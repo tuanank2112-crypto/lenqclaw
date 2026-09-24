@@ -1,0 +1,84 @@
+import type { Message } from '@anthropic-ai/sdk/resources/messages';
+import { afterEach, describe, expect, it } from 'vitest';
+import { ModelUnavailableError } from '../domain/errors.js';
+import { APIError, callModel, setModelClientForTest, type ModelClientLike } from './model.js';
+
+function fakeMessage(model: string): Message {
+  return {
+    id: 'msg_test',
+    type: 'message',
+    role: 'assistant',
+    content: [],
+    model,
+    stop_reason: 'end_turn',
+    stop_sequence: null,
+    usage: {
+      input_tokens: 12,
+      output_tokens: 3,
+      cache_creation_input_tokens: 0,
+      cache_read_input_tokens: 0,
+      cache_creation: null,
+      server_tool_use: null,
+      service_tier: null,
+    },
+  } as unknown as Message;
+}
+
+describe('callModel (adapters/model.ts)', () => {
+  afterEach(() => {
+    setModelClientForTest(null);
+    delete process.env.MODEL_DEFAULT;
+    delete process.env.MODEL_DIAGNOSE;
+  });
+
+  it('dung dung model theo route va gan cache_control tren system', async () => {
+    process.env.MODEL_DIAGNOSE = 'claude-test-diagnose';
+    const captured: { body?: { model: string; system: unknown } } = {};
+    const fake: ModelClientLike = {
+      messages: {
+        create: async (body) => {
+          captured.body = body as { model: string; system: unknown };
+          return fakeMessage(body.model);
+        },
+      },
+    };
+    setModelClientForTest(fake);
+
+    const result = await callModel({ route: 'diagnose', system: 'ban la tro ly BQL', messages: [{ role: 'user', content: 'xin chao' }] });
+
+    expect(result.model).toBe('claude-test-diagnose');
+    expect(Array.isArray(captured.body?.system)).toBe(true);
+    const systemBlocks = captured.body!.system as Array<{ cache_control?: { type: string } }>;
+    expect(systemBlocks[systemBlocks.length - 1]!.cache_control).toEqual({ type: 'ephemeral' });
+  });
+
+  it('529 sau retry cua SDK => ModelUnavailableError', async () => {
+    const fake: ModelClientLike = {
+      messages: {
+        create: async () => {
+          throw new APIError(529, {}, 'overloaded_error', new Headers());
+        },
+      },
+    };
+    setModelClientForTest(fake);
+
+    await expect(
+      callModel({ route: 'diagnose', system: 'he thong', messages: [] })
+    ).rejects.toBeInstanceOf(ModelUnavailableError);
+  });
+
+  it('429 => ModelUnavailableError', async () => {
+    const fake: ModelClientLike = {
+      messages: {
+        create: async () => {
+          throw new APIError(429, {}, 'rate_limited', new Headers());
+        },
+      },
+    };
+    setModelClientForTest(fake);
+
+    await expect(
+      callModel({ route: 'diagnose', system: 'he thong', messages: [] })
+    ).rejects.toBeInstanceOf(ModelUnavailableError);
+  });
+});
