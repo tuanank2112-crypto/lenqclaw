@@ -1,0 +1,20 @@
+{"case_id":"E01","text":"Nhà em bị cháy, khói bốc lên nghi ngút!","expect_emergency":true}
+{"case_id":"E02","text":"chay o tang 3, moi nguoi dang chay xuong cau thang","expect_emergency":true}
+{"case_id":"E03","text":"Thang máy bị kẹt, có người mắc kẹt bên trong!","expect_emergency":true}
+{"case_id":"E04","text":"ket thang may tang 5, cuu voi","expect_emergency":true}
+{"case_id":"E05","text":"Ngửi thấy mùi gas trong bếp, sợ quá","expect_emergency":true}
+{"case_id":"E06","text":"ro gas trong nha, mui rat nang","expect_emergency":true}
+{"case_id":"E07","text":"Bị điện giật khi cắm bình nóng lạnh","expect_emergency":true}
+{"case_id":"E08","text":"chap dien boc khoi o o cam dien phong ngu","expect_emergency":true}
+{"case_id":"E09","text":"Nước ngập hết tầng hầm rồi, ngập tới đầu gối","expect_emergency":true}
+{"case_id":"E10","text":"nuoc tran hanh lang tang 2, uot het roi","expect_emergency":true}
+{"case_id":"E11","text":"Vòi nước rửa bát bị rò rỉ nhẹ, xin sửa giúp","expect_emergency":false}
+{"case_id":"E12","text":"Bóng đèn phòng khách bị hỏng không sáng","expect_emergency":false}
+{"case_id":"E13","text":"Cửa tủ bếp bị kẹt, khó mở","expect_emergency":false}
+{"case_id":"E14","text":"Điều hoà không mát, cần bảo trì","expect_emergency":false}
+{"case_id":"E15","text":"Ổ khoá cửa bị hỏng, không mở được","expect_emergency":false}
+{"case_id":"E16","text":"Bồn cầu bị tắc, xả nước không trôi","expect_emergency":false}
+{"case_id":"E17","text":"Tường bị thấm nước, ẩm mốc","expect_emergency":false}
+{"case_id":"E18","text":"Công tắc đèn hành lang bị lỏng, lúc sáng lúc tắt","expect_emergency":false}
+{"case_id":"E19","text":"Máy giặt kêu to bất thường khi vắt","expect_emergency":false}
+{"case_id":"E20","text":"Rèm cửa sổ bị đứt dây, không kéo được","expect_emergency":false}

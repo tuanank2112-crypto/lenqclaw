@@ -1,0 +1,30 @@
+{"case_id":"R01","symptom_query":"đường ống nước chung ở trục đứng bị rò rỉ","expected_party":"bql"}
+{"case_id":"R02","symptom_query":"duong ong nuoc chung ngoai can bi vo","expected_party":"bql"}
+{"case_id":"R03","symptom_query":"ống nước trong bếp sau đồng hồ nước bị rò","expected_party":"resident"}
+{"case_id":"R04","symptom_query":"duong ong nuoc trong can ho bi ri nuoc","expected_party":"resident"}
+{"case_id":"R05","symptom_query":"tủ điện tầng, đường điện trục chính bị chập","expected_party":"bql"}
+{"case_id":"R06","symptom_query":"he thong dien truoc cong to bi hong","expected_party":"bql"}
+{"case_id":"R07","symptom_query":"ổ cắm điện trong phòng ngủ không có điện","expected_party":"resident"}
+{"case_id":"R08","symptom_query":"cong tac den trong can ho bi hong","expected_party":"resident"}
+{"case_id":"R09","symptom_query":"trần nhà thấm nước do đường ống chung của toà nhà","expected_party":"bql"}
+{"case_id":"R10","symptom_query":"tran nha tham nuoc do can tren xa nuoc lam vo, khong phai duong ong chung","expected_party":"resident"}
+{"case_id":"R11","symptom_query":"trần bị thấm nước từ căn trên, chưa rõ nguyên nhân","expected_party":"unclear"}
+{"case_id":"R12","symptom_query":"cửa căn hộ bị kẹt khoá, không mở được","expected_party":"resident"}
+{"case_id":"R13","symptom_query":"ban le cua phong ngu trong can bi long","expected_party":"resident"}
+{"case_id":"R14","symptom_query":"bồn cầu trong căn hộ bị nứt","expected_party":"resident"}
+{"case_id":"R15","symptom_query":"thiet bi ve sinh lavabo trong can bi vo","expected_party":"resident"}
+{"case_id":"R16","symptom_query":"điều hoà lắp riêng trong căn hộ bị hỏng","expected_party":"resident"}
+{"case_id":"R17","symptom_query":"may lanh trong phong ngu khong mat","expected_party":"resident"}
+{"case_id":"R18","symptom_query":"hành lang tầng bị bong gạch","expected_party":"bql"}
+{"case_id":"R19","symptom_query":"sanh chung toa nha bi hong den","expected_party":"bql"}
+{"case_id":"R20","symptom_query":"thang máy bị kẹt, không hoạt động","expected_party":"bql"}
+{"case_id":"R21","symptom_query":"thang bo chung cu bi hong tay vin","expected_party":"bql"}
+{"case_id":"R22","symptom_query":"ổ cắm công tắc trong phòng khách của căn hộ bị cháy","expected_party":"resident"}
+{"case_id":"R23","symptom_query":"den chieu sang trong can ho bi chap chon","expected_party":"resident"}
+{"case_id":"R24","symptom_query":"quy định cũ về thấm trần đã thay thế, còn áp dụng không","expected_party":"unclear"}
+{"case_id":"R25","symptom_query":"ap dung quy dinh thay tran cu da deprecated","expected_party":"unclear"}
+{"case_id":"R26","symptom_query":"quy định cũ về điện trong căn hết hiệu lực từ 2020 có còn dùng được không","expected_party":"unclear"}
+{"case_id":"R27","symptom_query":"quy dinh dien trong can da het hieu luc 2020 ap dung the nao","expected_party":"unclear"}
+{"case_id":"R28","symptom_query":"việc sửa chữa chưa có trong quy chế nào cả, không tìm thấy quy định","expected_party":"unclear"}
+{"case_id":"R29","symptom_query":"khong ro quy dinh nao ap dung cho truong hop nay","expected_party":"unclear"}
+{"case_id":"R30","symptom_query":"đường ống cấp nước đứng của toà nhà bị vỡ gây ngập hành lang tầng","expected_party":"bql"}
