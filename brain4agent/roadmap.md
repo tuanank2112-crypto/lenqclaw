@@ -1,0 +1,59 @@
+# Roadmap & Active Tasks
+
+File này chứa danh sách các tính năng, mục tiêu sắp tới và tình trạng công việc hiện tại.
+
+> Nguồn chi tiết: [`planning/01_2026-09-24_san-viec-tho-mvp/plan.md`](../planning/01_2026-09-24_san-viec-tho-mvp/plan.md) §3–§4. File này chỉ tóm tắt.
+
+## Mục tiêu hiện tại (Active) — hồ sơ `01_2026-09-24_san-viec-tho-mvp`, SemVer đích `0.1.0`
+
+Thứ tự (Đ13, Đ15): `P01 → P03 → P05 → P06 → P08`; P04 tối thiểu song song từ P03; P02 (Zalo thật) sau; P07 chạy dọc. P00 ngoài phạm vi build.
+
+- [x] 🖐 Người dùng duyệt pipeline v0.2 (Đ10) — 2026-09-24
+- [x] 🖐 Duyệt Đ11 (dashboard + mô phỏng) — 2026-09-24
+- [x] 🖐 Đ13: trọng tâm = xây agent; kinh doanh ra khỏi phạm vi — 2026-09-24
+- [ ] 🖐 Giữ/bỏ bước cư dân "Đồng ý"
+- [x] 🖐 Đ14: phí vào nhóm (slot đồng giá) + miễn phí thời gian đầu TRONG phạm vi — 2026-09-24
+- [x] 🖐 Đ15: sổ lợi ích ba bên hiện trong hệ thống — 2026-09-24 ("gần đúng ý", tinh chỉnh khi viết SPEC-P08)
+- [ ] 🖐 Chốt `FREE_TRIAL_DAYS`, `SLOT_FEE_MONTHLY`, `SLOT_MIN_JOBS_PER_VENDOR`, `BQL_SHARE_PCT`, `MIN_EARNINGS_TO_FEE`, `MINUTES_PER_CASE_BASELINE`
+- [ ] Viết SPEC-P08 "Sổ lợi ích ba bên" + gate G17
+- [ ] 🖐 `git init` + remote riêng tư
+- [ ] P01 — Nền tảng + SimTransport (chat giả lập `/dev/sim`, kịch bản `evals/scenarios`) (🟠)
+- [ ] P04 — Dashboard BQL tối thiểu + thợ & slot + sổ phí + dữ liệu mô phỏng (🟠) — song song từ P03
+- [ ] P03 — Agent cư dân bước 0–3: khẩn cấp, chẩn đoán, phân loại trách nhiệm, ticket BQL / ticket case (🔴/🟠)
+- [ ] P05 — Agent bước 4–7: job ẩn danh → nhóm thợ giữ slot → chốt → ticket cấp quyền → giao việc + luật slot/dùng thử (🔴)
+- [ ] P06 — Agent bước 8: theo dõi, nghiệm thu, đóng case, điểm thợ, giá thật (🟠)
+- [ ] P08 — Sổ lợi ích ba bên: phiếu hoàn thành, bảng thu nhập thợ, thẻ Hiệu quả tháng, luật cân bằng slot (🟠)
+- [ ] P02 — Zalo thật cắm vào `Transport` (🔴)
+- [ ] P07 — Golden + deploy VPS + backup (🟠)
+
+## Tương lai (Upcoming)
+
+- Kênh Zalo OA song song (giữ interface `Transport`), khi nhân rộng 5–10 tòa.
+- Dashboard nhiều tòa, trang minh bạch cho Ban quản trị.
+- **Tinh gọn UI dashboard BQL** — người dùng: "ổn nhưng chưa tối ưu, rối mắt, fix sau" (Đ11).
+
+## 💡 Kho Ý Tưởng & Backlog (Idea Vault)
+
+
+*Đã cân nhắc, chưa làm ở vòng 0.1 — giữ lý do để không lật lại khi chưa có căn cứ mới.*
+
+- **[KINH DOANH — tài liệu nhà đầu tư, ngoài phạm vi build (Đ13)]** FOMO chỉ từ số thật (bảng tin tuần: số cuốc, giá trung vị, slot còn trống), chiến dịch kéo thợ (QR phòng kỹ thuật, cửa hàng vật tư, nhóm thợ khu vực), ưu đãi khác ngoài dùng thử, kiểm chứng tay P00/G0. Bác phương án slot hai hạng (ai cũng mua thì ưu tiên mất nghĩa). Cơ chế phí vào nhóm + dùng thử thì ĐÃ vào phạm vi build (Đ14).
+
+- **Nhắn riêng top thợ song song với đăng nhóm** — rút theo Đ10 (đăng thẳng nhóm là đủ nhanh, ít rủi ro khoá tài khoản hơn); cân nhắc lại nếu thời gian có người nhận > 30 phút.
+
+- **Booking tiện ích qua chat** (từ `docs/DESIGN.md` v0.1) — rút theo Đ01; form/Mini App làm tốt hơn chat cho việc có cấu trúc.
+- **Hỏi đáp nội quy tổng quát** — rút theo Đ01; lõi trích dẫn vẫn được port cho bước "việc của ai?", mở rộng sau rất rẻ.
+- **Thanh toán trong hệ thống / cọc giữ cuốc** — rút theo Đ05; cân nhắc lại nếu tỷ lệ bùng > 10%.
+- **Trí tuệ liên tòa**: đối chuẩn, cảnh báo sớm, xếp hạng nhà thầu (xem `docs/SYSTEM-MAP.md` §3) — cần ≥ 5–10 tòa và danh mục chuẩn chung.
+- **Marketplace dịch vụ mở rộng** (vệ sinh, chuyển nhà, giặt là) — sau khi thợ sửa chữa chạy ổn.
+- **Nhận tin nhắn thoại của thợ** (speech-to-text) — thợ quen gửi voice.
+
+## Đã hoàn thành (Done)
+
+- [x] **2026-09-24 — Hình kinh tế ba bên** `docs/images/10-kinh-te-ba-ben.png` và mockup dashboard `docs/images/09-dashboard-bql-mockup.png`.
+
+- [x] **2026-09-24 — Pipeline v0.2 được duyệt (Đ10):** agent điều phối trọn vòng; ảnh `docs/images/08-pipeline-chuan.png` + bản ASCII ở `docs/SYSTEM-MAP.md` §10.
+
+- [x] **2026-09-24 — Dựng bộ SPEC hồ sơ 01** (plan + 00/01/P00/P02–P06/OPERATIONS/TESTING-ACCEPTANCE) và sơ đồ pipeline `docs/images/08-pipeline-chuan.png`.
+- [x] **2026-09-24 — Phân tích OpenClaw/ZaloClaw, định vị sản phẩm** (`docs/SYSTEM-MAP.md`, ảnh 01–07).
+- [x] **Khởi tạo Bộ Nhớ Não Bộ Chuẩn:** brain4agent engine 1.13.1, khung 1.7.1.

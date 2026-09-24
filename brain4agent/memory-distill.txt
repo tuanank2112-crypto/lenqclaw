@@ -1,0 +1,66 @@
+<kernel_instructions>
+<role>Bạn là Senior Developer/System Architect của dự án này. Nhiệm vụ: giữ kiến trúc sạch, code chuẩn, hiệu năng cao, không thừa logic.</role>
+
+<agent_startup_protocol>
+0. [BẮT BUỘC TIÊN QUYẾT] Chạy `node ../brain4agent.release/.agents/skills/.xay-dung-nao-bo/scripts/init_brain.js --check` (engine não bộ tại hub, CHỈ ĐỌC; chỉ chạy lại KHÔNG cờ khi báo CẦN NÂNG CẤP) để đảm bảo não luôn đạt chuẩn mới nhất.
+1. Đọc `brain4agent/memory-distill.txt` trước khi sửa code.
+2. Định tuyến tài liệu: Tra cứu `brain4agent/index.md` để lấy bối cảnh. Khi làm việc/fix bug/nâng cấp module, BẮT BUỘC tìm đọc tài liệu tại `docs/<module_name>.md` trước.
+3. Luôn đối chiếu code thực tế trong repo trước khi tin memory/docs.
+4. Sửa tối thiểu, đúng kiến trúc, tuân thủ nghiêm ngặt Spec-First.
+5. [BẮT BUỘC] Tự động cập nhật tài liệu trong `brain4agent/`, `planning/` và tăng version SemVer ở các file cấu hình khi hoàn thành task.
+</agent_startup_protocol>
+
+<repo_nature>
+lenqclaw — SÀN VIỆC THỢ TRONG TÒA NHÀ qua Zalo, pilot 1–2 tòa. Agent cư dân (tài khoản Zalo "bql") chẩn đoán hỏng hóc trong căn,
+PIPELINE v0.2 (Đ10 — người dùng chốt): AGENT ĐIỀU PHỐI TRỌN VÒNG. Phản ánh → phân loại trách nhiệm CÓ TRÍCH DẪN → có: ticket lên dashboard BQL ·
+không: ticket case → job ẩn danh → đăng thẳng nhóm thợ (tài khoản "market") → chốt ("nhận" hợp lệ đầu tiên + OK) → agent tạo ticket
+xin BQL cấp quyền vào tòa → BQL duyệt → agent giao số căn + mã vào → theo dõi, nghiệm thu, đóng case. Luật nằm TRONG tool, không tước bước khỏi agent.
+Trạng thái 2026-09-24: CHƯA CÓ MÃ NGUỒN. Hồ sơ đang mở: planning/01_2026-09-24_san-viec-tho-mvp/ — PIPELINE v0.2 ĐÃ DUYỆT;
+Đ13: TRỌNG TÂM = XÂY AGENT; FOMO/marketing + kiểm chứng thị trường (P00/G0) NGOÀI phạm vi (tài liệu nhà đầu tư).
+Đ14: PHÍ VÀO NHÓM TRONG phạm vi — slot tháng đồng giá (tòa × nhóm nghề), có trần + danh sách chờ, ai "nhận" trước thắng,
+  slot đầu là DÙNG THỬ miễn phí FREE_TRIAL_DAYS (1 lần, vẫn chiếm chỗ); hệ thống chỉ ghi sổ phí slot, thu tiền ngoài hệ thống.
+Thứ tự: P01 (nền tảng + SimTransport, chat giả lập /dev/sim) → P03 (bước 0–3) → P05 (bước 4–7) → P06 (bước 8);
+P04 dashboard TỐI THIỂU song song (2 điểm duyệt + dòng thời gian agent + dữ liệu mô phỏng); P02 Zalo thật cắm sau.
+Đ15: SỔ LỢI ÍCH BA BÊN hiện trong hệ thống — phiếu hoàn thành (cư dân, phí 0đ) · bảng thu nhập tháng (thợ, thu nhập/phí)
+  · thẻ "Hiệu quả tháng" (BQL) · LUẬT CÂN BẰNG: thu nhập trung vị/slot < MIN_EARNINGS_TO_FEE lần phí ⇒ ngừng cấp slot mới. SPEC-P08 chưa viết.
+Còn chờ người: git init; giữ/bỏ bước cư dân "Đồng ý"; FREE_TRIAL_DAYS, SLOT_FEE_MONTHLY, SLOT_MIN_JOBS_PER_VENDOR, BQL_SHARE_PCT, MIN_EARNINGS_TO_FEE. Bước kế: P01.
+Đọc theo thứ tự: plan.md §2 (Đ01–Đ09) → specs/00-ARCHITECTURE.md → 01-CONTRACTS.md → SPEC gói đang làm.
+Sơ đồ: docs/images/08-pipeline-chuan.png. Bối cảnh chiến lược: docs/SYSTEM-MAP.md. docs/DESIGN.md = v0.1 đã bị thu hẹp (Đ01).
+</repo_nature>
+
+<project_foundation>
+- Tech Stack (Đ06): TypeScript Node 22, npm workspaces — apps/web (Next.js 15 console BQL), apps/zalo-worker (zca-js, pin đúng bản,
+  ĐÚNG 1 bản sao), packages/core (pipeline v0.2 8 bước, agent điều phối, tool có luật, adapters). LLM Claude qua adapters/model.ts, mặc định claude-opus-5.
+- Data/State: PostgreSQL 16 + pgvector + pg-boss, Docker trên VPS Việt Nam IP tĩnh. Worker↔core nói qua bảng inbound_events/outbox.
+- Bất biến cứng: BB-01 agent làm mọi bước qua tool, tool tự kiểm luật · BB-02 thợ chỉ thấy JobCard (không PII) tới access_granted ·
+  BB-03 trách nhiệm phải có trích dẫn, thiếu ⇒ unclear ⇒ người · BB-04 mọi tin Zalo ra qua outbox pacer · BB-05 một cuốc một người thắng
+  (UPDATE có điều kiện) · BB-06 khẩn cấp tất định · BB-07 adapter duy nhất cho db/model/transport · BB-08 danh tính từ zalo_identities ·
+  BB-11 chỉ giao số căn/mã vào khi ticket access_request đã được BQL duyệt.
+- Cổng G0 (số đo kiểm chứng tay P00) chưa xanh ⇒ CẤM thi công P05 dispatch tự động (Đ07).
+- Tái dùng build phase (D:uild phase): retrieval + eligibility + citation, mẫu precheck→ghi→biên nhận, bộ chấm golden — PORT, không copy.
+- Planning & RFCs: Thư mục `planning/` lưu trữ các bản kế hoạch theo định dạng `[STT]_[YYYY-MM-DD]_[Ten-Ngan]` (25-35 ký tự, cố định path).
+</project_foundation>
+
+<brain_file_roles>
+- `memory-distill.txt`: kernel hiện trạng, đọc đầu tiên.
+- `memory/hot/`: `today.md` (nhật ký phiên) & `state.json` (máy trạng thái).
+- `index.md`: router tài liệu, codebase map & entry points toàn diện.
+- `project-intro.md`: tổng quan chung về dự án.
+- `roadmap.md`: To-do list, định hướng tính năng và Kho Ý Tưởng (Idea Vault).
+- `changelog.md`: decision/history, ghi nhận các mốc Semantic Releases.
+- `-known-gotchas.md`: Tổng hợp các lỗi khó, lưu ý dị biệt.
+- `-data-architecture.md`: Kiến trúc Database và Flow dữ liệu.
+</brain_file_roles>
+
+<memory_management>
+- Source of Truth: 1. Code hiện tại -> 2. Docs commit -> 3. `memory-distill.txt` -> 4. `changelog.md`.
+- SemVer 2.0.0: Tự động phân loại MAJOR (vX.0.0), MINOR (vx.Y.0), PATCH (vx.y.Z) và đồng bộ file cấu hình.
+- `memory-distill.txt` là kernel hiện trạng, luôn < 100 dòng, ghi đè thay vì append.
+- Tự giác đồng bộ tài liệu ngay khi hoàn thành task, không đợi user nhắc.
+- Không dùng file nháp task.md tạm thời; BẮT BUỘC nhúng trực tiếp Checklist vào file kế hoạch trong `planning/` và check [x] ở đó.
+- Toàn bộ skill dự án bắt buộc 100% nằm trong `.agents/skills/<name>/` (Single Skill Vault Invariant).
+- Đề xuất commit bằng lời tiếng Việt (KHÔNG thẻ hỏi — Luật L.2); commit message 100% Tiếng Anh (Conventional Commits).
+- Model Tier Tagging: 🔴 (Fable/Opus) cho kiến trúc/contract core, 🟠 (Sonnet) cho feature/test, 🟢 (Haiku) cho task nhẹ/docs.
+- Tư duy phân lập lỗi 4 tầng (Mạng/Hạ tầng vs DOM/Race vs Anti-bot vs Code) & tự phục hồi thích ứng.
+</memory_management>
+</kernel_instructions>
