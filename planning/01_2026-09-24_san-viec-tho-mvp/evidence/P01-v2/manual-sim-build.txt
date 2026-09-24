@@ -1,0 +1,15 @@
+=== R02-tham-dinh D3: next build && next start, DATA_MODE=sim, /dev/sim voi bql_admin ===
+GET /login (chua dang nhap): 200
+GET /dev/sim (chua dang nhap, khong theo redirect): 307
+POST /api/auth/login: 200 {"ok":true}
+GET /dev/sim (da dang nhap bql_admin, BAN BUILD PRODUCTION): 200
+
+=== gui tin, kiem tra echo co dau tieng Viet ===
+{"ok":true,"duplicate":false}
+{"messages":[{"id":"19","kind":"in","text":"Bong den phong khach bi chay","at":"2026-09-24T16:32:46.042Z"},{"id":"18","kind":"out","text":"[sim] đã nhận: Bong den phong khach bi chay","at":"2026-09-24T16:32:46.068Z"}]}
+
+=== D10: input khong hop le ===
+POST /api/auth/login email la so (khong phai chuoi): 400 {"error":"invalid_credentials_type"}
+POST /api/dev/sim/send threadType=bogus: 400 {"error":"invalid_body"}
+POST /api/dev/sim/send account=evil: 400 {"error":"invalid_body"}
+GET /ticketsX (bql_admin logged in, deny-by-default): 403

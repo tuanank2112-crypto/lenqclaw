@@ -1,0 +1,21 @@
+ .env.example                                 |   7 ++
+ apps/web/app/api/auth/login/route.ts         |  37 +++++--
+ apps/web/app/api/dev/sim/send/route.ts       |  40 +++++--
+ apps/web/app/dev/sim/page.tsx                |   6 ++
+ apps/web/lib/auth/policy.test.ts             |  14 +++
+ apps/web/lib/auth/policy.ts                  |  23 ++--
+ apps/web/lib/auth/session.test.ts            |  61 ++++++++++-
+ compose.yaml                                 |  10 +-
+ packages/core/package.json                   |   2 +-
+ packages/core/src/adapters/db.ts             |  16 ++-
+ packages/core/src/adapters/model.test.ts     |  47 ++++++++-
+ packages/core/src/adapters/model.ts          |  39 ++++++-
+ packages/core/src/db/seed.ts                 |  34 +++---
+ packages/core/src/dbtests/p01.db.test.ts     |  38 ++++++-
+ packages/core/src/services/job-state.test.ts |  14 ++-
+ packages/core/src/services/job-state.ts      |  12 ++-
+ packages/core/src/sim/sim-transport.ts       | 109 +++++++++++--------
+ packages/core/tsconfig.typecheck.json        |   4 +
+ scripts/check_adapter_boundary.mjs           | 152 ++++++++++++++++++++-------
+ scripts/check_agent_tools.mjs                |  51 ++++++---
+ 20 files changed, 563 insertions(+), 153 deletions(-)

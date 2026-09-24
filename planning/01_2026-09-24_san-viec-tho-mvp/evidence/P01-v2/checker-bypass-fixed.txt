@@ -1,0 +1,46 @@
+### checker-bypass-fixed.sh   2026-09-24T23:31:13+07:00
+### baseline
+violations: 0
+exit=0
+pii_keys_in_jobcard: 0
+forbidden_tools: 0
+exit=0
+### B01-B15 (check_adapter_boundary - pg/anthropic outside adapter)
+B01 | violations: 1 | exit=1
+B02 | violations: 1 | exit=1
+B03 | violations: 1 | exit=1
+B04 | violations: 1 | exit=1
+B05 | violations: 1 | exit=1
+B06 | violations: 1 | exit=1
+B07 | violations: 1 | exit=1
+B08 | violations: 1 | exit=1
+B09 | violations: 1 | exit=1
+B10 | violations: 1 | exit=1
+B11 | violations: 2 | exit=1
+B12 | violations: 1 | exit=1
+B13 | violations: 1 | exit=1
+B14 | violations: 1 | exit=1
+B15 | violations: 1 | exit=1
+### O01-O08 (insert into outbox outside transport.ts)
+O01 | violations: 1 | exit=1
+O02 | violations: 1 | exit=1
+O03 | violations: 1 | exit=1
+O04 | violations: 1 | exit=1
+O05 | violations: 1 | exit=1
+O06 | violations: 1 | exit=1
+O07 | violations: 1 | exit=1
+O08 | violations: 1 | exit=1
+### A01-A09 (check_agent_tools - PII keys + forbidden tool names)
+A01 | forbidden_tools: 0 | exit=1
+A02 | forbidden_tools: 0 | exit=1
+A03 | forbidden_tools: 0 | exit=1
+A04 | forbidden_tools: 0 | exit=1
+A07 | forbidden_tools: 1 | exit=1
+A08 | forbidden_tools: 1 | exit=1
+A09 | forbidden_tools: 1 | exit=1
+### final: cay sach
+violations: 0
+exit=0
+pii_keys_in_jobcard: 0
+forbidden_tools: 0
+exit=0

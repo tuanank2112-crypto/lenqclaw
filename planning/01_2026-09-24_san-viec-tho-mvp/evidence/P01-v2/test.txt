@@ -1,0 +1,40 @@
+
+> lenqclaw@0.0.1 test
+> npm run test --workspaces --if-present
+
+
+> @lenqclaw/web@0.0.1 test
+> vitest run --exclude "**/*.db.test.ts"
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mD:/lenqclaw/apps/web[39m
+
+ [32m✓[39m lib/auth/policy.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 6[2mms[22m[39m
+ [32m✓[39m lib/auth/session.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 20[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m17 passed[39m[22m[90m (17)[39m
+[2m   Start at [22m 23:28:38
+[2m   Duration [22m 1.54s[2m (transform 109ms, setup 0ms, collect 234ms, tests 26ms, environment 0ms, prepare 1.70s)[22m
+
+
+> @lenqclaw/zalo-worker@0.0.1 test
+> echo "@lenqclaw/zalo-worker: no tests in P01 (P02 scope)"
+
+"@lenqclaw/zalo-worker: no tests in P01 (P02 scope)"
+
+> @lenqclaw/core@0.0.1 test
+> vitest run --exclude "**/*.db.test.ts"
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mD:/lenqclaw/packages/core[39m
+
+ [32m✓[39m src/services/job-state.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 12[2mms[22m[39m
+ [32m✓[39m src/domain/password.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 189[2mms[22m[39m
+ [32m✓[39m src/adapters/model.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 18[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m      Tests [22m [1m[32m11 passed[39m[22m[90m (11)[39m
+[2m   Start at [22m 23:28:40
+[2m   Duration [22m 1.51s[2m (transform 165ms, setup 0ms, collect 1.14s, tests 219ms, environment 1ms, prepare 506ms)[22m
+
