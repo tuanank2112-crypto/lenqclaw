@@ -6,9 +6,11 @@
 import { pathToFileURL } from 'node:url';
 import { sql, tx, closeDb } from '../adapters/db.js';
 
-const ORG_NAME = 'Cong ty Van hanh Demo';
+// R02-tham-dinh D8: du lieu mo phong PHAI co dau tieng Viet UTF-8 dung bang
+// SPEC-P01-Foundation.md §3 (truoc day bi go bo dau khong can thiet).
+const ORG_NAME = 'Công ty Vận hành Demo';
 const BUILDING_CODE = 'TOA-A';
-const BUILDING_NAME = 'Toa A';
+const BUILDING_NAME = 'Toà A';
 const FLOORS = 5;
 const UNITS_PER_FLOOR = 4;
 
@@ -19,18 +21,18 @@ const JOB_CATEGORIES: Array<{
   default_mode: 'fixed' | 'quote';
   emergency: boolean;
 }> = [
-  { code: 'ong_nuoc_ro', name_vi: 'Ro ri duong ong nuoc', trade_group: 'dien_nuoc', default_mode: 'fixed', emergency: false },
-  { code: 'thiet_bi_ve_sinh', name_vi: 'Thiet bi ve sinh hong', trade_group: 'dien_nuoc', default_mode: 'fixed', emergency: false },
-  { code: 'tac_thoat_nuoc', name_vi: 'Tac thoat nuoc', trade_group: 'dien_nuoc', default_mode: 'fixed', emergency: false },
-  { code: 'dien_mat_cuc_bo', name_vi: 'Mat dien cuc bo / nhay aptomat', trade_group: 'dien_nuoc', default_mode: 'fixed', emergency: false },
-  { code: 'o_cam_cong_tac', name_vi: 'O cam, cong tac, den', trade_group: 'dien_nuoc', default_mode: 'fixed', emergency: false },
-  { code: 'khoa_cua', name_vi: 'Khoa cua, mo khoa', trade_group: 'khoa', default_mode: 'fixed', emergency: false },
-  { code: 'dieu_hoa_khong_mat', name_vi: 'Dieu hoa khong mat', trade_group: 'dien_lanh', default_mode: 'quote', emergency: false },
-  { code: 'dieu_hoa_ve_sinh', name_vi: 'Ve sinh dieu hoa', trade_group: 'dien_lanh', default_mode: 'fixed', emergency: false },
-  { code: 'binh_nong_lanh', name_vi: 'Binh nong lanh', trade_group: 'dien_lanh', default_mode: 'quote', emergency: false },
-  { code: 'tham_tuong_tran', name_vi: 'Tham tuong, tran', trade_group: 'xay_sua', default_mode: 'quote', emergency: false },
-  { code: 'cua_ban_le', name_vi: 'Cua, ban le, tay nam', trade_group: 'xay_sua', default_mode: 'fixed', emergency: false },
-  { code: 'khac', name_vi: 'Viec khac (can khao sat)', trade_group: 'xay_sua', default_mode: 'quote', emergency: false },
+  { code: 'ong_nuoc_ro', name_vi: 'Rò rỉ đường ống nước', trade_group: 'dien_nuoc', default_mode: 'fixed', emergency: false },
+  { code: 'thiet_bi_ve_sinh', name_vi: 'Thiết bị vệ sinh hỏng', trade_group: 'dien_nuoc', default_mode: 'fixed', emergency: false },
+  { code: 'tac_thoat_nuoc', name_vi: 'Tắc thoát nước', trade_group: 'dien_nuoc', default_mode: 'fixed', emergency: false },
+  { code: 'dien_mat_cuc_bo', name_vi: 'Mất điện cục bộ / nhảy aptomat', trade_group: 'dien_nuoc', default_mode: 'fixed', emergency: false },
+  { code: 'o_cam_cong_tac', name_vi: 'Ổ cắm, công tắc, đèn', trade_group: 'dien_nuoc', default_mode: 'fixed', emergency: false },
+  { code: 'khoa_cua', name_vi: 'Khoá cửa, mở khoá', trade_group: 'khoa', default_mode: 'fixed', emergency: false },
+  { code: 'dieu_hoa_khong_mat', name_vi: 'Điều hoà không mát', trade_group: 'dien_lanh', default_mode: 'quote', emergency: false },
+  { code: 'dieu_hoa_ve_sinh', name_vi: 'Vệ sinh điều hoà', trade_group: 'dien_lanh', default_mode: 'fixed', emergency: false },
+  { code: 'binh_nong_lanh', name_vi: 'Bình nóng lạnh', trade_group: 'dien_lanh', default_mode: 'quote', emergency: false },
+  { code: 'tham_tuong_tran', name_vi: 'Thấm tường, trần', trade_group: 'xay_sua', default_mode: 'quote', emergency: false },
+  { code: 'cua_ban_le', name_vi: 'Cửa, bản lề, tay nắm', trade_group: 'xay_sua', default_mode: 'fixed', emergency: false },
+  { code: 'khac', name_vi: 'Việc khác (cần khảo sát)', trade_group: 'xay_sua', default_mode: 'quote', emergency: false },
 ];
 
 async function seedOrganization(): Promise<string> {
@@ -66,11 +68,11 @@ async function seedApartments(buildingId: string): Promise<void> {
 async function seedZaloAccounts(): Promise<void> {
   await sql(
     `insert into zalo_accounts (id, display_name, session_state) values ($1,$2,'logged_out') on conflict (id) do nothing`,
-    ['bql', 'BQL Toa A']
+    ['bql', 'BQL Toà A']
   );
   await sql(
     `insert into zalo_accounts (id, display_name, session_state) values ($1,$2,'logged_out') on conflict (id) do nothing`,
-    ['market', 'San Tho Toa A']
+    ['market', 'Sàn Thợ Toà A']
   );
 }
 

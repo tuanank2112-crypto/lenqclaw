@@ -4,8 +4,12 @@
 
 import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
-import { sql, tx } from '../adapters/db.js';
+import { sql } from '../adapters/db.js';
+import { audit } from '../services/audit.js';
 import { enqueue, type InboundEvent } from '../adapters/transport.js';
+
+/** Mau tra loi khi handler loi (SPEC-P03-Resident-Agent.md §10.1). */
+export const BUSY_REPLY = 'Xin lỗi, hệ thống đang bận, vui lòng thử lại sau ít phút.';
 
 export interface SimInboundArgs {
   account: 'bql' | 'market';
@@ -38,8 +42,9 @@ export async function simInbound(args: SimInboundArgs): Promise<SimInboundResult
 
 export type InboundHandler = (e: InboundEvent) => Promise<void>;
 
-/** Handler P01: vong vong lai — enqueue tin `"[sim] da nhan: <text>"` ve
- * dung thread. P03 thay handler nay bang agent. */
+/** Handler P01: vong vong lai — enqueue tin `"[sim] đã nhận: <text>"` ve
+ * dung thread. P03 thay handler nay bang agent (SPEC-P03 §10.1 — chuoi
+ * gui nguoi dung PHAI co dau tieng Viet UTF-8). */
 export const echoHandler: InboundHandler = async (e) => {
   const text = typeof (e.payload as { text?: unknown }).text === 'string' ? (e.payload as { text: string }).text : '';
   await enqueue({
@@ -47,13 +52,9 @@ export const echoHandler: InboundHandler = async (e) => {
     threadId: e.threadId,
     threadType: e.threadType,
     kind: 'text',
-    body: { text: `[sim] da nhan: ${text}` },
+    body: { text: `[sim] đã nhận: ${text}` },
   });
 };
-
-interface ProcessInboundOptions {
-  limit?: number;
-}
 
 interface InboundRow {
   id: number;
@@ -67,42 +68,62 @@ interface InboundRow {
   received_at: string;
 }
 
-/** Lay `inbound_events` chua `processed_at` bang `FOR UPDATE SKIP LOCKED`,
- * goi `handler`, dat `processed_at`. */
-export async function processInbound(
-  handler: InboundHandler = echoHandler,
-  opts: ProcessInboundOptions = {}
-): Promise<{ processed: number }> {
-  const limit = opts.limit ?? 50;
-  let processed = 0;
-  await tx(async (q) => {
-    const rows = await q<InboundRow>(
-      `select id, zalo_account_id, zalo_msg_id, thread_id, thread_type, sender_uid, is_self, payload, received_at
-       from inbound_events
-       where processed_at is null
-       order by id
-       limit $1
-       for update skip locked`,
-      [limit]
-    );
-    for (const r of rows) {
-      const event: InboundEvent = {
-        id: r.id,
-        zaloAccountId: r.zalo_account_id,
-        zaloMsgId: r.zalo_msg_id,
-        threadId: r.thread_id,
-        threadType: r.thread_type,
-        senderUid: r.sender_uid,
-        isSelf: r.is_self,
-        payload: r.payload,
-        receivedAt: r.received_at,
-      };
-      await handler(event);
-      await q(`update inbound_events set processed_at = now() where id = $1`, [r.id]);
-      processed++;
-    }
-  });
-  return { processed };
+/**
+ * R02-tham-dinh D5, theo SPEC-P03-Resident-Agent.md §10.1: NHAN TRUOC, XU LY
+ * SAU. Mot cau `UPDATE ... WHERE id = (SELECT ... FOR UPDATE SKIP LOCKED)
+ * RETURNING *` nhan (danh dau `processed_at`) DUNG MOT dong — day la MOT
+ * cau lenh tu than atomic, KHONG can boc trong `tx()` — roi goi `handler`
+ * NGOAI transaction (handler tu `enqueue` bang client rieng cua no; giu no
+ * trong mot `tx` dang mo se can pool khi goi dong thoi, tung gay treo chet
+ * — 4h cua R02-tham-dinh). Ngu nghia: moi tin xu ly TOI DA MOT LAN — khong
+ * bao gio tra loi trung du handler loi hay khong. Handler nem loi => ghi
+ * `audit_log action='inbound.handler_error'` + gui `BUSY_REPLY`, KHONG xu
+ * ly lai (khong retry, khong throw tiep).
+ */
+export async function processInbound(handler: InboundHandler = echoHandler): Promise<{ processed: number }> {
+  const rows = await sql<InboundRow>(
+    `update inbound_events
+     set processed_at = now()
+     where id = (
+       select id from inbound_events where processed_at is null order by id limit 1 for update skip locked
+     )
+     returning id, zalo_account_id, zalo_msg_id, thread_id, thread_type, sender_uid, is_self, payload, received_at`
+  );
+  if (rows.length === 0) return { processed: 0 };
+
+  const r = rows[0]!;
+  const event: InboundEvent = {
+    id: r.id,
+    zaloAccountId: r.zalo_account_id,
+    zaloMsgId: r.zalo_msg_id,
+    threadId: r.thread_id,
+    threadType: r.thread_type,
+    senderUid: r.sender_uid,
+    isSelf: r.is_self,
+    payload: r.payload,
+    receivedAt: r.received_at,
+  };
+
+  try {
+    await handler(event);
+  } catch (err) {
+    await audit(sql, {
+      actorType: 'system',
+      actorId: String(r.id),
+      action: 'inbound.handler_error',
+      target: r.thread_id,
+      data: { message: err instanceof Error ? err.message : String(err) },
+    });
+    await enqueue({
+      zaloAccountId: r.zalo_account_id as 'bql' | 'market',
+      threadId: r.thread_id,
+      threadType: r.thread_type,
+      kind: 'text',
+      body: { text: BUSY_REPLY },
+    });
+  }
+
+  return { processed: 1 };
 }
 
 /** Chuyen `outbox` `queued -> sent` (khong pacer — pacer that la P02), dat

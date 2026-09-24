@@ -14,7 +14,7 @@ import { ConflictError } from '../domain/errors.js';
 import { MigrationChecksumError, runMigrations } from '../db/migrate.js';
 import { runSeed } from '../db/seed.js';
 import { transitionJob } from '../services/job-state.js';
-import { runScenario } from '../sim/sim-transport.js';
+import { echoHandler, processInbound, runScenario, simInbound } from '../sim/sim-transport.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.join(__dirname, '..', '..', '..', '..');
@@ -179,10 +179,6 @@ describe('3) transitionJob tren DB that (SPEC-P01 §9, mam BB-05)', () => {
 });
 
 describe('4) runScenario(echo.jsonl) — SimTransport (SPEC-P01 §9)', () => {
-  afterAll(async () => {
-    await closeDb();
-  });
-
   it('duplicates=1, outbound=inbound, moi outbox sent', async () => {
     const result = await runScenario(SCENARIO_PATH);
 
@@ -194,5 +190,37 @@ describe('4) runScenario(echo.jsonl) — SimTransport (SPEC-P01 §9)', () => {
       `select count(*)::int as c from outbox where zalo_msg_id like 'sim-out-%' and status != 'sent'`
     );
     expect(notSent[0]!.c).toBe(0);
+  });
+});
+
+describe('5) processInbound — nhan truoc xu ly sau, khong ket chet (R02-tham-dinh D5, SPEC-P03 §10.1)', () => {
+  afterAll(async () => {
+    await closeDb();
+  });
+
+  it('12 processInbound dong thoi xong < 5s, moi tin dung 1 outbox', async () => {
+    const threadId = `sim-concurrency-${randomUUID().slice(0, 8)}`;
+    for (let i = 0; i < 12; i++) {
+      await simInbound({
+        account: 'bql',
+        threadId,
+        threadType: 'user',
+        senderUid: `resident-concurrency-${i}`,
+        text: `tin thu ${i}`,
+        msgId: `concurrency-${threadId}-${i}`,
+      });
+    }
+
+    const before = await sql<{ c: number }>(`select count(*)::int as c from outbox where thread_id = $1`, [threadId]);
+
+    const startedAt = Date.now();
+    const results = await Promise.all(Array.from({ length: 12 }, () => processInbound(echoHandler)));
+    const elapsedMs = Date.now() - startedAt;
+
+    expect(elapsedMs).toBeLessThan(5000);
+    expect(results.filter((r) => r.processed === 1).length).toBe(12);
+
+    const after = await sql<{ c: number }>(`select count(*)::int as c from outbox where thread_id = $1`, [threadId]);
+    expect(after[0]!.c - before[0]!.c).toBe(12);
   });
 });
