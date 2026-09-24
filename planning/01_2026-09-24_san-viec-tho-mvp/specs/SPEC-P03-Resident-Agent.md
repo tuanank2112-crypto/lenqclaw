@@ -102,3 +102,10 @@ Các mục dưới đây là hợp đồng thi công P03; §1–§9 vẫn giữ 
 
 ### §10.7 Vùng cấm bổ sung
 - CẤM gọi LLM trong transaction DB. CẤM pg-boss ở P03 (retry model để P07 — lý do: cần runner `jobs`, chưa có). CẤM truy hồi lai/embedding. CẤM sửa `report_problem`, dispatch, tool phía thợ.
+
+### §10.8 Hợp đồng gọi model (tra skill `claude-api` 2026-09-24 — `claude-opus-5` là ID hợp lệ)
+- Model giữ `claude-opus-5` (Đ06). Thinking của Opus 5 **bật mặc định** — CẤM gửi `thinking: {type:'disabled'}` hay `budget_tokens` (400); không đặt `temperature`/`top_p` (400). `max_tokens` 16000, không streaming ở P03.
+- Vòng tool: sau mỗi phản hồi, nối **nguyên** `response.content` (kể cả khối `thinking`) làm lượt `assistant` — CẤM chỉ nối text; mọi `tool_result` của một lượt nằm trong **một** message `user`; lỗi tool ⇒ `tool_result` `is_error:true`, không bỏ. Parse `tool_use.input` như object (đã là JSON), không so chuỗi.
+- Tool: `strict: true` ở cấp định nghĩa tool (cạnh `name`/`description`/`input_schema`); `input_schema` có `additionalProperties:false` + `required` đủ trường. `tool_choice` để `auto`.
+- Từ chối: kiểm `stop_reason === 'refusal'` TRƯỚC khi đọc `content` ⇒ `handoff_to_staff('model_refusal')` + `BUSY_REPLY`. Bật fallback phía server mặc định trong `adapters/model.ts`: gọi `client.beta.messages.create` với `betas: ['server-side-fallback-2026-07-01']` và `fallbacks: 'default'` (dạng chuỗi — CẤM ghép với header `-2026-06-01`). Kiểu SDK không có trường ⇒ tra `.d.ts` của gói đã cài; vẫn không có ⇒ ghi Câu hỏi mở, KHÔNG tự đổi sang dạng mảng.
+- Kiểu dữ liệu: dùng kiểu SDK (`MessageParam`, `Tool`, `ToolUseBlock`, `ToolResultBlockParam`), CẤM tự định nghĩa lại.
