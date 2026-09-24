@@ -109,7 +109,8 @@ create table agent_runs (id bigserial primary key, conversation_id uuid, route t
   cache_read_tokens int, latency_ms int, outcome text, created_at timestamptz default now());
 
 create table job_categories (code text primary key, name_vi text not null,
-  trade_group text not null check (trade_group in ('dien_nuoc','khoa','dien_lanh','xay_sua')),   -- nhóm nghề, đơn vị tính slot (Đ14) default_mode text check (default_mode in ('fixed','quote')),
+  trade_group text not null check (trade_group in ('dien_nuoc','khoa','dien_lanh','xay_sua')),   -- nhóm nghề, đơn vị tính slot (Đ14)
+  default_mode text check (default_mode in ('fixed','quote')),
   emergency boolean default false);
 create table price_book (category_code text references job_categories, building_id uuid references buildings,
   p25 int, p50 int, p75 int, sample_size int default 0, source text check (source in ('seed','observed')),

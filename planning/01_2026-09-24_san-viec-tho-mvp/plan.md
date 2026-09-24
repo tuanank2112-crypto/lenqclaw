@@ -10,7 +10,7 @@
 | Mã hồ sơ | `01_2026-09-24_san-viec-tho-mvp` |
 | Ngày mở | 2026-09-24 |
 | Chủ trì | Super Orchestrator (cửa sổ này) |
-| Trạng thái | 🟢 PIPELINE v0.2 · Đ13 trọng tâm agent · Đ14 phí vào nhóm · Đ15 sổ lợi ích ba bên — ĐÃ DUYỆT (2026-09-24). Chờ: SPEC-P08, tham số phí, `git init`; chưa có mã nguồn |
+| Trạng thái | 🟢 PIPELINE v0.2 · Đ13 trọng tâm agent · Đ14 phí vào nhóm · Đ15 sổ lợi ích ba bên — ĐÃ DUYỆT (2026-09-24). Chờ: SPEC-P08, tham số phí. Git: `origin` = github.com/tuanank2112-crypto/lenqclaw (private). P01 đang thi công (H01) |
 | Phạm vi | Pilot 1–2 tòa, một công ty vận hành, kênh Zalo cá nhân |
 | SemVer dự kiến | `0.1.0` (MINOR đầu tiên — dựng mới) |
 | Đặc tả kế thừa | `docs/DESIGN.md` v0.1 (trợ lý BQL tổng quát) — bị thu hẹp bởi Đ01, xem "Quyết định bị thay thế" · Lõi trả lời có trích dẫn của repo `D:\build phase` (Resident Agent v1.0) — tham chiếu để port, không chép mù |
@@ -99,6 +99,10 @@ Lợi ích kinh tế của từng bên phải **nhìn thấy được trong sả
 - Người dùng nói "gần đúng ý" ⇒ chi tiết hiển thị còn tinh chỉnh khi viết SPEC-P08; khung (3 bề mặt + luật cân bằng) đã chốt.
 **Lật được:** ngưỡng và cách hiển thị (cấu hình/UI). **Chi phí lật:** thấp.
 
+### Đ16 — 2026-09-24 · P01 có SPEC riêng (Super Orchestrator chốt, 🔴)
+Khi soạn handoff P01 lộ ra các quyết định 01-CONTRACTS chưa nói: test không DB (`npm test`) tách khỏi test cần DB (`npm run test:db`, thiếu `DATABASE_URL` ⇒ đỏ, không skip); phiên đăng nhập = cookie HMAC tự viết, không NextAuth; SQL thuần, không ORM; SimTransport ở P01 chạy vòng vọng lại (`echoHandler`) để P03 chỉ thay handler; seed nền 1 tòa/20 căn/12 danh mục; DB dev cổng `127.0.0.1:55432`. Ghi tại [SPEC-P01](specs/SPEC-P01-Foundation.md). Kèm vá lỗi DDL: comment trong `job_categories` nuốt mất cột `default_mode` (01-CONTRACTS §4).
+**Lật được:** mọi mục (chưa có mã phụ thuộc). **Chi phí lật:** thấp.
+
 ### Quyết định bị thay thế
 | Mốc cũ | Phát biểu cũ | Thay bằng | Lý do |
 | :-- | :-- | :-- | :-- |
@@ -109,6 +113,7 @@ Lợi ích kinh tế của từng bên phải **nhìn thấy được trong sả
 | Đ07 | P00/G0 chặn thi công P05 | Đ13 | P00/G0 là việc kinh doanh, ngoài phạm vi build |
 | Đ12 | Slot tháng đồng giá là hợp đồng kỹ thuật (bảng, luật dispatch, G15) | Đ13 | Chỉ còn là ghi chú kinh doanh cho nhà đầu tư |
 | Đ13 (phần phí) | Phí, slot, sổ phí ra khỏi phạm vi build | Đ14 | Người dùng: vẫn phải thu phí thợ vào nhóm, có miễn phí thời gian đầu; chỉ FOMO/marketing và P00/G0 là ngoài phạm vi |
+| 00-ARCH §1 | "P01 không có SPEC riêng" | Đ16 | Quyết định P01 cần chỗ ghi có hợp đồng |
 | Đ11 (thứ tự) | `P01 → P04 → P02` | Đ13 | Agent trước: `P01 → P03 → P05 → P06`, P04 tối thiểu song song, Zalo sau |
 | Đề xuất Đ12 bản nháp (chat) | Hai hạng: thành viên trả tiền được ưu tiên 10 phút, nhóm mở cho thợ thường | Đ12 | Ai cũng mua thì ưu tiên mất nghĩa — người dùng bác |
 | `docs/DESIGN.md` v0.1 | Trợ lý BQL tổng quát: booking tiện ích, hỏi đáp, ticket | Đ01 | Người dùng chọn ngách sàn việc thợ; booking tiện ích vào Idea Vault; hỏi đáp chỉ còn phần quy chế trách nhiệm; ticket BQL là nhánh rẽ |
@@ -120,7 +125,7 @@ Lợi ích kinh tế của từng bên phải **nhìn thấy được trong sả
 | Gói | Nội dung | Tầng | Phụ thuộc | SPEC |
 | :-- | :-- | :-- | :-- | :-- |
 | P00 | ~~Kiểm chứng tay~~ — **ngoài phạm vi build (Đ13)**, bàn giao đội kinh doanh | — | — | [SPEC-P00](specs/SPEC-P00-Concierge-Validation.md) (tham khảo) |
-| P01 | Nền tảng: monorepo, Postgres, migrations, 3 adapter, **SimTransport + màn chat dev**, auth web, audit log | 🟠 | — | [01-CONTRACTS](specs/01-CONTRACTS.md) §1–§4, §8 · [OPERATIONS](specs/OPERATIONS.md) §2–§3 |
+| P01 | Nền tảng: monorepo, Postgres, migrations, 3 adapter, **SimTransport + màn chat dev**, auth web, audit log | 🟠 | — | [SPEC-P01](specs/SPEC-P01-Foundation.md) · [01-CONTRACTS](specs/01-CONTRACTS.md) §1–§4, §8 · [OPERATIONS](specs/OPERATIONS.md) §2–§3 |
 | P02 | Zalo Transport: worker, đăng nhập QR qua web, hàng đợi vào, outbox pacer, watchdog | 🔴 | P01 | [SPEC-P02](specs/SPEC-P02-Zalo-Transport.md) |
 | P03 | Agent cư dân (bước 1–3): khẩn cấp, chẩn đoán, phân loại trách nhiệm có trích dẫn, ticket BQL / ticket case | 🔴 hợp đồng · 🟠 thi công | P01, P02 | [SPEC-P03](specs/SPEC-P03-Resident-Agent.md) |
 | P04 | Dashboard BQL **tối thiểu**: 2 điểm duyệt, case + dòng thời gian agent, quy chế, duyệt thợ, **thợ & slot + sổ phí (Đ14)**, dữ liệu mô phỏng | 🟠 | P01 | [SPEC-P04](specs/SPEC-P04-Vendor-Console.md) |
@@ -141,7 +146,8 @@ Thứ tự bắt buộc (Đ13, Đ15): `P01 (nền tảng + SimTransport) → P03
 - [ ] 🖐 Người chốt tham số phí (Đ14, Đ15): `FREE_TRIAL_DAYS`, `SLOT_FEE_MONTHLY`, `SLOT_MIN_JOBS_PER_VENDOR`, `BQL_SHARE_PCT`, `MIN_EARNINGS_TO_FEE`, `MINUTES_PER_CASE_BASELINE`
 - [x] 🖐 Người dùng duyệt Đ15 (sổ lợi ích ba bên) — 2026-09-24
 - [ ] Viết SPEC-P08 (Đ15) + gate G17
-- [ ] 🖐 `git init` + remote riêng tư (luật §5.D yêu cầu commit sau mỗi việc)
+- [x] 🖐 `git init` + remote riêng tư `github.com/tuanank2112-crypto/lenqclaw` — commit nền `478bf32` đã push (2026-09-24)
+- [x] Viết [SPEC-P01](specs/SPEC-P01-Foundation.md) (Đ16)
 - [ ] P01 — nền tảng + SimTransport (G01–G03, G16)
 - [ ] P03 — Agent cư dân bước 0–3 (G08–G10)
 - [ ] P04 — Dashboard tối thiểu (G07)
@@ -156,6 +162,7 @@ Thứ tự bắt buộc (Đ13, Đ15): `P01 (nền tảng + SimTransport) → P03
 
 | File | Nội dung |
 | :-- | :-- |
+| [specs/SPEC-P01-Foundation.md](specs/SPEC-P01-Foundation.md) | Công cụ, compose dev, migrate/seed, adapter, máy trạng thái, SimTransport, auth 3 vai, máy đo, test P01 |
 | [specs/00-ARCHITECTURE.md](specs/00-ARCHITECTURE.md) | Mục tiêu, non-goals, pipeline v0.2 (8 bước, agent điều phối), bất biến BB-01…BB-11, router thứ tự đọc |
 | [specs/01-CONTRACTS.md](specs/01-CONTRACTS.md) | Layout repo, adapter, DDL, máy trạng thái cuốc, kiểu TS, tool agent, Transport, bảng lỗi |
 | [specs/SPEC-P00-Concierge-Validation.md](specs/SPEC-P00-Concierge-Validation.md) | Quy trình kiểm chứng tay, mẫu tin, số đo, ngưỡng G0 |

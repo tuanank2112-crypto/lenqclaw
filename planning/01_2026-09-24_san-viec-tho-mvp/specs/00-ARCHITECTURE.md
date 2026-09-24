@@ -20,7 +20,7 @@
 | 9 | [`OPERATIONS.md`](OPERATIONS.md) | Trước lần deploy đầu tiên | ❌ |
 | 10 | [`TESTING-ACCEPTANCE.md`](TESTING-ACCEPTANCE.md) | Trước khi báo "xong" bất kỳ gói nào | ❌ |
 
-P01 không có SPEC riêng: hợp đồng nằm ở `01-CONTRACTS.md` §1–§4 và `OPERATIONS.md` §2–§3.
+P01: [`SPEC-P01-Foundation.md`](SPEC-P01-Foundation.md) (Đ16) — đọc cùng `01-CONTRACTS.md` §1–§4, §8 và `OPERATIONS.md` §2–§3.
 
 ## 2. Mục tiêu
 
