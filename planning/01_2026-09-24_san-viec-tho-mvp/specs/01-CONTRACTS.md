@@ -265,3 +265,21 @@ Worker và core nói chuyện qua Postgres (bảng `inbound_events`, `outbox`, `
 | `RegulationUnavailable` | không truy hồi được quy chế | verdict `unclear` ⇒ ticket |
 | `TransportDeadError` | phiên Zalo `kicked`/`dead` | dừng gửi, giữ outbox `queued`, báo động (OPERATIONS §5) |
 | `RateLimitedError` | Zalo trả lỗi giới hạn / mã 221 / không có msgId | pacer lùi ≥30 phút cho tài khoản đó |
+
+## §2b. Nhà cung cấp LLM — Gemini mặc định (Đ18, 2026-09-24)
+
+`callModel` giữ NGUYÊN chữ ký §2 (vào/ra theo dạng Anthropic: `MessageParam`, `Tool`, `Message`, `Usage`) — core, agent, tool KHÔNG biết nhà cung cấp. Chỉ `adapters/model.ts` chọn và dịch.
+
+| Hạng mục | Chốt |
+| :-- | :-- |
+| Chọn nhà cung cấp | env `MODEL_PROVIDER` = `gemini` (mặc định) \| `anthropic` |
+| Gọi Gemini | `fetch` tới `https://generativelanguage.googleapis.com/v1beta/models/<model>:generateContent`, key qua header `x-goog-api-key` (CẤM đặt key trong URL — URL hay bị log). Đọc `GEMINI_API_KEY` chỉ trong `adapters/model.ts` |
+| Model | `MODEL_DEFAULT` (mặc định `gemini-3.6-flash` khi provider gemini, `claude-opus-5` khi anthropic); `MODEL_<ROUTE>` ghi đè. Trước mỗi lần chạy golden: probe model (một lời gọi ngắn) — model 429/503 lặp lại ⇒ đổi qua env, không sửa code |
+| Dịch vào | `system` ⇒ `systemInstruction`; `user`/`assistant` ⇒ `user`/`model`; `text` ⇒ `{text}`; `image` ⇒ `inlineData`; `tool_use` ⇒ `functionCall{name,args}`; `tool_result` ⇒ `functionResponse{name, response:{content, is_error}}` (tên lấy từ `tool_use` cùng id); `tools[].input_schema` ⇒ `functionDeclarations[].parametersJsonSchema`; bỏ `cache_control` (Gemini cache ngầm) |
+| Dịch ra | `parts[].text` ⇒ `text`; `parts[].functionCall` ⇒ `tool_use` với `id` do adapter sinh (`toolu_gm_<n>`), `input=args`; có `functionCall` ⇒ `stop_reason='tool_use'`, không ⇒ `end_turn`; `finishReason` `SAFETY`/`PROHIBITED_CONTENT`/`BLOCKLIST` hoặc `promptFeedback.blockReason` ⇒ `stop_reason='refusal'`; `MAX_TOKENS` ⇒ `max_tokens`. `usageMetadata` ⇒ `input_tokens`/`output_tokens`/`cache_read_input_tokens` (`cachedContentTokenCount`) |
+| Chữ ký suy nghĩ | Gemini 3 trả `thoughtSignature` cùng `functionCall` và BẮT BUỘC nhận lại ở lượt sau trong cùng vòng tool (thiếu ⇒ 400). Adapter giữ bảng `tool_use.id → thoughtSignature` trong bộ nhớ tiến trình và gắn lại khi dịch `tool_use` vào. Lịch sử nạp từ DB chỉ có text ⇒ không cần chữ ký |
+| Kiểm input tool | Gemini không có `strict` ⇒ trước khi `run`, mỗi tool kiểm `input` theo `input_schema` (trường `required`, kiểu, enum, không khoá lạ); sai ⇒ `tool_result is_error` mã `InvalidToolInput`, không chạy tool |
+| Lỗi | 429/500/503/504, lỗi mạng, timeout ⇒ `ModelUnavailableError` (retry tối đa 2 lần, lùi 1 s rồi 3 s); 400/401/403/404 ⇒ ném lỗi gốc (lỗi cấu hình, không retry) |
+| Nhánh `anthropic` | Giữ nguyên hành vi hiện có + SPEC-P03 §10.8 (fallback `default`, refusal) |
+
+CẤM: SDK/endpoint Gemini ngoài `adapters/model.ts` (máy đo biên canh chuỗi `generativelanguage.googleapis.com` và `@google/genai`); log key hay URL có key; để core rẽ nhánh theo nhà cung cấp.

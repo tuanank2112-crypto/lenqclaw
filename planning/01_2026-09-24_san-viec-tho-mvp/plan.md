@@ -107,6 +107,11 @@ Khi soạn handoff P01 lộ ra các quyết định 01-CONTRACTS chưa nói: tes
 Ghi ở [SPEC-P03 §10](specs/SPEC-P03-Resident-Agent.md): (a) `processInbound` đổi sang nhận-trước-xử-lý-sau, mỗi tin tối đa một lần, LLM không chạy trong transaction — vá thiết kế SPEC-P01 §6 (handler trong transaction + outbox ghi ngoài transaction ⇒ trả lời trùng khi lỗi); (b) truy hồi quy chế chỉ từ khoá (port build phase), embedding để trống vì stack chỉ có Claude; (c) đồng ý của cư dân kiểm tất định trong tool `open_service_case` — giữ bước "Đồng ý" theo SPEC hiện hành cho tới khi người chốt khác; (d) quy chế `QC-DEMO` + cư dân mô phỏng để chạy trên kênh giả lập; (e) chưa có `ANTHROPIC_API_KEY` ⇒ golden cần LLM trả `blocked` (mã 3), golden khẩn cấp tất định chạy trong `npm test`.
 **Lật được:** (c) khi người chốt bỏ bước đồng ý — chi phí thấp (một tool, một chuyển trạng thái); (b) khi chọn nhà cung cấp embedding — thêm cột dữ liệu, không đổi tool.
 
+### Đ18 — 2026-09-24 · LLM mặc định là Gemini, qua cùng adapter (người dùng chốt)
+Người dùng: "sử dụng key gemini" — máy không có credential Anthropic, chỉ có key Gemini. Hợp đồng ở [01-CONTRACTS §2b](specs/01-CONTRACTS.md): `callModel` giữ nguyên dạng vào/ra, chỉ `adapters/model.ts` dịch sang Gemini `generateContent` (functionCall ⇄ tool_use, giữ `thoughtSignature` trong vòng tool); `MODEL_PROVIDER=gemini` mặc định, `anthropic` vẫn chạy được. Model mặc định `gemini-3.6-flash` (build phase đo 2026-09-23: `3.5-flash` 429/503 liên tục, `3.6-flash` 200). Gemini không có `strict` ⇒ tool tự kiểm input theo schema.
+**Hệ quả:** golden `diagnosis`/`responsibility` chạy được bằng model thật khi có key trong `.env`; embedding Gemini (`gemini-embedding-001`) mở đường truy hồi lai — vẫn để Idea Vault (Đ17 b), chưa làm.
+**Lật được:** có — `MODEL_PROVIDER=anthropic` + key, đo lại golden. **Chi phí lật:** thấp (chỉ env).
+
 ### Quyết định bị thay thế
 | Mốc cũ | Phát biểu cũ | Thay bằng | Lý do |
 | :-- | :-- | :-- | :-- |
@@ -119,6 +124,7 @@ Ghi ở [SPEC-P03 §10](specs/SPEC-P03-Resident-Agent.md): (a) `processInbound` 
 | Đ13 (phần phí) | Phí, slot, sổ phí ra khỏi phạm vi build | Đ14 | Người dùng: vẫn phải thu phí thợ vào nhóm, có miễn phí thời gian đầu; chỉ FOMO/marketing và P00/G0 là ngoài phạm vi |
 | SPEC-P01 §6 "Xử lý" | `processInbound` gọi handler trong transaction khoá dòng | Đ17 (a) | Trả lời trùng khi handler lỗi; giữ khoá suốt lượt LLM |
 | 00-ARCH §1 | "P01 không có SPEC riêng" | Đ16 | Quyết định P01 cần chỗ ghi có hợp đồng |
+| Đ06 (LLM) | LLM mặc định Claude `claude-opus-5` | Đ18 | Chỉ có key Gemini; Claude giữ làm lựa chọn qua env |
 | Đ11 (thứ tự) | `P01 → P04 → P02` | Đ13 | Agent trước: `P01 → P03 → P05 → P06`, P04 tối thiểu song song, Zalo sau |
 | Đề xuất Đ12 bản nháp (chat) | Hai hạng: thành viên trả tiền được ưu tiên 10 phút, nhóm mở cho thợ thường | Đ12 | Ai cũng mua thì ưu tiên mất nghĩa — người dùng bác |
 | `docs/DESIGN.md` v0.1 | Trợ lý BQL tổng quát: booking tiện ích, hỏi đáp, ticket | Đ01 | Người dùng chọn ngách sàn việc thợ; booking tiện ích vào Idea Vault; hỏi đáp chỉ còn phần quy chế trách nhiệm; ticket BQL là nhánh rẽ |
