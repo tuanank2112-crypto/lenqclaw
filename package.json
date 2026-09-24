@@ -14,12 +14,14 @@
     "typecheck": "npm run build -w @lenqclaw/core && npm run typecheck --workspaces --if-present",
     "build": "npm run build -w @lenqclaw/core && npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
-    "test:db": "npm run db:migrate && npm run db:seed && npm run test:db -w @lenqclaw/core && npm run test:db -w @lenqclaw/web && npm run test:db -w @lenqclaw/zalo-worker --if-present",
+    "test:db": "npm run db:migrate && npm run db:seed && npm run db:seed:sim && npm run test:db -w @lenqclaw/core && npm run test:db -w @lenqclaw/web && npm run test:db -w @lenqclaw/zalo-worker --if-present",
     "db:migrate": "tsx packages/core/src/db/migrate.ts",
     "db:seed": "tsx packages/core/src/db/seed.ts",
+    "db:seed:sim": "node --import tsx -e \"process.env.DATA_MODE='sim'; const m=await import('./packages/core/src/db/seed-sim.ts'); const r=await m.runSeedSim(); console.log('seed-sim: kb_sections='+r.kbSections+' residents='+r.residents+' price_book='+r.priceBookRows); process.exit(0);\"",
     "create-admin": "tsx packages/core/src/scripts/create-admin.ts",
     "check:adapter-boundary": "node scripts/check_adapter_boundary.mjs",
     "check:agent-tools": "node scripts/check_agent_tools.mjs",
+    "eval:golden": "tsx scripts/eval_golden.mjs",
     "gate": "node scripts/gate.mjs"
   },
   "devDependencies": {
