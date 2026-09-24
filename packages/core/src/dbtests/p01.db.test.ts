@@ -53,9 +53,9 @@ describe('1) runMigrations — DB rong -> schema day du (SPEC-P01 §9)', () => {
     await sql('create schema public');
   });
 
-  it('lan dau: applied=1, moi bang ton tai', async () => {
+  it('lan dau: applied=2 (001_init.sql + 002_search.sql), moi bang ton tai', async () => {
     const result = await runMigrations();
-    expect(result.applied).toBe(1);
+    expect(result.applied).toBe(2);
 
     const rows = await sql<{ table_name: string }>(
       `select table_name from information_schema.tables where table_schema = 'public'`
