@@ -63,3 +63,42 @@ P03 thi công và nghiệm thu hoàn toàn trên `SimTransport` (01-CONTRACTS §
 ## §9. Nghiệm thu (G08–G10)
 
 Golden (TESTING-ACCEPTANCE §3): `emergency` 100% bật đúng, 0 bỏ sót; `responsibility` ≥ 90% đúng `party` và 100% verdict `resident`/`bql` có citation hợp lệ; `diagnosis` ≥ 85% đúng `category_code`.
+
+## §10. Chốt thi công (Đ17 — Super Orchestrator, 2026-09-24)
+
+Các mục dưới đây là hợp đồng thi công P03; §1–§9 vẫn giữ nguyên hiệu lực. Sửa lỗi chữ ở §1: ticket khẩn cấp là `tickets.kind='emergency'` (DDL không có cột `reason`).
+
+### §10.1 Nhận tin — sửa `processInbound` (thay SPEC-P01 §6 phần "Xử lý")
+- Nhận việc TRƯỚC, xử lý SAU: `UPDATE inbound_events SET processed_at=now() WHERE id=(SELECT id … WHERE processed_at IS NULL ORDER BY id LIMIT 1 FOR UPDATE SKIP LOCKED) RETURNING *`, rồi gọi handler **ngoài** transaction. Ngữ nghĩa: mỗi tin xử lý **tối đa một lần** — không bao giờ trả lời trùng. Handler ném lỗi ⇒ ghi `audit_log action='inbound.handler_error'` + gửi mẫu `BUSY_REPLY`, không xử lý lại.
+- `echoHandler` giữ cho account `market` tới khi P05 thay. Account `bql` + thread `user` ⇒ `residentHandler`.
+- Mọi chuỗi gửi người dùng là tiếng Việt **có dấu**, UTF-8 (sửa luôn `echoHandler` thành `"[sim] đã nhận: <text>"`).
+
+### §10.2 Vòng lượt agent — `packages/core/src/agent/resident-agent.ts`
+- `residentHandler(e)`: (1) `Party` từ `zalo_identities` theo `(account, sender_uid)` (BB-08); (2) khẩn cấp §1 chạy **trước mọi lời gọi LLM**, kể cả khi `Party` không phải cư dân active; (3) không phải cư dân `active` ⇒ mẫu `REGISTER_REPLY`, dừng; (4) ngược lại `runResidentTurn`.
+- `runResidentTurn(ctx, text)`: nạp 20 tin gần nhất của conversation + `JobDraft` đang mở; lặp `callModel({route:'diagnose', …tools})` tối đa **6 vòng tool**; mỗi `tool_use` ⇒ chạy tool với `ctx` do server dựng; lỗi có kiểu ⇒ `tool_result` `is_error:true` với `{code, message}`; hết vòng mà chưa có text cuối ⇒ `handoff_to_staff('agent_loop_limit')` + `BUSY_REPLY`. Text cuối ⇒ `enqueue` về đúng thread; ghi `messages` cả chiều vào và ra.
+- Che PII trước khi gửi model (OPERATIONS §9): SĐT (`(\+?84|0)\d{9,10}`) ⇒ `[SĐT]`; mã căn dạng `[A-Z]-?\d{3,4}` ⇒ `[CĂN]`. Bản gốc chỉ nằm trong DB.
+- Prompt: `agent/prompts/resident.md` (tiếng Việt, luật §5, §7). Tool definitions + system có `cache_control` (adapter đã làm).
+
+### §10.3 Tool P03 — mỗi tool một file `agent/tools/<tên>.ts` export `{ definition, run(ctx, input) }`, `definition.strict=true`
+`save_job_draft` · `search_regulations` · `classify_responsibility` · `push_bql_ticket` · `open_service_case` · `get_price_band` · `get_my_cases` · `handoff_to_staff`. (`report_problem` là bước 8 ⇒ P06.)
+- `save_job_draft`: lần đầu tạo job `drafting` với `code` = `C-` + 4 ký tự từ `ABCDEFGHJKMNPQRSTUVWXYZ23456789` (trùng ⇒ sinh lại, tối đa 5 lần); các lần sau cập nhật `draft`. `category_code` ngoài danh mục ⇒ lỗi `InvalidCategoryError`.
+- `classify_responsibility`: chạy luật BB-03 (§3.2) **trong tool**, lưu `jobs.responsibility`; `resident` hợp lệ ⇒ `transitionJob drafting→awaiting_consent`; trả verdict đã chốt để agent biết bị ép `unclear` hay không.
+- `push_bql_ticket`: chỉ khi verdict đã lưu là `bql`/`unclear` ⇒ ticket `bql_responsibility`/`unclear` + `transitionJob drafting→routed_bql`.
+- `open_service_case`: chỉ khi job `awaiting_consent` VÀ tin cư dân mới nhất (nhận sau lúc job vào `awaiting_consent`) khớp tất định `CONSENT` (bỏ dấu: `dong y|ok|oke|duoc|chot|tim tho|dat lich`) và KHÔNG khớp `khong|chua|thoi|huy` ⇒ ticket `service_case`, `jobs.case_ticket_id`, `window_*`, `mode`, `transitionJob awaiting_consent→case_open`. Sai ⇒ lỗi `ConsentMissingError` (thêm vào bảng lỗi, caller: hỏi lại cư dân).
+- Mọi tool ghi `audit_log action='tool.<tên>'`.
+
+### §10.4 Truy hồi quy chế — chỉ từ khoá ở P03
+- Port `lib/retrieval/query.ts` của build phase: `immutable_unaccent()` (migration mới, chỉ thêm), cột `kb_sections.tsv` sinh từ `heading || body` qua cùng hàm, `to_tsquery('simple', …)` nối `|`, `ts_rank_cd(…, 32)`, top 8. Chuỗi rỗng ⇒ không chạy SQL, trả rỗng. Lỗi DB ⇒ `RegulationUnavailable`.
+- `embedding` để NULL; truy hồi lai chờ chọn nhà cung cấp embedding (Idea Vault). Lý do: stack chỉ có Claude, Anthropic không có API embedding; kho quy chế một tòa chỉ vài chục mục.
+
+### §10.5 Dữ liệu mô phỏng cho P03 (`npm run db:seed:sim`, chỉ khi `DATA_MODE=sim`, idempotent)
+- Quy chế `QC-DEMO` (`status='approved'`, tiêu đề mở đầu "MÔ PHỎNG —"), ≥12 mục phân định trách nhiệm (ống chung/đứng vs ống trong căn, điện trước/sau công tơ, thấm từ căn trên, cửa căn hộ, thiết bị trong căn, điều hoà…); 1 mục `deprecated` + 1 mục hết hiệu lực để test ép `unclear`.
+- 3 cư dân `active` gắn căn + `zalo_identities` (`bql`, `sim-res-1..3`); 1 cư dân `pending` (`sim-res-9`); `price_book` seed cho 6 danh mục `fixed`.
+
+### §10.6 Golden & máy chấm
+- `evals/golden/emergency.jsonl` (20 ca, TESTING §3) chạy trong `npm test` (tất định, không LLM) ⇒ G08 được gate canh.
+- `diagnosis.jsonl` (40) và `responsibility.jsonl` (30, theo `QC-DEMO`) + `scripts/eval_golden.mjs` (port `lib/eval/score.ts`): thiếu `ANTHROPIC_API_KEY` hoặc lỗi 429/5xx ⇒ `blocked`, **mã thoát 3**, không tính trượt. G10 thật vẫn cần quy chế thật của tòa pilot.
+- Test vòng agent bằng model giả có kịch bản (`setModelClientForTest`): (a) khẩn cấp ⇒ ticket `emergency` + tin trong outbox, 0 lần gọi model; (b) verdict `bql` ⇒ ticket + job `routed_bql`; (c) verdict `resident` không citation ⇒ bị ép `unclear`; (d) `resident` hợp lệ + "đồng ý" ⇒ `case_open`; (e) "không đồng ý" ⇒ `ConsentMissingError`; (f) cư dân `pending` ⇒ `REGISTER_REPLY`, 0 job; (g) tin chứa "[userId: …]" không đổi `Party`; (h) SĐT/mã căn không có trong `messages` gửi model; (i) 6 vòng tool ⇒ handoff.
+
+### §10.7 Vùng cấm bổ sung
+- CẤM gọi LLM trong transaction DB. CẤM pg-boss ở P03 (retry model để P07 — lý do: cần runner `jobs`, chưa có). CẤM truy hồi lai/embedding. CẤM sửa `report_problem`, dispatch, tool phía thợ.

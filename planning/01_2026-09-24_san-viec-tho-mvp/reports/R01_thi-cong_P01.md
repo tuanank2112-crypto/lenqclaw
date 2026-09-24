@@ -75,4 +75,4 @@ Không gói nào chạm quyết định thiếu trong SPEC (không có gói 🔴
 ⭐ Nên làm trước: chốt câu hỏi mở ở mục 6, vì nó quyết định P01 đã "xong" theo nghĩa nào trước khi mở gói tiếp theo.
 ⏸ Chưa làm: G16 (happy_path 0→8), toàn bộ agent/tool/pipeline (P02/P03/P05/P06), Zalo thật (P02), dashboard thật (P04), slot/ledger (P08) — đúng như Vùng cấm SPEC-P01 §10 và thứ tự gói ở `plan.md` §3.
 
-⏳ Chờ người duyệt.
+🔁 SỬA: D1 + D2 (chặn G01 — máy đo biên adapter/PII bỏ lọt import nhiều dòng, `pg/lib/*`, khoá `phone?:`…; SO đo lại xác nhận) · kèm D3–D10, G1, G3 theo R02 · D5 + D8 sửa bằng SPEC-P03 §10.1 (Đ17 a) · thêm test unit cookie giả mạo (đổi role giữ chữ ký, chữ ký rỗng/thiếu, đổi exp) · SO · 2026-09-24 23:13:19

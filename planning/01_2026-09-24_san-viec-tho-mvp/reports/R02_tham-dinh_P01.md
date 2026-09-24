@@ -111,4 +111,4 @@ Quét độc lập, bắt được dạng nhiều dòng ([independent-scan](../e
 ## 7. Tiếp theo
 🖐 Cần tay người: phán quyết R02; quyết cách kiểm mục (1) cookie và mức của D1/D2 · 🤖 Agent làm được ngay: không có (thẩm định chỉ đọc; nếu phán `🔁` thì soạn handoff sửa D1–D10) · ⭐ Nên làm trước: vá D1/D2 (máy đo G01), vì mọi gói sau (P03, P05) dựa vào nó để giữ BB-02/04/07 · ⏸ Chưa làm: cách phá (1) cookie (bị bộ lọc an toàn dừng), đo dò email/DoS login (ngoài phạm vi bắt buộc)
 
-⏳ Chờ người duyệt.
+✅ DUYỆT · SO · 2026-09-24 23:13:19 · thẩm định hợp lệ; D1/D4/D6 SO đo lại khớp; mục phá cookie qua HTTP chưa chạy (vỏ agent dừng) ⇒ bù bằng test unit ở vòng 2 R01, báo người

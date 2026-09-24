@@ -103,6 +103,10 @@ Lợi ích kinh tế của từng bên phải **nhìn thấy được trong sả
 Khi soạn handoff P01 lộ ra các quyết định 01-CONTRACTS chưa nói: test không DB (`npm test`) tách khỏi test cần DB (`npm run test:db`, thiếu `DATABASE_URL` ⇒ đỏ, không skip); phiên đăng nhập = cookie HMAC tự viết, không NextAuth; SQL thuần, không ORM; SimTransport ở P01 chạy vòng vọng lại (`echoHandler`) để P03 chỉ thay handler; seed nền 1 tòa/20 căn/12 danh mục; DB dev cổng `127.0.0.1:55432`. Ghi tại [SPEC-P01](specs/SPEC-P01-Foundation.md). Kèm vá lỗi DDL: comment trong `job_categories` nuốt mất cột `default_mode` (01-CONTRACTS §4).
 **Lật được:** mọi mục (chưa có mã phụ thuộc). **Chi phí lật:** thấp.
 
+### Đ17 — 2026-09-24 · Chốt thi công P03 (Super Orchestrator, 🔴)
+Ghi ở [SPEC-P03 §10](specs/SPEC-P03-Resident-Agent.md): (a) `processInbound` đổi sang nhận-trước-xử-lý-sau, mỗi tin tối đa một lần, LLM không chạy trong transaction — vá thiết kế SPEC-P01 §6 (handler trong transaction + outbox ghi ngoài transaction ⇒ trả lời trùng khi lỗi); (b) truy hồi quy chế chỉ từ khoá (port build phase), embedding để trống vì stack chỉ có Claude; (c) đồng ý của cư dân kiểm tất định trong tool `open_service_case` — giữ bước "Đồng ý" theo SPEC hiện hành cho tới khi người chốt khác; (d) quy chế `QC-DEMO` + cư dân mô phỏng để chạy trên kênh giả lập; (e) chưa có `ANTHROPIC_API_KEY` ⇒ golden cần LLM trả `blocked` (mã 3), golden khẩn cấp tất định chạy trong `npm test`.
+**Lật được:** (c) khi người chốt bỏ bước đồng ý — chi phí thấp (một tool, một chuyển trạng thái); (b) khi chọn nhà cung cấp embedding — thêm cột dữ liệu, không đổi tool.
+
 ### Quyết định bị thay thế
 | Mốc cũ | Phát biểu cũ | Thay bằng | Lý do |
 | :-- | :-- | :-- | :-- |
@@ -113,6 +117,7 @@ Khi soạn handoff P01 lộ ra các quyết định 01-CONTRACTS chưa nói: tes
 | Đ07 | P00/G0 chặn thi công P05 | Đ13 | P00/G0 là việc kinh doanh, ngoài phạm vi build |
 | Đ12 | Slot tháng đồng giá là hợp đồng kỹ thuật (bảng, luật dispatch, G15) | Đ13 | Chỉ còn là ghi chú kinh doanh cho nhà đầu tư |
 | Đ13 (phần phí) | Phí, slot, sổ phí ra khỏi phạm vi build | Đ14 | Người dùng: vẫn phải thu phí thợ vào nhóm, có miễn phí thời gian đầu; chỉ FOMO/marketing và P00/G0 là ngoài phạm vi |
+| SPEC-P01 §6 "Xử lý" | `processInbound` gọi handler trong transaction khoá dòng | Đ17 (a) | Trả lời trùng khi handler lỗi; giữ khoá suốt lượt LLM |
 | 00-ARCH §1 | "P01 không có SPEC riêng" | Đ16 | Quyết định P01 cần chỗ ghi có hợp đồng |
 | Đ11 (thứ tự) | `P01 → P04 → P02` | Đ13 | Agent trước: `P01 → P03 → P05 → P06`, P04 tối thiểu song song, Zalo sau |
 | Đề xuất Đ12 bản nháp (chat) | Hai hạng: thành viên trả tiền được ưu tiên 10 phút, nhóm mở cho thợ thường | Đ12 | Ai cũng mua thì ưu tiên mất nghĩa — người dùng bác |
