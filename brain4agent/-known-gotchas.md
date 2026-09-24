@@ -14,4 +14,11 @@ Tổng hợp các lỗi khó, các lưu ý dị biệt hoặc cách workaround �
 
 ## Môi trường & Config
 
-- (Chưa có mã nguồn — cập nhật khi gặp.)
+- **G08 — Máy đo tĩnh quét theo từng dòng thì bỏ lọt.** `check_adapter_boundary` bản đầu cho qua `import {
+ Pool
+} from 'pg'`, `pg/lib/client`, `pg-pool`, `INSERT
+ INTO outbox`; `check_agent_tools` cho qua `phone?:`, khoá có nháy. Máy đo phải quét cả nội dung file và có ca ĐỎ cho từng dạng (`planning/01_2026-09-24_san-viec-tho-mvp/evidence/P01-v2/checker-bypass-fixed.txt`). Kiểm mã thoát trực tiếp — `script | tail` trả mã của `tail`.
+- **G09 — Trang Next đọc biến môi trường lúc chạy phải `force-dynamic`.** `/dev/sim` đọc `DATA_MODE`; bản build prerender tĩnh ⇒ 404 ở `next start` dù `next dev` trả 200. Luôn đo bằng `next build && next start`.
+- **G10 — Không chạy handler (nhất là LLM) trong transaction khoá dòng.** `processInbound` bản đầu: handler trong `tx`, `enqueue` ghi outbox qua kết nối khác ⇒ lỗi thì trả lời trùng; 12 lời gọi đồng thời cạn pool, treo. Nhận-trước (`UPDATE … RETURNING`) rồi xử lý ngoài transaction.
+- **G11 — Windows:** `spawn('npm', …)` cần `shell: true` (không thì `EINVAL`). Máy dev có container `zalo-crm` giữ cổng 3080 ⇒ Postgres dev dùng `127.0.0.1:55432`.
+- **G12 — Ghi audit "thành công" SAU bước có thể hỏng cuối cùng.** Login bản đầu ghi `auth.login.ok` trước khi tạo cookie ⇒ thiếu `SESSION_SECRET` vẫn có dòng ok.

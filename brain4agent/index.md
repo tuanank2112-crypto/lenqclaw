@@ -24,7 +24,8 @@ Khi nhận nhiệm vụ, Agent tra cứu bảng này để đọc **chính xác*
 | **Kiến trúc dữ liệu & Data Flow** | [`-data-architecture.md`](-data-architecture.md) | Cấu trúc dữ liệu, cơ chế lưu trữ và State Flow. |
 | **Lộ trình nâng cấp & Ý tưởng** | [`roadmap.md`](roadmap.md) | Active tasks, Kho Ý Tưởng (Idea Vault) và các mốc đã hoàn thành. |
 | **Lịch sử cập nhật** | [`changelog.md`](changelog.md) | Lịch sử Semantic Releases (vX.Y.Z). |
-| **Tài liệu kỹ thuật module** | [`docs/`](../docs/) | Thư mục chứa tài liệu chuyên trách 1-1 cho từng module. |
+| **Tài liệu kỹ thuật module** | [`docs/core.md`](../docs/core.md) · [`docs/web.md`](../docs/web.md) · [`docs/zalo-worker.md`](../docs/zalo-worker.md) | 1-1 với `packages/core`, `apps/web`, `apps/zalo-worker`: cấu trúc, lệnh, luật khi sửa. |
+| **Cổng kiểm tra** | `npm run gate` | typecheck → build → test → `check_adapter_boundary` → `check_agent_tools` (TESTING-ACCEPTANCE §1). Test cần DB: `npm run test:db`. |
 
 ---
 
@@ -55,8 +56,15 @@ project-root/
 │   └── project-intro.md              # [INTRO] Tổng quan dự án & Tech stack
 ├── planning/                         # [QUẢN LÝ KẾ HOẠCH NÂNG CẤP] Chứa các bản kế hoạch RFCs
 ├── .agents/skills/                   # [WORKSPACE SKILLS] Kỹ năng chuyên dụng cục bộ dự án
-├── docs/                             # DESIGN.md (v0.1 cũ), SYSTEM-MAP.md, images/01…08
-└── (dự kiến, chưa tạo) apps/web · apps/zalo-worker · packages/core · db/migrations · scripts · evals/golden
+├── docs/                             # core.md · web.md · zalo-worker.md (module 1-1), SYSTEM-MAP.md, DESIGN.md (v0.1 cũ), images/01…10
+├── apps/web/                         # Next.js 15: auth 3 vai (cookie HMAC), /dev/sim, trang tạm /tickets /gate — P01
+├── apps/zalo-worker/                 # khung rỗng, chờ P02
+├── packages/core/src/                # adapters/{db,model,transport} · domain/{types,errors,password} · services/{job-state,audit} · sim/ · db/{migrate,seed}
+├── db/migrations/                    # 001_init.sql (toàn bộ DDL 01-CONTRACTS §4)
+├── scripts/                          # check_adapter_boundary.mjs · check_agent_tools.mjs · gate.mjs
+├── evals/scenarios/                  # echo.jsonl (kịch bản kênh giả lập)
+├── compose.yaml · compose.dev.yaml   # Postgres pgvector:pg16; dev publish 127.0.0.1:55432
+└── package.json                      # npm workspaces (apps/*, packages/*), v0.0.1
 ```
 
 Layout mã nguồn dự kiến: `planning/01_2026-09-24_san-viec-tho-mvp/specs/01-CONTRACTS.md` §1.

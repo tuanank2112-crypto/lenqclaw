@@ -2,7 +2,7 @@
 
 Tài liệu thiết kế về cấu trúc dữ liệu, cơ chế lưu trữ bền vững (Persistence Layer) và luồng luân chuyển dữ liệu đa tầng.
 
-> **Trạng thái 2026-09-24: THIẾT KẾ, CHƯA CÓ DB.** Nguồn chân lý DDL: [`planning/01_2026-09-24_san-viec-tho-mvp/specs/01-CONTRACTS.md`](../planning/01_2026-09-24_san-viec-tho-mvp/specs/01-CONTRACTS.md) §4–§5. File này chỉ tóm tắt.
+> **Trạng thái 2026-09-24: DB có thật từ P01** — `db/migrations/001_init.sql` áp đủ DDL (33 bảng), runner `schema_migrations` + checksum, seed nền; pg-boss và embedding CHƯA dùng. Nguồn chân lý DDL: [`planning/01_2026-09-24_san-viec-tho-mvp/specs/01-CONTRACTS.md`](../planning/01_2026-09-24_san-viec-tho-mvp/specs/01-CONTRACTS.md) §4–§5. File này chỉ tóm tắt.
 
 ## 1. Các Tầng Lưu Trữ (Data Persistence Stores)
 
@@ -23,7 +23,7 @@ Nhóm bảng:
 - **BQL:** `tickets`, `kb_documents`, `kb_sections` (tsv + embedding), `audit_log`.
 
 Luồng:
-1. Kênh (`SimTransport` khi phát triển, Zalo worker khi chạy thật — Đ13) → `inbound_events` (chống trùng) → pg-boss theo làn thread → pipeline core.
+1. Kênh (`SimTransport` khi phát triển, Zalo worker khi chạy thật — Đ13) → `inbound_events` (chống trùng) → `processInbound`: nhận-trước bằng `UPDATE … SET processed_at … RETURNING`, handler chạy NGOÀI transaction, mỗi tin tối đa một lần (Đ17 a) → pipeline core. pg-boss dời sang P07.
 2. Core → `outbox` → pacer trong worker → Zalo. Không đường tắt (BB-04).
 3. Ticket là trục (Đ10): `bql_responsibility`/`unclear` (BQL xử lý) · `service_case` (theo dõi việc trong căn) · `access_request` (BQL duyệt/từ chối). Cuốc đi `drafting → awaiting_consent → case_open → published → held → confirmed → access_pending → access_granted → dispatched → in_progress → awaiting_acceptance → accepted → closed` bằng `UPDATE … WHERE status=<from>` + `job_events` trong một transaction (BB-05, BB-09, BB-11).
 4. Cuốc `closed` (tool `close_case`) → cập nhật `price_book` và `vendor_scores` → dùng lại khi đăng cuốc (khung giá, bước 4) và khi lọc thợ đủ điều kiện (bước 5).

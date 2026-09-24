@@ -1,7 +1,7 @@
 {
   "current_version": "0.0.1",
   "brain_template_version": "1.7.1",
-  "system_status": "planning",
+  "system_status": "building",
   "last_verification": {
     "timestamp": "2026-09-24T13:32:07.935Z",
     "grade": "Grade A Initialized"
@@ -29,5 +29,22 @@
   "owner": {
     "name": "",
     "license": ""
-  }
+  },
+  "last_milestone": {
+    "id": "P01",
+    "verdict": "approved",
+    "at": "2026-09-24",
+    "gates_local": [
+      "G01",
+      "G02",
+      "G03"
+    ],
+    "tests": {
+      "unit": 28,
+      "db": 12,
+      "fail": 0,
+      "skip": 0
+    }
+  },
+  "next": "P03"
 }

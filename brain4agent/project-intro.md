@@ -2,7 +2,7 @@
 
 ## 0. Bản chất repo
 
-`lenqclaw` là **sàn việc thợ trong tòa nhà chạy trên Zalo**, pilot 1–2 tòa. Tính đến 2026-09-24 repo **chưa có mã nguồn**; mọi thiết kế nằm trong hồ sơ [`planning/01_2026-09-24_san-viec-tho-mvp/`](../planning/01_2026-09-24_san-viec-tho-mvp/plan.md).
+`lenqclaw` là **sàn việc thợ trong tòa nhà chạy trên Zalo**, pilot 1–2 tòa. Từ 2026-09-24 repo có **mã nền P01** (monorepo, DB, adapter, auth, kênh giả lập — chưa có agent); git ở `github.com/tuanank2112-crypto/lenqclaw` (private). Thiết kế nằm trong hồ sơ [`planning/01_2026-09-24_san-viec-tho-mvp/`](../planning/01_2026-09-24_san-viec-tho-mvp/plan.md).
 
 Nguồn gốc: phân tích OpenClaw (extension `zalouser`) và ZaloClaw (monas-team) khi dùng tài khoản Zalo cá nhân, rồi thu hẹp dần từ "trợ lý thay BQL" (`docs/DESIGN.md` v0.1) xuống một ngách có người trả tiền. Bối cảnh chiến lược và các sơ đồ: [`docs/SYSTEM-MAP.md`](../docs/SYSTEM-MAP.md).
 
@@ -23,7 +23,8 @@ Phạm vi build (Đ13, Đ14): agent — pipeline, tool, máy trạng thái, kên
 - **Kênh:** Zalo cá nhân qua `zca-js` (pin đúng phiên bản), 2 tài khoản `bql` và `market`, tiến trình riêng `apps/zalo-worker`.
 - **Lõi:** TypeScript Node 22, `packages/core` — pipeline v0.2 (8 bước, agent điều phối), tool có luật cứng bên trong, 3 adapter (db, model, transport).
 - **LLM:** Claude qua `@anthropic-ai/sdk`, mặc định `claude-opus-5`, prompt caching; đổi được theo route.
-- **Data Persistence:** PostgreSQL 16 + pgvector + pg-boss, Docker, VPS Việt Nam IP tĩnh.
+- **Data Persistence:** PostgreSQL 16 + pgvector + pg-boss, Docker, VPS Việt Nam IP tĩnh. SQL thuần (driver `pg`), không ORM.
+- **Công cụ:** npm workspaces, `tsx` chạy CLI, `vitest` (`npm test` không DB, `npm run test:db` cần DB), `npm run gate`. Kênh giả lập `SimTransport` + `/dev/sim` thay Zalo khi phát triển agent (Đ13).
 
 ## 3. Triết lý thiết kế
 

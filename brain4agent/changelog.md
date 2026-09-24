@@ -18,11 +18,15 @@ Tất cả các quyết định kiến trúc và lịch sử nâng cấp phiên 
 - Đ15 Sổ lợi ích ba bên hiện trong hệ thống: phiếu hoàn thành (cư dân), bảng thu nhập tháng (thợ), thẻ "Hiệu quả tháng" (BQL), luật cân bằng slot `MIN_EARNINGS_TO_FEE`. **Duyệt 2026-09-24** ("gần đúng ý").
 - Đ14 Phí vào nhóm TRONG phạm vi (người dùng sửa Đ13): slot tháng đồng giá theo (tòa × nhóm nghề), trần + danh sách chờ, ai "nhận" trước thắng, slot đầu dùng thử miễn phí `FREE_TRIAL_DAYS` (1 lần); ghi sổ `ledger_entries` (slot_fee, bql_share).
 - Đ13 Trọng tâm = xây agent: kinh doanh (phí, slot, FOMO, P00/G0) ra khỏi phạm vi build; agent phát triển trên `SimTransport` trước, Zalo sau; dashboard tối thiểu; thứ tự P01 → P03 → P05 → P06.
+- Đ16 P01 có SPEC riêng (`SPEC-P01-Foundation.md`): test không DB tách `test:db`, cookie HMAC tự viết, SQL thuần, SimTransport vọng lại, seed nền.
+- Đ17 Chốt thi công P03 (`SPEC-P03` §10): `processInbound` nhận-trước-xử-lý-sau; truy hồi quy chế chỉ từ khoá; đồng ý của cư dân kiểm tất định trong tool; quy chế `QC-DEMO` mô phỏng; golden cần LLM trả `blocked` khi thiếu key.
 ### Superseded
+- `processInbound` gọi handler trong transaction khoá dòng (SPEC-P01 §6 bản đầu) — thay bởi Đ17 (a): gây trả lời trùng và kẹt pool khi đồng thời.
 - Phí theo cuốc, slot tháng, sổ phí, cổng G0 chặn P05 — ra khỏi phạm vi build (Đ13).
 - Pipeline 10 bước bản đầu (7 bước "dịch vụ tất định", tự cấp thẻ vào tòa, nhắn riêng top 3 thợ) — thay bởi Đ10.
 - `docs/DESIGN.md` v0.1 (trợ lý BQL tổng quát) bị thu hẹp bởi Đ01.
 ### Added
+- **P01 nền tảng (mã nguồn đầu tiên):** `apps/web`, `apps/zalo-worker` (khung), `packages/core`, `db/migrations/001_init.sql`, `scripts/{check_adapter_boundary,check_agent_tools,gate}.mjs`, `compose*.yaml`, `evals/scenarios/echo.jsonl`; `docs/core.md`, `docs/web.md`, `docs/zalo-worker.md`. Repo git + GitHub private.
 - `docs/images/09-dashboard-bql-mockup.png`, `docs/images/10-kinh-te-ba-ben.png`.
 - `docs/SYSTEM-MAP.md` + `docs/images/01…08` (kiến trúc, luồng, nhân rộng, vòng quay, hai agent, giá trị agent, poster ngách, pipeline chuẩn).
 

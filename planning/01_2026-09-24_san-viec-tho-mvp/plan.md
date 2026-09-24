@@ -153,7 +153,7 @@ Thứ tự bắt buộc (Đ13, Đ15): `P01 (nền tảng + SimTransport) → P03
 - [ ] Viết SPEC-P08 (Đ15) + gate G17
 - [x] 🖐 `git init` + remote riêng tư `github.com/tuanank2112-crypto/lenqclaw` — commit nền `478bf32` đã push (2026-09-24)
 - [x] Viết [SPEC-P01](specs/SPEC-P01-Foundation.md) (Đ16)
-- [ ] P01 — nền tảng + SimTransport (G01–G03; phần P01 của G16 = `runScenario(echo.jsonl)`) — thi công xong `e585851`, chờ thẩm định H02
+- [x] P01 — nền tảng + SimTransport (G01–G03 ✅ local; phần P01 của G16 = `runScenario(echo.jsonl)`) — `2cfbbe2`, R01 ✅ 2026-09-24 23:39:41 (vòng 2 sau thẩm định R02)
 - [ ] P03 — Agent cư dân bước 0–3 (G08–G10)
 - [ ] P04 — Dashboard tối thiểu (G07)
 - [ ] P05 — Agent bước 4–7 (G11, G12, G12b)

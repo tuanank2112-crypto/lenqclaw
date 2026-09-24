@@ -40,9 +40,9 @@ Chấm bằng `scripts/eval_golden.mjs` (một bộ chấm duy nhất, mẫu t�
 
 | Gate | Nội dung | local | vps |
 | :-- | :-- | :-- | :-- |
-| G01 | Cổng §1 xanh trên cây sạch | ⬜ | ⬜ |
-| G02 | Migrations từ rỗng + seed | ⬜ | ⬜ |
-| G03 | Auth 3 vai + audit log | ⬜ | ⬜ |
+| G01 | Cổng §1 xanh trên cây sạch | ✅ [R01](../reports/R01_thi-cong_P01.md) | ⬜ |
+| G02 | Migrations từ rỗng + seed | ✅ [R01](../reports/R01_thi-cong_P01.md) | ⬜ |
+| G03 | Auth 3 vai + audit log | ✅ [R01](../reports/R01_thi-cong_P01.md) | ⬜ |
 | G04 | Transport: chống trùng, nhận diện, ảnh an toàn | ⬜ | ⬜ |
 | G05 | Pacer đúng bảng §5 trong mô phỏng 50 tin/20 người | ⬜ | ⬜ |
 | G06 | Watchdog: 3003, 1006, im lặng 20 phút; nhường người thật | ⬜ | ⬜ |

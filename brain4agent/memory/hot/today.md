@@ -31,7 +31,14 @@ Phân tích OpenClaw + ZaloClaw (monas-team) với tài khoản Zalo cá nhân �
 
 - Người dùng duyệt Đ15 ("tốt, đã gần đúng ý") và yêu cầu cập nhật não ⇒ ghi Đ15 vào plan.md, thêm gói P08 (SPEC-P08 chưa viết), đồng bộ kernel/roadmap/changelog/index/SYSTEM-MAP bằng skill `nao-dong-bo`.
 
+- **Git + GitHub:** tạo repo private `github.com/tuanank2112-crypto/lenqclaw` qua GitHub API (gh CLI chưa đăng nhập; dùng credential Git Credential Manager). `git init -b main`, commit nền `478bf32` đã push.
+- **Đ16 — SPEC-P01:** soạn handoff P01 lộ ra quyết định chưa có trong 01-CONTRACTS ⇒ viết `specs/SPEC-P01-Foundation.md` (test không DB tách `test:db`, cookie HMAC, SQL thuần, SimTransport vọng lại, seed nền, DB dev `127.0.0.1:55432`); vá DDL `job_categories` mất cột `default_mode`. Commit `b7e907f`.
+- **P01 xong:** worker 🟠 thi công theo H01 (30 test) → thẩm định đối kháng H02 (🔴, agent khác) tìm D1/D2 chặn (máy đo bỏ lọt import nhiều dòng, `pg/lib/*`, khoá `phone?:`) + 8 lỗi nên sửa → R01 🔁 → vòng 2 vá hết (40 test) → SO đo lại trên DB rỗng + cây cố tình hỏng ⇒ R01 ✅, R02 ✅. G01–G03 ✅ local. Đồng bộ não (skill `nao-dong-bo`) + docs module `docs/{core,web,zalo-worker}.md`.
+- **Đ17 — chốt thi công P03** ở SPEC-P03 §10 (nhận-trước-xử-lý-sau đã làm luôn ở vòng 2 P01; truy hồi từ khoá; đồng ý tất định; QC-DEMO; golden LLM `blocked` khi thiếu key).
+- Thẩm định chưa chạy được phần giả mạo cookie qua HTTP (vỏ agent tự dừng) ⇒ bù bằng test unit `verifySessionCookie`; đã báo người.
+
 ### ⏭ Treo / cần người
-- Giữ hay bỏ bước cư dân "Đồng ý"; chốt tham số phí + `MIN_EARNINGS_TO_FEE`; viết SPEC-P08; `git init`.
-- Repo chưa là git repo ⇒ chưa commit được.
+- `ANTHROPIC_API_KEY` chưa có ⇒ golden diagnosis/responsibility sẽ `blocked`.
+- Trạng thái `unassigned`/`disputed` chưa có đường ra (01-CONTRACTS §5) — chốt khi soạn P05/P06.
+- Giữ hay bỏ bước cư dân "Đồng ý"; chốt tham số phí + `MIN_EARNINGS_TO_FEE`; viết SPEC-P08.
 - Cần quy chế thật của tòa pilot để làm golden `responsibility` (G10).

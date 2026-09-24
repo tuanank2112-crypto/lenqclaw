@@ -16,8 +16,8 @@ Thứ tự (Đ13, Đ15): `P01 → P03 → P05 → P06 → P08`; P04 tối thiể
 - [x] 🖐 Đ15: sổ lợi ích ba bên hiện trong hệ thống — 2026-09-24 ("gần đúng ý", tinh chỉnh khi viết SPEC-P08)
 - [ ] 🖐 Chốt `FREE_TRIAL_DAYS`, `SLOT_FEE_MONTHLY`, `SLOT_MIN_JOBS_PER_VENDOR`, `BQL_SHARE_PCT`, `MIN_EARNINGS_TO_FEE`, `MINUTES_PER_CASE_BASELINE`
 - [ ] Viết SPEC-P08 "Sổ lợi ích ba bên" + gate G17
-- [ ] 🖐 `git init` + remote riêng tư
-- [ ] P01 — Nền tảng + SimTransport (chat giả lập `/dev/sim`, kịch bản `evals/scenarios`) (🟠)
+- [x] `git init` + remote private `github.com/tuanank2112-crypto/lenqclaw` — 2026-09-24
+- [x] P01 — Nền tảng + SimTransport (chat giả lập `/dev/sim`, kịch bản `evals/scenarios`) — G01–G03 ✅ local, 2026-09-24
 - [ ] P04 — Dashboard BQL tối thiểu + thợ & slot + sổ phí + dữ liệu mô phỏng (🟠) — song song từ P03
 - [ ] P03 — Agent cư dân bước 0–3: khẩn cấp, chẩn đoán, phân loại trách nhiệm, ticket BQL / ticket case (🔴/🟠)
 - [ ] P05 — Agent bước 4–7: job ẩn danh → nhóm thợ giữ slot → chốt → ticket cấp quyền → giao việc + luật slot/dùng thử (🔴)
@@ -46,9 +46,13 @@ Thứ tự (Đ13, Đ15): `P01 → P03 → P05 → P06 → P08`; P04 tối thiể
 - **Thanh toán trong hệ thống / cọc giữ cuốc** — rút theo Đ05; cân nhắc lại nếu tỷ lệ bùng > 10%.
 - **Trí tuệ liên tòa**: đối chuẩn, cảnh báo sớm, xếp hạng nhà thầu (xem `docs/SYSTEM-MAP.md` §3) — cần ≥ 5–10 tòa và danh mục chuẩn chung.
 - **Marketplace dịch vụ mở rộng** (vệ sinh, chuyển nhà, giặt là) — sau khi thợ sửa chữa chạy ổn.
+- **Truy hồi lai (từ khoá + embedding) cho quy chế** — Đ17: P03 chỉ dùng từ khoá vì stack chỉ có Claude (không có API embedding); làm khi chọn nhà cung cấp embedding và kho quy chế lớn lên.
+- **Nâng vitest 5 / Next 16 để vá `npm audit`** (7 lỗ, đều ở công cụ dev hoặc postcss của Next) — cần Đ mới vì Next 16 lệch Đ06; xét ở P07.
 - **Nhận tin nhắn thoại của thợ** (speech-to-text) — thợ quen gửi voice.
 
 ## Đã hoàn thành (Done)
+
+- [x] **2026-09-24 — P01 Nền tảng (R01 ✅ sau thẩm định R02):** npm workspaces, migration 001 + seed nền, adapter db/model/transport, máy trạng thái cuốc, SimTransport + `/dev/sim`, auth 3 vai cookie HMAC, `npm run gate`; 40 test (28 unit + 12 DB). Thẩm định đối kháng tìm 2 lỗi chặn ở máy đo (bỏ lọt import nhiều dòng, khoá `phone?:`) — đã vá ở vòng 2.
 
 - [x] **2026-09-24 — Hình kinh tế ba bên** `docs/images/10-kinh-te-ba-ben.png` và mockup dashboard `docs/images/09-dashboard-bql-mockup.png`.
 

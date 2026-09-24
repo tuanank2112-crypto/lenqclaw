@@ -163,4 +163,4 @@ Tổng: **40/40 pass, 0 fail, 0 skip** — tăng từ 30 (vòng 1), không giả
 ⭐ Nên làm trước: phán quyết vòng 2, vì D1/D2 (máy đo biên) là điều kiện mọi gói sau (P03+) dựa vào để giữ BB-02/04/07.
 ⏸ Chưa làm: G2/G4/G5/G6/G7 (ghi chú, ngoài danh sách bắt buộc), câu hỏi mở checklist G16 (vòng 1), P02/P03 (ngoài §10.1)/P04/P05/P06/P08.
 
-⏳ Chờ người duyệt.
+✅ DUYỆT · SO · 2026-09-24 23:39:41 · vòng 2: SO đo lại npm ci/typecheck/build/test 28/test:db 12 (DB rỗng)/gate = 0; cây cố tình hỏng ⇒ boundary/agent-tools/gate exit 1; 0 file ngoài phạm vi
