@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 // scripts/check_agent_tools.mjs — BB-01, BB-02 (SPEC-P01-Foundation.md §8).
-// (a) JobCard khong duoc chua khoa PII; (b) ten tool agent khong duoc nam
-// trong danh sach cam. In "pii_keys_in_jobcard: <n>" va "forbidden_tools: <n>";
-// tong > 0 => exit 1.
+// Vong 2 (R02-tham-dinh D2): (a) tim khoi `type JobCard = {...}` bang DEM
+// NGOAC (khong dung "}};" dau tien — mot kieu object long ben trong se lam
+// sai vi tri ket thuc), khoa PII cho phep tuy chon (`phone?:`), co nhay
+// ('phone': / "phone":); (b) quet ten tool cam trong agent/tools/** ca file
+// .js/.mjs/.cjs, cho phep khoa co nhay va gia tri dang template literal.
+// In "pii_keys_in_jobcard: <n>" va "forbidden_tools: <n>"; tong > 0 => exit 1.
 
 import { readdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
@@ -13,6 +16,7 @@ const ROOT = path.join(__dirname, '..');
 
 const TYPES_FILE = path.join(ROOT, 'packages', 'core', 'src', 'domain', 'types.ts');
 const TOOLS_DIR = path.join(ROOT, 'packages', 'core', 'src', 'agent', 'tools');
+const TOOLS_EXT = new Set(['.ts', '.tsx', '.mts', '.cts', '.js', '.mjs', '.cjs']);
 
 const FORBIDDEN_JOBCARD_KEYS = [
   'apartment',
@@ -28,13 +32,32 @@ const FORBIDDEN_JOBCARD_KEYS = [
 
 const FORBIDDEN_TOOL_NAMES = ['exec', 'shell', 'read_file', 'write_file', 'list_contacts', 'approve_ticket', 'update_config'];
 
+/**
+ * Tim khoi noi dung giua ngoac `{` mo dau va ngoac `}` KHOP no bang dem
+ * do sau — chiu duoc kieu object literal long ben trong (vd
+ * `price_band: [number, number] | null` khong co ngoac nhon nhung mot
+ * truong `meta: { a: number }` thi co, va khong duoc lam sai vi tri dong).
+ */
+function extractBalancedBlock(source, openBraceIndex) {
+  let depth = 0;
+  for (let i = openBraceIndex; i < source.length; i++) {
+    const ch = source[i];
+    if (ch === '{') depth++;
+    else if (ch === '}') {
+      depth--;
+      if (depth === 0) return source.slice(openBraceIndex, i + 1);
+    }
+  }
+  return null; // khong can bang — file loi cu phap, de tsc bat rieng
+}
+
 function extractJobCardBlock(source) {
-  const marker = 'type JobCard = {';
-  const start = source.indexOf(marker);
-  if (start === -1) return null;
-  const end = source.indexOf('};', start);
-  if (end === -1) return null;
-  return source.slice(start, end + 2);
+  const marker = 'type JobCard = ';
+  const markerIdx = source.indexOf(marker);
+  if (markerIdx === -1) return null;
+  const braceIdx = source.indexOf('{', markerIdx);
+  if (braceIdx === -1) return null;
+  return extractBalancedBlock(source, braceIdx);
 }
 
 async function checkJobCard() {
@@ -52,7 +75,9 @@ async function checkJobCard() {
   }
   const hits = [];
   for (const key of FORBIDDEN_JOBCARD_KEYS) {
-    const re = new RegExp(`\\b${key}\\b\\s*:`, 'g');
+    // Khoa co the: tran (`phone:`), tuy chon (`phone?:`), co nhay don/kep
+    // (`'phone':`, `"phone":`), voi khoang trang tuy y quanh `?`/`:`.
+    const re = new RegExp(`['"]?\\b${key}\\b['"]?\\s*\\?\\s*:|['"]?\\b${key}\\b['"]?\\s*:`, 'g');
     if (re.test(block)) hits.push(key);
   }
   return hits;
@@ -70,7 +95,7 @@ async function walk(dir) {
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       files.push(...(await walk(full)));
-    } else if (['.ts', '.tsx'].includes(path.extname(entry.name))) {
+    } else if (TOOLS_EXT.has(path.extname(entry.name))) {
       files.push(full);
     }
   }
@@ -91,7 +116,9 @@ async function checkForbiddenTools() {
   for (const file of files) {
     const content = await readFile(file, 'utf8');
     for (const name of FORBIDDEN_TOOL_NAMES) {
-      const re = new RegExp(`name\\s*:\\s*['"]${name}['"]`, 'g');
+      // Khoa `name` co the tran hoac co nhay (`"name":`); gia tri co the
+      // nhay don/kep hoac template literal (`` `exec` ``).
+      const re = new RegExp(`['"]?\\bname\\b['"]?\\s*:\\s*['"\`]${name}['"\`]`, 'g');
       if (re.test(content)) hits.push(`${path.relative(ROOT, file)}: tool "${name}"`);
     }
   }
