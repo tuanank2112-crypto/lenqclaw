@@ -25,14 +25,16 @@ P04 dashboard TỐI THIỂU song song (2 điểm duyệt + dòng thời gian age
   · thẻ "Hiệu quả tháng" (BQL) · LUẬT CÂN BẰNG: thu nhập trung vị/slot < MIN_EARNINGS_TO_FEE lần phí ⇒ ngừng cấp slot mới. SPEC-P08 chưa viết.
 P01 XONG 2026-09-24 (R01 ✅, G01–G03 local): monorepo + DB + adapter + auth 3 vai + SimTransport /dev/sim; kiểm bằng `npm run gate` + `npm run test:db`.
 Đ16 SPEC-P01 · Đ17 chốt thi công P03 (SPEC-P03 §10: nhận-trước-xử-lý-sau, truy hồi từ khoá, QC-DEMO). Git: github.com/tuanank2112-crypto/lenqclaw (private).
-Còn chờ người: ANTHROPIC_API_KEY (golden LLM); giữ/bỏ bước cư dân "Đồng ý"; FREE_TRIAL_DAYS, SLOT_FEE_MONTHLY, SLOT_MIN_JOBS_PER_VENDOR, BQL_SHARE_PCT, MIN_EARNINGS_TO_FEE. Bước kế: P03.
+P03 THI CÔNG XONG (e3d2079, SO đo lại xanh 2026-09-25) — CHƯA thẩm định; tạm dừng theo lệnh người. Kế: thẩm định P03 ∥ H04 adapter Gemini.
+Đ18: LLM mặc định Gemini gemini-3.6-flash (key ở .env, gitignore); 01-CONTRACTS §2b. Đời 2 của Gemini 404 với key này (G13).
+Còn chờ người: giữ/bỏ bước cư dân "Đồng ý"; FREE_TRIAL_DAYS, SLOT_FEE_MONTHLY, SLOT_MIN_JOBS_PER_VENDOR, BQL_SHARE_PCT, MIN_EARNINGS_TO_FEE. Bước kế: thẩm định P03, rồi H04.
 Đọc theo thứ tự: plan.md §2 (Đ01–Đ09) → specs/00-ARCHITECTURE.md → 01-CONTRACTS.md → SPEC gói đang làm.
 Sơ đồ: docs/images/08-pipeline-chuan.png. Bối cảnh chiến lược: docs/SYSTEM-MAP.md. docs/DESIGN.md = v0.1 đã bị thu hẹp (Đ01).
 </repo_nature>
 
 <project_foundation>
 - Tech Stack (Đ06): TypeScript Node 22, npm workspaces — apps/web (Next.js 15 console BQL), apps/zalo-worker (zca-js, pin đúng bản,
-  ĐÚNG 1 bản sao), packages/core (pipeline v0.2 8 bước, agent điều phối, tool có luật, adapters). LLM Claude qua adapters/model.ts, mặc định claude-opus-5.
+  ĐÚNG 1 bản sao), packages/core (pipeline v0.2 8 bước, agent điều phối, tool có luật, adapters). LLM qua adapters/model.ts: Gemini mặc định (Đ18), Claude tuỳ chọn.
 - Data/State: PostgreSQL 16 + pgvector + pg-boss, Docker trên VPS Việt Nam IP tĩnh. Worker↔core nói qua bảng inbound_events/outbox.
 - Bất biến cứng: BB-01 agent làm mọi bước qua tool, tool tự kiểm luật · BB-02 thợ chỉ thấy JobCard (không PII) tới access_granted ·
   BB-03 trách nhiệm phải có trích dẫn, thiếu ⇒ unclear ⇒ người · BB-04 mọi tin Zalo ra qua outbox pacer · BB-05 một cuốc một người thắng

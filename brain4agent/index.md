@@ -59,10 +59,11 @@ project-root/
 ├── docs/                             # core.md · web.md · zalo-worker.md (module 1-1), SYSTEM-MAP.md, DESIGN.md (v0.1 cũ), images/01…10
 ├── apps/web/                         # Next.js 15: auth 3 vai (cookie HMAC), /dev/sim, trang tạm /tickets /gate — P01
 ├── apps/zalo-worker/                 # khung rỗng, chờ P02
-├── packages/core/src/                # adapters/{db,model,transport} · domain/{types,errors,password} · services/{job-state,audit} · sim/ · db/{migrate,seed}
-├── db/migrations/                    # 001_init.sql (toàn bộ DDL 01-CONTRACTS §4)
-├── scripts/                          # check_adapter_boundary.mjs · check_agent_tools.mjs · gate.mjs
-├── evals/scenarios/                  # echo.jsonl (kịch bản kênh giả lập)
+├── packages/core/src/                # adapters/{db,model,transport} · domain/{types,errors,password} · services/{job-state,audit} · sim/ · db/{migrate,seed,seed-sim}
+│                                     # agent/{resident-agent,pii,job-code,tool-context,prompts/resident.ts,tools/*} · retrieval/search-regulations.ts (P03)
+├── db/migrations/                    # 001_init.sql (DDL 01-CONTRACTS §4) · 002_search.sql (unaccent + tsv, P03)
+├── scripts/                          # check_adapter_boundary.mjs · check_agent_tools.mjs · gate.mjs · eval_golden.mjs (exit 3 = blocked)
+├── evals/                            # scenarios/echo.jsonl · golden/{emergency,diagnosis,responsibility}.jsonl
 ├── compose.yaml · compose.dev.yaml   # Postgres pgvector:pg16; dev publish 127.0.0.1:55432
 └── package.json                      # npm workspaces (apps/*, packages/*), v0.0.1
 ```

@@ -31,20 +31,22 @@
     "license": ""
   },
   "last_milestone": {
-    "id": "P01",
-    "verdict": "approved",
-    "at": "2026-09-24",
-    "gates_local": [
-      "G01",
-      "G02",
-      "G03"
-    ],
+    "id": "P03",
+    "verdict": "pending_audit",
+    "built_at": "2026-09-25",
+    "head": "e3d2079",
     "tests": {
-      "unit": 28,
-      "db": 12,
+      "unit": 54,
+      "db": 23,
       "fail": 0,
       "skip": 0
-    }
+    },
+    "so_remeasured": true
   },
-  "next": "P03"
+  "next": "audit P03, then H04 Gemini adapter",
+  "approved": [
+    "P01"
+  ],
+  "llm_provider": "gemini",
+  "paused_by_user": "2026-09-25"
 }

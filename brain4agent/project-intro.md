@@ -22,7 +22,7 @@ Phạm vi build (Đ13, Đ14): agent — pipeline, tool, máy trạng thái, kên
 - **Web:** Next.js 15 (App Router) + TypeScript — console BQL (`apps/web`).
 - **Kênh:** Zalo cá nhân qua `zca-js` (pin đúng phiên bản), 2 tài khoản `bql` và `market`, tiến trình riêng `apps/zalo-worker`.
 - **Lõi:** TypeScript Node 22, `packages/core` — pipeline v0.2 (8 bước, agent điều phối), tool có luật cứng bên trong, 3 adapter (db, model, transport).
-- **LLM:** Claude qua `@anthropic-ai/sdk`, mặc định `claude-opus-5`, prompt caching; đổi được theo route.
+- **LLM (Đ18):** Gemini mặc định (`gemini-3.6-flash`, gọi qua REST trong `adapters/model.ts`, key ở `.env`); Claude (`@anthropic-ai/sdk`, `claude-opus-5`) vẫn chọn được qua `MODEL_PROVIDER=anthropic`. Core chỉ thấy `callModel` dạng Anthropic — adapter lo dịch.
 - **Data Persistence:** PostgreSQL 16 + pgvector + pg-boss, Docker, VPS Việt Nam IP tĩnh. SQL thuần (driver `pg`), không ORM.
 - **Công cụ:** npm workspaces, `tsx` chạy CLI, `vitest` (`npm test` không DB, `npm run test:db` cần DB), `npm run gate`. Kênh giả lập `SimTransport` + `/dev/sim` thay Zalo khi phát triển agent (Đ13).
 

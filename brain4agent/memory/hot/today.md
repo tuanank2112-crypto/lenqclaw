@@ -37,8 +37,17 @@ Phân tích OpenClaw + ZaloClaw (monas-team) với tài khoản Zalo cá nhân �
 - **Đ17 — chốt thi công P03** ở SPEC-P03 §10 (nhận-trước-xử-lý-sau đã làm luôn ở vòng 2 P01; truy hồi từ khoá; đồng ý tất định; QC-DEMO; golden LLM `blocked` khi thiếu key).
 - Thẩm định chưa chạy được phần giả mạo cookie qua HTTP (vỏ agent tự dừng) ⇒ bù bằng test unit `verifySessionCookie`; đã báo người.
 
+- **Push:** người dùng duyệt ⇒ `origin/main` = `4955b5a` (P01 + SPEC/H03).
+- **Đ18 — Gemini:** người dùng "sử dụng key gemini". Auto mode CHẶN việc chép key từ `D:uild phase.env.local` (Credential Exploration) ⇒ người dùng tự dán key ⇒ ghi `.env` (gitignore). Probe: `gemini-3.6-flash`/`3-flash-preview` 200 + functionCall + `thoughtSignature`; `3.5-flash-lite` 200; `3.5-flash`/`3.1-flash-lite`/`flash-latest` 503; mọi `2.x` 404 (G13). Hợp đồng 01-CONTRACTS §2b + `MODEL_FALLBACKS`.
+
+## 🏁 Phiên 2026-09-25 (tiếp) — P03 thi công xong, tạm dừng
+- Worker 🟠 thi công H03 ⇒ R03 ⏳ (`e3d2079`, report `ee362f7`): 8 tool, resident agent, migration 002, seed sim, 3 bộ golden + `eval_golden.mjs`. Bắt được bug thật: `pg` trả cột `date` thành JS `Date` ⇒ so hiệu lực sai ⇒ ép `::text`.
+- SO đo lại: phạm vi sạch (không đụng specs/brain/docs/check scripts); `npm ci`/typecheck/build/`npm test` 54/`test:db` 23 trên DB rỗng/gate = 0.
+- **Người dùng: "dừng lại rồi cập nhật não"** ⇒ CHƯA phóng thẩm định P03, CHƯA giao H04. Đồng bộ não.
+
 ### ⏭ Treo / cần người
-- `ANTHROPIC_API_KEY` chưa có ⇒ golden diagnosis/responsibility sẽ `blocked`.
+- Thẩm định P03 (đối kháng, agent khác) rồi phán R03; H04 adapter Gemini (`model.ts` hiện chỉ Anthropic).
+- Câu hỏi mở R03: `window_start/end` khi mở case; `eval_golden` chấm một lượt đơn (không phải vòng tool thật); SDK Anthropic 0.68 không có `fallbacks`; SPEC-P03 §10.8 lệch Đ18.
 - Trạng thái `unassigned`/`disputed` chưa có đường ra (01-CONTRACTS §5) — chốt khi soạn P05/P06.
 - Giữ hay bỏ bước cư dân "Đồng ý"; chốt tham số phí + `MIN_EARNINGS_TO_FEE`; viết SPEC-P08.
 - Cần quy chế thật của tòa pilot để làm golden `responsibility` (G10).

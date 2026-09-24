@@ -160,7 +160,9 @@ Thứ tự bắt buộc (Đ13, Đ15): `P01 (nền tảng + SimTransport) → P03
 - [x] 🖐 `git init` + remote riêng tư `github.com/tuanank2112-crypto/lenqclaw` — commit nền `478bf32` đã push (2026-09-24)
 - [x] Viết [SPEC-P01](specs/SPEC-P01-Foundation.md) (Đ16)
 - [x] P01 — nền tảng + SimTransport (G01–G03 ✅ local; phần P01 của G16 = `runScenario(echo.jsonl)`) — `2cfbbe2`, R01 ✅ 2026-09-24 23:39:41 (vòng 2 sau thẩm định R02)
-- [ ] P03 — Agent cư dân bước 0–3 (G08–G10)
+- [ ] P03 — Agent cư dân bước 0–3 (G08–G10) — thi công xong `e3d2079` (R03 ⏳), SO đo lại 2026-09-25 xanh: typecheck/build/`npm test` 54/`test:db` 23 (DB rỗng)/gate = 0; **chờ thẩm định** (tạm dừng theo lệnh người)
+- [ ] H04 — adapter Gemini theo 01-CONTRACTS §2b (Đ18) + `MODEL_FALLBACKS` + chạy golden thật (key đã ở `.env`)
+- [ ] Chốt câu hỏi mở R03: (1) SPEC-P03 §10.8 còn ghi `claude-opus-5` ⇒ đồng bộ theo Đ18; (2) SDK `@anthropic-ai/sdk@0.68.0` không có `fallbacks` ⇒ nhánh anthropic dùng `MODEL_FALLBACKS` phía client; (3) quy ước `jobs.window_start/end` từ khung giờ gợi ý — trước P05; (4) `eval_golden` chấm một lượt đơn, chưa chạy vòng tool của agent thật — xét lại khi thẩm định
 - [ ] P04 — Dashboard tối thiểu (G07)
 - [ ] P05 — Agent bước 4–7 (G11, G12, G12b)
 - [ ] P06 — Bước 8 (G13, G16 trọn bước 0→8 trên kênh giả lập)

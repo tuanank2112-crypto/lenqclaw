@@ -2,7 +2,7 @@
 
 Tài liệu thiết kế về cấu trúc dữ liệu, cơ chế lưu trữ bền vững (Persistence Layer) và luồng luân chuyển dữ liệu đa tầng.
 
-> **Trạng thái 2026-09-24: DB có thật từ P01** — `db/migrations/001_init.sql` áp đủ DDL (33 bảng), runner `schema_migrations` + checksum, seed nền; pg-boss và embedding CHƯA dùng. Nguồn chân lý DDL: [`planning/01_2026-09-24_san-viec-tho-mvp/specs/01-CONTRACTS.md`](../planning/01_2026-09-24_san-viec-tho-mvp/specs/01-CONTRACTS.md) §4–§5. File này chỉ tóm tắt.
+> **Trạng thái 2026-09-24: DB có thật từ P01** — `db/migrations/001_init.sql` áp đủ DDL (33 bảng), runner `schema_migrations` + checksum, seed nền; Migration `002_search.sql` (P03): hàm `immutable_unaccent()`, `kb_sections.tsv` là cột sinh tự động từ heading+body — truy hồi từ khoá OR-tsquery + `ts_rank_cd(…,32)`. pg-boss và embedding CHƯA dùng. Dữ liệu mô phỏng: `npm run db:seed:sim` (chỉ khi `DATA_MODE=sim`) — quy chế `QC-DEMO` (+1 bản deprecated, +1 hết hiệu lực), 4 cư dân `sim-res-*`, `price_book` 6 danh mục. Nguồn chân lý DDL: [`planning/01_2026-09-24_san-viec-tho-mvp/specs/01-CONTRACTS.md`](../planning/01_2026-09-24_san-viec-tho-mvp/specs/01-CONTRACTS.md) §4–§5. File này chỉ tóm tắt.
 
 ## 1. Các Tầng Lưu Trữ (Data Persistence Stores)
 
