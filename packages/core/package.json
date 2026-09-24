@@ -16,7 +16,7 @@
     }
   },
   "scripts": {
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
     "build": "tsc -p tsconfig.json",
     "test": "vitest run --exclude \"**/*.db.test.ts\"",
     "test:db": "tsx scripts/require-database-url.ts && vitest run --config vitest.db.config.ts"
