@@ -1,0 +1,132 @@
+
+> lenqclaw@0.0.1 gate
+> node scripts/gate.mjs
+
+
+=== gate: typecheck ===
+
+> lenqclaw@0.0.1 typecheck
+> npm run build -w @lenqclaw/core && npm run typecheck --workspaces --if-present
+
+
+> @lenqclaw/core@0.0.1 build
+> tsc -p tsconfig.json
+
+
+> @lenqclaw/web@0.0.1 typecheck
+> tsc --noEmit
+
+
+> @lenqclaw/zalo-worker@0.0.1 typecheck
+> tsc --noEmit
+
+
+> @lenqclaw/core@0.0.1 typecheck
+> tsc --noEmit
+
+
+=== gate: build ===
+
+> lenqclaw@0.0.1 build
+> npm run build -w @lenqclaw/core && npm run build --workspaces --if-present
+
+
+> @lenqclaw/core@0.0.1 build
+> tsc -p tsconfig.json
+
+
+> @lenqclaw/web@0.0.1 build
+> next build
+
+   ▲ Next.js 15.5.26
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 8.2s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/13) ...
+   Generating static pages (3/13) 
+   Generating static pages (6/13) 
+   Generating static pages (9/13) 
+ ✓ Generating static pages (13/13)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
+┌ ƒ /                                      145 B         103 kB
+├ ○ /_not-found                            988 B         104 kB
+├ ƒ /api/auth/login                        145 B         103 kB
+├ ƒ /api/auth/logout                       145 B         103 kB
+├ ƒ /api/dev/sim/replay                    145 B         103 kB
+├ ƒ /api/dev/sim/send                      145 B         103 kB
+├ ƒ /api/dev/sim/thread                    145 B         103 kB
+├ ○ /dev/sim                             1.46 kB         104 kB
+├ ○ /gate                                  145 B         103 kB
+├ ○ /login                                 766 B         103 kB
+└ ○ /tickets                               145 B         103 kB
++ First Load JS shared by all             103 kB
+  ├ chunks/18-498168fb58dcd546.js        46.4 kB
+  ├ chunks/87c73c54-24122e7b92478d00.js  54.2 kB
+  └ other shared chunks (total)          1.95 kB
+
+
+ƒ Middleware                             34.9 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+> @lenqclaw/zalo-worker@0.0.1 build
+> tsc -p tsconfig.json
+
+
+> @lenqclaw/core@0.0.1 build
+> tsc -p tsconfig.json
+
+
+=== gate: test ===
+
+> lenqclaw@0.0.1 test
+> npm run test --workspaces --if-present
+
+
+> @lenqclaw/web@0.0.1 test
+> vitest run --exclude "**/*.db.test.ts"
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mC:/Users/lenku/AppData/Local/Temp/lenqclaw-red-gate/apps/web[39m
+
+ [32m✓[39m lib/auth/policy.test.ts [2m([22m[2m7 tests[22m[2m)[22m[90m 6[2mms[22m[39m
+ [32m✓[39m lib/auth/session.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 11[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m11 passed[39m[22m[90m (11)[39m
+[2m   Start at [22m 22:39:22
+[2m   Duration [22m 1.28s[2m (transform 95ms, setup 0ms, collect 167ms, tests 17ms, environment 0ms, prepare 1.38s)[22m
+
+
+> @lenqclaw/zalo-worker@0.0.1 test
+> echo "@lenqclaw/zalo-worker: no tests in P01 (P02 scope)"
+
+"@lenqclaw/zalo-worker: no tests in P01 (P02 scope)"
+
+> @lenqclaw/core@0.0.1 test
+> vitest run --exclude "**/*.db.test.ts"
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mC:/Users/lenku/AppData/Local/Temp/lenqclaw-red-gate/packages/core[39m
+
+ [32m✓[39m src/services/job-state.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 6[2mms[22m[39m
+ [32m✓[39m src/domain/password.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 197[2mms[22m[39m
+ [32m✓[39m src/adapters/model.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 9[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m      Tests [22m [1m[32m8 passed[39m[22m[90m (8)[39m
+[2m   Start at [22m 22:39:24
+[2m   Duration [22m 1.56s[2m (transform 171ms, setup 0ms, collect 1.25s, tests 212ms, environment 1ms, prepare 479ms)[22m
+
+
+=== gate: check_adapter_boundary ===
+apps/web/app/page.tsx:1: import "pg" ngoai adapters/db.ts
+violations: 1
+GATE_FAIL: buoc "check_adapter_boundary" exit 1

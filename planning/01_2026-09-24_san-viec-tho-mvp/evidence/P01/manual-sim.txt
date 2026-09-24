@@ -1,0 +1,20 @@
+=== TRUOC KHI DANG NHAP ===
+GET /login: 200
+GET /dev/sim (chua dang nhap, ky vong redirect->login, status cuoi cung 200 vi curl theo redirect... dung -o /dev/null -w cho status cuoi):
+GET /dev/sim: 200
+GET /dev/sim (khong theo redirect, status that): 307
+
+=== DANG NHAP ===
+POST /api/auth/login: 200
+{"ok":true}
+
+=== SAU KHI DANG NHAP (admin) ===
+GET /dev/sim: 200
+GET /login (da dang nhap, van vao duoc theo bang): 200
+
+=== GUI TIN O KHUNG CU DAN (/dev/sim) ===
+POST /api/dev/sim/send: 200
+{"ok":true,"duplicate":false}
+GET /api/dev/sim/thread: 200
+{"messages":[{"id":"7","kind":"in","text":"Bong den nha ve sinh bi chay","at":"2026-09-24T15:41:06.775Z"},{"id":"6","kind":"out","text":"[sim] da nhan: Bong den nha ve sinh bi chay","at":"2026-09-24T15:41:06.810Z"}]}
+OK: thay tin echo [sim] da nhan

@@ -1,0 +1,11 @@
+
+> lenqclaw@0.0.1 db:seed
+> tsx packages/core/src/db/seed.ts
+
+seed: job_categories=12 apartments=20
+--- run 2 ---
+
+> lenqclaw@0.0.1 db:seed
+> tsx packages/core/src/db/seed.ts
+
+seed: job_categories=12 apartments=20

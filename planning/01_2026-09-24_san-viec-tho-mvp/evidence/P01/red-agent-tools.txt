@@ -1,0 +1,4 @@
+pii_key: phone
+pii_keys_in_jobcard: 1
+forbidden_tools: 0
+EXIT:1

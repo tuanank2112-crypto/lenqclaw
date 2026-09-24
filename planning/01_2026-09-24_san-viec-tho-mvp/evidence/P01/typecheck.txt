@@ -1,0 +1,20 @@
+
+> lenqclaw@0.0.1 typecheck
+> npm run build -w @lenqclaw/core && npm run typecheck --workspaces --if-present
+
+
+> @lenqclaw/core@0.0.1 build
+> tsc -p tsconfig.json
+
+
+> @lenqclaw/web@0.0.1 typecheck
+> tsc --noEmit
+
+
+> @lenqclaw/zalo-worker@0.0.1 typecheck
+> tsc --noEmit
+
+
+> @lenqclaw/core@0.0.1 typecheck
+> tsc --noEmit
+
