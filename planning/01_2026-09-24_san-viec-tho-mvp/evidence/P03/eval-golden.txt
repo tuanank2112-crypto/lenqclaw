@@ -1,0 +1,9 @@
+
+> lenqclaw@0.0.1 eval:golden
+> tsx scripts/eval_golden.mjs
+
+emergency: total=20 pass=20 false_positive=0 false_negative=0 ok=true
+diagnosis: blocked (missing ANTHROPIC_API_KEY)
+responsibility: blocked (missing ANTHROPIC_API_KEY)
+EVAL_GOLDEN: BLOCKED (thieu credential hoac loi ha tang o bo can LLM) — khong tinh truot.
+EXIT:3

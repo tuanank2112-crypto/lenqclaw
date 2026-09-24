@@ -1,0 +1,32 @@
+# Bang chung DO that (truoc khi sua) cho test BB-03 moi
+# (classify_responsibility: nguon deprecated/het hieu luc => phai ep unclear)
+#
+# Nguyen nhan: node-postgres tra cot Postgres kieu `date` (kb_documents.
+# effective_from/effective_to) thanh JS `Date`, khong phai chuoi. So sanh
+# `Date < string` trong isEffectiveToday() ep kieu sai (luon false) nen loc
+# "het hieu luc" khong hoat dong. Da sua bang cach ep `::text` trong SQL
+# (classify_responsibility.ts, search-regulations.ts).
+
+$ npm run test:db  (truoc khi sua, tren DB rong)
+...
+ ❯ src/dbtests/p03.db.test.ts (11 tests | 1 failed) 409ms
+   × BB-03 — nguon het hieu luc / deprecated va hai citation ngược nhau => unclear > citation deprecated + het hieu luc => khong con citation hop le => forced unclear 45ms
+     → expected 'bql' to be 'unclear' // Object.is equality
+
+ ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p03.db.test.ts > BB-03 — nguon het hieu luc / deprecated va hai citation ngược nhau => unclear > citation deprecated + het hieu luc => khong con citation hop le => forced unclear
+AssertionError: expected 'bql' to be 'unclear'
+
+Expected: "unclear"
+Received: "bql"
+
+ ❯ src/dbtests/p03.db.test.ts:518:70
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 20 passed (21)
+
+npm error Lifecycle script `test:db` failed with error:
+npm error code 1
+
+EXIT:1

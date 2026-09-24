@@ -1,0 +1,12 @@
+
+> lenqclaw@0.0.1 db:seed:sim
+> node --import tsx -e "process.env.DATA_MODE='sim'; const m=await import('./packages/core/src/db/seed-sim.ts'); const r=await m.runSeedSim(); console.log('seed-sim: kb_sections='+r.kbSections+' residents='+r.residents+' price_book='+r.priceBookRows); process.exit(0);"
+
+seed-sim: kb_sections=14 residents=4 price_book=6
+EXIT:0
+
+> lenqclaw@0.0.1 db:seed:sim
+> node --import tsx -e "process.env.DATA_MODE='sim'; const m=await import('./packages/core/src/db/seed-sim.ts'); const r=await m.runSeedSim(); console.log('seed-sim: kb_sections='+r.kbSections+' residents='+r.residents+' price_book='+r.priceBookRows); process.exit(0);"
+
+seed-sim: kb_sections=14 residents=4 price_book=6
+EXIT run2:0

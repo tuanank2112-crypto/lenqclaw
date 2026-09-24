@@ -1,0 +1,2 @@
+SEED_SIM_ERROR: db:seed:sim CHI chay khi DATA_MODE=sim (SPEC-P03-Resident-Agent.md §10.5).
+EXIT:1

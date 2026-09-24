@@ -1,0 +1,56 @@
+
+> lenqclaw@0.0.1 test:db
+> npm run db:migrate && npm run db:seed && npm run db:seed:sim && npm run test:db -w @lenqclaw/core && npm run test:db -w @lenqclaw/web && npm run test:db -w @lenqclaw/zalo-worker --if-present
+
+
+> lenqclaw@0.0.1 db:migrate
+> tsx packages/core/src/db/migrate.ts
+
+-- applying 001_init.sql
+-- applying 002_search.sql
+applied: 2
+
+> lenqclaw@0.0.1 db:seed
+> tsx packages/core/src/db/seed.ts
+
+seed: job_categories=12 apartments=20
+
+> lenqclaw@0.0.1 db:seed:sim
+> node --import tsx -e "process.env.DATA_MODE='sim'; const m=await import('./packages/core/src/db/seed-sim.ts'); const r=await m.runSeedSim(); console.log('seed-sim: kb_sections='+r.kbSections+' residents='+r.residents+' price_book='+r.priceBookRows); process.exit(0);"
+
+seed-sim: kb_sections=14 residents=4 price_book=6
+
+> @lenqclaw/core@0.0.1 test:db
+> tsx scripts/require-database-url.ts && vitest run --config vitest.db.config.ts
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mD:/lenqclaw/packages/core[39m
+
+ [32m✓[39m src/dbtests/p03.db.test.ts [2m([22m[2m11 tests[22m[2m)[22m[33m 421[2mms[22m[39m
+ [32m✓[39m src/dbtests/p01.db.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 461[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m21 passed[39m[22m[90m (21)[39m
+[2m   Start at [22m 00:09:46
+[2m   Duration [22m 1.81s[2m (transform 160ms, setup 0ms, collect 474ms, tests 881ms, environment 0ms, prepare 164ms)[22m
+
+
+> @lenqclaw/web@0.0.1 test:db
+> tsx ../../packages/core/scripts/require-database-url.ts && vitest run --config vitest.db.config.ts
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mD:/lenqclaw/apps/web[39m
+
+ [32m✓[39m tests/00-login.db.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 144[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m   Start at [22m 00:09:49
+[2m   Duration [22m 963ms[2m (transform 115ms, setup 0ms, collect 474ms, tests 144ms, environment 0ms, prepare 106ms)[22m
+
+
+> @lenqclaw/zalo-worker@0.0.1 test:db
+> echo "@lenqclaw/zalo-worker: no db tests in P01 (P02 scope)"
+
+"@lenqclaw/zalo-worker: no db tests in P01 (P02 scope)"
+EXIT:0

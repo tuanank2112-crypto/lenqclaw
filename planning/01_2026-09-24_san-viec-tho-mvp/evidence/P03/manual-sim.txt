@@ -1,0 +1,22 @@
+# Chay tay /dev/sim (DATA_MODE=sim, TRANSPORT=sim, khong ANTHROPIC_API_KEY)
+# 2 ca khong can LLM (SPEC-P03-Resident-Agent.md §10 "xong khi" muc g)
+
+## Ca 1: tin "nha em bi chay, khoi boc len nhieu qua" (sim-res-1, active) => EMERGENCY_REPLY + ticket
+POST /api/dev/sim/send -> HTTP 200 {"ok":true,"duplicate":false}
+GET /api/dev/sim/thread ->
+{"messages":[
+  {"id":"19","kind":"in","text":"nha em bi chay, khoi boc len nhieu qua","at":"2026-09-24T17:07:24.331Z"},
+  {"id":"18","kind":"out","text":"Đây là tình huống khẩn cấp. Vui lòng gọi ngay hotline BQL: 1900-1234, hoặc 114 (cứu hoả)/115 (y tế) nếu cần. Ban quản lý đã được báo và sẽ liên hệ ngay.","at":"2026-09-24T17:07:24.349Z"}
+]}
+(Ticket kind='emergency' duoc tao — kiem lai qua DB: select id,kind,summary from tickets where kind='emergency' order by created_at desc limit 1;)
+
+## Ca 2: tin "nha em bi hong dieu hoa" (sim-res-9, pending) => REGISTER_REPLY, 0 job
+POST /api/dev/sim/send -> HTTP 200 {"ok":true,"duplicate":false}
+GET /api/dev/sim/thread ->
+{"messages":[
+  {"id":"20","kind":"in","text":"nha em bi hong dieu hoa","at":"2026-09-24T17:07:30.088Z"},
+  {"id":"19","kind":"out","text":"Xin chào, hệ thống chưa nhận diện anh/chị là cư dân đã đăng ký của toà nhà. Vui lòng liên hệ Ban quản lý để được hỗ trợ đăng ký căn hộ.","at":"2026-09-24T17:07:30.105Z"}
+]}
+
+Ca hai tin nhan tren KHONG can ANTHROPIC_API_KEY (0 lan goi model — khan cap va
+dang ky deu re nhanh truoc vong LLM). May chay khong co credential Anthropic.
