@@ -148,11 +148,11 @@ Thứ tự bắt buộc (Đ13, Đ15): `P01 (nền tảng + SimTransport) → P03
 - [ ] Viết SPEC-P08 (Đ15) + gate G17
 - [x] 🖐 `git init` + remote riêng tư `github.com/tuanank2112-crypto/lenqclaw` — commit nền `478bf32` đã push (2026-09-24)
 - [x] Viết [SPEC-P01](specs/SPEC-P01-Foundation.md) (Đ16)
-- [ ] P01 — nền tảng + SimTransport (G01–G03, G16)
+- [ ] P01 — nền tảng + SimTransport (G01–G03; phần P01 của G16 = `runScenario(echo.jsonl)`) — thi công xong `e585851`, chờ thẩm định H02
 - [ ] P03 — Agent cư dân bước 0–3 (G08–G10)
 - [ ] P04 — Dashboard tối thiểu (G07)
 - [ ] P05 — Agent bước 4–7 (G11, G12, G12b)
-- [ ] P06 — Bước 8 (G13)
+- [ ] P06 — Bước 8 (G13, G16 trọn bước 0→8 trên kênh giả lập)
 - [ ] P08 — Sổ lợi ích ba bên (G17)
 - [ ] P02 — Zalo thật cắm vào Transport (G04–G06)
 - [ ] P07 — deploy VPS, mọi gate cột `vps` ✅ (G14)
