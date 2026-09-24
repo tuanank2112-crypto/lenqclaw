@@ -17,17 +17,24 @@ import type { StaffRole } from '@lenqclaw/core';
  * `role=null` (chua dang nhap) chi duoc `true` cho /login va /api/auth/*;
  * middleware.ts tu quyet dinh chuyen huong /login cho phan con lai.
  */
+
+/**
+ * `pathname` khop `base` theo RANH GIOI DOAN DUONG DAN: dung bang `base`
+ * hoac bat dau bang `base + '/'`. R02-tham-dinh D6: `startsWith('/tickets')`
+ * (khong co ranh gioi) khop nham `/ticketsX`, `/gate` khop nham `/gatekeeper`
+ * — mot route sau nay dat ten trung tien to se lo cheo vai.
+ */
+function matchesSegment(pathname: string, base: string): boolean {
+  return pathname === base || pathname.startsWith(`${base}/`);
+}
+
 export function canAccess(role: StaffRole | null, pathname: string): boolean {
-  if (pathname === '/login' || pathname.startsWith('/api/auth/')) return true;
+  if (matchesSegment(pathname, '/login') || matchesSegment(pathname, '/api/auth')) return true;
   if (role === null) return false;
   if (pathname === '/') return true;
-  if (pathname.startsWith('/tickets')) return role === 'bql_admin' || role === 'bql_staff';
-  if (pathname.startsWith('/gate')) return role === 'bql_admin' || role === 'guard';
-  if (
-    pathname.startsWith('/admin') ||
-    pathname.startsWith('/dev') ||
-    pathname.startsWith('/api/dev')
-  ) {
+  if (matchesSegment(pathname, '/tickets')) return role === 'bql_admin' || role === 'bql_staff';
+  if (matchesSegment(pathname, '/gate')) return role === 'bql_admin' || role === 'guard';
+  if (matchesSegment(pathname, '/admin') || matchesSegment(pathname, '/dev') || matchesSegment(pathname, '/api/dev')) {
     return role === 'bql_admin';
   }
   return false;

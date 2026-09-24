@@ -47,4 +47,18 @@ describe('canAccess (SPEC-P01-Foundation.md §7)', () => {
     expect(canAccess('bql_staff', '/khong-ton-tai')).toBe(false);
     expect(canAccess('guard', '/khong-ton-tai')).toBe(false);
   });
+
+  it('R02-tham-dinh D6: khop theo RANH GIOI DOAN, khong theo tien to', () => {
+    // /ticketsX khong phai /tickets hay /tickets/... => duong khac => tu choi
+    expect(canAccess('bql_admin', '/ticketsX')).toBe(false);
+    expect(canAccess('bql_staff', '/ticketsX')).toBe(false);
+    // /gatekeeper khong phai /gate hay /gate/... => tu choi
+    expect(canAccess('bql_admin', '/gatekeeper')).toBe(false);
+    expect(canAccess('guard', '/gatekeeper')).toBe(false);
+    // /devices khong phai /dev hay /dev/... => tu choi (ke ca admin)
+    expect(canAccess('bql_admin', '/devices')).toBe(false);
+    // dung doan van hoat dong binh thuong
+    expect(canAccess('bql_admin', '/tickets')).toBe(true);
+    expect(canAccess('guard', '/gate')).toBe(true);
+  });
 });
