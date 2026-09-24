@@ -3,9 +3,13 @@ services:
     image: pgvector/pgvector:pg16
     restart: unless-stopped
     environment:
-      POSTGRES_USER: lenqclaw
-      POSTGRES_PASSWORD: lenqclaw
-      POSTGRES_DB: lenqclaw
+      # R02-tham-dinh D9: KHONG ghi cung mat khau trong file dung chung cho
+      # VPS/production — bat buoc lay tu bien moi truong (`.env` canh file
+      # nay, Docker Compose tu doc). `:?` => compose tu choi chay va bao loi
+      # ro rang neu bien chua duoc dat, thay vi am tham dung gia tri rong.
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER chua duoc dat — xem .env.example}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD chua duoc dat — xem .env.example}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB chua duoc dat — xem .env.example}
     volumes:
       - pgdata:/var/lib/postgresql/data
 
