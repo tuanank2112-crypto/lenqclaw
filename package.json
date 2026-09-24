@@ -1,0 +1,29 @@
+{
+  "name": "lenqclaw",
+  "version": "0.0.1",
+  "private": true,
+  "description": "San viec tho trong toa nha (MVP pilot) - monorepo root",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "typecheck": "npm run build -w @lenqclaw/core && npm run typecheck --workspaces --if-present",
+    "build": "npm run build -w @lenqclaw/core && npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "test:db": "npm run db:migrate && npm run db:seed && npm run test:db -w @lenqclaw/core && npm run test:db -w @lenqclaw/web && npm run test:db -w @lenqclaw/zalo-worker --if-present",
+    "db:migrate": "tsx packages/core/src/db/migrate.ts",
+    "db:seed": "tsx packages/core/src/db/seed.ts",
+    "create-admin": "tsx packages/core/src/scripts/create-admin.ts",
+    "check:adapter-boundary": "node scripts/check_adapter_boundary.mjs",
+    "check:agent-tools": "node scripts/check_agent_tools.mjs",
+    "gate": "node scripts/gate.mjs"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.3"
+  }
+}

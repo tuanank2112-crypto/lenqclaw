@@ -1,0 +1,19 @@
+{
+  "name": "@lenqclaw/zalo-worker",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.json",
+    "test": "echo \"@lenqclaw/zalo-worker: no tests in P01 (P02 scope)\"",
+    "test:db": "echo \"@lenqclaw/zalo-worker: no db tests in P01 (P02 scope)\""
+  },
+  "dependencies": {
+    "@lenqclaw/core": "0.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "typescript": "^5.9.3"
+  }
+}

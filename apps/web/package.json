@@ -1,0 +1,27 @@
+{
+  "name": "@lenqclaw/web",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "typecheck": "tsc --noEmit",
+    "build": "next build",
+    "test": "vitest run --exclude \"**/*.db.test.ts\"",
+    "test:db": "tsx ../../packages/core/scripts/require-database-url.ts && vitest run --config vitest.db.config.ts"
+  },
+  "dependencies": {
+    "@lenqclaw/core": "0.0.1",
+    "next": "^15.5.4",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@types/react": "^19.1.16",
+    "@types/react-dom": "^19.1.9",
+    "typescript": "^5.9.3",
+    "vitest": "^2.1.9",
+    "tsx": "^4.19.2"
+  }
+}
