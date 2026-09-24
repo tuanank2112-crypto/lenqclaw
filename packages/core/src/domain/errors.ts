@@ -67,6 +67,22 @@ export class RateLimitedError extends Error {
   }
 }
 
+export class InvalidCategoryError extends Error {
+  readonly code = 'InvalidCategoryError';
+  constructor(message = 'Danh muc viec khong hop le.') {
+    super(message);
+    this.name = 'InvalidCategoryError';
+  }
+}
+
+export class ConsentMissingError extends Error {
+  readonly code = 'ConsentMissingError';
+  constructor(message = 'Chua nhan duoc su dong y ro rang cua cu dan.') {
+    super(message);
+    this.name = 'ConsentMissingError';
+  }
+}
+
 /** Loi lap trinh: cap (from -> to) khong nam trong bang §5 01-CONTRACTS.
  * CAM caller bat loi nay de "xu ly tiep" (SPEC-P01 §5) — no bao mot bug o
  * noi goi transitionJob, khong phai mot tinh huong nghiep vu binh thuong. */
