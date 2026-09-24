@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { SqlFn } from '../adapters/db.js';
+import type { TxSqlFn } from '../adapters/db.js';
 import { IllegalTransitionError } from '../domain/errors.js';
 import type { JobStatus } from '../domain/types.js';
 import { TRANSITIONS, transitionJob } from './job-state.js';
@@ -51,11 +51,19 @@ describe('TRANSITIONS (01-CONTRACTS.md §5)', () => {
     }
   });
 
-  it('cap ngoai bang => IllegalTransitionError, khong cham DB', async () => {
-    const q = vi.fn() as unknown as SqlFn;
+  it('cap ngoai bang => IllegalTransitionError, khong cham DB (khong can q hop le)', async () => {
+    const q = vi.fn() as unknown as TxSqlFn;
     await expect(
       transitionJob(q, { jobId: 'job-1', from: 'drafting', to: 'closed', actorType: 'system', actorId: null })
     ).rejects.toBeInstanceOf(IllegalTransitionError);
     expect(q).not.toHaveBeenCalled();
+  });
+
+  it('R02-tham-dinh G1: q khong phai cua tx() (thieu marker __tx) => nem loi, khong cham DB', async () => {
+    const bareSql = vi.fn() as unknown as TxSqlFn; // gia lap `sql` cua pool bi ep kieu sai
+    await expect(
+      transitionJob(bareSql, { jobId: 'job-1', from: 'published', to: 'held', actorType: 'vendor', actorId: null })
+    ).rejects.toThrow(/tx\(\)/);
+    expect(bareSql).not.toHaveBeenCalled();
   });
 });

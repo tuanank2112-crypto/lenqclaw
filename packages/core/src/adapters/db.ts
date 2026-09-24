@@ -9,6 +9,17 @@ export type SqlFn = <T = Record<string, unknown>>(
   params?: readonly unknown[]
 ) => Promise<T[]>;
 
+/**
+ * R02-tham-dinh G1: kieu RIENG cho `q` cua `tx()` — mot ham `SqlFn` thuong
+ * (vd `sql` cua pool) khong tu dong gan duoc vao tham so kieu `TxSqlFn`
+ * (thieu marker `__tx`), nen `transitionJob` (services/job-state.ts) — noi
+ * PHAI ghi `job_events` cung mot transaction voi UPDATE trang thai — khong
+ * the vo tinh nhan nham `sql` cua pool luc bien dich. `tx()` gan marker
+ * that o runtime (khong chi la ep kieu) de `transitionJob` con kiem duoc
+ * ca khi bi ep kieu `as any`.
+ */
+export type TxSqlFn = SqlFn & { readonly __tx: true };
+
 let pool: pg.Pool | null = null;
 
 /** Tao Pool luoi (lazy) o lan goi dau tien — build KHONG can DATABASE_URL. */
@@ -34,15 +45,16 @@ export const sql: SqlFn = async (text, params) => {
  * `sql` nhung chay tren client cua transaction, COMMIT khi thanh cong,
  * ROLLBACK va nem lai loi khi that bai.
  */
-export async function tx<T>(fn: (q: SqlFn) => Promise<T>): Promise<T> {
+export async function tx<T>(fn: (q: TxSqlFn) => Promise<T>): Promise<T> {
   const p = getPool();
   const client = await p.connect();
   try {
     await client.query('BEGIN');
-    const q: SqlFn = async (text, params) => {
+    const rawQ: SqlFn = async (text, params) => {
       const result = await client.query(text, params as unknown[] | undefined);
       return result.rows;
     };
+    const q = Object.assign(rawQ, { __tx: true as const }) as TxSqlFn;
     const out = await fn(q);
     await client.query('COMMIT');
     return out;

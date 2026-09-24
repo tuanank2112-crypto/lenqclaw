@@ -1,7 +1,7 @@
 // packages/core/src/services/job-state.ts — may trang thai cuoc (jobs.status),
 // 01-CONTRACTS.md §5 + SPEC-P01-Foundation.md §5.
 
-import type { SqlFn } from '../adapters/db.js';
+import type { TxSqlFn } from '../adapters/db.js';
 import { ConflictError, IllegalTransitionError } from '../domain/errors.js';
 import type { JobStatus } from '../domain/types.js';
 
@@ -67,11 +67,19 @@ export interface TransitionJobArgs {
  * bat de xu ly tiep). Cap hop le: `UPDATE ... WHERE status = from`; 0 dong
  * => `ConflictError`; co dong => `INSERT job_events` trong CUNG `q` (caller
  * truyen `q` cua `tx`).
+ *
+ * R02-tham-dinh G1: `q` PHAI la `TxSqlFn` (marker `__tx` gan boi `tx()` luc
+ * runtime) — truyen `sql` thuong (ngoai transaction) se nem loi ngay, tranh
+ * ca doi trang thai thanh cong ma thieu `job_events` do mot lenh la client
+ * khac cua pool.
  */
-export async function transitionJob(q: SqlFn, args: TransitionJobArgs): Promise<void> {
+export async function transitionJob(q: TxSqlFn, args: TransitionJobArgs): Promise<void> {
   const { jobId, from, to, actorType, actorId, data } = args;
   if (!isTransitionAllowed(from, to)) {
     throw new IllegalTransitionError(from, to);
+  }
+  if (!q.__tx) {
+    throw new Error('transitionJob() phai duoc goi voi q cua tx() — khong duoc truyen sql cua pool.');
   }
   const rows = await q<{ id: string }>(
     `update jobs set status = $1, updated_at = now() where id = $2 and status = $3 returning id`,
