@@ -9,3 +9,5 @@ export * from './adapters/transport.js';
 export * from './services/job-state.js';
 export * from './services/audit.js';
 export * as sim from './sim/sim-transport.js';
+export * as agent from './agent/resident-agent.js';
+export * as retrieval from './retrieval/search-regulations.js';

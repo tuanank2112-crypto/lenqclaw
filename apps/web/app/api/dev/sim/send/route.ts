@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { sql, audit, sim } from '@lenqclaw/core';
+import { sql, audit, sim, agent } from '@lenqclaw/core';
 import { getSessionFromRequest } from '../../../../../lib/auth/guard';
 
 interface RawSendBody {
@@ -57,7 +57,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   });
 
   if (!result.duplicate) {
-    await sim.processInbound(sim.echoHandler);
+    // SPEC-P03 §10.1: account bql + thread user => residentHandler; con lai
+    // van vong vong lai (echoHandler) toi khi P05 thay.
+    await sim.processInbound(agent.routeInboundEvent);
     await sim.simDeliver();
   }
 
