@@ -10,8 +10,9 @@
 // khi SDK tu retry het luot se nem `APIError` (co `.status`).
 
 import Anthropic from '@anthropic-ai/sdk';
-import { APIError } from '@anthropic-ai/sdk';
+import { APIConnectionError, APIError } from '@anthropic-ai/sdk';
 import type {
+  ContentBlockParam,
   Message,
   MessageParam,
   TextBlockParam,
@@ -23,7 +24,7 @@ import { ModelUnavailableError } from '../domain/errors.js';
 
 // Re-export de noi khac (vd test) khong phai tu import "@anthropic-ai/sdk"
 // truc tiep — giu dung MOT diem import SDK trong toan repo (BB-07).
-export { APIError };
+export { APIError, APIConnectionError };
 
 export type ModelRoute = 'diagnose' | 'responsibility' | 'acceptance' | 'vendor_parse' | 'compose';
 
@@ -102,6 +103,31 @@ function withCacheControlOnLastTool(tools: Tool[] | undefined): Tool[] | undefin
   );
 }
 
+/**
+ * R02-tham-dinh D7: `ModelCall.images` (01-CONTRACTS §2) truoc day bi bo
+ * qua lang le — anh khong bao gio toi request that. Dua anh thanh cac
+ * `image` content block, noi vao CUOI noi dung cua tin nhan CUOI CUNG
+ * (chuyen `content` dang chuoi thanh mang truoc khi noi). Khong tao tin
+ * nhan moi vi tin cuoi thuong la vai `user` mo ta trieu chung kem anh.
+ */
+function withImages(messages: MessageParam[], images: ImageRef[] | undefined): MessageParam[] {
+  if (!images || images.length === 0) return messages;
+  if (messages.length === 0) {
+    throw new Error('callModel: co images nhung messages rong — khong co tin nhan nao de gan anh vao.');
+  }
+  const imageBlocks: ContentBlockParam[] = images.map((img) => ({
+    type: 'image',
+    source: { type: 'base64', media_type: img.mediaType, data: img.base64 },
+  }));
+  const out = messages.slice();
+  const lastIndex = out.length - 1;
+  const last = out[lastIndex]!;
+  const existingContent: ContentBlockParam[] =
+    typeof last.content === 'string' ? [{ type: 'text', text: last.content }] : last.content;
+  out[lastIndex] = { ...last, content: [...existingContent, ...imageBlocks] };
+  return out;
+}
+
 async function recordAgentRun(row: {
   conversationId: string | null;
   route: ModelRoute;
@@ -144,7 +170,7 @@ export async function callModel(c: ModelCall): Promise<CallModelResult> {
       model,
       max_tokens: 4096,
       system: buildSystem(c.system),
-      messages: c.messages,
+      messages: withImages(c.messages, c.images),
       tools: withCacheControlOnLastTool(c.tools),
     });
     const usage = message.usage;
@@ -170,6 +196,13 @@ export async function callModel(c: ModelCall): Promise<CallModelResult> {
       latencyMs: Date.now() - startedAt,
       outcome: 'error',
     });
+    // R02-tham-dinh G3: loi mang/timeout (`APIConnectionError`, ke ca
+    // `APIConnectionTimeoutError` — la lop con) cung phai thanh
+    // `ModelUnavailableError`, khong chi 429/5xx — caller §9 dua vao kieu
+    // loi nay de xin loi cu dan thay vi de rot APIConnectionError tho.
+    if (err instanceof APIConnectionError) {
+      throw new ModelUnavailableError(`Model ${model}: loi ket noi/timeout sau retry cua SDK (${err.message}).`);
+    }
     if (err instanceof APIError) {
       const status = err.status;
       if (status === 429 || (typeof status === 'number' && status >= 500)) {

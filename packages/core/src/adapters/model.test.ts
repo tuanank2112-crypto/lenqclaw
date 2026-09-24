@@ -1,7 +1,7 @@
-import type { Message } from '@anthropic-ai/sdk/resources/messages';
+import type { Message, MessageCreateParamsNonStreaming } from '@anthropic-ai/sdk/resources/messages';
 import { afterEach, describe, expect, it } from 'vitest';
 import { ModelUnavailableError } from '../domain/errors.js';
-import { APIError, callModel, setModelClientForTest, type ModelClientLike } from './model.js';
+import { APIConnectionError, APIError, callModel, setModelClientForTest, type ModelClientLike } from './model.js';
 
 function fakeMessage(model: string): Message {
   return {
@@ -80,5 +80,48 @@ describe('callModel (adapters/model.ts)', () => {
     await expect(
       callModel({ route: 'diagnose', system: 'he thong', messages: [] })
     ).rejects.toBeInstanceOf(ModelUnavailableError);
+  });
+
+  it('R02-tham-dinh G3: loi mang/timeout (APIConnectionError) => ModelUnavailableError, khong rot tho', async () => {
+    const fake: ModelClientLike = {
+      messages: {
+        create: async () => {
+          throw new APIConnectionError({ message: 'ECONNRESET' });
+        },
+      },
+    };
+    setModelClientForTest(fake);
+
+    await expect(
+      callModel({ route: 'diagnose', system: 'he thong', messages: [] })
+    ).rejects.toBeInstanceOf(ModelUnavailableError);
+  });
+
+  it('R02-tham-dinh D7: images duoc dua vao content block cua tin nhan cuoi', async () => {
+    let captured: MessageCreateParamsNonStreaming | null = null;
+    const fake: ModelClientLike = {
+      messages: {
+        create: async (body) => {
+          captured = body as MessageCreateParamsNonStreaming;
+          return fakeMessage(body.model);
+        },
+      },
+    };
+    setModelClientForTest(fake);
+
+    await callModel({
+      route: 'diagnose',
+      system: 'he thong',
+      messages: [{ role: 'user', content: 'day la anh may hong' }],
+      images: [{ mediaType: 'image/png', base64: 'AAAA' }],
+    });
+
+    const lastMessage = captured!.messages[captured!.messages.length - 1]!;
+    expect(Array.isArray(lastMessage.content)).toBe(true);
+    const blocks = lastMessage.content as Array<{ type: string; source?: { type: string; media_type: string; data: string } }>;
+    expect(blocks.some((b) => b.type === 'text')).toBe(true);
+    const imageBlock = blocks.find((b) => b.type === 'image');
+    expect(imageBlock).toBeDefined();
+    expect(imageBlock!.source).toEqual({ type: 'base64', media_type: 'image/png', data: 'AAAA' });
   });
 });
