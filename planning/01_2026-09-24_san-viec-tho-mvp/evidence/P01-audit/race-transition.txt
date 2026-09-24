@@ -1,0 +1,16 @@
+### $ WT=<worktree e585851> DATABASE_URL=.../lq_audit node brk/audit-race.mjs   2026-09-24T23:02:33+07:00
+4a | 200 concurrent published->held: winners | expect=1 | got=1 | XANH
+4a | 200 concurrent: ConflictError count | expect=199 | got=199 | XANH
+4a | 200 concurrent: job_events rows | expect=1 | got=1 | XANH
+4b | 60 concurrent published->{held,unassigned,cancelled}: winners | expect=1 | got=1 | XANH
+4b | job_events rows | expect=1 | got=1 | XANH
+4c | events == successful transitions (BB-09 count) | expect=6 | got=6 | XANH
+4c | non-Conflict errors | expect=0 | got=0 | XANH
+4d | 9 out-of-table pairs => IllegalTransitionError | expect=9 | got=9 | XANH
+4d | status unchanged / job_events after illegal pairs | expect=published/0 | got=published/0 | XANH
+4e | in tx, job_events insert fails (actor_type null) => status rolled back | expect=published/0 | got=published/0 | XANH
+4f | caller passes `sql` (no tx), event insert fails => state change without job_events (BB-09) | expect=published/0 | got=held/0 | DO
+4g | non-uuid jobId => ConflictError (typed §9) | expect=ConflictError | got=raw:22P02 | DO
+4h | 12 concurrent processInbound(limit 1), pool default size | expect=completed | got=TIMEOUT_20s | DO
+summary: XANH=10 DO=3
+EXIT=0

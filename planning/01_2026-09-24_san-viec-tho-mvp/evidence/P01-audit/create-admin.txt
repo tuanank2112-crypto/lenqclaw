@@ -1,0 +1,8 @@
+### $ git diff --stat e585851 HEAD -- apps packages scripts db package.json   (expect empty: HEAD adds docs only)
+diff_lines=0
+### $ printf 'x\n' | npm run -s create-admin -- --email r@audit.local --role superuser   (DATABASE_URL unset)
+--role phai la mot trong: bql_admin, bql_staff, guard
+EXIT=2
+### $ npm run -s create-admin -- --email p@audit.local --role guard --password secret123 < /dev/null   (password via argv must be ignored)
+Mat khau rong — doc tu stdin, vd: echo "mat-khau" | npm run create-admin -- --email a@b.c --role bql_admin
+EXIT=2

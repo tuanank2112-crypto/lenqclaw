@@ -1,0 +1,17 @@
+### $ node brk/ddl-compare.mjs (SPEC=specs/01-CONTRACTS.md @HEAD, DB=lq_audit migrated from e585851)
+spec tables: 33 · live tables: 34 (live includes schema_migrations)
+index one_active_slot: CREATE UNIQUE INDEX one_active_slot ON vendor_slots USING btree (vendor_id, building_id, trade_group) WHERE (status = 'active'::text)
+index one_trial_ever: CREATE UNIQUE INDEX one_trial_ever ON vendor_slots USING btree (vendor_id, building_id, trade_group) WHERE is_trial
+jobs->tickets FKs: jobs_access_ticket_id_fkey, jobs_case_ticket_id_fkey
+jobs.status CHECK (17): accepted,access_granted,access_pending,awaiting_acceptance,awaiting_consent,cancelled,case_open,closed,confirmed,dispatched,disputed,drafting,held,in_progress,published,routed_bql,unassigned
+JobStatus union (17) equal CHECK: true
+01-CONTRACTS §5 states (17) equal CHECK: true
+column/table diffs: 0
+EXIT=0
+
+### seed text vs SPEC-P01 §3 (diacritics)
+Cong ty Van hanh Demo
+ong_nuoc_ro = Ro ri duong ong nuoc
+khoa_cua = Khoa cua, mo khoa
+khac = Viec khac (can khao sat)
+EXIT=0

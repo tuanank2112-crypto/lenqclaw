@@ -1,0 +1,11 @@
+### red proof: worktree e585851 + scripts/audit_probe.mjs containing: import pg from 'pg';
+$ npm run gate
+=== gate: typecheck ===
+=== gate: build ===
+=== gate: test ===
+=== gate: check_adapter_boundary ===
+scripts/audit_probe.mjs:1: import "pg" ngoai adapters/db.ts
+violations: 1
+GATE_FAIL: buoc "check_adapter_boundary" exit 1
+EXIT=1
+worktree dirty_files after cleanup=0

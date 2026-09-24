@@ -1,0 +1,52 @@
+### $ bash brk/checker-break.sh <git archive e585851 copy>   2026-09-24T23:03:46+07:00
+### baseline
+violations: 0
+exit=0
+pii_keys_in_jobcard: 0
+forbidden_tools: 0
+exit=0
+### check_adapter_boundary.mjs — import pg outside adapters/db.ts
+B01 | control: import pg from 'pg' | file=apps/web/lib/audit_probe.ts | violations: 1 | exit=1 | XANH
+B02 | control: require('pg') | file=apps/web/lib/audit_probe.ts | violations: 1 | exit=1 | XANH
+B03 | control: await import('pg') | file=apps/web/lib/audit_probe.ts | violations: 1 | exit=1 | XANH
+B04 | subpath import 'pg/lib/index.js' | file=apps/web/lib/audit_probe.ts | violations: 0 | exit=0 | DO(bypass)
+B05 | subpath require('pg/lib/client') | file=apps/web/lib/audit_probe.ts | violations: 0 | exit=0 | DO(bypass)
+B06 | dynamic import with template literal | file=apps/web/lib/audit_probe.ts | violations: 0 | exit=0 | DO(bypass)
+B07 | import split across two lines | file=apps/web/lib/audit_probe.ts | violations: 0 | exit=0 | DO(bypass)
+B08 | require split across lines | file=apps/web/lib/audit_probe.ts | violations: 0 | exit=0 | DO(bypass)
+B09 | re-export: export { default } from 'pg' | file=apps/web/lib/audit_probe.ts | violations: 0 | exit=0 | DO(bypass)
+B10 | type import + value import on one line | file=apps/web/lib/audit_probe.ts | violations: 0 | exit=0 | DO(bypass)
+B11 | .mts file (not in INCLUDE_EXT) | file=apps/web/lib/audit_probe.mts | violations: 0 | exit=0 | DO(bypass)
+B12 | file under a src dir named dist | file=packages/core/src/dist/audit_probe.ts | violations: 0 | exit=0 | DO(bypass)
+B13 | sibling driver pg-pool (spec says only 'pg') | file=apps/web/lib/audit_probe.ts | violations: 0 | exit=0 | DO(bypass)
+B14 | control: @anthropic-ai/sdk outside model.ts | file=apps/web/lib/audit_probe.ts | violations: 1 | exit=1 | XANH
+B15 | @anthropic-ai/sdk import split over lines | file=apps/web/lib/audit_probe.ts | violations: 0 | exit=0 | DO(bypass)
+### check_adapter_boundary.mjs — insert into outbox outside transport.ts
+O01 | control: insert into outbox | file=packages/core/src/services/audit_probe.ts | violations: 1 | exit=1 | XANH
+O02 | INSERT  INTO   outbox (multi spaces) | file=packages/core/src/services/audit_probe.ts | violations: 1 | exit=1 | XANH
+O03 | INSERT<TAB>INTO<TAB>outbox | file=packages/core/src/services/audit_probe.ts | violations: 1 | exit=1 | XANH
+O04 | INSERT INTO / newline / outbox | file=packages/core/src/services/audit_probe.ts | violations: 0 | exit=0 | DO(bypass)
+O05 | insert into "outbox" (quoted ident) | file=packages/core/src/services/audit_probe.ts | violations: 0 | exit=0 | DO(bypass)
+O06 | insert into public.outbox | file=packages/core/src/services/audit_probe.ts | violations: 0 | exit=0 | DO(bypass)
+O07 | insert /*c*/ into outbox | file=packages/core/src/services/audit_probe.ts | violations: 0 | exit=0 | DO(bypass)
+O08 | string concatenation | file=packages/core/src/services/audit_probe.ts | violations: 0 | exit=0 | DO(bypass)
+### check_agent_tools.mjs — PII key added to JobCard
+A01 | control: phone: string | pii_keys_in_jobcard: 1 | exit=1 | XANH
+A02 | optional key phone?: string | pii_keys_in_jobcard: 0 | exit=0 | DO(bypass)
+A03 | quoted key 'phone': string | pii_keys_in_jobcard: 0 | exit=0 | DO(bypass)
+A04 | nested object type before PII key | pii_keys_in_jobcard: 0 | exit=0 | DO(bypass)
+A05 | readonly apartment_code | pii_keys_in_jobcard: 1 | exit=1 | XANH
+### check_agent_tools.mjs — forbidden tool name
+A06 | control: name: 'exec' | file=packages/core/src/agent/tools/audit_probe.ts | pii_keys_in_jobcard: 0 forbidden_tools: 1 | exit=1 | XANH
+A07 | JSON-style quoted key "name": "exec" | file=packages/core/src/agent/tools/audit_probe.ts | pii_keys_in_jobcard: 0 forbidden_tools: 0 | exit=0 | DO(bypass)
+A08 | template literal name: `exec` | file=packages/core/src/agent/tools/audit_probe.ts | pii_keys_in_jobcard: 0 forbidden_tools: 0 | exit=0 | DO(bypass)
+A09 | tool in .js file under tools/ | file=packages/core/src/agent/tools/audit_probe.js | pii_keys_in_jobcard: 0 forbidden_tools: 0 | exit=0 | DO(bypass)
+### tree clean after cases: 0 (not a git dir if blank); diff vs pristine: 0
+EXIT=0
+### runtime resolvability of bypass specifiers (cwd packages/core of worktree e585851)
+require(pg/lib/client): function
+exit=0
+import(pg/lib/index.js) Pool: function
+exit=0
+require(pg-pool): function
+exit=0

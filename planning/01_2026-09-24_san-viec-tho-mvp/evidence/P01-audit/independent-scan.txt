@@ -1,0 +1,12 @@
+### $ node brk/independent-scan.mjs (tree = worktree e585851, git ls-files apps packages scripts)
+ok   packages/core/src/adapters/db.ts:5 specifier=pg
+type packages/core/src/adapters/model.test.ts:1 specifier=@anthropic-ai/sdk/resources/messages
+ok   packages/core/src/adapters/model.ts:12 specifier=@anthropic-ai/sdk
+ok   packages/core/src/adapters/model.ts:13 specifier=@anthropic-ai/sdk
+ok   packages/core/src/adapters/model.ts:20 specifier=@anthropic-ai/sdk/resources/messages
+ok   packages/core/src/adapters/transport.ts:5 outbox-insert="insert into outbox"
+ok   packages/core/src/adapters/transport.ts:43 outbox-insert="insert into outbox"
+ok   scripts/check_adapter_boundary.mjs:88 outbox-insert="insert into outbox"
+files_scanned: 47
+real_violations: 0
+EXIT=0

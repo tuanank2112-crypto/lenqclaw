@@ -1,0 +1,31 @@
+### mode=sim base=http://127.0.0.1:3917 2026-09-24T23:00:02+07:00
+db before: inbound_events=7 outbox=7 audit_sim=2
+login: bql_admin=200 bql_staff=200 guard=200
+R01 | GET /dev/sim bql_admin (SPEC-P01 §6: page exists) | expect=200 | got=404 | DO
+R02 | GET /dev/sim bql_staff | expect=403 | got=403 | XANH
+R03 | GET /dev/sim guard | expect=403 | got=403 | XANH
+R04 | GET /dev/sim no cookie | expect=307/login | got=307/login | XANH
+R05 | POST /api/dev/sim/send bql_staff | expect=403 | got=403 | XANH
+R06 | POST /api/dev/sim/send guard | expect=403 | got=403 | XANH
+R07 | POST /api/dev/sim/replay bql_staff | expect=403 | got=403 | XANH
+R08 | POST /api/dev/sim/replay guard | expect=403 | got=403 | XANH
+R09 | GET /api/dev/sim/thread guard | expect=403 | got=403 | XANH
+N01 | POST /api/dev/sim/send no cookie | expect=307/login | got=307/login | XANH
+N02 | POST /api/dev/sim/replay no cookie | expect=307/login | got=307/login | XANH
+N03 | GET /api/dev/sim/thread no cookie | expect=307/login | got=307/login | XANH
+N04 | GET /api/auth/logout no cookie (no audit expected) | expect=307/login | got=307/login | XANH
+N05 | POST /api/auth/login empty body | expect=400 | got=400 | XANH
+N06 | POST /api/auth/login non-string email | expect=400 | got=500 | DO
+N07 | POST /api/auth/login bql_admin non-string password | expect=401 | got=500 | DO
+T01 | GET /tickets guard | expect=403 | got=403 | XANH
+T02 | GET /gate bql_staff | expect=403 | got=403 | XANH
+T03 | GET /ticketsX bql_staff (other path => deny) | expect=403 | got=404 | DO
+T04 | GET /gatekeeper guard (other path => deny) | expect=403 | got=404 | DO
+W01 | inbound_events rows added by all denied writes | expect=0 | got=0 | XANH
+W02 | audit sim.* rows added by all denied writes | expect=0 | got=0 | XANH
+V01 | POST send bql_admin threadType=bogus (input validation) | expect=400 | got=500 | DO
+V02 | POST send bql_admin account=evil (input validation) | expect=400 | got=200 | DO
+db: inbound rows with account not in (bql,market) = 2 · outbox rows = 2
+A01 | POST send bql_admin valid (control) | expect=200 | got=200 | XANH
+db after: inbound_events=9 outbox=9 audit_sim=4
+script_exit=0

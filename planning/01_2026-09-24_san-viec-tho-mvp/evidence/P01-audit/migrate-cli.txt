@@ -1,0 +1,15 @@
+### $ npm run -s db:migrate   (already applied)
+applied: 0
+EXIT=0
+### $ npm run -s db:seed   (second time)
+seed: job_categories=12 apartments=20
+EXIT=0
+### tamper: append '-- audit' to db/migrations/001_init.sql (scratch worktree), then db:migrate
+MIGRATE_ERROR: 001_init.sql da duoc ap dung nhung noi dung file da doi ke tu do. Migration chi duoc THEM, khong duoc sua file da chay (OPERATIONS.md §7).
+EXIT=1
+### restored; dirty_files=0
+### new file 002 with syntax error => transaction rollback, not recorded
+MIGRATE_ERROR: relation "no_such_table" does not exist
+EXIT=1
+audit_tmp exists=false · 002 recorded=0
+dirty_files=0

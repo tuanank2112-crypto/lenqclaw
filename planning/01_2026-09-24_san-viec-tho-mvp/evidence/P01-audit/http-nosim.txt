@@ -1,0 +1,12 @@
+### mode=nosim base=http://127.0.0.1:3918 2026-09-24T23:00:46+07:00
+db before: inbound_events=9 outbox=9 audit_sim=4
+login: bql_admin=200 bql_staff=200 guard=200
+M01 | GET /dev/sim bql_admin, DATA_MODE unset | expect=404 | got=404 | XANH
+M02 | POST /api/dev/sim/send bql_admin, DATA_MODE unset | expect=404 | got=404 | XANH
+M03 | POST /api/dev/sim/replay bql_admin, DATA_MODE unset | expect=404 | got=404 | XANH
+M04 | GET /api/dev/sim/thread bql_admin, DATA_MODE unset | expect=404 | got=404 | XANH
+M05 | POST /api/dev/sim/send no cookie, DATA_MODE unset | expect=404 | got=404 | XANH
+M06 | GET /dev/sim guard, DATA_MODE unset | expect=404 | got=404 | XANH
+M07 | inbound_events rows added | expect=0 | got=0 | XANH
+db after: inbound_events=9 outbox=9 audit_sim=4
+script_exit=0

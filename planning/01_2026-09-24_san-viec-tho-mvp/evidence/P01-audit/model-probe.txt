@@ -1,0 +1,6 @@
+### $ node brk/model-probe.mjs (fake client, DB=lq_audit)  2026-09-24T23:07:15+07:00
+M1 | ok call => +1 agent_runs outcome=ok | expect=1 | got=1 | XANH
+M2 | 529 call => +1 agent_runs (error rows total) | expect=1 | got=1 | XANH
+M3 | network failure (APIConnectionError, no HTTP status) => typed ModelUnavailableError (§9 caller path) | expect=ModelUnavailableError | got=APIConnectionError | DO
+M4 | ModelCall.images (01-CONTRACTS §2) reaches the API request | expect=1 | got=0 | DO
+EXIT=0

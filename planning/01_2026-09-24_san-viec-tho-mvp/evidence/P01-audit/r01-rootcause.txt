@@ -1,0 +1,19 @@
+### R01 root cause — build artefacts (built with DATA_MODE unset, as in TESTING §1 / npm run gate)
+$ ls .next/server/app/dev/
+sim
+sim.html
+sim.meta
+sim.rsc
+$ grep -o 'NEXT_HTTP_ERROR_FALLBACK;404\|NEXT_NOT_FOUND\|Man chat gia lap' .next/server/app/dev/sim.html | sort | uniq -c
+      1 NEXT_HTTP_ERROR_FALLBACK;404
+      2 This page could not be found
+$ node -e prerender-manifest routes containing /dev/sim
+[["/dev/sim",null]]
+
+### server log lines for N06/N07/V01 (next start stderr)
+TypeError: b?.email?.trim is not a function
+TypeError: The "password" argument must be of type string or an instance of ArrayBuffer, Buffer, TypedArray, or DataView. Received type number (123)
+error: new row for relation "inbound_events" violates check constraint "inbound_events_thread_type_check"
+TypeError: b?.email?.trim is not a function
+TypeError: The "password" argument must be of type string or an instance of ArrayBuffer, Buffer, TypedArray, or DataView. Received type number (123)
+error: new row for relation "inbound_events" violates check constraint "inbound_events_thread_type_check"

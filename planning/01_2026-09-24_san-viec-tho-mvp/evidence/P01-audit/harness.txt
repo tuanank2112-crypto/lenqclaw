@@ -1,0 +1,375 @@
+################ $ cat scratchpad/brk/http-roles.sh
+#!/usr/bin/env bash
+# Audit H02 — role/mode access checks against a live `next start`, using ONLY
+# cookies issued by the real /api/auth/login (no crafted cookies).
+# Usage: http-roles.sh <mode: sim|nosim|nosecret> <base>
+MODE=$1; BASE=$2; J=$(mktemp -d)
+PSQL="docker exec lenqclaw-db-1 psql -U lenqclaw -d lq_audit -tAc"
+cnt() { $PSQL "$1" | tr -d '[:space:]'; }
+login() { curl -s -o /dev/null -w "%{http_code}" -c "$J/$1" -H 'content-type: application/json' \
+  -d "{\"email\":\"$1@audit.local\",\"password\":\"Audit-Pass-$1-9x\"}" "$BASE/api/auth/login"; }
+hit() { # hit <jar|none> <method> <path> [json]
+  local jar=$1 m=$2 p=$3 d=$4
+  local args=(-s -o /dev/null -w "%{http_code}%{redirect_url}" -X "$m")
+  [ "$jar" != none ] && args+=(-b "$J/$jar")
+  [ -n "$d" ] && args+=(-H 'content-type: application/json' -d "$d")
+  curl "${args[@]}" "$BASE$p" | sed -E "s#https?://[^/]+##; s#\?.*##"; }
+check() { # check <id> <desc> <expect> <got>
+  local v=DO; [ "$4" = "$3" ] && v=XANH; echo "$1 | $2 | expect=$3 | got=$4 | $v"; }
+SEND='{"account":"bql","threadId":"audit-t","threadType":"user","senderUid":"audit-u","text":"audit probe"}'
+echo "### mode=$MODE base=$BASE $(date -Iseconds)"
+IN0=$(cnt "select count(*) from inbound_events"); OUT0=$(cnt "select count(*) from outbox"); SIM0=$(cnt "select count(*) from audit_log where action like 'sim.%'")
+echo "db before: inbound_events=$IN0 outbox=$OUT0 audit_sim=$SIM0"
+if [ "$MODE" = nosecret ]; then
+  OK0=$(cnt "select count(*) from audit_log where action='auth.login.ok'")
+  C=$(login bql_admin); echo "login bql_admin http=$C set-cookie-lines=$(grep -c lq_session "$J/bql_admin")"
+  check S01 "login bql_admin, SESSION_SECRET unset => refused (no session cookie)" "0" "$(grep -c lq_session "$J/bql_admin")"
+  OK1=$(cnt "select count(*) from audit_log where action='auth.login.ok'")
+  check S02 "audit auth.login.ok rows added by the refused login" "0" "$((OK1-OK0))"
+  exit 0
+fi
+echo "login: bql_admin=$(login bql_admin) bql_staff=$(login bql_staff) guard=$(login guard)"
+if [ "$MODE" = sim ]; then
+  check R01 "GET /dev/sim bql_admin (SPEC-P01 §6: page exists)" "200" "$(hit bql_admin GET /dev/sim)"
+  check R02 "GET /dev/sim bql_staff" "403" "$(hit bql_staff GET /dev/sim)"
+  check R03 "GET /dev/sim guard" "403" "$(hit guard GET /dev/sim)"
+  check R04 "GET /dev/sim no cookie" "307/login" "$(hit none GET /dev/sim)"
+  check R05 "POST /api/dev/sim/send bql_staff" "403" "$(hit bql_staff POST /api/dev/sim/send "$SEND")"
+  check R06 "POST /api/dev/sim/send guard" "403" "$(hit guard POST /api/dev/sim/send "$SEND")"
+  check R07 "POST /api/dev/sim/replay bql_staff" "403" "$(hit bql_staff POST /api/dev/sim/replay '{}')"
+  check R08 "POST /api/dev/sim/replay guard" "403" "$(hit guard POST /api/dev/sim/replay '{}')"
+  check R09 "GET /api/dev/sim/thread guard" "403" "$(hit guard GET '/api/dev/sim/thread?account=bql&threadId=x')"
+  check N01 "POST /api/dev/sim/send no cookie" "307/login" "$(hit none POST /api/dev/sim/send "$SEND")"
+  check N02 "POST /api/dev/sim/replay no cookie" "307/login" "$(hit none POST /api/dev/sim/replay '{}')"
+  check N03 "GET /api/dev/sim/thread no cookie" "307/login" "$(hit none GET '/api/dev/sim/thread?account=bql&threadId=x')"
+  check N04 "GET /api/auth/logout no cookie (no audit expected)" "307/login" "$(hit none GET /api/auth/logout)"
+  check N05 "POST /api/auth/login empty body" "400" "$(hit none POST /api/auth/login '{}')"
+  check N06 "POST /api/auth/login non-string email" "400" "$(hit none POST /api/auth/login '{"email":123,"password":"x"}')"
+  check N07 "POST /api/auth/login bql_admin non-string password" "401" "$(hit none POST /api/auth/login '{"email":"bql_admin@audit.local","password":123}')"
+  check T01 "GET /tickets guard" "403" "$(hit guard GET /tickets)"
+  check T02 "GET /gate bql_staff" "403" "$(hit bql_staff GET /gate)"
+  check T03 "GET /ticketsX bql_staff (other path => deny)" "403" "$(hit bql_staff GET /ticketsX)"
+  check T04 "GET /gatekeeper guard (other path => deny)" "403" "$(hit guard GET /gatekeeper)"
+  IN1=$(cnt "select count(*) from inbound_events"); SIM1=$(cnt "select count(*) from audit_log where action like 'sim.%'")
+  check W01 "inbound_events rows added by all denied writes" "0" "$((IN1-IN0))"
+  check W02 "audit sim.* rows added by all denied writes" "0" "$((SIM1-SIM0))"
+  check V01 "POST send bql_admin threadType=bogus (input validation)" "400" "$(hit bql_admin POST /api/dev/sim/send '{"account":"bql","threadId":"v","threadType":"bogus","senderUid":"u","text":"t"}')"
+  check V02 "POST send bql_admin account=evil (input validation)" "400" "$(hit bql_admin POST /api/dev/sim/send '{"account":"evil","threadId":"v2","threadType":"user","senderUid":"u","text":"t"}')"
+  echo "db: inbound rows with account not in (bql,market) = $(cnt "select count(*) from inbound_events where zalo_account_id not in ('bql','market')") · outbox rows = $(cnt "select count(*) from outbox where zalo_account_id not in ('bql','market')")"
+  check A01 "POST send bql_admin valid (control)" "200" "$(hit bql_admin POST /api/dev/sim/send "$SEND")"
+else
+  check M01 "GET /dev/sim bql_admin, DATA_MODE unset" "404" "$(hit bql_admin GET /dev/sim)"
+  check M02 "POST /api/dev/sim/send bql_admin, DATA_MODE unset" "404" "$(hit bql_admin POST /api/dev/sim/send "$SEND")"
+  check M03 "POST /api/dev/sim/replay bql_admin, DATA_MODE unset" "404" "$(hit bql_admin POST /api/dev/sim/replay '{}')"
+  check M04 "GET /api/dev/sim/thread bql_admin, DATA_MODE unset" "404" "$(hit bql_admin GET '/api/dev/sim/thread?account=bql&threadId=x')"
+  check M05 "POST /api/dev/sim/send no cookie, DATA_MODE unset" "404" "$(hit none POST /api/dev/sim/send "$SEND")"
+  check M06 "GET /dev/sim guard, DATA_MODE unset" "404" "$(hit guard GET /dev/sim)"
+  IN1=$(cnt "select count(*) from inbound_events")
+  check M07 "inbound_events rows added" "0" "$((IN1-IN0))"
+fi
+echo "db after: inbound_events=$(cnt "select count(*) from inbound_events") outbox=$(cnt "select count(*) from outbox") audit_sim=$(cnt "select count(*) from audit_log where action like 'sim.%'")"
+rm -rf "$J"
+
+################ $ cat scratchpad/brk/audit-race.mjs
+// Audit H02 — break (4): transitionJob races + out-of-table pairs, plus
+// processInbound pool behaviour. Runs OUTSIDE the repo against DB lq_audit,
+// importing the BUILT core of the audited worktree.
+import { pathToFileURL } from 'node:url';
+const core = await import(pathToFileURL(process.env.WT + '/packages/core/dist/index.js').href);
+const { sql, tx, closeDb, transitionJob, ConflictError, IllegalTransitionError, sim } = core;
+
+let red = 0, green = 0;
+const check = (id, desc, expect, got) => {
+  const ok = String(expect) === String(got);
+  ok ? green++ : red++;
+  console.log(`${id} | ${desc} | expect=${expect} | got=${got} | ${ok ? 'XANH' : 'DO'}`);
+};
+const one = async (t, p) => (await sql(t, p))[0];
+
+const [b] = await sql(`select id from buildings where code='TOA-A' limit 1`);
+const [apt] = await sql(`select id from apartments where building_id=$1 order by code limit 1`, [b.id]);
+const [res] = await sql(`insert into residents (full_name, status) values ('audit resident','active') returning id`);
+let seq = 0;
+async function newJob(status) {
+  const code = `AUD-${Date.now().toString(36)}-${seq++}`;
+  const [j] = await sql(
+    `insert into jobs (code, building_id, apartment_id, resident_id, draft, status) values ($1,$2,$3,$4,'{}'::jsonb,$5) returning id`,
+    [code, b.id, apt.id, res.id, status]);
+  return j.id;
+}
+const events = async (id) => Number((await one(`select count(*)::int c from job_events where job_id=$1`, [id])).c);
+const status = async (id) => (await one(`select status from jobs where id=$1`, [id])).status;
+async function race(jobId, specs) {
+  const r = await Promise.allSettled(specs.map(([from, to], i) =>
+    tx((q) => transitionJob(q, { jobId, from, to, actorType: 'audit', actorId: `r${i}` }))));
+  return {
+    ok: r.filter((x) => x.status === 'fulfilled').length,
+    conflict: r.filter((x) => x.status === 'rejected' && x.reason instanceof ConflictError).length,
+    other: r.filter((x) => x.status === 'rejected' && !(x.reason instanceof ConflictError)).map((x) => x.reason?.message).slice(0, 2),
+  };
+}
+
+// 4a — 200 concurrent same pair (BB-05 size; unit test only does 20)
+let j = await newJob('published');
+let r = await race(j, Array.from({ length: 200 }, () => ['published', 'held']));
+check('4a', '200 concurrent published->held: winners', 1, r.ok);
+check('4a', '200 concurrent: ConflictError count', 199, r.conflict);
+check('4a', '200 concurrent: job_events rows', 1, await events(j));
+
+// 4b — concurrent DIFFERENT targets from the same state
+j = await newJob('published');
+r = await race(j, [...Array(20)].flatMap(() => [['published', 'held'], ['published', 'unassigned'], ['published', 'cancelled']]));
+check('4b', '60 concurrent published->{held,unassigned,cancelled}: winners', 1, r.ok);
+check('4b', 'job_events rows', 1, await events(j));
+
+// 4c — ABA: timer (held->published) vs confirm (held->confirmed) vs claim (published->held)
+j = await newJob('held');
+r = await race(j, [...Array(30)].flatMap(() => [['held', 'published'], ['held', 'confirmed'], ['published', 'held']]));
+const ev = await events(j);
+check('4c', 'events == successful transitions (BB-09 count)', r.ok, ev);
+check('4c', 'non-Conflict errors', 0, r.other.length);
+
+// 4d — out-of-table pairs: IllegalTransitionError, zero DB effect
+j = await newJob('published');
+const illegal = [['published', 'closed'], ['published', 'published'], ['closed', 'drafting'], ['cancelled', 'drafting'],
+  ['in_progress', 'cancelled'], ['disputed', 'closed'], ['unassigned', 'published'], ['hacked', 'cancelled'], ['published', 'hacked']];
+let ill = 0;
+for (const [from, to] of illegal) {
+  try { await tx((q) => transitionJob(q, { jobId: j, from, to, actorType: 'audit', actorId: 'x' })); }
+  catch (e) { if (e instanceof IllegalTransitionError) ill++; }
+}
+check('4d', `${illegal.length} out-of-table pairs => IllegalTransitionError`, illegal.length, ill);
+check('4d', 'status unchanged / job_events after illegal pairs', 'published/0', `${await status(j)}/${await events(j)}`);
+
+// 4e — event insert fails inside tx => whole transition rolled back
+j = await newJob('published');
+let e4e = '';
+try { await tx((q) => transitionJob(q, { jobId: j, from: 'published', to: 'held', actorType: null, actorId: 'x' })); }
+catch (e) { e4e = e.code ?? e.constructor.name; }
+check('4e', 'in tx, job_events insert fails (actor_type null) => status rolled back', 'published/0', `${await status(j)}/${await events(j)}`);
+
+// 4f — same failure when caller passes pool `sql` instead of tx q (signature allows it)
+j = await newJob('published');
+try { await transitionJob(sql, { jobId: j, from: 'published', to: 'held', actorType: null, actorId: 'x' }); } catch {}
+check('4f', 'caller passes `sql` (no tx), event insert fails => state change without job_events (BB-09)', 'published/0', `${await status(j)}/${await events(j)}`);
+
+// 4g — non-uuid jobId => typed error?
+let e4g = '';
+try { await tx((q) => transitionJob(q, { jobId: 'not-a-uuid', from: 'published', to: 'held', actorType: 'audit', actorId: 'x' })); }
+catch (e) { e4g = e.code === 'ConflictError' ? 'ConflictError' : `raw:${e.code ?? e.name}`; }
+check('4g', 'non-uuid jobId => ConflictError (typed §9)', 'ConflictError', e4g);
+
+// 4h — processInbound pool starvation: 12 concurrent processInbound({limit:1}) with 12 pending events
+await sql(`update inbound_events set processed_at = now() where processed_at is null`);
+for (let i = 0; i < 12; i++) await sim.simInbound({ account: 'bql', threadId: 'aud-pool', threadType: 'user', senderUid: 'u', text: `p${i}` });
+const timeout = new Promise((r) => setTimeout(() => r('TIMEOUT_20s'), 20000));
+const run = Promise.all(Array.from({ length: 12 }, () => sim.processInbound(sim.echoHandler, { limit: 1 }))).then(() => 'completed');
+check('4h', '12 concurrent processInbound(limit 1), pool default size', 'completed', await Promise.race([run, timeout]));
+
+console.log(`summary: XANH=${green} DO=${red}`);
+process.exit(0); // 4h may leave pool clients blocked; exit explicitly
+
+################ $ cat scratchpad/brk/checker-break.sh
+#!/usr/bin/env bash
+# Audit H02 — break (5): static checkers vs evasive-but-valid code.
+# Runs on a `git archive e585851` copy OUTSIDE the repo. Each case: write one
+# file, run the checker, record count + exit, delete the file.
+T=$1   # tree copy root
+cd "$T" || exit 9
+# case <id> <expect caught|bypass-if-green> <file> <checker> <content>
+run() {
+  local id=$1 desc=$2 file=$3 checker=$4 content=$5
+  mkdir -p "$(dirname "$file")"; printf '%b\n' "$content" > "$file"
+  local out; out=$(node "scripts/$checker" 2>&1); local ex=$?
+  local n; n=$(echo "$out" | grep -E '^(violations|pii_keys_in_jobcard|forbidden_tools):' | tr '\n' ' ')
+  local v=XANH; [ $ex -eq 0 ] && v="DO(bypass)"
+  echo "$id | $desc | file=$file | $n| exit=$ex | $v"
+  rm -f "$file"
+}
+jobcard() { # jobcard <id> <desc> <extra field text>
+  cp packages/core/src/domain/types.ts /tmp/types.bak.$$
+  sed -i "s#  photo_urls_redacted: string\[\];#  photo_urls_redacted: string[];\n$3#" packages/core/src/domain/types.ts
+  local out; out=$(node scripts/check_agent_tools.mjs 2>&1); local ex=$?
+  local v=XANH; [ $ex -eq 0 ] && v="DO(bypass)"
+  echo "$1 | $2 | $(echo "$out" | grep -E '^pii_keys_in_jobcard:') | exit=$ex | $v"
+  cp /tmp/types.bak.$$ packages/core/src/domain/types.ts; rm -f /tmp/types.bak.$$
+}
+echo "### baseline"; node scripts/check_adapter_boundary.mjs | tail -1; echo "exit=$?"; node scripts/check_agent_tools.mjs | tail -2; echo "exit=$?"
+echo "### check_adapter_boundary.mjs — import pg outside adapters/db.ts"
+W=apps/web/lib/audit_probe
+run B01 "control: import pg from 'pg'"            $W.ts  check_adapter_boundary.mjs "import pg from 'pg';"
+run B02 "control: require('pg')"                    $W.ts  check_adapter_boundary.mjs "const pg = require('pg');"
+run B03 "control: await import('pg')"               $W.ts  check_adapter_boundary.mjs "const pg = await import('pg');"
+run B04 "subpath import 'pg/lib/index.js'"          $W.ts  check_adapter_boundary.mjs "import pg from 'pg/lib/index.js';"
+run B05 "subpath require('pg/lib/client')"          $W.ts  check_adapter_boundary.mjs "const Client = require('pg/lib/client');"
+run B06 "dynamic import with template literal"      $W.ts  check_adapter_boundary.mjs 'const pg = await import(`pg`);'
+run B07 "import split across two lines"             $W.ts  check_adapter_boundary.mjs "import pg\n  from 'pg';"
+run B08 "require split across lines"                $W.ts  check_adapter_boundary.mjs "const pg = require(\n  'pg'\n);"
+run B09 "re-export: export { default } from 'pg'"   $W.ts  check_adapter_boundary.mjs "export { default as pg } from 'pg';"
+run B10 "type import + value import on one line"    $W.ts  check_adapter_boundary.mjs "import type { Pool } from 'pg'; import pg from 'pg';"
+run B11 ".mts file (not in INCLUDE_EXT)"            $W.mts check_adapter_boundary.mjs "import pg from 'pg';"
+run B12 "file under a src dir named dist"           packages/core/src/dist/audit_probe.ts check_adapter_boundary.mjs "import pg from 'pg';"
+run B13 "sibling driver pg-pool (spec says only 'pg')" $W.ts check_adapter_boundary.mjs "import Pool from 'pg-pool';"
+run B14 "control: @anthropic-ai/sdk outside model.ts" $W.ts check_adapter_boundary.mjs "import A from '@anthropic-ai/sdk';"
+run B15 "@anthropic-ai/sdk import split over lines" $W.ts  check_adapter_boundary.mjs "import A\n  from '@anthropic-ai/sdk';"
+echo "### check_adapter_boundary.mjs — insert into outbox outside transport.ts"
+S=packages/core/src/services/audit_probe.ts
+run O01 "control: insert into outbox"               $S check_adapter_boundary.mjs "export const q = 'insert into outbox (kind) values (1)';"
+run O02 "INSERT  INTO   outbox (multi spaces)"      $S check_adapter_boundary.mjs "export const q = 'INSERT  INTO   outbox (kind) values (1)';"
+run O03 "INSERT<TAB>INTO<TAB>outbox"                $S check_adapter_boundary.mjs "export const q = 'INSERT\tINTO\toutbox (kind) values (1)';"
+run O04 "INSERT INTO / newline / outbox"            $S check_adapter_boundary.mjs "export const q = \`INSERT INTO\n  outbox (kind) values (1)\`;"
+run O05 "insert into \"outbox\" (quoted ident)"     $S check_adapter_boundary.mjs "export const q = 'insert into \"outbox\" (kind) values (1)';"
+run O06 "insert into public.outbox"                 $S check_adapter_boundary.mjs "export const q = 'insert into public.outbox (kind) values (1)';"
+run O07 "insert /*c*/ into outbox"                  $S check_adapter_boundary.mjs "export const q = 'insert /*c*/ into outbox (kind) values (1)';"
+run O08 "string concatenation"                      $S check_adapter_boundary.mjs "export const q = 'insert into ' + 'outbox (kind) values (1)';"
+echo "### check_agent_tools.mjs — PII key added to JobCard"
+jobcard A01 "control: phone: string"                "  phone: string;"
+jobcard A02 "optional key phone?: string"           "  phone?: string;"
+jobcard A03 "quoted key 'phone': string"            "  'phone': string;"
+jobcard A04 "nested object type before PII key"     "  loc: { tower: string };\n  resident_phone: string;"
+jobcard A05 "readonly apartment_code"               "  readonly apartment_code: string;"
+echo "### check_agent_tools.mjs — forbidden tool name"
+TT=packages/core/src/agent/tools/audit_probe.ts
+run A06 "control: name: 'exec'"                     $TT check_agent_tools.mjs "export const t = { name: 'exec' };"
+run A07 "JSON-style quoted key \"name\": \"exec\""  $TT check_agent_tools.mjs "export const t = { \"name\": \"exec\" };"
+run A08 "template literal name: \`exec\`"           $TT check_agent_tools.mjs 'export const t = { name: `exec` };'
+run A09 "tool in .js file under tools/"             packages/core/src/agent/tools/audit_probe.js check_agent_tools.mjs "export const t = { name: 'exec' };"
+rmdir packages/core/src/agent/tools packages/core/src/agent packages/core/src/dist 2>/dev/null
+echo "### tree clean after cases: $(git -C "$T" status --porcelain 2>/dev/null | wc -l) (not a git dir if blank); diff vs pristine: $(diff -rq "$T" "$T.pristine" | wc -l)"
+
+################ $ cat scratchpad/brk/ddl-compare.mjs
+// Audit H02 — 01-CONTRACTS §4 DDL (parsed from the spec) vs live schema in lq_audit.
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+const require = createRequire(process.env.WT + '/packages/core/package.json');
+const pg = require('pg');
+
+const spec = readFileSync(process.env.SPEC, 'utf8');
+const block = spec.slice(spec.indexOf('## §4.'), spec.indexOf('## §5.'));
+const sqlText = block.slice(block.indexOf('```sql') + 6, block.indexOf('```', block.indexOf('```sql') + 6))
+  .replace(/--[^\n]*/g, '');
+const tables = new Map();
+const re = /create table (\w+) \(/g;
+let m;
+while ((m = re.exec(sqlText))) {
+  let depth = 1, i = re.lastIndex, start = i;
+  for (; i < sqlText.length && depth > 0; i++) { if (sqlText[i] === '(') depth++; else if (sqlText[i] === ')') depth--; }
+  const body = sqlText.slice(start, i - 1);
+  const parts = []; let d = 0, cur = '';
+  for (const ch of body) { if (ch === '(') d++; if (ch === ')') d--; if (ch === ',' && d === 0) { parts.push(cur); cur = ''; } else cur += ch; }
+  parts.push(cur);
+  const cols = parts.map((p) => p.trim()).filter((p) => p && !/^(primary|unique|check|foreign|constraint)\b/i.test(p)).map((p) => p.split(/\s+/)[0]);
+  tables.set(m[1], cols);
+}
+const db = new pg.Client({ connectionString: process.env.DATABASE_URL });
+await db.connect();
+const live = await db.query(`select table_name, column_name from information_schema.columns where table_schema='public' order by table_name, ordinal_position`);
+const liveMap = new Map();
+for (const r of live.rows) { if (!liveMap.has(r.table_name)) liveMap.set(r.table_name, []); liveMap.get(r.table_name).push(r.column_name); }
+let diffs = 0;
+console.log(`spec tables: ${tables.size} · live tables: ${liveMap.size} (live includes schema_migrations)`);
+for (const [t, cols] of tables) {
+  const lc = liveMap.get(t);
+  if (!lc) { console.log(`MISSING TABLE ${t}`); diffs++; continue; }
+  const miss = cols.filter((c) => !lc.includes(c)); const extra = lc.filter((c) => !cols.includes(c));
+  if (miss.length || extra.length) { diffs++; console.log(`${t}: missing=[${miss}] extra=[${extra}]`); }
+}
+for (const t of liveMap.keys()) if (!tables.has(t) && t !== 'schema_migrations') { diffs++; console.log(`EXTRA TABLE ${t}`); }
+const idx = await db.query(`select indexname, indexdef from pg_indexes where indexname in ('one_active_slot','one_trial_ever')`);
+for (const r of idx.rows) console.log(`index ${r.indexname}: ${r.indexdef.replace(/public\./g, '')}`);
+const fk = await db.query(`select conname from pg_constraint where conname in ('jobs_case_ticket_id_fkey','jobs_access_ticket_id_fkey') order by 1`);
+console.log(`jobs->tickets FKs: ${fk.rows.map((r) => r.conname).join(', ')}`);
+const chk = await db.query(`select pg_get_constraintdef(oid) d from pg_constraint where conrelid='jobs'::regclass and contype='c' and pg_get_constraintdef(oid) like '%status%'`);
+const statuses = [...chk.rows[0].d.matchAll(/'(\w+)'/g)].map((x) => x[1]).sort();
+const tsUnion = [...readFileSync(process.env.WT + '/packages/core/src/domain/types.ts', 'utf8').matchAll(/^\s+\| '(\w+)'/gm)].map((x) => x[1]).sort();
+const sec5 = spec.slice(spec.indexOf('## §5.'), spec.indexOf('## §6.'));
+// first two columns (Từ | Sang) of the §5 table only
+const specStates = [...new Set([...sec5.matchAll(/^\| ([^|]+) \| ([^|]+) \|/gm)]
+  .flatMap((x) => [x[1], x[2]])
+  .flatMap((c) => [...c.matchAll(/`(\w+)`/g)].map((y) => y[1])))].sort();
+console.log(`jobs.status CHECK (${statuses.length}): ${statuses.join(',')}`);
+console.log(`JobStatus union (${tsUnion.length}) equal CHECK: ${JSON.stringify(tsUnion) === JSON.stringify(statuses)}`);
+console.log(`01-CONTRACTS §5 states (${specStates.length}) equal CHECK: ${JSON.stringify(specStates) === JSON.stringify(statuses)}`);
+console.log(`column/table diffs: ${diffs}`);
+await db.end();
+
+################ $ cat scratchpad/brk/model-probe.mjs
+// Audit H02 — callModel against DB lq_audit with a fake client (no network).
+import { pathToFileURL } from 'node:url';
+import { createRequire } from 'node:module';
+const core = await import(pathToFileURL(process.env.WT + '/packages/core/dist/index.js').href);
+const { model, sql, closeDb, ModelUnavailableError } = core;
+const require = createRequire(process.env.WT + '/packages/core/package.json');
+const { APIConnectionError } = require('@anthropic-ai/sdk');
+
+const check = (id, desc, expect, got) =>
+  console.log(`${id} | ${desc} | expect=${expect} | got=${got} | ${String(expect) === String(got) ? 'XANH' : 'DO'}`);
+const runs = async () => Number((await sql(`select count(*)::int c from agent_runs`))[0].c);
+
+let lastBody = null;
+const okMsg = { id: 'm', type: 'message', role: 'assistant', model: 'x', content: [{ type: 'text', text: 'hi' }],
+  stop_reason: 'end_turn', stop_sequence: null, usage: { input_tokens: 5, output_tokens: 2, cache_read_input_tokens: 1, cache_creation_input_tokens: 0 } };
+let mode = 'ok';
+model.setModelClientForTest({ messages: { create: async (b) => {
+  lastBody = b;
+  if (mode === '529') throw new model.APIError(529, { type: 'error' }, 'overloaded', new Headers());
+  if (mode === 'conn') throw new APIConnectionError({ message: 'ECONNRESET' });
+  return okMsg; } } });
+
+const r0 = await runs();
+await model.callModel({ route: 'diagnose', system: 's', messages: [{ role: 'user', content: 'x' }] });
+check('M1', 'ok call => +1 agent_runs outcome=ok', 1, (await runs()) - r0);
+mode = '529';
+try { await model.callModel({ route: 'compose', system: 's', messages: [{ role: 'user', content: 'x' }] }); } catch {}
+check('M2', '529 call => +1 agent_runs (error rows total)', 1, Number((await sql(`select count(*)::int c from agent_runs where outcome='error'`))[0].c));
+mode = 'conn';
+let e3 = '';
+try { await model.callModel({ route: 'compose', system: 's', messages: [{ role: 'user', content: 'x' }] }); }
+catch (e) { e3 = e instanceof ModelUnavailableError ? 'ModelUnavailableError' : e.constructor.name; }
+check('M3', 'network failure (APIConnectionError, no HTTP status) => typed ModelUnavailableError (§9 caller path)', 'ModelUnavailableError', e3);
+mode = 'ok';
+await model.callModel({ route: 'diagnose', system: 's', messages: [{ role: 'user', content: 'look' }],
+  images: [{ mediaType: 'image/png', base64: 'iVBORw0KGgo=' }] });
+const sentImages = JSON.stringify(lastBody.messages).includes('iVBORw0KGgo=') ? 1 : 0;
+check('M4', 'ModelCall.images (01-CONTRACTS §2) reaches the API request', 1, sentImages);
+await closeDb();
+
+################ $ cat scratchpad/brk/independent-scan.mjs
+// Audit H02 — independent, multi-line-aware scan of the audited tree for
+// BB-04/BB-07 violations (to separate "checker blind spot" from "real violation").
+import { execSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+const root = process.env.WT;
+const files = execSync('git ls-files apps packages scripts', { cwd: root, encoding: 'utf8' })
+  .split('\n').filter((f) => /\.(ts|tsx|js|mjs|cjs|mts|cts|jsx)$/.test(f));
+const ALLOW = {
+  pg: ['packages/core/src/adapters/db.ts'],
+  sdk: ['packages/core/src/adapters/model.ts'],
+  zca: ['packages/core/src/adapters/transport.ts'],
+  outbox: ['packages/core/src/adapters/transport.ts', 'scripts/check_adapter_boundary.mjs'],
+};
+// module specifiers inside import/require/export-from, across newlines, any quote style
+const SPEC = /(?:\bfrom\s*|\bimport\s*\(\s*|\brequire\s*\(\s*|^\s*import\s+)(['"`])([^'"`]+)\1/gm;
+const OUTBOX = /insert(?:\s|\/\*[\s\S]*?\*\/)+into\s+(?:"?public"?\.)?"?outbox\b/gi;
+let n = 0;
+const lineOf = (s, i) => s.slice(0, i).split('\n').length;
+for (const f of files) {
+  const s = readFileSync(`${root}/${f}`, 'utf8');
+  for (const m of s.matchAll(SPEC)) {
+    const spec = m[2];
+    const kind = /^pg(\/|$)|^pg-pool$/.test(spec) ? 'pg' : /^@anthropic-ai\/sdk/.test(spec) ? 'sdk' : /^zca-js/.test(spec) ? 'zca' : null;
+    if (!kind) continue;
+    const typeOnly = /^\s*import\s+type\b/.test(s.slice(s.lastIndexOf('\n', m.index) + 1, m.index + m[0].length)) ;
+    const allowed = ALLOW[kind].includes(f) || (kind === 'zca' && f.startsWith('apps/zalo-worker/'));
+    console.log(`${allowed ? 'ok  ' : typeOnly ? 'type' : 'VIOL'} ${f}:${lineOf(s, m.index)} specifier=${spec}`);
+    if (!allowed && !typeOnly) n++;
+  }
+  for (const m of s.matchAll(OUTBOX)) {
+    const allowed = ALLOW.outbox.includes(f);
+    console.log(`${allowed ? 'ok  ' : 'VIOL'} ${f}:${lineOf(s, m.index)} outbox-insert="${m[0].replace(/\s+/g, ' ')}"`);
+    if (!allowed) n++;
+  }
+}
+console.log(`files_scanned: ${files.length}`);
+console.log(`real_violations: ${n}`);
+
