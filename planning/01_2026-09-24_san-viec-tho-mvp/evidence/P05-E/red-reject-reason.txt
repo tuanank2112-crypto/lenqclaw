@@ -1,0 +1,35 @@
+$ npx vitest run --config vitest.db.config.ts tests/tickets-decision.db.test.ts (vo hieu hoa kiem note_required)
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mD:/lenqclaw/apps/web[39m
+
+ [31m❯[39m tests/tickets-decision.db.test.ts [2m([22m[2m5 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 580[2mms[22m[39m
+[31m   [31m×[31m /api/tickets/{id}/decision (db, SPEC-P04 §8.4 a-e)[2m > [22m(b) bql_staff reject khong note ⇒ 400, ticket van open[90m 124[2mms[22m[31m[39m
+[31m     → expected 500 to be 400 // Object.is equality[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 1 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[31m[1m[7m FAIL [27m[22m[39m tests/tickets-decision.db.test.ts[2m > [22m/api/tickets/{id}/decision (db, SPEC-P04 §8.4 a-e)[2m > [22m(b) bql_staff reject khong note ⇒ 400, ticket van open
+[31m[1mAssertionError[22m: expected 500 to be 400 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 400[39m
+[31m+ 500[39m
+
+[36m [2m❯[22m tests/tickets-decision.db.test.ts:[2m61:24[22m[39m
+    [90m 59| [39m      [34midParams[39m(ticketId)
+    [90m 60| [39m    )[33m;[39m
+    [90m 61| [39m    [34mexpect[39m(res[33m.[39mstatus)[33m.[39m[34mtoBe[39m([34m400[39m)[33m;[39m
+    [90m   | [39m                       [31m^[39m
+    [90m 62| [39m    [35mconst[39m body [33m=[39m [35mawait[39m res[33m.[39m[34mjson[39m()[33m;[39m
+    [90m 63| [39m    [34mexpect[39m(body[33m.[39merror)[33m.[39m[34mtoBe[39m([32m'note_required'[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m4 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 04:28:27
+[2m   Duration [22m 1.87s[2m (transform 250ms, setup 0ms, collect 1.00s, tests 580ms, environment 0ms, prepare 95ms)[22m
+
+EXIT:1

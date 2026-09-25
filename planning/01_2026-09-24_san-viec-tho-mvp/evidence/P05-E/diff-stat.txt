@@ -1,0 +1,26 @@
+ apps/web/app/api/_auth.ts                         |  19 ++
+ apps/web/app/api/dev/sim/replay/route.ts          |   4 +-
+ apps/web/app/api/dev/sim/send/route.ts            |   5 +
+ apps/web/app/api/dev/sim/tick/route.ts            |  51 ++++++
+ apps/web/app/api/tickets/[id]/decision/route.ts   |  85 +++++++++
+ apps/web/app/api/vendors/[id]/slots/paid/route.ts |  71 ++++++++
+ apps/web/app/api/vendors/[id]/status/route.ts     |  95 ++++++++++
+ apps/web/app/api/vendors/capacity/route.ts        |  55 ++++++
+ apps/web/app/dev/sim/SimBoard.tsx                 |  81 ++++++++-
+ apps/web/app/gate/page.tsx                        |  70 ++++++-
+ apps/web/app/jobs/[code]/page.tsx                 |  86 +++++++++
+ apps/web/app/jobs/page.tsx                        |  76 ++++++++
+ apps/web/app/tickets/TicketDecisionForm.tsx       |  59 ++++++
+ apps/web/app/tickets/page.tsx                     | 126 ++++++++++++-
+ apps/web/app/vendors/CapacityForm.tsx             |  76 ++++++++
+ apps/web/app/vendors/SlotPaidButton.tsx           |  54 ++++++
+ apps/web/app/vendors/VendorStatusActions.tsx      |  60 ++++++
+ apps/web/app/vendors/page.tsx                     | 211 ++++++++++++++++++++++
+ apps/web/lib/auth/policy.test.ts                  |  37 ++++
+ apps/web/lib/auth/policy.ts                       |  30 ++-
+ apps/web/tests/p05e-helpers.ts                    | 205 +++++++++++++++++++++
+ apps/web/tests/sim-tick.db.test.ts                |  46 +++++
+ apps/web/tests/tickets-decision.db.test.ts        | 145 +++++++++++++++
+ apps/web/tests/vendors-paid.db.test.ts            |  90 +++++++++
+ apps/web/tests/vendors-status.db.test.ts          |  53 ++++++
+ 25 files changed, 1864 insertions(+), 26 deletions(-)
