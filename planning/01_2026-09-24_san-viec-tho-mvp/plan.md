@@ -133,6 +133,10 @@ Lý do: P03 đã duyệt, P02 không phụ thuộc P05/P06; rủi ro Zalo là �
 Lý do: lượt chấm model thật đầu tiên (H08) ra chẩn đoán 0/40 vì `save_job_draft` chỉ ghi danh mục vào JSON `draft`, không ghi cột — lỗi sản phẩm (khung giá ticket case luôn rỗng, P05 ghép thợ sẽ gãy), không chỉ lỗi máy chấm. Hợp đồng: [SPEC-P03 §11.11](specs/SPEC-P03-Resident-Agent.md). Giao trong H08 vòng 2 (worker trước bị ngắt giữa lượt chấm); H08 được mở phạm vi thêm `save_job_draft.ts` + test.
 **Lật được:** có — chỉ một câu lệnh ghi trong tool.
 
+### Đ24 — 2026-09-25 · Thêm nhà cung cấp OpenRouter, chấm lại bằng CÙNG model Gemini (người dùng đưa key OpenRouter: "lấy tạm key này… model nào cũng được, nhẹ chút")
+Lý do: key Gemini trực tiếp hết hạn mức giữa lượt chấm H08 (429 cả 3 model). OpenRouter có `google/gemini-3.6-flash` ⇒ SO chọn chấm lại bằng CÙNG model (số so được với lượt 1 và với mặc định sản phẩm) thay vì `gpt-4o-mini` (rẻ hơn nhưng số đo không nói gì về model đang dùng; đổi sang được bằng `MODEL_DEFAULT`). Chi phí ước ~1 USD/lượt đủ 4 bộ. Hợp đồng: [01-CONTRACTS §2c](specs/01-CONTRACTS.md); giao H10. Mặc định sản phẩm vẫn `gemini`.
+**Lật được:** có — bỏ `MODEL_PROVIDER=openrouter`.
+
 ### Quyết định bị thay thế
 | Mốc cũ | Phát biểu cũ | Thay bằng | Lý do |
 | :-- | :-- | :-- | :-- |
@@ -193,6 +197,7 @@ Thứ tự bắt buộc (Đ13, Đ15): `P01 (nền tảng + SimTransport) → P03
 - [x] P03 vòng 2 theo SPEC-P03 §11 (Đ20, Đ21 lớp hiểu ý) — H06 `f396bb5..65fe108` (2 vòng), R06 ✅, R03 ✅ — 2026-09-25; `npm test` 173, `test:db` 76, 0 skip
 - [ ] H08 — Máy chấm model thật (Đ19-4 + Đ21): G09/G10 qua vòng agent thật, golden emergency hai lớp (≥100) + consent (≥40); vá `eval_golden` gọi `searchRegulations` thiếu `buildingId` (R06 Q3); lệch sót sau R06: `handoff_to_staff` ghi cứng 30 phút thay vì env `HUMAN_TAKEOVER_MIN` mặc định 60 (§11.6) + `.env.example` thiếu `MODEL_TRIAGE`/`TRIAGE_*`/`HUMAN_TAKEOVER_MIN` — mở khoá G08–G10 · vòng 1 bị ngắt 12:31 (khẩn cấp 100/100, đồng ý 42/44, chẩn đoán 0/40 do lỗi cột — Đ23) ⇒ vòng 2
 - [x] Chốt câu hỏi mở R03 (Đ19, 2026-09-25): (1) SPEC-P03 §10.8 còn ghi `claude-opus-5` ⇒ đồng bộ theo Đ18; (2) SDK `@anthropic-ai/sdk@0.68.0` không có `fallbacks` ⇒ nhánh anthropic dùng `MODEL_FALLBACKS` phía client; (3) quy ước `jobs.window_start/end` từ khung giờ gợi ý — trước P05; (4) `eval_golden` chấm một lượt đơn, chưa chạy vòng tool của agent thật — xét lại khi thẩm định
+- [ ] H10 — nhánh OpenRouter trong adapter model (01-CONTRACTS §2c, Đ24) + khói thật 1 lời gọi
 - [ ] P04 — Dashboard tối thiểu (G07)
 - [ ] P05 — Agent bước 4–7 (G11, G12, G12b)
 - [ ] P06 — Bước 8 (G13, G16 trọn bước 0→8 trên kênh giả lập)

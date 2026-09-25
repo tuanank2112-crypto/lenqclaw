@@ -289,3 +289,22 @@ Worker và core nói chuyện qua Postgres (bảng `inbound_events`, `outbox`, `
 | Thử nghiệm | `setModelClientForTest` giữ nguyên cho nhánh anthropic; nhánh gemini có `setGeminiFetchForTest(fake: typeof fetch \| null)` — test dịch vào/ra, `thoughtSignature`, fallback, lỗi đều chạy bằng fetch giả, 0 mạng trong `npm test` |
 
 CẤM: SDK/endpoint Gemini ngoài `adapters/model.ts` (máy đo biên canh chuỗi `generativelanguage.googleapis.com` và `@google/genai`); log key hay URL có key; để core rẽ nhánh theo nhà cung cấp.
+
+## §2c. Nhà cung cấp LLM thứ ba — OpenRouter (Đ24, 2026-09-25)
+
+Lý do: key Gemini trực tiếp hết hạn mức (429 `RESOURCE_EXHAUSTED`, 2026-09-25 ~15:43) giữa lượt chấm model thật. OpenRouter phục vụ CÙNG model Gemini (`google/gemini-3.6-flash`) qua API dạng OpenAI ⇒ số đo so được với lượt chấm Gemini trực tiếp. Chữ ký `callModel`/`callTriageModel` giữ nguyên §2b — chỉ `adapters/model.ts` thêm nhánh.
+
+| Hạng mục | Chốt |
+| :-- | :-- |
+| Chọn | `MODEL_PROVIDER=openrouter` (thêm vào `ModelProvider`); mặc định vẫn `gemini` |
+| Gọi | `fetch` POST `${OPENROUTER_BASE_URL ?? 'https://openrouter.ai/api/v1'}/chat/completions`, header `authorization: Bearer <OPENROUTER_API_KEY>`, `content-type: application/json`, `x-title: lenqclaw`. Đọc `OPENROUTER_API_KEY` chỉ trong `adapters/model.ts`. Body BẮT BUỘC có `provider: { data_collection: 'deny' }` (không cho nhà cung cấp dùng dữ liệu cư dân để huấn luyện — Luật 91/2025) và `max_tokens: 16000`. CẤM `temperature`/`top_p`/`reasoning`; CẤM trường `models` (fallback phía server) — fallback làm phía client như §2b để `agent_runs.model` đúng |
+| Model | `MODEL_DEFAULT` mặc định `google/gemini-3.6-flash`; `MODEL_<ROUTE>` ghi đè; triage mặc định `google/gemini-3.5-flash-lite` (vẫn KHÔNG rơi về `MODEL_DEFAULT`, §11.10); `MODEL_FALLBACKS` mặc định `google/gemini-3-flash-preview`. Probe 2026-09-25 (key người dùng): 3 model trên + `openai/gpt-4o-mini` đều 200 + `tool_calls` |
+| Dịch vào | `system` ⇒ message `{role:'system'}` đầu mảng; `text` ⇒ `content` chuỗi (nhiều khối text nối `
+`) hoặc mảng part `{type:'text'}` khi có ảnh; `image` ⇒ `{type:'image_url', image_url:{url:'data:<mime>;base64,<b64>'}}`; `tool_use` (assistant) ⇒ `tool_calls[{id, type:'function', function:{name, arguments: JSON.stringify(input)}}]`; mỗi `tool_result` ⇒ một message `{role:'tool', tool_call_id, content}` (`is_error` ⇒ tiền tố `ERROR: `), đặt NGAY sau message assistant chứa `tool_calls`, theo đúng thứ tự; `tools[]` ⇒ `{type:'function', function:{name, description, parameters: input_schema}}`; bỏ `cache_control` |
+| Dịch ra | `choices[0].message.content` ⇒ khối `text` (rỗng ⇒ không có khối); `tool_calls[]` ⇒ `tool_use{id: tool_call.id, name, input: JSON.parse(arguments)}` — `arguments` không parse được ⇒ `input = {}` để lớp kiểm input tool (§2b) trả `InvalidToolInput`; `finish_reason` `tool_calls` ⇒ `tool_use`, `stop` ⇒ `end_turn` (nhưng có `tool_calls` thì luôn `tool_use`), `length` ⇒ `max_tokens`, `content_filter` ⇒ `refusal`. `usage.prompt_tokens`/`completion_tokens`/`prompt_tokens_details.cached_tokens` ⇒ `input_tokens`/`output_tokens`/`cache_read_input_tokens`. `model` trả về ghi vào `agent_runs.model` |
+| Lỗi | 429/500/502/503/504, lỗi mạng, timeout ⇒ `ModelUnavailableError` (retry 2 lần, lùi 1 s rồi 3 s, rồi `MODEL_FALLBACKS`); 402 (hết credit) ⇒ `ModelUnavailableError` KHÔNG retry, KHÔNG fallback; 400/401/403/404 ⇒ ném lỗi gốc; body 200 có trường `error` ⇒ xử như mã trong `error.code` |
+| Thử nghiệm | `setOpenRouterFetchForTest(fake: typeof fetch \| null)`; triage dùng lại `setTriageFetchForTest` khi provider openrouter. Test dịch vào/ra (vòng tool 2 lượt, nhiều `tool_result` một lượt, ảnh), `data_collection:'deny'` có trong body, 429 ⇒ fallback, 402 ⇒ không retry, `arguments` hỏng — 0 mạng trong `npm test` |
+| Máy chấm | `scripts/eval/score.mjs`: `credentialEnvName()` trả `OPENROUTER_API_KEY` khi provider `openrouter` (thiếu ⇒ `blocked`, exit 3) |
+
+CẤM: gọi `openrouter.ai` ngoài `adapters/model.ts` (máy đo biên `check_adapter_boundary.mjs` canh thêm chuỗi `openrouter.ai`); SDK `openai` (chỉ `fetch`); log key; đổi `MODEL_PROVIDER` mặc định khỏi `gemini` (OpenRouter là đường tạm/dự phòng — đổi mặc định cần người chốt).
+
