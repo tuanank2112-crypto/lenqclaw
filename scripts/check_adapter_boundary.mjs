@@ -27,6 +27,9 @@ const ZALO_WORKER_DIR = path.join('apps', 'zalo-worker').split(path.sep).join('/
 // May do nay TU CHUA chuoi bao dong (regex, thong bao loi) — quet chinh no
 // se tu bao dong gia. Loai tru dung file nay.
 const SELF = path.join('scripts', 'check_adapter_boundary.mjs').split(path.sep).join('/');
+// 01-CONTRACTS §2b: chuoi endpoint Gemini CHI duoc xuat hien trong
+// adapters/model.ts (goi H04, goi c).
+const GEMINI_HOST = 'generativelanguage.googleapis.com';
 
 async function walk(dir, insideSrc) {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -68,6 +71,7 @@ function makeMatcher(exact, prefixes) {
 const isPgSpecifier = makeMatcher(['pg', 'pg-pool'], ['pg/']);
 const isAnthropicSpecifier = makeMatcher(['@anthropic-ai/sdk'], ['@anthropic-ai/sdk/']);
 const isZcaSpecifier = makeMatcher(['zca-js'], ['zca-js/']);
+const isGenaiSpecifier = makeMatcher(['@google/genai'], ['@google/genai/']);
 
 /**
  * Tra ve mang { specifier, index, typeOnly } — moi phan tu la MOT tham
@@ -156,6 +160,9 @@ async function main() {
       if (!isModelAdapter && isAnthropicSpecifier(ref.specifier)) {
         violations.push(`${rel}:${lineNo}: ${ref.keyword} "${ref.specifier}" ngoai adapters/model.ts`);
       }
+      if (!isModelAdapter && isGenaiSpecifier(ref.specifier)) {
+        violations.push(`${rel}:${lineNo}: ${ref.keyword} "${ref.specifier}" ngoai adapters/model.ts`);
+      }
       if (!isTransportAdapter && !isZaloWorker && isZcaSpecifier(ref.specifier)) {
         violations.push(`${rel}:${lineNo}: ${ref.keyword} "${ref.specifier}" ngoai adapters/transport.ts va apps/zalo-worker/**`);
       }
@@ -164,6 +171,15 @@ async function main() {
     if (!isTransportAdapter) {
       for (const offset of findOutboxInsertOffsets(content)) {
         violations.push(`${rel}: "insert into outbox" (be mat chinh tac, ~offset ${offset}) ngoai adapters/transport.ts`);
+      }
+    }
+
+    if (!isModelAdapter) {
+      let searchFrom = 0;
+      let idx;
+      while ((idx = content.indexOf(GEMINI_HOST, searchFrom)) !== -1) {
+        violations.push(`${rel}:${lineAt(content, idx)}: chuoi "${GEMINI_HOST}" ngoai adapters/model.ts`);
+        searchFrom = idx + GEMINI_HOST.length;
       }
     }
   }

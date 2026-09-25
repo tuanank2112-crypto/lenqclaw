@@ -5,10 +5,12 @@
 // khong trung lap). Can `npm run build -w @lenqclaw/core` truoc (doc
 // `packages/core/dist/**`).
 //
-// Ngu nghia mo hinh (SPEC-P03 §10.6, Đ17-e): may nay KHONG co
-// ANTHROPIC_API_KEY => bo `diagnosis`/`responsibility` (can LLM) phai tra
-// "blocked", KHONG tinh truot, ma thoat 3. Bo `emergency` la tat dinh
-// (khong LLM) nen LUON cham duoc, bat ke co credential hay khong.
+// Ngu nghia mo hinh (SPEC-P03 §10.6, Đ17-e, Đ18/Đ19 + 01-CONTRACTS §2b):
+// thieu credential CUA PROVIDER DANG CHON (GEMINI_API_KEY khi
+// MODEL_PROVIDER=gemini — mac dinh; ANTHROPIC_API_KEY khi anthropic) => bo
+// `diagnosis`/`responsibility` (can LLM) phai tra "blocked", KHONG tinh
+// truot, ma thoat 3. Bo `emergency` la tat dinh (khong LLM) nen LUON cham
+// duoc, bat ke co credential hay khong.
 
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -58,16 +60,29 @@ async function scoreEmergency() {
   return { blocked: false, total, pass, falsePositive, falseNegative, ok, failures };
 }
 
-function hasCredential() {
-  return Boolean(process.env.ANTHROPIC_API_KEY?.trim());
+/** SPEC-P03 §10.6: credential doc theo nha cung cap dang chon (01-CONTRACTS
+ * §2b) — GEMINI_API_KEY khi MODEL_PROVIDER=gemini (mac dinh), ANTHROPIC_API_KEY
+ * khi MODEL_PROVIDER=anthropic. */
+function currentProvider() {
+  const p = process.env.MODEL_PROVIDER?.trim().toLowerCase();
+  return p === 'anthropic' ? 'anthropic' : 'gemini';
 }
 
-/** Bo `diagnosis`/`responsibility`: can ANTHROPIC_API_KEY that. Thieu
- * credential, hoac loi ha tang (429/5xx/mang) => blocked=true, KHONG tinh
- * truot (Đ17-e). Diem: >= threshold moi qua. */
+function credentialEnvName() {
+  return currentProvider() === 'anthropic' ? 'ANTHROPIC_API_KEY' : 'GEMINI_API_KEY';
+}
+
+function hasCredential() {
+  const name = credentialEnvName();
+  return Boolean(process.env[name]?.trim());
+}
+
+/** Bo `diagnosis`/`responsibility`: can credential that cua provider dang
+ * chon. Thieu credential, hoac loi ha tang (429/5xx/mang) => blocked=true,
+ * KHONG tinh truot (Đ17-e). Diem: >= threshold moi qua. */
 async function scoreLlmSet(fileName, threshold, scoreOneCase) {
   if (!hasCredential()) {
-    return { blocked: true, reason: 'missing ANTHROPIC_API_KEY' };
+    return { blocked: true, reason: `missing ${credentialEnvName()} (MODEL_PROVIDER=${currentProvider()})` };
   }
   const cases = await loadJsonl(path.join(GOLDEN_DIR, fileName));
   let pass = 0;
