@@ -171,6 +171,10 @@ Người dùng hỏi "chỉ cần thay phần chưa làm là được?". Không 
 Khi duyệt R14 phát hiện hai lỗ: route web tự ghép việc đình chỉ (nhả cuốc trước, đặt `suspended` sau ⇒ thợ bị đình chỉ nhận lại được cuốc vừa nhả) và cuốc `access_granted` của thợ bị đình chỉ vẫn được giao (lộ số căn/SĐT cư dân — BB-02). Hợp đồng: [SPEC-P05 §10.17](specs/SPEC-P05-Dispatch.md) + cặp `access_granted → published` ở 01-CONTRACTS §5. Giao H14 vòng 2 (mở phạm vi `services/{vendors,access,timers,job-state}.ts`, `domain/errors.ts`).
 **Lật được:** có — nhưng bỏ chốt chặn `dispatchToVendor` là mở lại lỗ PII.
 
+### Đ31 — 2026-09-26 · Model sập ⇒ trả lời kèm hotline + đẩy cho người (Super Orchestrator, 🔴)
+Lượt chấm H08 vòng 4 (Gemini cạn quota) cho thấy khi `triage` và agent chính cùng lỗi, 3 ca khẩn cấp gián tiếp bị bỏ sót và cư dân chỉ nhận "Em đang bận…" — BQL không biết. Hợp đồng: [SPEC-P03 §11.12](specs/SPEC-P03-Resident-Agent.md): câu trả lời có hotline BQL + `handoff_to_staff(model_unavailable)`; không đổi prompt, không báo động giả. Giao H15.
+**Lật được:** có — đổi câu chữ qua hằng số; bỏ handoff là quay lại lỗ im lặng.
+
 ### Quyết định bị thay thế
 | Mốc cũ | Phát biểu cũ | Thay bằng | Lý do |
 | :-- | :-- | :-- | :-- |
