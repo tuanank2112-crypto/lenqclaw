@@ -110,3 +110,10 @@ Người dùng duyệt đưa P02 lên chạy song song (lật một phần thứ
 - Q5 các mặc định worker tự chọn (thử lại lỗi gửi 30 s × 5 ⇒ `failed`; đồng bộ cookie 10 phút; `ZaloApiError` khi đăng nhập lại ⇒ cookie hết hạn; outbox `image` ⇒ `failed`; không khoá cứng 2 bản) — chấp nhận cho giai đoạn 1.
 - Q6 `createTransport('zalo')`: core chỉ dùng `enqueue()` ghi outbox, không cần transport theo env ⇒ giữ `TRANSPORT=sim` cho `/dev/sim`; bỏ lỗi này ở giai đoạn 2.
 - Test đếm migration KHÔNG được ghi cứng số: `applied` = số file `db/migrations/*.sql`.
+
+### §9.8 Đăng xuất + trạng thái QR trên `/zalo` (SO, 2026-09-25 — sau chạy thử: G18, G19)
+- Migration `005_zalo_ui.sql` (chỉ thêm): `zalo_accounts` thêm `logout_requested_at timestamptz`, `qr_state text check (qr_state in ('waiting_scan','scanned','expired','declined'))`.
+- `POST /api/zalo/{account}/logout` (chỉ `bql_admin`; vai khác 403) ⇒ đặt `logout_requested_at=now()`. Worker quét cùng nhịp 2 s với `login_requested_at` ⇒ dừng listener + pacer của tài khoản đó, `session_enc=null`, xoá `qr_*`, `session_state='logged_out'`, `logout_requested_at=null`, `audit_log action='zalo.logout'` (actor = staff đã bấm, lấy từ route, ghi vào cột tạm hoặc audit phía web — chọn một, ghi report). Worker KHÔNG chạy ⇒ route vẫn tự xoá `session_enc` + đặt `logged_out` trong cùng transaction (không để phiên mồ côi).
+- Sự kiện QR của zca-js ⇒ `qr_state`: `qr`⇒`waiting_scan`, `scanned`⇒`scanned`, `expired`⇒`expired`, từ chối trên điện thoại ⇒ `declined`; đăng nhập xong ⇒ `null`.
+- Trang `/zalo`: `waiting_scan` ⇒ ảnh QR + đồng hồ đếm ngược tới `qr_expires_at`; `scanned` ⇒ "Đã quét — bấm XÁC NHẬN trên điện thoại Zalo phụ" (ẩn ảnh QR); `expired`/`declined` ⇒ nút "Lấy mã QR mới". `connected` ⇒ nút "Đăng xuất Zalo" có hộp xác nhận nói rõ: "Hệ thống xoá phiên; để gỡ hẳn, vào Zalo trên điện thoại → quản lý thiết bị đăng nhập" (G18).
+- CẤM tự động xin QR mới khi hết hạn (tránh vòng QR vô hạn khi không có người).
