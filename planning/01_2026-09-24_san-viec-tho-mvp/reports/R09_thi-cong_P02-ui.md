@@ -86,3 +86,10 @@ Head vòng 2: `a7c3bc633add3a3a29cbedcab6dc7af10c6e1578` — test(web): disable 
 - Không có.
 
 ⏳ Chờ người duyệt.
+
+## Duyệt vòng 2 — SO đo lại (2026-09-25)
+- `a7c3bc6`: đúng 1 dòng `fileParallelism: false` trong `apps/web/vitest.db.config.ts` ✅.
+- DB rỗng `lq_so09`: `npm run test:db` exit 0 — core 84, web 11, zalo-worker 27 (122, 0 fail, 0 skip). `npm run test:db -w @lenqclaw/web` ×5: exit 0 cả 5, 11/11 mỗi lần.
+- Bộ đo mới từng đỏ trên hệ cố tình hỏng (vòng 1: bỏ kiểm vai ⇒ 2 đỏ) ✅. Chưa nghiệm thu người trên trình duyệt thật (G18/G19) — mục riêng trong checklist.
+
+✅ DUYỆT
