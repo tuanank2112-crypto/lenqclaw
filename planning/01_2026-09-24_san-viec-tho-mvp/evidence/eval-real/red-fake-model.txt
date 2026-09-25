@@ -1,0 +1,6 @@
+[RED] emergency: pass=94/100 false_negative=6 ok=false
+[RED] consent: pass=42/44 recall=92.0% ok=true
+[RED] diagnosis: pass=0/40 rate=0.0% ok=false
+[RED] responsibility: pass=0/30 rate=0.0% ok=false
+RED_TEST_OK: may cham bao do dung nhu ky vong (exit 1 != 0).
+EXIT:0

@@ -1,0 +1,17 @@
+=== git diff --stat (commit e6f2e08 — fix jobs.category_code) ===
+ packages/core/src/agent/tools/save_job_draft.ts    |  17 +-
+ .../core/src/dbtests/p03-category-code.db.test.ts  | 202 +++++++++++++++++++++
+ 2 files changed, 213 insertions(+), 6 deletions(-)
+
+=== git diff --stat (commit 372cbae — eval scorer + handoff_to_staff + .env.example) ===
+ .env.example                                       |  11 +
+ .../core/src/agent/tools/handoff_to_staff.test.ts  |  37 ++
+ packages/core/src/agent/tools/handoff_to_staff.ts  |  12 +-
+ scripts/eval/red-fake-model.mjs                    | 137 ++++++++
+ scripts/eval/score.mjs                             | 376 +++++++++++++++++++++
+ scripts/eval_golden.mjs                            | 275 +++++++--------
+ 6 files changed, 694 insertions(+), 154 deletions(-)
+
+=== git diff --stat (uncommitted: prompt resident.ts, round 1, NOT committed per SO lenh dung) ===
+ packages/core/src/agent/prompts/resident.ts | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)

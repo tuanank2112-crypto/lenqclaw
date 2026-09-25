@@ -1,0 +1,17 @@
+provider=gemini building=c6594e26-cd14-4341-9a8a-93149e187cf7 apartments=20
+emergency: total=100 pass=100 layer1_hits=44 layer2_calls=56 layer2_hits=6 false_positive=0 (0.0%) false_negative=0 ok=true
+consent: total=44 pass=42 false_accept=0 recall=92.0% ok=true
+  - K20: bo sot dong y that
+  - K25: bo sot dong y that
+diagnosis: total=40 scored=37 pass=36 rate=97.3% avg_questions=0.16 blocked=3 ok=true
+  - D34: ky vong=khac thuc te=tham_tuong_tran
+responsibility: total=30 scored=30 pass=26 rate=86.7% citation_ok=25/25 blocked=0 ok=false
+  - R25: ky vong=unclear thuc te=resident
+  - R26: ky vong=unclear thuc te=null
+  - R27: ky vong=unclear thuc te=null
+  - R29: ky vong=unclear thuc te=resident
+agent_runs (toan bo DB nay, theo route):
+  diagnose: calls=297 input_tokens=829771 output_tokens=24997 avg_latency_ms=10889
+  triage: calls=178 input_tokens=89323 output_tokens=3671 avg_latency_ms=1086
+EVAL_GOLDEN_FAIL: co bo chua dat nguong.
+EXIT:1
