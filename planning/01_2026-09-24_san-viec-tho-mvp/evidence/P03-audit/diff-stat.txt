@@ -1,0 +1,57 @@
+$ git diff --stat 4955b5a..e3d2079
+ apps/web/app/api/dev/sim/send/route.ts             |   6 +-
+ brain4agent/-known-gotchas.md                      |   1 +
+ db/migrations/002_search.sql                       |  29 ++
+ evals/golden/diagnosis.jsonl                       |  40 ++
+ evals/golden/emergency.jsonl                       |  20 +
+ evals/golden/responsibility.jsonl                  |  30 ++
+ package.json                                       |   4 +-
+ packages/core/src/agent/job-code.ts                |  15 +
+ packages/core/src/agent/pii.test.ts                |  75 +++
+ packages/core/src/agent/pii.ts                     |  62 +++
+ packages/core/src/agent/prompts/resident.ts        |  33 ++
+ packages/core/src/agent/resident-agent.ts          | 302 +++++++++++
+ packages/core/src/agent/tool-context.ts            |  16 +
+ .../src/agent/tools/classify_responsibility.ts     | 172 +++++++
+ packages/core/src/agent/tools/get_my_cases.ts      |  34 ++
+ packages/core/src/agent/tools/get_price_band.ts    |  40 ++
+ packages/core/src/agent/tools/handoff_to_staff.ts  |  45 ++
+ packages/core/src/agent/tools/index.ts             |  39 ++
+ packages/core/src/agent/tools/open_service_case.ts | 113 +++++
+ packages/core/src/agent/tools/push_bql_ticket.ts   |  90 ++++
+ packages/core/src/agent/tools/save_job_draft.ts    | 112 ++++
+ .../core/src/agent/tools/search_regulations.ts     |  63 +++
+ packages/core/src/agent/tools/tool-kit.ts          |  19 +
+ packages/core/src/db/seed-sim.ts                   | 272 ++++++++++
+ packages/core/src/dbtests/p01.db.test.ts           |   4 +-
+ packages/core/src/dbtests/p03.db.test.ts           | 564 +++++++++++++++++++++
+ packages/core/src/domain/errors.ts                 |  16 +
+ packages/core/src/index.ts                         |   2 +
+ packages/core/src/retrieval/search-regulations.ts  |  89 ++++
+ planning/01_2026-09-24_san-viec-tho-mvp/plan.md    |   6 +
+ .../specs/01-CONTRACTS.md                          |  18 +
+ scripts/eval_golden.mjs                            | 157 ++++++
+ 32 files changed, 2483 insertions(+), 5 deletions(-)
+
+$ git log --format='%h %s' 4955b5a..e3d2079
+e3d2079 test(p03): emergency golden (npm test) + 9 agent-loop cases + BB-03
+6099096 feat(p03): golden datasets + eval_golden.mjs scorer
+273821b feat(p03): db:seed:sim (QC-DEMO regulations, sim residents, price_book)
+5a83bb1 feat(p03): resident agent orchestrator + emergency/register + web wiring
+e76b7c7 feat(p03): 8 resident-agent tools (01-CONTRACTS §7, SPEC-P03 §10.3)
+fdbc590 feat(p03): add InvalidCategoryError and ConsentMissingError
+b1d4990 feat(p03): lexical regulation search (immutable_unaccent + generated tsv)
+7df2a60 docs(plan-01): record Gemini model probe and fallback list in contract
+f03f480 docs(plan-01): decision D18 - Gemini as default LLM behind the model adapter
+
+$ (ngoai pham vi H05 §3b) git diff --name-only 4955b5a..e3d2079 | grep -vE '^(packages/core/|apps/web/|db/migrations/0(0[2-9]|[1-9][0-9])_|evals/|scripts/eval_golden\.mjs$|package(-lock)?\.json$|planning/01_2026-09-24_san-viec-tho-mvp/(plan\.md|reports/R03|evidence/P03/))'
+brain4agent/-known-gotchas.md
+planning/01_2026-09-24_san-viec-tho-mvp/specs/01-CONTRACTS.md
+
+$ git log --format='%h %s' 4955b5a..e3d2079 -- brain4agent/-known-gotchas.md planning/01_2026-09-24_san-viec-tho-mvp/specs/01-CONTRACTS.md
+7df2a60 docs(plan-01): record Gemini model probe and fallback list in contract
+f03f480 docs(plan-01): decision D18 - Gemini as default LLM behind the model adapter
+
+$ git grep -nE '^\s*it\(' <sha> -- '*.test.ts' | wc -l   (dem tinh so it())
+4955b5a: 40
+e3d2079: 57

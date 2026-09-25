@@ -1,0 +1,6 @@
+// H05 audit TAM: model gia tra ve MOI nhan trong mot cau — do do long cua may cham (khong goi mang).
+import { setModelClientForTest } from '@lenqclaw/core/adapters/model';
+const ALL = 'ong_nuoc_ro thiet_bi_ve_sinh tac_thoat_nuoc dien_mat_cuc_bo o_cam_cong_tac khoa_cua dieu_hoa_khong_mat dieu_hoa_ve_sinh binh_nong_lanh tham_tuong_tran cua_ban_le khac | resident bql unclear';
+let n = 0;
+setModelClientForTest({ messages: { async create() { n++; return { id: 'x', type: 'message', role: 'assistant', model: 'fake', stop_reason: 'end_turn', stop_sequence: null, content: [{ type: 'text', text: ALL, citations: null }], usage: { input_tokens: 1, output_tokens: 1, cache_creation_input_tokens: null, cache_read_input_tokens: null, cache_creation: null, server_tool_use: null, service_tier: null } }; } } });
+process.on('exit', () => console.log(`fake_model_calls=${n}`));

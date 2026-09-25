@@ -1,0 +1,9 @@
+$ docker exec lenqclaw-db-1 psql -U lenqclaw -d lenqclaw -c 'drop database lq_audit3'
+DROP DATABASE
+EXIT=0
+$ git worktree remove --force <scratchpad>/wt
+EXIT=0
+$ git worktree list
+D:/lenqclaw 0fe11a5 [main]
+$ psql \l | grep -c lq_audit3
+0

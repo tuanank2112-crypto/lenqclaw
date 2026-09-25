@@ -1,0 +1,41 @@
+=== m0 doi chung (khong dot bien)
+  unit pii.test:       Tests  26 passed (26)
+  db p03:       Tests  11 passed (11)
+=== m1 classify: bo ep unclear khi 0 citation hop le
+MUTATED packages/core/src/agent/tools/classify_responsibility.ts
+  unit pii.test:       Tests  26 passed (26)
+  db p03:    × SPEC-P03 §10.6(c) — verdict resident khong citation => bi ep unclear > classify_responsibility(resident, citations=[]) => forced unclear, job routed_bql 46ms
+  db p03:    × BB-03 — nguon het hieu luc / deprecated va hai citation ngược nhau => unclear > citation deprecated + het hieu luc => khong con citation hop le => forced unclear 36ms
+  db p03:       Tests  2 failed | 9 passed (11)
+=== m2 redactPii: khong che gi
+MUTATED packages/core/src/agent/pii.ts
+  unit pii.test:       Tests  2 failed | 24 passed (26)
+  db p03:    × SPEC-P03 §10.6(h) — SDT/ma can KHONG co trong messages gui model > che PII truoc khi dua vao ngu canh model 28ms
+  db p03:       Tests  1 failed | 10 passed (11)
+=== m3 open_service_case: bo kiem dong y
+MUTATED packages/core/src/agent/tools/open_service_case.ts
+  unit pii.test:       Tests  26 passed (26)
+  db p03:    × SPEC-P03 §10.6(d)+(e) — resident hop le: dong y => case_open; khong dong y => ConsentMissingError > (e) "khong dong y" => ConsentMissingError, job giu awaiting_consent 84ms
+  db p03:       Tests  1 failed | 10 passed (11)
+=== m4 detectEmergency: luon null
+MUTATED packages/core/src/agent/pii.ts
+  unit pii.test:       Tests  11 failed | 15 passed (26)
+  db p03:    × SPEC-P03 §10.6(a) — khan cap: ticket emergency + outbox, 0 lan goi model > tao ticket kind=emergency va tra EMERGENCY_REPLY, khong goi model 34ms
+  db p03:       Tests  1 failed | 10 passed (11)
+=== m5 bo kiem stop_reason=refusal
+MUTATED packages/core/src/agent/resident-agent.ts
+  unit pii.test:       Tests  26 passed (26)
+  db p03:       Tests  11 passed (11)
+=== m6 moi tool_result mot message user rieng
+MUTATED packages/core/src/agent/resident-agent.ts
+  unit pii.test:       Tests  26 passed (26)
+  db p03:       Tests  11 passed (11)
+=== m7 chi noi text (bo tool_use/thinking) vao luot assistant
+MUTATED packages/core/src/agent/resident-agent.ts
+  unit pii.test:       Tests  26 passed (26)
+  db p03:       Tests  11 passed (11)
+=== m8 classify: bo luat hai citation mau thuan
+MUTATED packages/core/src/agent/tools/classify_responsibility.ts
+  unit pii.test:       Tests  26 passed (26)
+  db p03:    × BB-03 — nguon het hieu luc / deprecated va hai citation ngược nhau => unclear > hai citation con hieu luc nhung ket luan nguoc nhau (sec05 BQL vs sec06 CU DAN) => unclear 86ms
+  db p03:       Tests  1 failed | 10 passed (11)

@@ -1,0 +1,53 @@
+$ grep -rn 'pg-boss|pgboss|PgBoss' packages apps scripts package.json (tru node_modules)
+packages/core/src/agent/resident-agent.ts:195:      // tra loi; khong retry trong luot nay (retry qua pg-boss ngoai P03).
+
+$ grep -rn 'callModel(' packages/core/src (tru test)
+packages/core/src/adapters/model.ts:164:export async function callModel(c: ModelCall): Promise<CallModelResult> {
+packages/core/src/agent/resident-agent.ts:186:      result = await callModel({
+
+$ grep -n 'max_tokens|temperature|top_p|thinking|budget_tokens|fallbacks|betas' packages/core/src/adapters/model.ts
+171:      max_tokens: 4096,
+
+$ grep -n refusal/push/filter vong tool trong resident-agent.ts
+200:    if (result.message.stop_reason === 'refusal') {
+207:    messages.push({ role: 'assistant', content: result.message.content as unknown as ContentBlockParam[] });
+228:    // §10.8: MOI tool_result cua mot luot nam trong MOT message 'user'.
+235:        toolResults.push({ type: 'tool_result', tool_use_id: tu.id, content: JSON.stringify(output) });
+240:          type: 'tool_result',
+242:          is_error: true,
+247:    messages.push({ role: 'user', content: toolResults });
+
+$ grep -c 'strict: true' packages/core/src/agent/tools/*.ts
+packages/core/src/agent/tools/classify_responsibility.ts:1
+packages/core/src/agent/tools/get_my_cases.ts:1
+packages/core/src/agent/tools/get_price_band.ts:1
+packages/core/src/agent/tools/handoff_to_staff.ts:1
+packages/core/src/agent/tools/index.ts:0
+packages/core/src/agent/tools/open_service_case.ts:1
+packages/core/src/agent/tools/push_bql_ticket.ts:1
+packages/core/src/agent/tools/save_job_draft.ts:1
+packages/core/src/agent/tools/search_regulations.ts:1
+packages/core/src/agent/tools/tool-kit.ts:2
+
+$ grep -L 'audit(' packages/core/src/agent/tools/*.ts   (tool KHONG ghi audit_log)
+packages/core/src/agent/tools/get_my_cases.ts
+packages/core/src/agent/tools/get_price_band.ts
+packages/core/src/agent/tools/index.ts
+packages/core/src/agent/tools/tool-kit.ts
+
+$ grep -n 'human_takeover_until' packages/core/src -r
+packages/core/src/agent/tools/handoff_to_staff.ts:3:// conversation nay (human_takeover_until).
+packages/core/src/agent/tools/handoff_to_staff.ts:33:      `update conversations set human_takeover_until = now() + ($1 || ' minutes')::interval where id = $2`,
+
+$ ma danh muc co trong prompt/mo ta tool? (grep ong_nuoc_ro|khoa_cua|dieu_hoa_khong_mat)
+exit=1
+
+$ grep -n 'draft' packages/core/src/agent/resident-agent.ts   (JobDraft co nap vao ngu canh §5?)
+143:    `select id from jobs where resident_id = $1 and status in ('drafting','awaiting_consent') order by created_at desc limit 1`,
+exit=0
+
+$ wc -l evals/golden/*.jsonl
+   40 evals/golden/diagnosis.jsonl
+   20 evals/golden/emergency.jsonl
+   30 evals/golden/responsibility.jsonl
+   90 total

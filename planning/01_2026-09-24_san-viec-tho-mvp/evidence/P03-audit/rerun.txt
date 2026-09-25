@@ -1,0 +1,183 @@
+$ git rev-parse HEAD
+e3d207933679feee064e982b3ab8080f97eed0f4
+$ npm ci
+
+added 94 packages, and audited 98 packages in 37s
+
+16 packages are looking for funding
+  run `npm fund` for details
+
+7 vulnerabilities (4 moderate, 2 high, 1 critical)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+EXIT(npm ci)=0
+
+$ npm run typecheck
+
+> lenqclaw@0.0.1 typecheck
+> npm run build -w @lenqclaw/core && npm run typecheck --workspaces --if-present
+
+
+> @lenqclaw/core@0.0.1 build
+> tsc -p tsconfig.json
+
+
+> @lenqclaw/web@0.0.1 typecheck
+> tsc --noEmit
+
+
+> @lenqclaw/zalo-worker@0.0.1 typecheck
+> tsc --noEmit
+
+
+> @lenqclaw/core@0.0.1 typecheck
+> tsc --noEmit -p tsconfig.typecheck.json
+
+EXIT(typecheck)=0
+
+$ env -u DATABASE_URL npm run build
+├ ƒ /api/dev/sim/send                      145 B         103 kB
+├ ƒ /api/dev/sim/thread                    145 B         103 kB
+├ ƒ /dev/sim                             1.46 kB         104 kB
+├ ○ /gate                                  145 B         103 kB
+├ ○ /login                                 765 B         103 kB
+└ ○ /tickets                               145 B         103 kB
++ First Load JS shared by all             103 kB
+  ├ chunks/18-498168fb58dcd546.js        46.4 kB
+  ├ chunks/87c73c54-24122e7b92478d00.js  54.2 kB
+  └ other shared chunks (total)          1.95 kB
+
+
+ƒ Middleware                             34.6 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+> @lenqclaw/zalo-worker@0.0.1 build
+> tsc -p tsconfig.json
+
+
+> @lenqclaw/core@0.0.1 build
+> tsc -p tsconfig.json
+
+EXIT(build)=0
+
+$ npm test
+> lenqclaw@0.0.1 test
+> npm run test --workspaces --if-present
+> @lenqclaw/web@0.0.1 test
+> vitest run --exclude "**/*.db.test.ts"
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mC:/Users/lenku/AppData/Local/Temp/claude/d--lenqclaw/3b8e885f-1d38-4433-81e1-34d1144db1c2/scratchpad/wt/apps/web[39m
+ [32m✓[39m lib/auth/policy.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 4[2mms[22m[39m
+ [32m✓[39m lib/auth/session.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 12[2mms[22m[39m
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m17 passed[39m[22m[90m (17)[39m
+[2m   Start at [22m 09:23:17
+[2m   Duration [22m 1.15s[2m (transform 82ms, setup 0ms, collect 164ms, tests 15ms, environment 0ms, prepare 1.10s)[22m
+> @lenqclaw/zalo-worker@0.0.1 test
+> echo "@lenqclaw/zalo-worker: no tests in P01 (P02 scope)"
+"@lenqclaw/zalo-worker: no tests in P01 (P02 scope)"
+> @lenqclaw/core@0.0.1 test
+> vitest run --exclude "**/*.db.test.ts"
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mC:/Users/lenku/AppData/Local/Temp/claude/d--lenqclaw/3b8e885f-1d38-4433-81e1-34d1144db1c2/scratchpad/wt/packages/core[39m
+ [32m✓[39m src/agent/pii.test.ts [2m([22m[2m26 tests[22m[2m)[22m[90m 7[2mms[22m[39m
+ [32m✓[39m src/services/job-state.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 7[2mms[22m[39m
+ [32m✓[39m src/domain/password.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 150[2mms[22m[39m
+ [32m✓[39m src/adapters/model.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 7[2mms[22m[39m
+[2m Test Files [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[32m37 passed[39m[22m[90m (37)[39m
+[2m   Start at [22m 09:23:19
+[2m   Duration [22m 623ms[2m (transform 145ms, setup 0ms, collect 420ms, tests 171ms, environment 1ms, prepare 512ms)[22m
+EXIT(test)=0
+
+$ DATABASE_URL=postgres://lenqclaw:***@127.0.0.1:55432/lq_audit3 npm run test:db   (DB rong)
+> lenqclaw@0.0.1 test:db
+> npm run db:migrate && npm run db:seed && npm run db:seed:sim && npm run test:db -w @lenqclaw/core && npm run test:db -w @lenqclaw/web && npm run test:db -w @lenqclaw/zalo-worker --if-present
+> lenqclaw@0.0.1 db:migrate
+> tsx packages/core/src/db/migrate.ts
+-- applying 001_init.sql
+-- applying 002_search.sql
+applied: 2
+> lenqclaw@0.0.1 db:seed
+> tsx packages/core/src/db/seed.ts
+seed: job_categories=12 apartments=20
+> lenqclaw@0.0.1 db:seed:sim
+> node --import tsx -e "process.env.DATA_MODE='sim'; const m=await import('./packages/core/src/db/seed-sim.ts'); const r=await m.runSeedSim(); console.log('seed-sim: kb_sections='+r.kbSections+' residents='+r.residents+' price_book='+r.priceBookRows); process.exit(0);"
+seed-sim: kb_sections=14 residents=4 price_book=6
+> @lenqclaw/core@0.0.1 test:db
+> tsx scripts/require-database-url.ts && vitest run --config vitest.db.config.ts
+ RUN  v2.1.9 C:/Users/lenku/AppData/Local/Temp/claude/d--lenqclaw/3b8e885f-1d38-4433-81e1-34d1144db1c2/scratchpad/wt/packages/core
+ ✓ src/dbtests/p03.db.test.ts (11 tests) 435ms
+ ✓ src/dbtests/p01.db.test.ts (10 tests) 464ms
+ Test Files  2 passed (2)
+      Tests  21 passed (21)
+   Start at  09:23:48
+   Duration  1.97s (transform 174ms, setup 0ms, collect 566ms, tests 899ms, environment 0ms, prepare 191ms)
+> @lenqclaw/web@0.0.1 test:db
+> tsx ../../packages/core/scripts/require-database-url.ts && vitest run --config vitest.db.config.ts
+ RUN  v2.1.9 C:/Users/lenku/AppData/Local/Temp/claude/d--lenqclaw/3b8e885f-1d38-4433-81e1-34d1144db1c2/scratchpad/wt/apps/web
+ ✓ tests/00-login.db.test.ts (2 tests) 146ms
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  09:23:52
+   Duration  1.09s (transform 123ms, setup 0ms, collect 534ms, tests 146ms, environment 0ms, prepare 124ms)
+> @lenqclaw/zalo-worker@0.0.1 test:db
+> echo "@lenqclaw/zalo-worker: no db tests in P01 (P02 scope)"
+"@lenqclaw/zalo-worker: no db tests in P01 (P02 scope)"
+EXIT(test:db)=0
+
+$ npm run gate
+  └ other shared chunks (total)          1.95 kB
+ƒ Middleware                             34.6 kB
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+> @lenqclaw/zalo-worker@0.0.1 build
+> tsc -p tsconfig.json
+> @lenqclaw/core@0.0.1 build
+> tsc -p tsconfig.json
+=== gate: test ===
+> lenqclaw@0.0.1 test
+> npm run test --workspaces --if-present
+> @lenqclaw/web@0.0.1 test
+> vitest run --exclude "**/*.db.test.ts"
+ RUN  v2.1.9 C:/Users/lenku/AppData/Local/Temp/claude/d--lenqclaw/3b8e885f-1d38-4433-81e1-34d1144db1c2/scratchpad/wt/apps/web
+ ✓ lib/auth/policy.test.ts (8 tests) 5ms
+ ✓ lib/auth/session.test.ts (9 tests) 10ms
+ Test Files  2 passed (2)
+      Tests  17 passed (17)
+   Start at  09:25:04
+   Duration  537ms (transform 67ms, setup 0ms, collect 126ms, tests 15ms, environment 0ms, prepare 269ms)
+> @lenqclaw/zalo-worker@0.0.1 test
+> echo "@lenqclaw/zalo-worker: no tests in P01 (P02 scope)"
+"@lenqclaw/zalo-worker: no tests in P01 (P02 scope)"
+> @lenqclaw/core@0.0.1 test
+> vitest run --exclude "**/*.db.test.ts"
+ RUN  v2.1.9 C:/Users/lenku/AppData/Local/Temp/claude/d--lenqclaw/3b8e885f-1d38-4433-81e1-34d1144db1c2/scratchpad/wt/packages/core
+ ✓ src/agent/pii.test.ts (26 tests) 8ms
+ ✓ src/services/job-state.test.ts (4 tests) 9ms
+ ✓ src/adapters/model.test.ts (5 tests) 10ms
+ ✓ src/domain/password.test.ts (2 tests) 162ms
+ Test Files  4 passed (4)
+      Tests  37 passed (37)
+   Start at  09:25:05
+   Duration  641ms (transform 155ms, setup 0ms, collect 394ms, tests 188ms, environment 1ms, prepare 503ms)
+=== gate: check_adapter_boundary ===
+violations: 0
+=== gate: check_agent_tools ===
+pii_keys_in_jobcard: 0
+forbidden_tools: 0
+GATE_OK: tat ca cac buoc deu xanh.
+EXIT(gate)=0
+
+$ npm run eval:golden   (khong co .env trong worktree, khong GEMINI_API_KEY/ANTHROPIC_API_KEY)
+> lenqclaw@0.0.1 eval:golden
+> tsx scripts/eval_golden.mjs
+emergency: total=20 pass=20 false_positive=0 false_negative=0 ok=true
+diagnosis: blocked (missing ANTHROPIC_API_KEY)
+responsibility: blocked (missing ANTHROPIC_API_KEY)
+EVAL_GOLDEN: BLOCKED (thieu credential hoac loi ha tang o bo can LLM) — khong tinh truot.
+EXIT(eval:golden)=3

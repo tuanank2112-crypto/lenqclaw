@@ -1,0 +1,566 @@
+// H05 audit — TAM THOI, KHONG commit. Moi `it` khang dinh TINH CHAT AN TOAN;
+// test do (x) = tim ra loi that (DO), test xanh = he giu duoc (XANH).
+// Chay rieng: migrate+seed+seed:sim roi `vitest run --config vitest.db.config.ts <file>`.
+
+import { randomUUID } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { afterAll, beforeEach, describe, expect, it } from 'vitest';
+import type { Message, MessageParam } from '@anthropic-ai/sdk/resources/messages';
+import { sql, closeDb } from '../adapters/db.js';
+import { setModelClientForTest, type ModelClientLike } from '../adapters/model.js';
+import { simInbound, processInbound } from '../sim/sim-transport.js';
+import { residentHandler } from '../agent/resident-agent.js';
+import { detectEmergency, redactPii } from '../agent/pii.js';
+import { searchRegulations } from '../retrieval/search-regulations.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = path.join(__dirname, '..', '..', '..', '..');
+
+const log = (...a: unknown[]) => console.log('AUDIT|', ...a);
+
+interface Captured { messages: MessageParam[] }
+function scripted(responses: Message[], delayMs = 0): { client: ModelClientLike; calls: Captured[] } {
+  const calls: Captured[] = [];
+  let i = 0;
+  return {
+    calls,
+    client: {
+      messages: {
+        async create(body) {
+          calls.push({ messages: JSON.parse(JSON.stringify(body.messages)) });
+          if (delayMs) await new Promise((r) => setTimeout(r, delayMs));
+          if (i >= responses.length) throw new Error(`het kich ban o lan ${i + 1}`);
+          return responses[i++]!;
+        },
+      },
+    },
+  };
+}
+const txt = (text: string): Message['content'][number] => ({ type: 'text', text, citations: null });
+const tu = (id: string, name: string, input: unknown): Message['content'][number] => ({ type: 'tool_use', id, name, input });
+function msg(content: Message['content'], stop: Message['stop_reason'] = 'tool_use'): Message {
+  return {
+    id: `msg_${randomUUID().slice(0, 8)}`, content, model: 'fake', role: 'assistant', stop_reason: stop, stop_sequence: null, type: 'message',
+    usage: { cache_creation: null, cache_creation_input_tokens: null, cache_read_input_tokens: null, input_tokens: 1, output_tokens: 1, server_tool_use: null, service_tier: null },
+  };
+}
+const draft = (over: Record<string, unknown> = {}) => ({
+  category_code: 'khoa_cua', symptoms: ['khoa hong'], location_in_unit: 'phong ngu', urgency: 'normal',
+  photo_ids: [], questions_asked: 1, confidence_note: '', ...over,
+});
+
+async function rid(uid: string): Promise<string> {
+  const r = await sql<{ party_id: string }>(`select party_id from zalo_identities where zalo_account_id='bql' and zalo_uid=$1`, [uid]);
+  return r[0]!.party_id;
+}
+async function resetOpen(uid: string): Promise<void> {
+  await sql(`update jobs set status='cancelled' where resident_id=$1 and status in ('drafting','awaiting_consent')`, [await rid(uid)]);
+}
+async function send(uid: string, threadId: string, text: string): Promise<void> {
+  await simInbound({ account: 'bql', threadId, threadType: 'user', senderUid: uid, text, msgId: `h05-${randomUUID()}` });
+  await processInbound(residentHandler);
+}
+async function latestJob(uid: string) {
+  const r = await sql<{ id: string; code: string; status: string; responsibility: any; draft: any }>(
+    `select id, code, status, responsibility, draft from jobs where resident_id=$1 order by created_at desc limit 1`, [await rid(uid)]);
+  return r[0] ?? null;
+}
+async function outboxTexts(threadId: string): Promise<string[]> {
+  const r = await sql<{ t: string }>(`select body->>'text' as t from outbox where thread_id=$1 order by id`, [threadId]);
+  return r.map((x) => x.t);
+}
+const th = (p: string) => `h05-${p}-${randomUUID().slice(0, 8)}`;
+
+/** Luot 1 chuan: draft -> classify(resident, sec07) -> text => job awaiting_consent. */
+async function toAwaitingConsent(uid: string, threadId: string): Promise<void> {
+  await resetOpen(uid);
+  const { client } = scripted([
+    msg([tu('a1', 'save_job_draft', draft())]),
+    msg([tu('a2', 'classify_responsibility', { party: 'resident', citations: [{ document_id: 'QC-DEMO', section_id: 'sec07', quote: 'Cửa, khoá, bản lề của căn hộ do cư dân tự bảo trì, sửa chữa.' }], reason_vi: 'khoa cua trong can' })]),
+    msg([txt('Viec nay thuoc cu dan. Anh/chi co dong y tim tho khong?')], 'end_turn'),
+  ]);
+  setModelClientForTest(client);
+  await send(uid, threadId, 'Khoa cua phong ngu nha em bi hong');
+}
+
+afterAll(async () => { setModelClientForTest(null); await closeDb(); });
+beforeEach(() => setModelClientForTest(null));
+
+// ---------------------------------------------------------------- (1) PII
+describe('P1 PII bien the toi model', () => {
+  const PHONE_CORE = '901234567';
+  const phoneVariants = [
+    '0901234567', '+84901234567', '090 123 4567', '090.123.4567', '090-123-4567', '+84 90 123 4567',
+    '(+84) 901234567', '０９０１２３４５６７', 'O9O1234567', 'không chín không một hai ba bốn năm sáu bảy',
+  ];
+  const aptVariants = ['A-0105', 'A0105', 'a-0105', 'a0105', 'A 0105', 'A.0105', 'A-01-05', 'căn 0105 tòa A', 'P.0105', 'T2-0105'];
+
+  it('P1a redactPii (thuan) — dem bien the con lo', () => {
+    const leaks: string[] = [];
+    for (const v of phoneVariants) {
+      const out = redactPii(`sdt em ${v} nhe`);
+      const digits = out.replace(/\D/g, '');
+      const spelled = /chín không một/.test(out);
+      const fw = /[０-９]{9}/.test(out);
+      if (digits.includes(PHONE_CORE) || spelled || fw || /O9O1234567/.test(out)) leaks.push(`PHONE "${v}" -> "${out}"`);
+    }
+    for (const v of aptVariants) {
+      const out = redactPii(`nha em ${v} bi hong`);
+      if (/0105|01-05/.test(out)) leaks.push(`APT "${v}" -> "${out}"`);
+    }
+    log(`P1a leaks=${leaks.length}/${phoneVariants.length + aptVariants.length}`);
+    for (const l of leaks) log('  ', l);
+    expect(leaks).toEqual([]);
+  });
+
+  it('P1b vong agent that — bien the o LICH SU (luot 1) va TIN HIEN TAI (luot 2) co toi messages gui model khong', async () => {
+    const uid = 'sim-res-1';
+    await resetOpen(uid);
+    const t = th('p1b');
+    setModelClientForTest(scripted([msg([txt('Em ghi nhan.')], 'end_turn')]).client);
+    await send(uid, t, 'Em o can a-0105, sdt 090 123 4567 nhe');
+    const s2 = scripted([msg([txt('Em ghi nhan tiep.')], 'end_turn')]);
+    setModelClientForTest(s2.client);
+    await send(uid, t, 'Goi em qua +84 90 123 4567 hoac A.0105 tang 1');
+    const serialized = JSON.stringify(s2.calls[0]!.messages);
+    const found = ['a-0105', '090 123 4567', '+84 90 123 4567', 'A.0105'].filter((x) => serialized.includes(x));
+    log(`P1b raw PII trong messages gui model (luot 2): ${JSON.stringify(found)}`);
+    log(`P1b messages luot 2 = ${serialized}`);
+    expect(found).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------- (2) citations
+describe('P2 classify_responsibility voi trich dan xau => phai ep unclear', () => {
+  const cases: Array<{ name: string; party: 'resident' | 'bql'; citations: any[]; setup?: () => Promise<void> }> = [
+    { name: 'id bia (QC-DEMO/sec99)', party: 'resident', citations: [{ document_id: 'QC-DEMO', section_id: 'sec99', quote: 'bia' }] },
+    { name: 'tai lieu bia (QC-FAKE/sec01)', party: 'resident', citations: [{ document_id: 'QC-FAKE', section_id: 'sec01', quote: 'bia' }] },
+    { name: 'chi muc deprecated (QC-DEMO-DEP)', party: 'resident', citations: [{ document_id: 'QC-DEMO-DEP', section_id: 'sec01', quote: 'x' }] },
+    { name: 'chi muc het hieu luc (QC-DEMO-EXP)', party: 'resident', citations: [{ document_id: 'QC-DEMO-EXP', section_id: 'sec01', quote: 'x' }] },
+    {
+      name: 'hieu luc tuong lai (QC-FUTURE, 2099)', party: 'resident', citations: [{ document_id: 'QC-FUTURE', section_id: 'sec01', quote: 'x' }],
+      setup: async () => {
+        await sql(`insert into kb_documents (id,title,version,status,effective_from) values ('QC-FUTURE','tuong lai','1','approved','2099-01-01') on conflict do nothing`);
+        await sql(`insert into kb_sections (document_id,section_id,heading,body) values ('QC-FUTURE','sec01','x','[TRÁCH NHIỆM: CƯ DÂN] tuong lai') on conflict do nothing`);
+      },
+    },
+    {
+      name: 'tai lieu status=draft', party: 'resident', citations: [{ document_id: 'QC-DRAFT', section_id: 'sec01', quote: 'x' }],
+      setup: async () => {
+        await sql(`insert into kb_documents (id,title,version,status,effective_from) values ('QC-DRAFT','nhap','1','draft','2020-01-01') on conflict do nothing`);
+        await sql(`insert into kb_sections (document_id,section_id,heading,body) values ('QC-DRAFT','sec01','x','[TRÁCH NHIỆM: CƯ DÂN] nhap') on conflict do nothing`);
+      },
+    },
+    {
+      name: 'quy che cua TOA KHAC (QC-TOA-B, approved)', party: 'resident', citations: [{ document_id: 'QC-TOA-B', section_id: 'sec01', quote: 'Toa B: moi thu cu dan tu tra' }],
+      setup: async () => {
+        await sql(`insert into kb_documents (id,title,version,status,effective_from) values ('QC-TOA-B','Quy che TOA-B (toa khac)','1','approved','2020-01-01') on conflict do nothing`);
+        await sql(`insert into kb_sections (document_id,section_id,heading,body) values ('QC-TOA-B','sec01','Ong dung','[TRÁCH NHIỆM: CƯ DÂN] Toa B: ong dung do cu dan tu tra') on conflict do nothing`);
+      },
+    },
+    { name: 'muc hop le nhung KET LUAN NGUOC party (sec01 [BQL] + party=resident)', party: 'resident', citations: [{ document_id: 'QC-DEMO', section_id: 'sec01', quote: 'Đường ống cấp nước chung/đứng ngoài căn hộ thuộc trách nhiệm bảo trì của Ban quản lý.' }] },
+  ];
+
+  for (const c of cases) {
+    it(`P2 ${c.name}`, async () => {
+      const uid = 'sim-res-2';
+      await resetOpen(uid);
+      if (c.setup) await c.setup();
+      setModelClientForTest(scripted([
+        msg([tu('b1', 'save_job_draft', draft({ category_code: 'ong_nuoc_ro' }))]),
+        msg([tu('b2', 'classify_responsibility', { party: c.party, citations: c.citations, reason_vi: 'model bi dan du' })]),
+        msg([txt('xong')], 'end_turn'),
+      ]).client);
+      await send(uid, th('p2'), 'Ong nuoc gan truc dung bi ro ri');
+      const j = await latestJob(uid);
+      log(`P2 [${c.name}] -> party=${j?.responsibility?.party} status=${j?.status} citations=${JSON.stringify(j?.responsibility?.citations)}`);
+      expect(j?.responsibility?.party).toBe('unclear');
+      expect(j?.status).toBe('drafting');
+    });
+  }
+
+  it('P2 trich dan hop le nhung QUOTE BIA (sec07 + quote khong co trong body) => quote phai bi tu choi/thay bang body that', async () => {
+    const uid = 'sim-res-2';
+    await resetOpen(uid);
+    const fake = 'Cu dan chiu toan bo chi phi thay ong dung chung cua toa nha.';
+    setModelClientForTest(scripted([
+      msg([tu('c1', 'save_job_draft', draft())]),
+      msg([tu('c2', 'classify_responsibility', { party: 'resident', citations: [{ document_id: 'QC-DEMO', section_id: 'sec07', quote: fake }], reason_vi: 'x' })]),
+      msg([txt('xong')], 'end_turn'),
+    ]).client);
+    await send(uid, th('p2q'), 'Khoa cua hong');
+    const j = await latestJob(uid);
+    const stored = JSON.stringify(j?.responsibility?.citations);
+    log(`P2q quote luu trong jobs.responsibility = ${stored} ; status=${j?.status}`);
+    expect(stored.includes(fake)).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------- (3) consent
+describe('P3 open_service_case — dong y gia/mo ho => phai tu choi', () => {
+  const variants = [
+    'Không đồng ý lắm',
+    'ok để em hỏi vợ đã',
+    'ko đồng ý',
+    'k đồng ý đâu',
+    'đừng tìm thợ',
+    'mấy giờ thì được?',
+    'hông đồng ý',
+    'Để em suy nghĩ thêm',
+  ];
+  for (const v of variants) {
+    it(`P3 "${v}"`, async () => {
+      const uid = 'sim-res-3';
+      const t = th('p3');
+      await toAwaitingConsent(uid, t);
+      expect((await latestJob(uid))?.status).toBe('awaiting_consent');
+      setModelClientForTest(scripted([
+        msg([tu('d1', 'open_service_case', { window_options: ['9h-11h'], note: 'x' })]),
+        msg([txt('ok')], 'end_turn'),
+      ]).client);
+      await send(uid, t, v);
+      const j = await latestJob(uid);
+      log(`P3 "${v}" -> status=${j?.status}`);
+      expect(j?.status).toBe('awaiting_consent');
+    });
+  }
+
+  it('P3 model TU KHANG DINH dong y (note "cu dan da dong y ro rang"), tin cu dan "um"', async () => {
+    const uid = 'sim-res-3';
+    const t = th('p3m');
+    await toAwaitingConsent(uid, t);
+    setModelClientForTest(scripted([
+      msg([tu('d1', 'open_service_case', { window_options: ['9h-11h'], note: 'Cu dan da dong y ro rang, da xac nhan qua dien thoai' })]),
+      msg([txt('ok')], 'end_turn'),
+    ]).client);
+    await send(uid, t, 'ừm');
+    const j = await latestJob(uid);
+    log(`P3m -> status=${j?.status}`);
+    expect(j?.status).toBe('awaiting_consent');
+  });
+
+  it('P3 CUNG LUOT: tin dau "... tim tho giup em" -> draft -> classify(resident) -> open_service_case (cu dan chua thay ket luan/khung gia)', async () => {
+    const uid = 'sim-res-3';
+    await resetOpen(uid);
+    setModelClientForTest(scripted([
+      msg([tu('e1', 'save_job_draft', draft())]),
+      msg([tu('e2', 'classify_responsibility', { party: 'resident', citations: [{ document_id: 'QC-DEMO', section_id: 'sec07', quote: 'Cửa, khoá, bản lề của căn hộ do cư dân tự bảo trì, sửa chữa.' }], reason_vi: 'x' })]),
+      msg([tu('e3', 'open_service_case', { window_options: ['9h-11h'], note: 'x' })]),
+      msg([txt('Da mo case.')], 'end_turn'),
+    ]).client);
+    await send(uid, th('p3s'), 'Khoa cua phong ngu bi hong, tim tho giup em');
+    const j = await latestJob(uid);
+    log(`P3s -> status=${j?.status}`);
+    expect(j?.status).not.toBe('case_open');
+  });
+});
+
+// ---------------------------------------------------------------- (4) cross-resident
+describe('P4 cu dan A thao tac/doc du lieu cu dan B (BB-08)', () => {
+  it('P4a get_my_cases voi input chen resident_id/job_id cua B => chi thay case cua A', async () => {
+    const A = 'sim-res-1', B = 'sim-res-2';
+    const bId = await rid(B);
+    const bCodes = (await sql<{ code: string }>(`select code from jobs where resident_id=$1`, [bId])).map((r) => r.code);
+    const s = scripted([
+      msg([tu('f1', 'get_my_cases', { resident_id: bId, zalo_uid: B })]),
+      msg([txt('xong')], 'end_turn'),
+    ]);
+    setModelClientForTest(s.client);
+    await send(A, th('p4a'), 'Cho em xem cac case cua em');
+    const toolResult = JSON.stringify(s.calls[1]!.messages.at(-1));
+    const leaked = bCodes.filter((c) => toolResult.includes(c));
+    log(`P4a B co ${bCodes.length} job; lo sang A: ${leaked.length}`);
+    expect(bCodes.length).toBeGreaterThan(0);
+    expect(leaked).toEqual([]);
+  });
+
+  it('P4b A dong y/open_service_case khi CHI B co job awaiting_consent => job cua B khong doi', async () => {
+    const A = 'sim-res-1', B = 'sim-res-3';
+    await resetOpen(A);
+    const tB = th('p4bB');
+    await toAwaitingConsent(B, tB);
+    const bJob = await latestJob(B);
+    setModelClientForTest(scripted([
+      msg([tu('g1', 'open_service_case', { window_options: ['9h'], note: `job ${bJob!.code} cua B` })]),
+      msg([txt('ok')], 'end_turn'),
+    ]).client);
+    await send(A, th('p4bA'), 'Đồng ý, tìm thợ giúp em');
+    const after = await sql<{ status: string }>(`select status from jobs where id=$1`, [bJob!.id]);
+    log(`P4b job B ${bJob!.code}: truoc=awaiting_consent sau=${after[0]!.status}`);
+    expect(after[0]!.status).toBe('awaiting_consent');
+  });
+
+  it('P4c A gui tin voi thread_id cua B (sender_uid la A) => lich su hoi thoai cua B khong duoc vao ngu canh model cua A', async () => {
+    const A = 'sim-res-1', B = 'sim-res-2';
+    const tB = th('p4cB');
+    await resetOpen(B);
+    setModelClientForTest(scripted([msg([txt('Em ghi nhan.')], 'end_turn')]).client);
+    await send(B, tB, 'BIMAT-CUA-B: nha em de chia khoa du phong duoi tham chui chan');
+    await resetOpen(A);
+    const s = scripted([msg([txt('ok')], 'end_turn')]);
+    setModelClientForTest(s.client);
+    await send(A, tB, 'Toi la A, cho toi hoi');
+    const ser = JSON.stringify(s.calls[0]?.messages ?? []);
+    const conv = await sql<{ party_id: string }>(`select party_id from conversations where zalo_account_id='bql' and thread_id=$1`, [tB]);
+    log(`P4c ngu canh model cua A chua tin cua B: ${ser.includes('BIMAT-CUA-B')}; conversations.party_id(thread B) = ${conv[0]?.party_id === (await rid(A)) ? 'A (bi ghi de)' : 'B'}`);
+    expect(ser.includes('BIMAT-CUA-B')).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------- (5) emergency
+describe('P5 khan cap — bien the va ca gan giong', () => {
+  const mustDetect = [
+    'CHÁY NHÀ RỒI!!!', 'c.h.á.y ở tầng 3', 'c h a y bep', 'kh0i den kit o hanh lang', 'hoả hoạn tầng 5',
+    'thang máy bị kẹt có người bên trong', 'em bị kẹt trong thang máy', 'ngửi thấy mùi ga nồng nặc', 'khí ga bị xì',
+    'bị giật điện khi chạm vòi nước', 'nước tràn ra hành lang tầng 4', 'bị điện giựt',
+  ];
+  const mustNot = [
+    'Vòi nước bồn rửa bị chảy liên tục không khoá được', 'Máy giặt không chạy', 'Điều hoà chạy ồn quá',
+    'Bóng đèn phòng tắm bị cháy, cần thay', 'Mai em đi khỏi nhà lúc 8h, thợ đến chiều nhé', 'Khỏi cần đến sớm đâu anh',
+    'Bồn cầu chảy nước hoài', 'Ống nước dưới bồn rửa bát bị rò rỉ, nước chảy ra sàn',
+  ];
+  it('P5a dem bo sot / bao nham', () => {
+    const missed = mustDetect.filter((t) => detectEmergency(t) === null);
+    const falseAlarm = mustNot.filter((t) => detectEmergency(t) !== null).map((t) => `${t} [${detectEmergency(t)}]`);
+    log(`P5a bo sot ${missed.length}/${mustDetect.length}: ${JSON.stringify(missed)}`);
+    log(`P5a bao nham ${falseAlarm.length}/${mustNot.length}: ${JSON.stringify(falseAlarm)}`);
+    expect({ missed: missed.length, falseAlarmAtMost1: falseAlarm.length <= 1 }).toEqual({ missed: 0, falseAlarmAtMost1: true });
+  });
+
+  it('P5b bo golden diagnosis/responsibility cua chinh repo (khong phai khan cap) bi bat nham bao nhieu', () => {
+    const load = (f: string) => readFileSync(path.join(REPO_ROOT, 'evals', 'golden', f), 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l));
+    const diag = load('diagnosis.jsonl');
+    const resp = load('responsibility.jsonl');
+    const fd = diag.filter((c: any) => detectEmergency(c.text) !== null).map((c: any) => `${c.case_id}[${detectEmergency(c.text)}]`);
+    const fr = resp.filter((c: any) => detectEmergency(c.symptom_query) !== null).map((c: any) => `${c.case_id}[${detectEmergency(c.symptom_query)}]`);
+    log(`P5b diagnosis.jsonl: ${fd.length}/${diag.length} bi coi la khan cap: ${JSON.stringify(fd)}`);
+    log(`P5b responsibility.jsonl: ${fr.length}/${resp.length} bi coi la khan cap: ${JSON.stringify(fr)}`);
+    expect(fd.length + fr.length).toBe(0);
+  });
+
+  it('P5c vong that: tin ro ri "nuoc chay ra san" => co chan doan (model duoc goi) hay bi re sang khan cap', async () => {
+    const uid = 'sim-res-1';
+    await resetOpen(uid);
+    const s = scripted([msg([txt('Anh/chi cho em hoi ro ri o dau a?')], 'end_turn')]);
+    setModelClientForTest(s.client);
+    const t = th('p5c');
+    const before = (await sql<{ c: number }>(`select count(*)::int c from tickets where kind='emergency'`))[0]!.c;
+    await send(uid, t, 'Ống nước dưới bồn rửa bát bị rò rỉ, nước chảy ra sàn');
+    const after = (await sql<{ c: number }>(`select count(*)::int c from tickets where kind='emergency'`))[0]!.c;
+    const out = await outboxTexts(t);
+    log(`P5c model_calls=${s.calls.length} emergency_tickets_moi=${after - before} outbox=${JSON.stringify(out)}`);
+    expect(after - before).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------- (6) idempotency
+describe('P6 cung mot tin inbound xu ly hai lan / dong thoi => dung mot tra loi', () => {
+  it('P6a cung msg_id chen 2 lan + processInbound 2 lan', async () => {
+    const uid = 'sim-res-1';
+    await resetOpen(uid);
+    const t = th('p6a');
+    const s = scripted([msg([txt('Tra loi 1')], 'end_turn'), msg([txt('Tra loi 2')], 'end_turn')]);
+    setModelClientForTest(s.client);
+    const mid = `h05-dup-${randomUUID()}`;
+    const r1 = await simInbound({ account: 'bql', threadId: t, threadType: 'user', senderUid: uid, text: 'Den phong khach hong', msgId: mid });
+    const r2 = await simInbound({ account: 'bql', threadId: t, threadType: 'user', senderUid: uid, text: 'Den phong khach hong', msgId: mid });
+    await processInbound(residentHandler);
+    await processInbound(residentHandler);
+    const out = await outboxTexts(t);
+    log(`P6a dup2=${r2.duplicate} id1=${r1.id} outbox=${out.length} model_calls=${s.calls.length}`);
+    expect(out.length).toBe(1);
+  });
+
+  it('P6b mot tin, 6 processInbound(residentHandler) dong thoi, model cham 300ms', async () => {
+    const uid = 'sim-res-2';
+    await resetOpen(uid);
+    await sql(`update inbound_events set processed_at = now() where processed_at is null`);
+    const t = th('p6b');
+    const s = scripted([msg([txt('Tra loi A')], 'end_turn'), msg([txt('Tra loi B')], 'end_turn'), msg([txt('Tra loi C')], 'end_turn')], 300);
+    setModelClientForTest(s.client);
+    await simInbound({ account: 'bql', threadId: t, threadType: 'user', senderUid: uid, text: 'Dieu hoa khong mat', msgId: `h05-${randomUUID()}` });
+    const res = await Promise.all(Array.from({ length: 6 }, () => processInbound(residentHandler)));
+    const out = await outboxTexts(t);
+    log(`P6b processed=${JSON.stringify(res.map((r) => r.processed))} outbox=${out.length} model_calls=${s.calls.length}`);
+    expect(out.length).toBe(1);
+    expect(s.calls.length).toBe(1);
+  });
+
+  it('P6c (tham khao) hai tin KHAC NHAU cua cung cu dan xu ly dong thoi => so job drafting tao ra', async () => {
+    const uid = 'sim-res-3';
+    await resetOpen(uid);
+    await sql(`update inbound_events set processed_at = now() where processed_at is null`);
+    const t = th('p6c');
+    const s = scripted([
+      msg([tu('h1', 'save_job_draft', draft())]), msg([tu('h2', 'save_job_draft', draft())]),
+      msg([txt('ok1')], 'end_turn'), msg([txt('ok2')], 'end_turn'),
+    ], 200);
+    setModelClientForTest(s.client);
+    await simInbound({ account: 'bql', threadId: t, threadType: 'user', senderUid: uid, text: 'Khoa cua hong', msgId: `h05-${randomUUID()}` });
+    await simInbound({ account: 'bql', threadId: t, threadType: 'user', senderUid: uid, text: 'O khoa phong ngu nua', msgId: `h05-${randomUUID()}` });
+    await Promise.all([processInbound(residentHandler), processInbound(residentHandler)]);
+    const open = await sql<{ c: number }>(`select count(*)::int c from jobs where resident_id=$1 and status='drafting'`, [await rid(uid)]);
+    log(`P6c job drafting mo dong thoi cho 1 cu dan = ${open[0]!.c}`);
+    expect(open[0]!.c).toBeLessThanOrEqual(1);
+  });
+});
+
+// ---------------------------------------------------------------- (7) search injection
+describe('P7 search_regulations voi chuoi chen SQL / ky tu dac biet', () => {
+  const inputs = [
+    "'", '%', '\\', "'; drop table kb_sections; --", "' OR 1=1 --", "ống' OR '1'='1", '%_%', 'ong\\', '\u0000ong',
+    'ongʼ', 'ŉ ong', 'ongːA', '⑴ ong', '!ong & tuong', '(ong', 'ong:*',
+  ];
+  it('P7 khong throw, khong mat du lieu', async () => {
+    const before = (await sql<{ c: number }>(`select count(*)::int c from kb_sections`))[0]!.c;
+    const rows: string[] = [];
+    let errors = 0;
+    for (const q of inputs) {
+      try {
+        const r = await searchRegulations(q);
+        rows.push(`${JSON.stringify(q)} -> ok ${r.length} hits`);
+      } catch (e) {
+        errors++;
+        rows.push(`${JSON.stringify(q)} -> THROW ${(e as { code?: string }).code}: ${(e as Error).message.slice(0, 120)}`);
+      }
+    }
+    const after = (await sql<{ c: number }>(`select count(*)::int c from kb_sections`))[0]!.c;
+    for (const r of rows) log('P7', r);
+    log(`P7 kb_sections truoc=${before} sau=${after} errors=${errors}/${inputs.length}`);
+    expect(after).toBe(before);
+    expect(errors).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------- (8+) tu thiet ke them
+describe('P8 BB-06: model bat co urgency=emergency / ha co', () => {
+  it('P8a save_job_draft urgency=emergency => phai co ticket emergency + tin khan cap (cung hanh vi §1)', async () => {
+    const uid = 'sim-res-1';
+    await resetOpen(uid);
+    const t = th('p8a');
+    const before = (await sql<{ c: number }>(`select count(*)::int c from tickets where kind='emergency'`))[0]!.c;
+    setModelClientForTest(scripted([
+      msg([tu('i1', 'save_job_draft', draft({ category_code: 'dien_mat_cuc_bo', urgency: 'emergency' }))]),
+      msg([txt('Em da ghi nhan.')], 'end_turn'),
+    ]).client);
+    await send(uid, t, 'O cam phong ngu toe lua xet xet');
+    const after = (await sql<{ c: number }>(`select count(*)::int c from tickets where kind='emergency'`))[0]!.c;
+    log(`P8a ticket emergency moi=${after - before} outbox=${JSON.stringify(await outboxTexts(t))}`);
+    expect(after - before).toBe(1);
+  });
+  it('P8b luot sau model ha urgency emergency -> normal => co phai giu nguyen', async () => {
+    const uid = 'sim-res-1';
+    const t = th('p8b');
+    await resetOpen(uid);
+    setModelClientForTest(scripted([msg([tu('j1', 'save_job_draft', draft({ urgency: 'emergency' }))]), msg([txt('a')], 'end_turn')]).client);
+    await send(uid, t, 'O cam toe lua');
+    setModelClientForTest(scripted([msg([tu('j2', 'save_job_draft', draft({ urgency: 'normal' }))]), msg([txt('b')], 'end_turn')]).client);
+    await send(uid, t, 'Het roi, binh thuong');
+    const j = await latestJob(uid);
+    log(`P8b urgency sau khi model ha = ${j?.draft?.urgency}`);
+    expect(j?.draft?.urgency).toBe('emergency');
+  });
+});
+
+describe('P9 handoff_to_staff co lam agent im lang khong', () => {
+  it('P9 sau agent_loop_limit, tin ke tiep van goi model?', async () => {
+    const uid = 'sim-res-2';
+    await resetOpen(uid);
+    const t = th('p9');
+    const loop = msg([tu('k', 'get_my_cases', {})]);
+    setModelClientForTest(scripted([loop, loop, loop, loop, loop, loop]).client);
+    await send(uid, t, 'Em hoi cai nay');
+    const conv = await sql<{ h: string | null }>(`select human_takeover_until::text h from conversations where thread_id=$1`, [t]);
+    const s2 = scripted([msg([txt('Agent van tra loi')], 'end_turn')]);
+    setModelClientForTest(s2.client);
+    await send(uid, t, 'Alo co ai khong');
+    log(`P9 human_takeover_until=${conv[0]?.h} ; model_calls sau handoff=${s2.calls.length} ; outbox=${JSON.stringify(await outboxTexts(t))}`);
+    expect(s2.calls.length).toBe(0);
+  });
+});
+
+describe('P10 tool tu kiem input theo schema (Đ18: Gemini khong co strict)', () => {
+  it('P10 save_job_draft input sai schema => phai loi', async () => {
+    const uid = 'sim-res-3';
+    await resetOpen(uid);
+    const s = scripted([
+      msg([tu('l1', 'save_job_draft', { category_code: 'khoa_cua', symptoms: 'khong phai mang', location_in_unit: 5, urgency: 'ha-co', photo_ids: 'x', questions_asked: 99, confidence_note: '', resident_id: 'gia-mao' })]),
+      msg([txt('x')], 'end_turn'),
+    ]);
+    setModelClientForTest(s.client);
+    await send(uid, th('p10'), 'Khoa hong');
+    const tr = JSON.stringify(s.calls[1]!.messages.at(-1));
+    const j = await latestJob(uid);
+    log(`P10 tool_result=${tr} ; draft luu=${JSON.stringify(j?.draft)}`);
+    expect(tr.includes('"is_error":true')).toBe(true);
+  });
+});
+
+describe('P11 ngu canh gui model', () => {
+  it('P11 tin hien tai xuat hien may lan trong messages luot dau', async () => {
+    const uid = 'sim-res-1';
+    await resetOpen(uid);
+    const s = scripted([msg([txt('x')], 'end_turn')]);
+    setModelClientForTest(s.client);
+    const text = `Den nha tam nhap nhay ${randomUUID().slice(0, 6)}`;
+    await send(uid, th('p11'), text);
+    const n = s.calls[0]!.messages.filter((m) => typeof m.content === 'string' && m.content === text).length;
+    log(`P11 so lan tin hien tai trong messages = ${n} ; roles=${JSON.stringify(s.calls[0]!.messages.map((m) => m.role))}`);
+    expect(n).toBe(1);
+  });
+});
+
+describe('P12 audit_log cho MOI tool (§10.3)', () => {
+  it('P12 get_my_cases + get_price_band co ghi audit_log tool.<ten>', async () => {
+    const uid = 'sim-res-1';
+    const c0 = await sql<{ a: string; c: number }>(`select action a, count(*)::int c from audit_log where action in ('tool.get_my_cases','tool.get_price_band') group by action`);
+    setModelClientForTest(scripted([
+      msg([tu('m1', 'get_my_cases', {}), tu('m2', 'get_price_band', { category_code: 'khoa_cua' })]),
+      msg([txt('x')], 'end_turn'),
+    ]).client);
+    await send(uid, th('p12'), 'Gia sua khoa bao nhieu');
+    const c1 = await sql<{ a: string; c: number }>(`select action a, count(*)::int c from audit_log where action in ('tool.get_my_cases','tool.get_price_band') group by action`);
+    log(`P12 audit truoc=${JSON.stringify(c0)} sau=${JSON.stringify(c1)}`);
+    expect(c1.length).toBe(2);
+  });
+});
+
+describe('P13 model tra ve rong / het max_tokens', () => {
+  it('P13 end_turn content rong => cu dan co nhan duoc tin nao khong', async () => {
+    const uid = 'sim-res-2';
+    await resetOpen(uid);
+    const t = th('p13');
+    setModelClientForTest(scripted([msg([], 'max_tokens')]).client);
+    await send(uid, t, 'Tu lanh nha em khong lanh');
+    const out = await outboxTexts(t);
+    log(`P13 outbox=${JSON.stringify(out)}`);
+    expect(out.length).toBeGreaterThan(0);
+  });
+});
+
+describe('P14 doi verdict sau awaiting_consent roi mo case', () => {
+  it('P14 luot 2: classify(bql, sec01 hop le) roi open_service_case voi "Đồng ý" => job co verdict bql KHONG duoc case_open', async () => {
+    const uid = 'sim-res-3';
+    const t = th('p14');
+    await toAwaitingConsent(uid, t);
+    setModelClientForTest(scripted([
+      msg([tu('n1', 'classify_responsibility', { party: 'bql', citations: [{ document_id: 'QC-DEMO', section_id: 'sec01', quote: 'Đường ống cấp nước chung/đứng ngoài căn hộ thuộc trách nhiệm bảo trì của Ban quản lý.' }], reason_vi: 'doi y' })]),
+      msg([tu('n2', 'open_service_case', { window_options: ['9h'], note: 'x' })]),
+      msg([txt('ok')], 'end_turn'),
+    ]).client);
+    await send(uid, t, 'Đồng ý');
+    const j = await latestJob(uid);
+    log(`P14 -> status=${j?.status} responsibility.party=${j?.responsibility?.party}`);
+    expect(!(j?.status === 'case_open' && j?.responsibility?.party !== 'resident')).toBe(true);
+  });
+});
+
+describe('P15 redactPii nuot ma cuoc', () => {
+  it('P15 ma cuoc toan so (C-2345) bi che thanh [CĂN]?', () => {
+    const out = redactPii('Cuoc C-2345 cua em sao roi');
+    log(`P15 "Cuoc C-2345 cua em sao roi" -> "${out}"`);
+    expect(out).toContain('C-2345');
+  });
+});

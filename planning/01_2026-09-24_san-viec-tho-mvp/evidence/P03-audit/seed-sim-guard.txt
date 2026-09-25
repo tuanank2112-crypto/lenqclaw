@@ -1,0 +1,14 @@
+$ psql lq_audit3: dem dong truoc
+5|4|17|6|6|4
+$ DATA_MODE=production npm run db:seed:sim
+seed-sim: kb_sections=17 residents=4 price_book=6
+EXIT(DATA_MODE=production db:seed:sim)=0
+$ env -u DATA_MODE npm run db:seed:sim  (lan 2)
+seed-sim: kb_sections=17 residents=4 price_book=6
+EXIT=0
+$ psql lq_audit3: dem dong sau 2 lan chay
+5|4|17|6|6|4
+$ DATA_MODE=production node --import tsx -e "...runSeedSim() goi truc tiep"
+THROW: db:seed:sim CHI chay khi DATA_MODE=sim (SPEC-P03-Resident-Agent.md §10.5).
+$ grep db:seed:sim package.json
+20:    "db:seed:sim": "node --import tsx -e \"process.env.DATA_MODE='sim'; const m=await import('./packages/core/src/db/seed-sim.ts'); const r=await m.runSeedSim(); console.log('seed-sim: kb_sections='+r.kbSections+' residents='+r.residents+' price_book='+r.priceBookRows); process.exit(0);\"",

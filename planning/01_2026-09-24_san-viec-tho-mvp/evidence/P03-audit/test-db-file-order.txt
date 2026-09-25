@@ -1,0 +1,94 @@
+$ npm run db:migrate && db:seed && db:seed:sim; cd packages/core && npx vitest run --config vitest.db.config.ts --sequence.shuffle.files --sequence.seed=1
+ ✓ src/dbtests/p01.db.test.ts (10 tests) 440ms
+ ❯ src/dbtests/p03.db.test.ts (11 tests | 9 failed) 101ms
+   × SPEC-P03 §10.6(b) — verdict bql => ticket bql_responsibility + job routed_bql > day du vong: save_job_draft -> search_regulations -> classify_responsibility(bql) -> push_bql_ticket 6ms
+   × SPEC-P03 §10.6(c) — verdict resident khong citation => bi ep unclear > classify_responsibility(resident, citations=[]) => forced unclear, job routed_bql 2ms
+   × SPEC-P03 §10.6(d)+(e) — resident hop le: dong y => case_open; khong dong y => ConsentMissingError > (d) verdict resident hop le + "dong y" => case_open, ticket service_case 1ms
+   × SPEC-P03 §10.6(d)+(e) — resident hop le: dong y => case_open; khong dong y => ConsentMissingError > (e) "khong dong y" => ConsentMissingError, job giu awaiting_consent 1ms
+   × SPEC-P03 §10.6(g) — chuoi "[userId: ...]" khong doi Party (BB-08) > gia mao userId trong noi dung tin nhan khong lam doi resident_id cua job 1ms
+   × SPEC-P03 §10.6(h) — SDT/ma can KHONG co trong messages gui model > che PII truoc khi dua vao ngu canh model 12ms
+   × SPEC-P03 §10.6(i) — het 6 vong tool ma khong co text cuoi => handoff > 6 lan goi tool lien tiep => handoff_to_staff + BUSY_REPLY 15ms
+   × BB-03 — nguon het hieu luc / deprecated va hai citation ngược nhau => unclear > citation deprecated + het hieu luc => khong con citation hop le => forced unclear 2ms
+   × BB-03 — nguon het hieu luc / deprecated va hai citation ngược nhau => unclear > hai citation con hieu luc nhung ket luan nguoc nhau (sec05 BQL vs sec06 CU DAN) => unclear 1ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/dbtests/p03.db.test.ts > SPEC-P03 §10.6(b) — verdict bql => ticket bql_responsibility + job routed_bql > day du vong: save_job_draft -> search_regulations -> classify_responsibility(bql) -> push_bql_ticket
+ ❯ src/dbtests/p03.db.test.ts:149:24
+ FAIL  src/dbtests/p03.db.test.ts > SPEC-P03 §10.6(c) — verdict resident khong citation => bi ep unclear > classify_responsibility(resident, citations=[]) => forced unclear, job routed_bql
+ ❯ src/dbtests/p03.db.test.ts:195:24
+ FAIL  src/dbtests/p03.db.test.ts > SPEC-P03 §10.6(d)+(e) — resident hop le: dong y => case_open; khong dong y => ConsentMissingError > (d) verdict resident hop le + "dong y" => case_open, ticket service_case
+ ❯ src/dbtests/p03.db.test.ts:239:24
+ FAIL  src/dbtests/p03.db.test.ts > SPEC-P03 §10.6(d)+(e) — resident hop le: dong y => case_open; khong dong y => ConsentMissingError > (e) "khong dong y" => ConsentMissingError, job giu awaiting_consent
+ ❯ src/dbtests/p03.db.test.ts:301:24
+EXIT(seed=1)=1
+$ npm run db:migrate && db:seed && db:seed:sim; cd packages/core && npx vitest run --config vitest.db.config.ts --sequence.shuffle.files --sequence.seed=2
+ ✓ src/dbtests/p01.db.test.ts (10 tests) 460ms
+ ❯ src/dbtests/p03.db.test.ts (11 tests | 9 failed) 101ms
+   × SPEC-P03 §10.6(b) — verdict bql => ticket bql_responsibility + job routed_bql > day du vong: save_job_draft -> search_regulations -> classify_responsibility(bql) -> push_bql_ticket 6ms
+   × SPEC-P03 §10.6(c) — verdict resident khong citation => bi ep unclear > classify_responsibility(resident, citations=[]) => forced unclear, job routed_bql 2ms
+   × SPEC-P03 §10.6(d)+(e) — resident hop le: dong y => case_open; khong dong y => ConsentMissingError > (d) verdict resident hop le + "dong y" => case_open, ticket service_case 2ms
+   × SPEC-P03 §10.6(d)+(e) — resident hop le: dong y => case_open; khong dong y => ConsentMissingError > (e) "khong dong y" => ConsentMissingError, job giu awaiting_consent 1ms
+   × SPEC-P03 §10.6(g) — chuoi "[userId: ...]" khong doi Party (BB-08) > gia mao userId trong noi dung tin nhan khong lam doi resident_id cua job 1ms
+   × SPEC-P03 §10.6(h) — SDT/ma can KHONG co trong messages gui model > che PII truoc khi dua vao ngu canh model 11ms
+   × SPEC-P03 §10.6(i) — het 6 vong tool ma khong co text cuoi => handoff > 6 lan goi tool lien tiep => handoff_to_staff + BUSY_REPLY 13ms
+   × BB-03 — nguon het hieu luc / deprecated va hai citation ngược nhau => unclear > citation deprecated + het hieu luc => khong con citation hop le => forced unclear 1ms
+   × BB-03 — nguon het hieu luc / deprecated va hai citation ngược nhau => unclear > hai citation con hieu luc nhung ket luan nguoc nhau (sec05 BQL vs sec06 CU DAN) => unclear 1ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/dbtests/p03.db.test.ts > SPEC-P03 §10.6(b) — verdict bql => ticket bql_responsibility + job routed_bql > day du vong: save_job_draft -> search_regulations -> classify_responsibility(bql) -> push_bql_ticket
+ ❯ src/dbtests/p03.db.test.ts:149:24
+ FAIL  src/dbtests/p03.db.test.ts > SPEC-P03 §10.6(c) — verdict resident khong citation => bi ep unclear > classify_responsibility(resident, citations=[]) => forced unclear, job routed_bql
+ ❯ src/dbtests/p03.db.test.ts:195:24
+ FAIL  src/dbtests/p03.db.test.ts > SPEC-P03 §10.6(d)+(e) — resident hop le: dong y => case_open; khong dong y => ConsentMissingError > (d) verdict resident hop le + "dong y" => case_open, ticket service_case
+ ❯ src/dbtests/p03.db.test.ts:239:24
+ FAIL  src/dbtests/p03.db.test.ts > SPEC-P03 §10.6(d)+(e) — resident hop le: dong y => case_open; khong dong y => ConsentMissingError > (e) "khong dong y" => ConsentMissingError, job giu awaiting_consent
+ ❯ src/dbtests/p03.db.test.ts:301:24
+EXIT(seed=2)=1
+$ npm run db:migrate && db:seed && db:seed:sim; cd packages/core && npx vitest run --config vitest.db.config.ts --sequence.shuffle.files --sequence.seed=3
+ ✓ src/dbtests/p03.db.test.ts (11 tests) 452ms
+ ✓ src/dbtests/p01.db.test.ts (10 tests) 469ms
+ Test Files  2 passed (2)
+      Tests  21 passed (21)
+EXIT(seed=3)=0
+$ npm run db:migrate && db:seed && db:seed:sim; cd packages/core && npx vitest run --config vitest.db.config.ts --sequence.shuffle.files --sequence.seed=4
+ ✓ src/dbtests/p01.db.test.ts (10 tests) 451ms
+ ❯ src/dbtests/p03.db.test.ts (11 tests | 9 failed) 117ms
+   × SPEC-P03 §10.6(b) — verdict bql => ticket bql_responsibility + job routed_bql > day du vong: save_job_draft -> search_regulations -> classify_responsibility(bql) -> push_bql_ticket 6ms
+   × SPEC-P03 §10.6(c) — verdict resident khong citation => bi ep unclear > classify_responsibility(resident, citations=[]) => forced unclear, job routed_bql 2ms
+   × SPEC-P03 §10.6(d)+(e) — resident hop le: dong y => case_open; khong dong y => ConsentMissingError > (d) verdict resident hop le + "dong y" => case_open, ticket service_case 2ms
+   × SPEC-P03 §10.6(d)+(e) — resident hop le: dong y => case_open; khong dong y => ConsentMissingError > (e) "khong dong y" => ConsentMissingError, job giu awaiting_consent 1ms
+   × SPEC-P03 §10.6(g) — chuoi "[userId: ...]" khong doi Party (BB-08) > gia mao userId trong noi dung tin nhan khong lam doi resident_id cua job 1ms
+   × SPEC-P03 §10.6(h) — SDT/ma can KHONG co trong messages gui model > che PII truoc khi dua vao ngu canh model 13ms
+   × SPEC-P03 §10.6(i) — het 6 vong tool ma khong co text cuoi => handoff > 6 lan goi tool lien tiep => handoff_to_staff + BUSY_REPLY 17ms
+   × BB-03 — nguon het hieu luc / deprecated va hai citation ngược nhau => unclear > citation deprecated + het hieu luc => khong con citation hop le => forced unclear 2ms
+   × BB-03 — nguon het hieu luc / deprecated va hai citation ngược nhau => unclear > hai citation con hieu luc nhung ket luan nguoc nhau (sec05 BQL vs sec06 CU DAN) => unclear 2ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/dbtests/p03.db.test.ts > SPEC-P03 §10.6(b) — verdict bql => ticket bql_responsibility + job routed_bql > day du vong: save_job_draft -> search_regulations -> classify_responsibility(bql) -> push_bql_ticket
+ ❯ src/dbtests/p03.db.test.ts:149:24
+ FAIL  src/dbtests/p03.db.test.ts > SPEC-P03 §10.6(c) — verdict resident khong citation => bi ep unclear > classify_responsibility(resident, citations=[]) => forced unclear, job routed_bql
+ ❯ src/dbtests/p03.db.test.ts:195:24
+ FAIL  src/dbtests/p03.db.test.ts > SPEC-P03 §10.6(d)+(e) — resident hop le: dong y => case_open; khong dong y => ConsentMissingError > (d) verdict resident hop le + "dong y" => case_open, ticket service_case
+ ❯ src/dbtests/p03.db.test.ts:239:24
+ FAIL  src/dbtests/p03.db.test.ts > SPEC-P03 §10.6(d)+(e) — resident hop le: dong y => case_open; khong dong y => ConsentMissingError > (e) "khong dong y" => ConsentMissingError, job giu awaiting_consent
+ ❯ src/dbtests/p03.db.test.ts:301:24
+EXIT(seed=4)=1
+$ npm run db:migrate && db:seed && db:seed:sim; cd packages/core && npx vitest run --config vitest.db.config.ts --sequence.shuffle.files --sequence.seed=5
+ ✓ src/dbtests/p01.db.test.ts (10 tests) 454ms
+ ❯ src/dbtests/p03.db.test.ts (11 tests | 9 failed) 96ms
+   × SPEC-P03 §10.6(b) — verdict bql => ticket bql_responsibility + job routed_bql > day du vong: save_job_draft -> search_regulations -> classify_responsibility(bql) -> push_bql_ticket 5ms
+   × SPEC-P03 §10.6(c) — verdict resident khong citation => bi ep unclear > classify_responsibility(resident, citations=[]) => forced unclear, job routed_bql 2ms
+   × SPEC-P03 §10.6(d)+(e) — resident hop le: dong y => case_open; khong dong y => ConsentMissingError > (d) verdict resident hop le + "dong y" => case_open, ticket service_case 1ms
+   × SPEC-P03 §10.6(d)+(e) — resident hop le: dong y => case_open; khong dong y => ConsentMissingError > (e) "khong dong y" => ConsentMissingError, job giu awaiting_consent 1ms
+   × SPEC-P03 §10.6(g) — chuoi "[userId: ...]" khong doi Party (BB-08) > gia mao userId trong noi dung tin nhan khong lam doi resident_id cua job 1ms
+   × SPEC-P03 §10.6(h) — SDT/ma can KHONG co trong messages gui model > che PII truoc khi dua vao ngu canh model 12ms
+   × SPEC-P03 §10.6(i) — het 6 vong tool ma khong co text cuoi => handoff > 6 lan goi tool lien tiep => handoff_to_staff + BUSY_REPLY 14ms
+   × BB-03 — nguon het hieu luc / deprecated va hai citation ngược nhau => unclear > citation deprecated + het hieu luc => khong con citation hop le => forced unclear 1ms
+   × BB-03 — nguon het hieu luc / deprecated va hai citation ngược nhau => unclear > hai citation con hieu luc nhung ket luan nguoc nhau (sec05 BQL vs sec06 CU DAN) => unclear 1ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/dbtests/p03.db.test.ts > SPEC-P03 §10.6(b) — verdict bql => ticket bql_responsibility + job routed_bql > day du vong: save_job_draft -> search_regulations -> classify_responsibility(bql) -> push_bql_ticket
+ ❯ src/dbtests/p03.db.test.ts:149:24
+ FAIL  src/dbtests/p03.db.test.ts > SPEC-P03 §10.6(c) — verdict resident khong citation => bi ep unclear > classify_responsibility(resident, citations=[]) => forced unclear, job routed_bql
+ ❯ src/dbtests/p03.db.test.ts:195:24
+ FAIL  src/dbtests/p03.db.test.ts > SPEC-P03 §10.6(d)+(e) — resident hop le: dong y => case_open; khong dong y => ConsentMissingError > (d) verdict resident hop le + "dong y" => case_open, ticket service_case
+ ❯ src/dbtests/p03.db.test.ts:239:24
+ FAIL  src/dbtests/p03.db.test.ts > SPEC-P03 §10.6(d)+(e) — resident hop le: dong y => case_open; khong dong y => ConsentMissingError > (e) "khong dong y" => ConsentMissingError, job giu awaiting_consent
+ ❯ src/dbtests/p03.db.test.ts:301:24
+EXIT(seed=5)=1

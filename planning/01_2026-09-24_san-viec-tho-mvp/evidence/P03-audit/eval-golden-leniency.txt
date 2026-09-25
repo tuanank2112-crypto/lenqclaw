@@ -1,0 +1,15 @@
+$ ANTHROPIC_API_KEY=dummy node --import ./h05-fake-model.mjs scripts/eval_golden.mjs   (model gia tra ve TAT CA nhan: "const ALL = 'ong_nuoc_ro thiet_bi_ve_sin...")
+emergency: total=20 pass=20 false_positive=0 false_negative=0 ok=true
+diagnosis: total=40 pass=40 ok=true
+responsibility: total=30 pass=30 ok=true
+EVAL_GOLDEN_OK
+fake_model_calls=70
+EXIT(eval_golden, model tra moi nhan)=0
+
+$ env -u DATABASE_URL ANTHROPIC_API_KEY=dummy node --import ./h05-fake-model.mjs scripts/eval_golden.mjs   (loi cau hinh, khong phai 429/5xx)
+emergency: total=20 pass=20 false_positive=0 false_negative=0 ok=true
+diagnosis: total=40 pass=40 ok=true
+responsibility: blocked (Khong truy hoi duoc quy che: DATABASE_URL chua duoc cau hinh. Xem specs/OPERATIONS.md §3.)
+EVAL_GOLDEN: BLOCKED (thieu credential hoac loi ha tang o bo can LLM) — khong tinh truot.
+fake_model_calls=40
+EXIT=3

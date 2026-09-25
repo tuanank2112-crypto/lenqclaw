@@ -1,0 +1,24 @@
+$ (lan 2, cung worktree, cache vitest tu lan 1) DATABASE_URL=.../lq_audit3 npm run test:db
+./apps/web/node_modules/.vite/vitest/results.json
+./packages/core/node_modules/.vite/vitest/results.json
+> @lenqclaw/core@0.0.1 test:db
+> tsx scripts/require-database-url.ts && vitest run --config vitest.db.config.ts
+ RUN  v2.1.9 C:/Users/lenku/AppData/Local/Temp/claude/d--lenqclaw/3b8e885f-1d38-4433-81e1-34d1144db1c2/scratchpad/wt/packages/core
+ ✓ src/dbtests/p03.db.test.ts (11 tests) 470ms
+ ✓ src/dbtests/p01.db.test.ts (10 tests) 469ms
+ Test Files  2 passed (2)
+      Tests  21 passed (21)
+   Start at  09:29:59
+   Duration  1.98s (transform 176ms, setup 0ms, collect 538ms, tests 938ms, environment 0ms, prepare 191ms)
+> @lenqclaw/web@0.0.1 test:db
+> tsx ../../packages/core/scripts/require-database-url.ts && vitest run --config vitest.db.config.ts
+ RUN  v2.1.9 C:/Users/lenku/AppData/Local/Temp/claude/d--lenqclaw/3b8e885f-1d38-4433-81e1-34d1144db1c2/scratchpad/wt/apps/web
+ ✓ tests/00-login.db.test.ts (2 tests) 146ms
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  09:30:02
+   Duration  1.06s (transform 126ms, setup 0ms, collect 546ms, tests 146ms, environment 0ms, prepare 116ms)
+> @lenqclaw/zalo-worker@0.0.1 test:db
+> echo "@lenqclaw/zalo-worker: no db tests in P01 (P02 scope)"
+"@lenqclaw/zalo-worker: no db tests in P01 (P02 scope)"
+EXIT(test:db lan 2)=0
