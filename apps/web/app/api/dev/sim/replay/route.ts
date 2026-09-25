@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { NextResponse, type NextRequest } from 'next/server';
-import { sql, audit, sim } from '@lenqclaw/core';
+import { sql, audit, sim, agent } from '@lenqclaw/core';
 import { getSessionFromRequest } from '../../../../../lib/auth/guard';
 
 interface ReplayBody {
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const file = body.file && /^[\w.-]+\.jsonl$/.test(body.file) ? body.file : 'echo.jsonl';
   const filePath = path.join(SCENARIOS_DIR, file);
 
-  const result = await sim.runScenario(filePath);
+  const result = await sim.runScenario(filePath, agent.routeInboundEvent);
 
   await audit(sql, {
     actorType: 'staff',

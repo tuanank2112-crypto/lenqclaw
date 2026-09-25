@@ -43,6 +43,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   const raw = (await req.json().catch(() => null)) as RawSendBody | null;
+  // SPEC-P05-Dispatch.md §10.11 / SPEC-P04 §8.2: 'system' danh rieng cho
+  // su kien he thong (enqueueSystemEvent) — CAM tho/cu dan gia mao gui.
+  if (raw && raw.senderUid === 'system') {
+    return NextResponse.json({ error: 'reserved_sender' }, { status: 400 });
+  }
   const body = parseSendBody(raw);
   if (!body) {
     return NextResponse.json({ error: 'invalid_body' }, { status: 400 });
