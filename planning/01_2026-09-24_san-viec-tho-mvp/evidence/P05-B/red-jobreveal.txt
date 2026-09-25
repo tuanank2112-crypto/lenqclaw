@@ -1,0 +1,6 @@
+jobreveal_leak: packages\core\src\services\vendor-messages.ts: nhac "JobReveal" ngoai domain/types.ts va services/access.ts
+pii_keys_in_jobcard: 0
+forbidden_tools: 0
+jobreveal_outside_allowed: 1
+allow_reveal_outside_access: 0
+EXIT_CODE=1

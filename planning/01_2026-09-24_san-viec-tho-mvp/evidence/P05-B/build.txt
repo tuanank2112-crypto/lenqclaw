@@ -1,0 +1,62 @@
+
+> lenqclaw@0.0.1 build
+> npm run build -w @lenqclaw/core && npm run build --workspaces --if-present
+
+
+> @lenqclaw/core@0.0.1 build
+> tsc -p tsconfig.json
+
+
+> @lenqclaw/web@0.0.1 build
+> next build
+
+   ▲ Next.js 15.5.26
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 1862ms
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/12) ...
+   Generating static pages (3/12) 
+   Generating static pages (6/12) 
+   Generating static pages (9/12) 
+ ✓ Generating static pages (12/12)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
+┌ ƒ /                                      152 B         103 kB
+├ ○ /_not-found                            987 B         104 kB
+├ ƒ /api/auth/login                        152 B         103 kB
+├ ƒ /api/auth/logout                       152 B         103 kB
+├ ƒ /api/dev/sim/replay                    152 B         103 kB
+├ ƒ /api/dev/sim/send                      152 B         103 kB
+├ ƒ /api/dev/sim/thread                    152 B         103 kB
+├ ƒ /api/zalo/[account]/login              152 B         103 kB
+├ ƒ /api/zalo/[account]/logout             152 B         103 kB
+├ ƒ /api/zalo/status                       152 B         103 kB
+├ ƒ /dev/sim                             1.46 kB         104 kB
+├ ○ /gate                                  152 B         103 kB
+├ ○ /login                                 764 B         103 kB
+├ ○ /tickets                               152 B         103 kB
+└ ƒ /zalo                                2.07 kB         105 kB
++ First Load JS shared by all             103 kB
+  ├ chunks/18-498168fb58dcd546.js        46.4 kB
+  ├ chunks/87c73c54-24122e7b92478d00.js  54.2 kB
+  └ other shared chunks (total)          1.95 kB
+
+
+ƒ Middleware                             34.8 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+> @lenqclaw/zalo-worker@0.0.1 build
+> tsc -p tsconfig.json
+
+
+> @lenqclaw/core@0.0.1 build
+> tsc -p tsconfig.json
+
+EXIT:0

@@ -1,0 +1,349 @@
+
+> lenqclaw@0.0.1 test:db
+> npm run db:migrate && npm run db:seed && node --import tsx scripts/seed-sim-for-test.mjs && npm run test:db -w @lenqclaw/core && npm run test:db -w @lenqclaw/web && npm run test:db -w @lenqclaw/zalo-worker --if-present
+
+
+> lenqclaw@0.0.1 db:migrate
+> tsx packages/core/src/db/migrate.ts
+
+-- applying 001_init.sql
+-- applying 002_search.sql
+-- applying 003_kb_building.sql
+-- applying 004_zalo_login.sql
+-- applying 005_zalo_ui.sql
+-- applying 006_dispatch_slots.sql
+applied: 6
+
+> lenqclaw@0.0.1 db:seed
+> tsx packages/core/src/db/seed.ts
+
+seed: job_categories=12 apartments=20
+seed-sim(test:db): kb_sections=14 residents=4 price_book=6
+
+> @lenqclaw/core@0.0.1 test:db
+> tsx scripts/require-database-url.ts && vitest run --config vitest.db.config.ts
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mD:/lenqclaw/packages/core[39m
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP1 (C6) PII bien the toi model[2m > [22m[2mP1a redactPii (thuan) — 0 bien the SDT/can con lo
+[22m[39mREGR| P1a leaks=0/16 []
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP1 (C6) PII bien the toi model[2m > [22m[2mP1b vong agent that — bien the o LICH SU (luot 1) va TIN HIEN TAI (luot 2) khong toi messages gui model
+[22m[39mREGR| P1b raw PII trong messages luot 2: []
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP2 (C1, N12) classify_responsibility voi trich dan xau => phai ep unclear[2m > [22m[2mP2 id bia (QC-DEMO/sec99)
+[22m[39mREGR| P2 [id bia (QC-DEMO/sec99)] -> party=unclear status=drafting
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP2 (C1, N12) classify_responsibility voi trich dan xau => phai ep unclear[2m > [22m[2mP2 tai lieu bia (QC-FAKE/sec01)
+[22m[39mREGR| P2 [tai lieu bia (QC-FAKE/sec01)] -> party=unclear status=drafting
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP2 (C1, N12) classify_responsibility voi trich dan xau => phai ep unclear[2m > [22m[2mP2 chi muc deprecated (QC-DEMO-DEP)
+[22m[39mREGR| P2 [chi muc deprecated (QC-DEMO-DEP)] -> party=unclear status=drafting
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP2 (C1, N12) classify_responsibility voi trich dan xau => phai ep unclear[2m > [22m[2mP2 chi muc het hieu luc (QC-DEMO-EXP)
+[22m[39mREGR| P2 [chi muc het hieu luc (QC-DEMO-EXP)] -> party=unclear status=drafting
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP2 (C1, N12) classify_responsibility voi trich dan xau => phai ep unclear[2m > [22m[2mP2 hieu luc tuong lai (QC-FUTURE, 2099)
+[22m[39mREGR| P2 [hieu luc tuong lai (QC-FUTURE, 2099)] -> party=unclear status=drafting
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP2 (C1, N12) classify_responsibility voi trich dan xau => phai ep unclear[2m > [22m[2mP2 tai lieu status=draft
+[22m[39mREGR| P2 [tai lieu status=draft] -> party=unclear status=drafting
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP2 (C1, N12) classify_responsibility voi trich dan xau => phai ep unclear[2m > [22m[2mP2 quy che cua TOA KHAC (QC-TOA-B, approved) — §11.4
+[22m[39mREGR| P2 [quy che cua TOA KHAC (QC-TOA-B, approved) — §11.4] -> party=unclear status=drafting
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP2 (C1, N12) classify_responsibility voi trich dan xau => phai ep unclear[2m > [22m[2mP2 muc hop le nhung KET LUAN NGUOC party (sec01 [BQL] + party=resident)
+[22m[39mREGR| P2 [muc hop le nhung KET LUAN NGUOC party (sec01 [BQL] + party=resident)] -> party=unclear status=drafting
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP2 (C1, N12) classify_responsibility voi trich dan xau => phai ep unclear[2m > [22m[2mP2q trich dan hop le nhung QUOTE BIA (sec07 + quote khong co trong body) => quote luu PHAI la body that, KHONG phai quote bia
+[22m[39mREGR| P2q quote luu = [{"quote":"[TRÁCH NHIỆM: CƯ DÂN] Cửa, khoá, bản lề của căn hộ do cư dân tự bảo trì, sửa chữa.","section_id":"sec07","document_id":"QC-DEMO"}]
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP3 (C2, C3) open_service_case — dong y gia/mo ho => phai tu choi[2m > [22m[2mP3 "Không đồng ý lắm" => tu choi (triage khong cau hinh => null => giu ConsentMissingError)
+[22m[39mREGR| P3 "Không đồng ý lắm" -> status=awaiting_consent
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP3 (C2, C3) open_service_case — dong y gia/mo ho => phai tu choi[2m > [22m[2mP3 "ok để em hỏi vợ đã" => tu choi (triage khong cau hinh => null => giu ConsentMissingError)
+[22m[39mREGR| P3 "ok để em hỏi vợ đã" -> status=awaiting_consent
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP3 (C2, C3) open_service_case — dong y gia/mo ho => phai tu choi[2m > [22m[2mP3 "ko đồng ý" => tu choi (triage khong cau hinh => null => giu ConsentMissingError)
+[22m[39mREGR| P3 "ko đồng ý" -> status=awaiting_consent
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP3 (C2, C3) open_service_case — dong y gia/mo ho => phai tu choi[2m > [22m[2mP3 "k đồng ý đâu" => tu choi (triage khong cau hinh => null => giu ConsentMissingError)
+[22m[39mREGR| P3 "k đồng ý đâu" -> status=awaiting_consent
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP3 (C2, C3) open_service_case — dong y gia/mo ho => phai tu choi[2m > [22m[2mP3 "đừng tìm thợ" => tu choi (triage khong cau hinh => null => giu ConsentMissingError)
+[22m[39mREGR| P3 "đừng tìm thợ" -> status=awaiting_consent
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP3 (C2, C3) open_service_case — dong y gia/mo ho => phai tu choi[2m > [22m[2mP3 "mấy giờ thì được?" => tu choi (triage khong cau hinh => null => giu ConsentMissingError)
+[22m[39mREGR| P3 "mấy giờ thì được?" -> status=awaiting_consent
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP3 (C2, C3) open_service_case — dong y gia/mo ho => phai tu choi[2m > [22m[2mP3 "hông đồng ý" => tu choi (triage khong cau hinh => null => giu ConsentMissingError)
+[22m[39mREGR| P3 "hông đồng ý" -> status=awaiting_consent
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP3 (C2, C3) open_service_case — dong y gia/mo ho => phai tu choi[2m > [22m[2mP3 "Để em suy nghĩ thêm" => tu choi (triage khong cau hinh => null => giu ConsentMissingError)
+[22m[39mREGR| P3 "Để em suy nghĩ thêm" -> status=awaiting_consent
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP3 (C2, C3) open_service_case — dong y gia/mo ho => phai tu choi[2m > [22m[2mP3s CUNG LUOT: "...tim tho giup em" -> draft -> classify(resident) -> open_service_case => KHONG duoc case_open
+[22m[39mREGR| P3s -> status=awaiting_consent
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP4 cu dan A thao tac/doc du lieu cu dan B (BB-08)[2m > [22m[2mP4a get_my_cases voi input chen resident_id cua B => 0 job cua B lo sang A
+[22m[39mREGR| P4a B co 9 job; lo sang A: 0
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP4 cu dan A thao tac/doc du lieu cu dan B (BB-08)[2m > [22m[2mP4c (N11) A gui tin voi thread_id cua B => lich su cua B KHONG vao ngu canh cua A, conversations.party_id KHONG bi ghi de
+[22m[39mREGR| P4c ser chua BIMAT: false; party_id giu B: true
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP5 (C5) khan cap — lop 1 khong bao nham tren bo gan giong[2m > [22m[2mP5a bo gan giong: 0 bao nham (nguong §11.1 — do phu tren "phai bat" giao lop 2, khong chan cong o day)
+[22m[39mREGR| P5a bao nham 0/8: []
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP5 (C5) khan cap — lop 1 khong bao nham tren bo gan giong[2m > [22m[2mP5c vong that: tin ro ri "nuoc chay ra san" => KHONG bi re sang khan cap (0 ticket emergency moi)
+[22m[39mREGR| P5c emergency_tickets_moi=0 outbox=["Anh/chi cho em hoi ro ri o dau a?"]
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP5 (C5) khan cap — lop 1 khong bao nham tren bo gan giong[2m > [22m[2mP5-triage lop 2 bat khan cap khi model triage tra emergency+do tin cao (mo ta gian tiep)
+[22m[39mREGR| P5-triage emergency_tickets_moi=1
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP6 cung mot tin inbound xu ly hai lan / dong thoi => dung mot tra loi[2m > [22m[2mP6c (G9) hai tin KHAC NHAU cua CUNG cu dan dong thoi => toi da 1 job drafting
+[22m[39mREGR| P6c job drafting mo dong thoi = 1
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP7 (N14) search_regulations voi chuoi chen SQL / ky tu dac biet[2m > [22m[2mP7 khong throw, khong mat du lieu
+[22m[39mREGR| P7 kb_sections truoc=17 sau=17 errors=0/16
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP8 (C4) BB-06: model bat co urgency=emergency / ha co[2m > [22m[2mP8a save_job_draft urgency=emergency => PHAI co ticket emergency + tin khan cap
+[22m[39mREGR| P8a ticket emergency moi=1
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP9 (N3) handoff_to_staff PHAI lam agent im lang[2m > [22m[2mP9 sau agent_loop_limit, tin ke tiep KHONG duoc goi model
+[22m[39mREGR| P9 human_takeover_until=2026-09-25 19:39:09.036567+00 ; model_calls sau handoff=0
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP10 tool tu kiem input theo schema (noi vao vong that — H06 §3.0)[2m > [22m[2mP10 save_job_draft input sai schema => tool_result is_error, KHONG chay tool
+[22m[39mREGR| P10 tool_result={"role":"user","content":[{"type":"tool_result","tool_use_id":"l1","is_error":true,"content":"{\"code\":\"InvalidToolInput\",\"message\":\"Tool \\\"save_job_draft\\\": truong \\\"symptoms\\\" sai kieu, ky vong array; truong \\\"location_in_unit\\\" sai kieu, ky vong string; truong \\\"urgency\\\" phai thuoc enum [normal, soon, emergency]; truong \\\"photo_ids\\\" sai kieu, ky vong array; khoa la \\\"resident_id\\\" khong co trong input_schema\"}"}]}
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP12 (N5) audit_log cho MOI tool[2m > [22m[2mP12 get_my_cases + get_price_band co ghi audit_log tool.<ten>
+[22m[39mREGR| P12 truoc=[{"a":"tool.get_my_cases","c":6}] sau=[{"a":"tool.get_my_cases","c":7},{"a":"tool.get_price_band","c":1}]
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP13 (N2) model tra ve rong / het max_tokens => van co tin tra loi + handoff[2m > [22m[2mP13
+[22m[39mREGR| P13 outbox=["Xin lỗi, hệ thống đang bận, vui lòng thử lại sau ít phút."]
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP14 (§11.5 VerdictLockedError) doi verdict sau awaiting_consent roi mo case[2m > [22m[2mP14 luot 2: classify(bql) bi VerdictLockedError (job da awaiting_consent) roi open_service_case voi "Đồng ý" => KHONG mo case voi verdict bql
+[22m[39mREGR| P14 -> status=case_open responsibility.party=resident
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP15 (G8) redactPii + ma cuoc cua chinh cu dan[2m > [22m[2mP15a redactPii THUAN (khong ngu canh) van che ma dang chu-so (thiet ke: G8 chi giu duoc trong vong that qua opts.keepJobCodes)
+[22m[39mREGR| P15a "Cuoc C-2345 cua em sao roi" -> "Cuoc [CĂN] cua em sao roi"
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP15 (G8) redactPii + ma cuoc cua chinh cu dan[2m > [22m[2mP15b vong that: ma cuoc CUA CHINH cu dan giu nguyen trong messages gui model (§11.3 ngoai le G8)
+[22m[39mREGR| P15b ma cuoc C-R6EC con trong messages: true
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP17 (G10) loi callModel KHAC ModelUnavailableError van bao "dang ban" NHUNG phai ghi audit rieng[2m > [22m[2mP17 loi la Error thuong (khong phai ModelUnavailableError) => audit agent.model_error + BUSY_REPLY (khong nuot im)
+[22m[39mREGR| P17 audit_moi=1 outbox=["Em đang bận, sẽ trả lời trong vài phút."]
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP18 (G6) loi sai trang thai trong tool la loi CO KIEU (khong phai Error thuong)[2m > [22m[2mP18 push_bql_ticket khi job chua co verdict => tool_result is_error voi code ConflictError
+[22m[39mREGR| P18 tool_result={"role":"user","content":[{"type":"tool_result","tool_use_id":"p2","is_error":true,"content":"{\"code\":\"ConflictError\",\"message\":\"push_bql_ticket: job khong o trang thai drafting hoac chua co verdict.\"}"}]}
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP19 (N10) noi NGUYEN content luot truoc (ke ca khoi la) lam luot assistant[2m > [22m[2mP19 khoi "la" (type khong phai text/tool_use) o luot 1 phai xuat hien nguyen ven trong request luot 2
+[22m[39mREGR| P19 assistant message luot 2 gui len co khoi la: true
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP20 (N10) MOI tool_result cua mot luot nam trong MOT message user (khong tach nhieu message)[2m > [22m[2mP20 hai tool_use trong CUNG mot phan hoi => CHI mot message role=user chua ca hai tool_result o luot ke tiep
+[22m[39mREGR| P20 so message user chua tool_result=1, tong so tool_result=2
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP21 (N10) refusal => KHONG doc content (khong chay tool), handoff + BUSY_REPLY[2m > [22m[2mP21 stop_reason=refusal kem mot tool_use trong content => tool KHONG duoc chay, 0 lan goi model tiep
+[22m[39mREGR| P21 model_calls=1 tool_chay_them=0 outbox=["Xin lỗi, hệ thống đang bận, vui lòng thử lại sau ít phút."]
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP22 (N7) JobDraft dang mo duoc nap vao ngu canh goi model (da che PII)[2m > [22m[2mP22 luot 2 (job da co tu luot 1) => request gui model chua ma cuoc/JobDraft cua job hien tai
+[22m[39mREGR| P22 request luot 2 co chua ma cuoc C-ZVNS: true; co chua trieu chung: true
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP23 (N8) danh sach category_code co trong system prompt gui model[2m > [22m[2mP23 system prompt (khoi cache/co dinh) chua it nhat vai category_code that tu job_categories
+[22m[39mREGR| P23 category thieu trong system: []
+
+[90mstdout[2m | src/dbtests/p03-regression.db.test.ts[2m > [22m[2mP24 (G7) hieu luc quy che dung ngay HOM NAY (regression o muc vong agent that)[2m > [22m[2mP24 kb_documents.effective_from = hom nay (theo todayInVietnam that) => KHONG bi ep unclear
+[22m[39mREGR| P24 today_vn=2026-09-26 -> party=resident
+
+ [32m✓[39m src/dbtests/p03-regression.db.test.ts [2m([22m[2m53 tests[22m[2m)[22m[33m 3214[2mms[22m[39m
+   [33m[2m✓[22m[39m P6 cung mot tin inbound xu ly hai lan / dong thoi => dung mot tra loi[2m > [22mP6b mot tin, 6 processInbound(residentHandler) dong thoi, model cham 300ms [33m335[2mms[22m[39m
+   [33m[2m✓[22m[39m P6 cung mot tin inbound xu ly hai lan / dong thoi => dung mot tra loi[2m > [22mP6c (G9) hai tin KHAC NHAU cua CUNG cu dan dong thoi => toi da 1 job drafting [33m450[2mms[22m[39m
+ [32m✓[39m src/dbtests/p03.db.test.ts [2m([22m[2m11 tests[22m[2m)[22m[33m 748[2mms[22m[39m
+ [32m✓[39m src/dbtests/p05-dispatch.db.test.ts [2m([22m[2m17 tests[22m[2m)[22m[33m 1059[2mms[22m[39m
+ [32m✓[39m src/dbtests/p05-timers.db.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 672[2mms[22m[39m
+ [32m✓[39m src/dbtests/p05-access.db.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 946[2mms[22m[39m
+ [32m✓[39m src/dbtests/p05-slots.db.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 818[2mms[22m[39m
+   [33m[2m✓[22m[39m G15(a) — 50 requestSlot dong thoi, tran 3, 2 slot active san[2m > [22mgranted=1 waitlisted=49, active_slots=3 [33m403[2mms[22m[39m
+ [32m✓[39m src/dbtests/p03-category-code.db.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 227[2mms[22m[39m
+ [32m✓[39m src/dbtests/p01.db.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 543[2mms[22m[39m
+ [32m✓[39m src/dbtests/p05-pii-probe.db.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 1209[2mms[22m[39m
+   [33m[2m✓[22m[39m G12 — 15 ca pii_probe.jsonl: publish+claim+confirm+requestAccess => 0 ro ri[2m > [22mleaks = 0 cho ca 15 ca [33m986[2mms[22m[39m
+ [32m✓[39m src/dbtests/p02-link-zalo.db.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 659[2mms[22m[39m
+   [33m[2m✓[22m[39m dev:link-zalo[2m > [22mDATA_MODE≠sim ⇒ ham tu choi; lenh CLI exit 1 [33m484[2mms[22m[39m
+ [32m✓[39m src/dbtests/p02-runner.db.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 261[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m11 passed[39m[22m[90m (11)[39m
+[2m      Tests [22m [1m[32m127 passed[39m[22m[90m (127)[39m
+[2m   Start at [22m 01:39:05
+[2m   Duration [22m 14.54s[2m (transform 389ms, setup 0ms, collect 1.77s, tests 10.36s, environment 2ms, prepare 932ms)[22m
+
+
+> @lenqclaw/web@0.0.1 test:db
+> tsx ../../packages/core/scripts/require-database-url.ts && vitest run --config vitest.db.config.ts
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mD:/lenqclaw/apps/web[39m
+
+ [32m✓[39m tests/zalo-login.db.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 73[2mms[22m[39m
+ [32m✓[39m tests/zalo-logout.db.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 49[2mms[22m[39m
+ [32m✓[39m tests/00-login.db.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 147[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m      Tests [22m [1m[32m11 passed[39m[22m[90m (11)[39m
+[2m   Start at [22m 01:39:21
+[2m   Duration [22m 1.99s[2m (transform 179ms, setup 0ms, collect 1.02s, tests 269ms, environment 1ms, prepare 267ms)[22m
+
+
+> @lenqclaw/zalo-worker@0.0.1 test:db
+> tsx ../../packages/core/scripts/require-database-url.ts && vitest run --config vitest.db.config.ts
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mD:/lenqclaw/apps/zalo-worker[39m
+
+{"t":"2026-09-25T18:39:25.161Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T18:39:25.169Z","event":"zalo.inbound","account":"bql","outcome":"inserted","msg_type":"webchat"}
+{"t":"2026-09-25T18:39:25.176Z","event":"zalo.inbound","account":"bql","outcome":"duplicate","msg_type":"webchat"}
+{"t":"2026-09-25T18:39:25.177Z","event":"zalo.inbound","account":"bql","outcome":"duplicate","msg_type":"webchat"}
+{"t":"2026-09-25T18:39:25.188Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T18:39:25.193Z","event":"zalo.inbound","account":"bql","outcome":"inserted","msg_type":"chat.photo"}
+{"t":"2026-09-25T18:39:25.201Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T18:39:25.203Z","event":"zalo.inbound","account":"bql","outcome":"ignored_group","msg_type":"webchat"}
+{"t":"2026-09-25T18:39:25.212Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T18:39:25.219Z","event":"zalo.inbound","account":"bql","outcome":"inserted","msg_type":"webchat"}
+{"t":"2026-09-25T18:39:25.221Z","event":"zalo.inbound","account":"bql","outcome":"inserted","msg_type":"webchat"}
+{"t":"2026-09-25T18:39:25.232Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T18:39:25.238Z","event":"zalo.inbound","account":"bql","outcome":"self_staff_takeover","msg_type":"webchat"}
+{"t":"2026-09-25T18:39:25.252Z","event":"pacer.sent","account":"bql","outbox_id":59}
+{"t":"2026-09-25T18:39:25.262Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T18:39:25.269Z","event":"zalo.inbound","account":"bql","outcome":"self_bot_echo","msg_type":"webchat"}
+{"t":"2026-09-25T18:39:25.278Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T18:39:25.286Z","event":"pacer.sent","account":"bql","outbox_id":61}
+{"t":"2026-09-25T18:39:25.294Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T18:39:25.296Z","event":"zalo.closed","account":"bql","code":3003,"decision":"kicked"}
+{"t":"2026-09-25T18:39:25.298Z","event":"zalo.state","account":"bql","state":"kicked"}
+{"t":"2026-09-25T18:39:25.312Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T18:39:25.312Z","event":"zalo.closed","account":"bql","code":3000,"decision":"kicked"}
+{"t":"2026-09-25T18:39:25.313Z","event":"zalo.state","account":"bql","state":"kicked"}
+{"t":"2026-09-25T18:39:25.323Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T18:39:25.323Z","event":"zalo.closed","account":"bql","code":1006,"decision":"reconnect"}
+{"t":"2026-09-25T18:39:25.325Z","event":"zalo.state","account":"bql","state":"reconnecting"}
+{"t":"2026-09-25T18:39:25.325Z","event":"zalo.reconnect_failed","account":"bql","attempt":1,"error":"Error: mang"}
+{"t":"2026-09-25T18:39:25.327Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T18:39:25.335Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T18:39:25.335Z","event":"zalo.closed","account":"bql","code":1006,"decision":"reconnect"}
+{"t":"2026-09-25T18:39:25.336Z","event":"zalo.state","account":"bql","state":"reconnecting"}
+{"t":"2026-09-25T18:39:25.336Z","event":"zalo.reconnect_failed","account":"bql","attempt":1,"error":"Error: mang"}
+{"t":"2026-09-25T18:39:25.336Z","event":"zalo.reconnect_failed","account":"bql","attempt":2,"error":"Error: mang"}
+{"t":"2026-09-25T18:39:25.336Z","event":"zalo.reconnect_failed","account":"bql","attempt":3,"error":"Error: mang"}
+{"t":"2026-09-25T18:39:25.336Z","event":"zalo.reconnect_failed","account":"bql","attempt":4,"error":"Error: mang"}
+{"t":"2026-09-25T18:39:25.336Z","event":"zalo.reconnect_failed","account":"bql","attempt":5,"error":"Error: mang"}
+{"t":"2026-09-25T18:39:25.336Z","event":"zalo.reconnect_failed","account":"bql","attempt":6,"error":"Error: mang"}
+{"t":"2026-09-25T18:39:25.336Z","event":"zalo.reconnect_failed","account":"bql","attempt":7,"error":"Error: mang"}
+{"t":"2026-09-25T18:39:25.336Z","event":"zalo.reconnect_failed","account":"bql","attempt":8,"error":"Error: mang"}
+{"t":"2026-09-25T18:39:25.337Z","event":"zalo.reconnect_failed","account":"bql","attempt":9,"error":"Error: mang"}
+{"t":"2026-09-25T18:39:25.337Z","event":"zalo.reconnect_failed","account":"bql","attempt":10,"error":"Error: mang"}
+{"t":"2026-09-25T18:39:25.338Z","event":"zalo.state","account":"bql","state":"dead"}
+{"t":"2026-09-25T18:39:25.348Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T18:39:25.348Z","event":"zalo.closed","account":"bql","code":1006,"decision":"reconnect"}
+{"t":"2026-09-25T18:39:25.350Z","event":"zalo.state","account":"bql","state":"reconnecting"}
+{"t":"2026-09-25T18:39:25.351Z","event":"zalo.state","account":"bql","state":"logged_out"}
+{"t":"2026-09-25T18:39:25.361Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T18:39:25.378Z","event":"zalo.probe_failed","account":"bql","error":"Error: probe"}
+{"t":"2026-09-25T18:39:25.378Z","event":"zalo.closed","account":"bql","code":1006,"decision":"reconnect"}
+{"t":"2026-09-25T18:39:25.381Z","event":"zalo.state","account":"bql","state":"reconnecting"}
+{"t":"2026-09-25T18:39:25.383Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T18:39:25.391Z","event":"zalo.state","account":"bql","state":"logged_out"}
+{"t":"2026-09-25T18:39:25.400Z","event":"zalo.qr_start","account":"bql"}
+{"t":"2026-09-25T18:39:25.402Z","event":"zalo.qr_event","account":"bql","type":"qr"}
+{"t":"2026-09-25T18:39:25.408Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T18:39:25.417Z","event":"zalo.qr_start","account":"bql"}
+{"t":"2026-09-25T18:39:25.418Z","event":"zalo.qr_event","account":"bql","type":"qr"}
+{"t":"2026-09-25T18:39:25.420Z","event":"zalo.qr_event","account":"bql","type":"scanned"}
+{"t":"2026-09-25T18:39:25.423Z","event":"zalo.state","account":"bql","state":"logged_out"}
+{"t":"2026-09-25T18:39:25.433Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T18:39:25.449Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T18:39:25.533Z","event":"pacer.sent","account":"bql","outbox_id":63}
+{"t":"2026-09-25T18:39:25.542Z","event":"pacer.sent","account":"bql","outbox_id":64}
+{"t":"2026-09-25T18:39:25.550Z","event":"pacer.sent","account":"bql","outbox_id":65}
+{"t":"2026-09-25T18:39:25.557Z","event":"pacer.sent","account":"bql","outbox_id":66}
+{"t":"2026-09-25T18:39:25.565Z","event":"pacer.sent","account":"bql","outbox_id":67}
+{"t":"2026-09-25T18:39:25.572Z","event":"pacer.sent","account":"bql","outbox_id":68}
+{"t":"2026-09-25T18:39:25.579Z","event":"pacer.sent","account":"bql","outbox_id":69}
+{"t":"2026-09-25T18:39:25.586Z","event":"pacer.sent","account":"bql","outbox_id":70}
+{"t":"2026-09-25T18:39:25.593Z","event":"pacer.sent","account":"bql","outbox_id":71}
+{"t":"2026-09-25T18:39:25.601Z","event":"pacer.sent","account":"bql","outbox_id":72}
+{"t":"2026-09-25T18:39:25.650Z","event":"pacer.sent","account":"bql","outbox_id":73}
+{"t":"2026-09-25T18:39:25.658Z","event":"pacer.sent","account":"bql","outbox_id":74}
+{"t":"2026-09-25T18:39:25.665Z","event":"pacer.sent","account":"bql","outbox_id":75}
+{"t":"2026-09-25T18:39:25.672Z","event":"pacer.sent","account":"bql","outbox_id":76}
+{"t":"2026-09-25T18:39:25.678Z","event":"pacer.sent","account":"bql","outbox_id":77}
+{"t":"2026-09-25T18:39:25.685Z","event":"pacer.sent","account":"bql","outbox_id":83}
+{"t":"2026-09-25T18:39:25.691Z","event":"pacer.sent","account":"bql","outbox_id":84}
+{"t":"2026-09-25T18:39:25.698Z","event":"pacer.sent","account":"bql","outbox_id":86}
+{"t":"2026-09-25T18:39:25.705Z","event":"pacer.sent","account":"bql","outbox_id":87}
+{"t":"2026-09-25T18:39:25.711Z","event":"pacer.sent","account":"bql","outbox_id":88}
+{"t":"2026-09-25T18:39:25.755Z","event":"pacer.sent","account":"bql","outbox_id":89}
+{"t":"2026-09-25T18:39:25.762Z","event":"pacer.sent","account":"bql","outbox_id":90}
+{"t":"2026-09-25T18:39:25.768Z","event":"pacer.sent","account":"bql","outbox_id":91}
+{"t":"2026-09-25T18:39:25.775Z","event":"pacer.sent","account":"bql","outbox_id":92}
+{"t":"2026-09-25T18:39:25.781Z","event":"pacer.sent","account":"bql","outbox_id":93}
+{"t":"2026-09-25T18:39:25.787Z","event":"pacer.sent","account":"bql","outbox_id":94}
+{"t":"2026-09-25T18:39:25.794Z","event":"pacer.sent","account":"bql","outbox_id":96}
+{"t":"2026-09-25T18:39:25.800Z","event":"pacer.sent","account":"bql","outbox_id":98}
+{"t":"2026-09-25T18:39:25.806Z","event":"pacer.sent","account":"bql","outbox_id":97}
+{"t":"2026-09-25T18:39:25.812Z","event":"pacer.sent","account":"bql","outbox_id":99}
+{"t":"2026-09-25T18:39:25.852Z","event":"pacer.sent","account":"bql","outbox_id":100}
+{"t":"2026-09-25T18:39:25.859Z","event":"pacer.sent","account":"bql","outbox_id":101}
+{"t":"2026-09-25T18:39:25.865Z","event":"pacer.sent","account":"bql","outbox_id":103}
+{"t":"2026-09-25T18:39:25.873Z","event":"pacer.sent","account":"bql","outbox_id":105}
+{"t":"2026-09-25T18:39:25.880Z","event":"pacer.sent","account":"bql","outbox_id":106}
+{"t":"2026-09-25T18:39:25.887Z","event":"pacer.sent","account":"bql","outbox_id":108}
+{"t":"2026-09-25T18:39:25.893Z","event":"pacer.sent","account":"bql","outbox_id":107}
+{"t":"2026-09-25T18:39:25.899Z","event":"pacer.sent","account":"bql","outbox_id":109}
+{"t":"2026-09-25T18:39:25.905Z","event":"pacer.sent","account":"bql","outbox_id":111}
+{"t":"2026-09-25T18:39:26.314Z","event":"pacer.sent","account":"bql","outbox_id":78}
+{"t":"2026-09-25T18:39:26.324Z","event":"pacer.sent","account":"bql","outbox_id":95}
+{"t":"2026-09-25T18:39:26.334Z","event":"pacer.sent","account":"bql","outbox_id":110}
+{"t":"2026-09-25T18:39:26.377Z","event":"pacer.sent","account":"bql","outbox_id":79}
+{"t":"2026-09-25T18:39:26.393Z","event":"pacer.sent","account":"bql","outbox_id":80}
+{"t":"2026-09-25T18:39:26.403Z","event":"pacer.sent","account":"bql","outbox_id":81}
+{"t":"2026-09-25T18:39:26.411Z","event":"pacer.sent","account":"bql","outbox_id":104}
+{"t":"2026-09-25T18:39:26.418Z","event":"pacer.sent","account":"bql","outbox_id":82}
+{"t":"2026-09-25T18:39:26.427Z","event":"pacer.sent","account":"bql","outbox_id":112}
+{"t":"2026-09-25T18:39:26.435Z","event":"pacer.sent","account":"bql","outbox_id":85}
+{"t":"2026-09-25T18:39:26.447Z","event":"pacer.sent","account":"bql","outbox_id":102}
+{"t":"2026-09-25T18:39:26.459Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T18:39:26.479Z","event":"pacer.sent","account":"bql","outbox_id":113}
+{"t":"2026-09-25T18:39:26.489Z","event":"pacer.sent","account":"bql","outbox_id":114}
+{"t":"2026-09-25T18:39:26.496Z","event":"pacer.sent","account":"bql","outbox_id":115}
+{"t":"2026-09-25T18:39:26.605Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T18:39:26.614Z","event":"pacer.backoff","account":"bql","reason":"no_msg_id","backoff_ms":1800000}
+{"t":"2026-09-25T18:39:26.620Z","event":"pacer.sent","account":"bql","outbox_id":116}
+{"t":"2026-09-25T18:39:26.627Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T18:39:26.634Z","event":"pacer.backoff","account":"bql","reason":"rate_limit_error","backoff_ms":1800000}
+{"t":"2026-09-25T18:39:26.642Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T18:39:26.653Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T18:39:26.658Z","event":"zalo.state","account":"bql","state":"logged_out"}
+{"t":"2026-09-25T18:39:26.669Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T18:39:26.677Z","event":"zalo.qr_start","account":"bql"}
+{"t":"2026-09-25T18:39:26.678Z","event":"zalo.qr_event","account":"bql","type":"qr"}
+{"t":"2026-09-25T18:39:26.681Z","event":"zalo.qr_event","account":"bql","type":"scanned"}
+{"t":"2026-09-25T18:39:26.683Z","event":"zalo.qr_event","account":"bql","type":"expired"}
+{"t":"2026-09-25T18:39:26.687Z","event":"zalo.state","account":"bql","state":"logged_out"}
+{"t":"2026-09-25T18:39:26.695Z","event":"zalo.qr_start","account":"bql"}
+{"t":"2026-09-25T18:39:26.697Z","event":"zalo.qr_event","account":"bql","type":"qr"}
+{"t":"2026-09-25T18:39:26.699Z","event":"zalo.qr_event","account":"bql","type":"declined"}
+{"t":"2026-09-25T18:39:26.702Z","event":"zalo.state","account":"bql","state":"logged_out"}
+{"t":"2026-09-25T18:39:26.710Z","event":"zalo.qr_start","account":"bql"}
+{"t":"2026-09-25T18:39:26.711Z","event":"zalo.qr_event","account":"bql","type":"qr"}
+{"t":"2026-09-25T18:39:26.713Z","event":"zalo.qr_event","account":"bql","type":"scanned"}
+{"t":"2026-09-25T18:39:26.718Z","event":"zalo.state","account":"bql","state":"connected"}
+ [32m✓[39m src/dbtests/p02-worker.db.test.ts [2m([22m[2m27 tests[22m[2m)[22m[33m 1594[2mms[22m[39m
+   [33m[2m✓[22m[39m pacer tren DB (§5, §8)[2m > [22mgia lap 50 tin / 20 nguoi qua outbox that + dong ho ao ⇒ gui het, 0 vi pham bang §5 [33m1006[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m27 passed[39m[22m[90m (27)[39m
+[2m   Start at [22m 01:39:24
+[2m   Duration [22m 2.57s[2m (transform 206ms, setup 0ms, collect 725ms, tests 1.59s, environment 0ms, prepare 85ms)[22m
+
+EXIT:0

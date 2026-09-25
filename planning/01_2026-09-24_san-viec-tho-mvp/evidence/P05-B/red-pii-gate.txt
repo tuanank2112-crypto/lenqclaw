@@ -1,0 +1,69 @@
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mD:/lenqclaw/packages/core[39m
+
+ [31m❯[39m src/services/pii-gate.test.ts [2m([22m[2m6 tests[22m[2m | [22m[31m4 failed[39m[2m)[22m[90m 9[2mms[22m[39m
+[31m   [31m×[31m assertNoResidentPii[2m > [22mSDT (co/khong dau phan cach) => PiiGateError[90m 4[2mms[22m[31m[39m
+[31m     → expected function to throw an error, but it didn't[39m
+[31m   [31m×[31m assertNoResidentPii[2m > [22mten cu dan (khong phan biet hoa thuong, NFC) => PiiGateError[90m 0[2mms[22m[31m[39m
+[31m     → expected function to throw an error, but it didn't[39m
+[31m   [31m×[31m assertNoResidentPii[2m > [22mma can (so khop long) => PiiGateError[90m 0[2mms[22m[31m[39m
+[31m     → expected function to throw an error, but it didn't[39m
+[31m   [31m×[31m assertNoResidentPii[2m > [22mmau chung PHONE_RE/APT_GENERIC_RE (so khac guard) van bi chan[90m 0[2mms[22m[31m[39m
+[31m     → expected function to throw an error, but it didn't[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 4 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/services/pii-gate.test.ts[2m > [22massertNoResidentPii[2m > [22mSDT (co/khong dau phan cach) => PiiGateError
+[31m[1mAssertionError[22m: expected function to throw an error, but it didn't[39m
+[36m [2m❯[22m src/services/pii-gate.test.ts:[2m21:72[22m[39m
+    [90m 19| [39m
+    [90m 20| [39m  [34mit[39m([32m'SDT (co/khong dau phan cach) => PiiGateError'[39m[33m,[39m () [33m=>[39m {
+    [90m 21| [39m    [34mexpect[39m(() [33m=>[39m [34massertNoResidentPii[39m([32m'Gọi 0901234567 giúp em'[39m[33m,[39m [33mGUARD[39m))…
+    [90m   | [39m                                                                       [31m^[39m
+    [90m 22| [39m    [34mexpect[39m(() [33m=>[39m [34massertNoResidentPii[39m([32m'Gọi 0901.234.567 giúp em'[39m[33m,[39m [33mGUARD[39m…
+    [90m 23| [39m    [34mexpect[39m(() [33m=>[39m [34massertNoResidentPii[39m([32m'Gọi 0901 234 567 giúp em'[39m[33m,[39m [33mGUARD[39m…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/services/pii-gate.test.ts[2m > [22massertNoResidentPii[2m > [22mten cu dan (khong phan biet hoa thuong, NFC) => PiiGateError
+[31m[1mAssertionError[22m: expected function to throw an error, but it didn't[39m
+[36m [2m❯[22m src/services/pii-gate.test.ts:[2m27:75[22m[39m
+    [90m 25| [39m
+    [90m 26| [39m  [34mit[39m([32m'ten cu dan (khong phan biet hoa thuong, NFC) => PiiGateError'[39m[33m,[39m (…
+    [90m 27| [39m    [34mexpect[39m(() [33m=>[39m [34massertNoResidentPii[39m([32m'anh nguyễn văn a đang chờ'[39m[33m,[39m [33mGUAR[39m…
+    [90m   | [39m                                                                          [31m^[39m
+    [90m 28| [39m  })[33m;[39m
+    [90m 29| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/services/pii-gate.test.ts[2m > [22massertNoResidentPii[2m > [22mma can (so khop long) => PiiGateError
+[31m[1mAssertionError[22m: expected function to throw an error, but it didn't[39m
+[36m [2m❯[22m src/services/pii-gate.test.ts:[2m31:69[22m[39m
+    [90m 29| [39m
+    [90m 30| [39m  [34mit[39m([32m'ma can (so khop long) => PiiGateError'[39m[33m,[39m () [33m=>[39m {
+    [90m 31| [39m    [34mexpect[39m(() [33m=>[39m [34massertNoResidentPii[39m([32m'căn a - 01 - 01 nhé'[39m[33m,[39m [33mGUARD[39m))[33m.[39m[34mto[39m…
+    [90m   | [39m                                                                    [31m^[39m
+    [90m 32| [39m    [34mexpect[39m(() [33m=>[39m [34massertNoResidentPii[39m([32m'can A.01.02'[39m[33m,[39m [33mGUARD[39m))[33m.[39m[34mtoThrow[39m([33mPi[39m…
+    [90m 33| [39m  })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/services/pii-gate.test.ts[2m > [22massertNoResidentPii[2m > [22mmau chung PHONE_RE/APT_GENERIC_RE (so khac guard) van bi chan
+[31m[1mAssertionError[22m: expected function to throw an error, but it didn't[39m
+[36m [2m❯[22m src/services/pii-gate.test.ts:[2m36:72[22m[39m
+    [90m 34| [39m
+    [90m 35| [39m  [34mit[39m([32m'mau chung PHONE_RE/APT_GENERIC_RE (so khac guard) van bi chan'[39m[33m,[39m …
+    [90m 36| [39m    [34mexpect[39m(() [33m=>[39m [34massertNoResidentPii[39m([32m'Gọi 0987654321 giúp em'[39m[33m,[39m [33mGUARD[39m))…
+    [90m   | [39m                                                                       [31m^[39m
+    [90m 37| [39m    [34mexpect[39m(() [33m=>[39m [34massertNoResidentPii[39m([32m'căn B-0203 nhé'[39m[33m,[39m [33mGUARD[39m))[33m.[39m[34mtoThrow[39m…
+    [90m 38| [39m  })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m4 failed[39m[22m[2m | [22m[1m[32m2 passed[39m[22m[90m (6)[39m
+[2m   Start at [22m 01:44:51
+[2m   Duration [22m 463ms[2m (transform 45ms, setup 0ms, collect 71ms, tests 9ms, environment 0ms, prepare 126ms)[22m
+
+EXIT_CODE=1

@@ -1,0 +1,6 @@
+allow_reveal_leak: packages\core\src\services\dispatch.ts: "allowReveal: true" ngoai services/access.ts
+pii_keys_in_jobcard: 0
+forbidden_tools: 0
+jobreveal_outside_allowed: 0
+allow_reveal_outside_access: 1
+EXIT_CODE=1

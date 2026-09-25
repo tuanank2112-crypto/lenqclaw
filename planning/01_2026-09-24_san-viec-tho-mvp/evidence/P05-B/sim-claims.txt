@@ -1,0 +1,2 @@
+claims=200 won=50 lost=150 jobs_with_two_winners=0 job_events_held=50
+EXIT_CODE=0
