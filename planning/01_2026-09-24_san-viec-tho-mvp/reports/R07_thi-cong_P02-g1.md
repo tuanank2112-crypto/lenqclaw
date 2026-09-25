@@ -113,3 +113,5 @@ Tiếp theo
 ⏸ Chưa làm: chạy thật với Zalo (live.txt), advisory lock chống chạy 2 bản, cột `sent_at` — lý do ở §5/§6.
 
 ⏳ Chờ người duyệt.
+
+🔁 SỬA: test:db đỏ — p01.db.test.ts ghi cứng applied=3 (SO cấp quyền sửa, đổi thành đếm số file migration); Q2/Q4/Q5/Q6 chốt ở SPEC-P02 §9.7 · SO · 2026-09-25 12:05:23

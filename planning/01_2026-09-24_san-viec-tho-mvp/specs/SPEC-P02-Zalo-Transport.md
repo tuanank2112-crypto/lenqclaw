@@ -103,3 +103,10 @@ Người dùng duyệt đưa P02 lên chạy song song (lật một phần thứ
 - CẤM bật `market`, CẤM gửi vào nhóm. CẤM tự đăng nhập lại sau 3000/3003 (§6). CẤM pg-boss (lý do: chưa có runner jobs; một runner tuần tự đủ cho 1 tòa).
 - CẤM chạy hai bản worker hay hai bản `core:run` cùng lúc (G01 + thứ tự tin).
 - CẤM dùng Zalo chính của người dùng làm tài khoản `bql` (rủi ro khoá — OPERATIONS).
+
+### §9.7 Chốt câu hỏi mở R07 (SO, 2026-09-25)
+- Q2 takeover: pacer CHỈ huỷ tin bot khi nhân viên gửi tay trong thread (tin `is_self` không khớp outbox) trong 30 phút; takeover do `handoff_to_staff` đặt thì tin đang chờ (vd `BUSY_REPLY`) VẪN gửi, còn agent im ở các lượt sau (SPEC-P03 §11.6). Thay câu "thread có `human_takeover_until > now()` ⇒ `cancelled`" ở §5.
+- Q4 `outbox` không có `sent_at`: chấp nhận xấp xỉ theo `created_at` ở giai đoạn 1; cột `sent_at` vào migration giai đoạn 2.
+- Q5 các mặc định worker tự chọn (thử lại lỗi gửi 30 s × 5 ⇒ `failed`; đồng bộ cookie 10 phút; `ZaloApiError` khi đăng nhập lại ⇒ cookie hết hạn; outbox `image` ⇒ `failed`; không khoá cứng 2 bản) — chấp nhận cho giai đoạn 1.
+- Q6 `createTransport('zalo')`: core chỉ dùng `enqueue()` ghi outbox, không cần transport theo env ⇒ giữ `TRANSPORT=sim` cho `/dev/sim`; bỏ lỗi này ở giai đoạn 2.
+- Test đếm migration KHÔNG được ghi cứng số: `applied` = số file `db/migrations/*.sql`.
