@@ -61,4 +61,10 @@ CHƯA COMMIT: `packages/core/src/agent/prompts/resident.ts` — 1 file, +3/-3 (g
 
 🖐 Cần tay người: kiểm tra/nâng hạn mức key `GEMINI_API_KEY` (hoặc xác nhận thời điểm quota reset), rồi cho phép chạy lại **đúng một** lượt chấm thật để đo số "sau" của sửa prompt `resident.ts` đang treo chưa commit · 🤖 Agent làm được ngay: khi quota hồi phục và được phép — tạo lại `lq_h08`, chạy `npx tsx --env-file=.env scripts/eval_golden.mjs`, ghi số trước/sau vào report, commit prompt nếu số cải thiện (hoặc bỏ diff nếu không) · ⭐ Nên làm trước: xác nhận Câu hỏi mở #2 (phạm vi P03 có bao gồm "hỏi về hiệu lực quy chế" không) trước khi chi thêm quota cho vòng chạy kế — tránh sửa prompt cho một luồng có thể ngoài phạm vi SPEC · ⏸ Chưa làm: đo số "sau" của sửa prompt (mục 5), commit hoặc bỏ diff `resident.ts`, mở khóa gate G08–G10 (còn phụ thuộc kết quả responsibility đạt ngưỡng 90%).
 
+## SO phán câu hỏi mở (2026-09-25 16:40)
+- Q1 quota: Đ24 — chấm lại qua OpenRouter bằng CÙNG model `google/gemini-3.6-flash` sau khi H10 (nhánh adapter `openrouter`, 01-CONTRACTS §2c) được duyệt.
+- Q2 R24–R29: TRONG phạm vi, giữ nguyên kỳ vọng. Căn cứ dữ liệu QC-DEMO: R29 không mô tả hỏng hóc nào mà agent kết luận `resident`; R25 (trần) có hai mục trái chiều theo nguyên nhân (sec05 BQL / sec06 cư dân) mà agent chốt `resident` — đổ trách nhiệm cho cư dân khi thiếu dữ kiện là hướng sai nguy hiểm nhất (BB-03). R26/R27 `null` = hỏi vòng không kết luận. Sửa prompt đang treo (thiếu căn cứ ⇒ `unclear` ngay, câu hỏi quy chế ⇒ không hỏi lại) đúng hướng, là hướng dẫn chung, không chèn đáp án golden ✅.
+- SO đã soát `e6f2e08` (§11.11): cả 3 nhánh ghi cột cùng câu lệnh với `draft`, thứ tự tham số đúng. Đo lại toàn gói để SAU lượt chấm vòng 3 (tránh đo khi H10 đang sửa adapter trên cùng cây).
+- Việc còn lại của H08 (vòng 3, sau R10 ✅): `MODEL_PROVIDER=openrouter` chạy lại đủ 4 bộ một lần với prompt đang treo ⇒ `real-run-3.txt`; đạt ⇒ commit prompt; trượt ⇒ còn đúng 1 vòng sửa theo mục 3d.
+
 ⏳ Chờ người duyệt.
