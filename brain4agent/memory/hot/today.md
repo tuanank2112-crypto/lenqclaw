@@ -91,3 +91,9 @@ Phân tích OpenClaw + ZaloClaw (monas-team) với tài khoản Zalo cá nhân �
 - SO: `.env.example` pacer (`PACER_MAX_PER_MINUTE` 10, bỏ `PACER_MIN_INTERVAL_MS`, `ZALO_ACCOUNTS`).
 - Người dùng bỏ phương án nạp OpenRouter, đưa key **Vyce AI** ("chọn deepseek cũng được") ⇒ lưu `.env` `VYCE_API_KEY`; dò ra base `https://vyceai.com/v1` (`api.vyceai.com` không phân giải); `deepseek-v4-flash` + tool + `max_tokens` 16000 ⇒ 200, 2,2 s. Liệt kê toàn bộ model bị bộ phân loại auto mode chặn (Data Exfiltration) — không cần, bỏ qua. **Đ25** 01-CONTRACTS §2d + H11 (worker làm R10 nhận tiếp). Commit não `4f3ff0e`, hồ sơ `fd1144a`.
 - R11 ✅ (SO đo lại 251/122, đột biến chặn `DATA_MODE` + trường `provider` đều bị bắt). H08 vòng 3 bằng `vyce/deepseek-v4-flash`: khẩn cấp 91/100 (bỏ sót 1, báo nhầm 8%), đồng ý nhận nhầm 2, chẩn đoán 2/40 ⇒ SO dừng, **Đ26**: gate chấm bằng Gemini; không sửa prompt cho DeepSeek (G25). Treo: 🖐 quota/billing Gemini ⇒ H08 vòng 4.
+
+## 🏁 Phiên 2026-09-25 (khuya) — H08 vòng 4 bằng Gemini
+- Bước 0 exit 0. SO probe Gemini `gemini-3.6-flash` 22:50 ⇒ HTTP 200 (quota đã hồi) ⇒ phụ lục H08 §9 (`c1f51c0`): chấm lại đủ 4 bộ một lần với prompt `resident.ts` đang treo; đạt ⇒ commit prompt; trượt ⇒ đúng 1 vòng sửa; 429 dồn dập ⇒ nộp `blocked`, không đổi provider. Phóng worker 🟠 chạy nền.
+
+### ⏭ Treo
+- Chờ R08 vòng 4 ⇒ SO đo lại, phán, cập nhật G08–G10.

@@ -32,8 +32,8 @@ Adapter Gemini xong (H04). Đ21 (người dùng): HIỂU Ý BẰNG MODEL (triage
 Đ23: cột `jobs.category_code` là nguồn chân lý danh mục (save_job_draft ghi cùng draft). Đ24: nhánh MODEL_PROVIDER=openrouter (R10 ✅, tài khoản 0 USD). Đ25: nhánh `vyce` (proxy Vyce AI, CHỈ DATA_MODE=sim, R11 ✅). Đ26: deepseek-v4-flash TRƯỢT (khẩn cấp bỏ sót 1, đồng ý nhận nhầm 2, chẩn đoán 5%) ⇒ gate chấm bằng Gemini 3.6 flash.
 MÁY CHẤM MODEL THẬT (H08, `scripts/eval/`): lượt 1 khẩn cấp 100/100 · đồng ý 92% (0 nhận nhầm) · chẩn đoán 97,3% · TRÁCH NHIỆM 86,7% < 90% ⇒ G08–G10 CHƯA ✅.
   Prompt resident.ts sửa (thiếu căn cứ ⇒ unclear ngay) CHƯA COMMIT, chờ lượt chấm Gemini đủ 4 bộ (gate gắn với cặp model đã chấm).
-Còn chờ người: quota/billing Gemini cho lượt chấm; provider cho pilot thật; giữ/bỏ bước cư dân "Đồng ý"; FREE_TRIAL_DAYS, SLOT_FEE_MONTHLY, SLOT_MIN_JOBS_PER_VENDOR, BQL_SHARE_PCT, MIN_EARNINGS_TO_FEE; push; thu hồi key OpenRouter + Vyce đã dán trong chat.
-Bước kế: H08 vòng 4 bằng Gemini (phán R08) · thử người /zalo + agent qua Zalo thật · `.env.example` pacer (SO) · SPEC-P05 chốt thi công.
+Còn chờ người: provider cho pilot thật; giữ/bỏ bước cư dân "Đồng ý"; FREE_TRIAL_DAYS, SLOT_FEE_MONTHLY, SLOT_MIN_JOBS_PER_VENDOR, BQL_SHARE_PCT, MIN_EARNINGS_TO_FEE; push; thu hồi key OpenRouter + Vyce đã dán trong chat.
+Bước kế: H08 vòng 4 bằng Gemini ĐANG CHẠY (quota hồi 22:50, phụ lục H08 §9) ⇒ SO đo lại, phán R08 · thử người /zalo + agent qua Zalo thật · `.env.example` pacer (SO) · SPEC-P05 chốt thi công.
 Đọc theo thứ tự: plan.md §2 (Đ01–Đ09) → specs/00-ARCHITECTURE.md → 01-CONTRACTS.md → SPEC gói đang làm.
 Sơ đồ: docs/images/08-pipeline-chuan.png. Bối cảnh chiến lược: docs/SYSTEM-MAP.md. docs/DESIGN.md = v0.1 đã bị thu hẹp (Đ01).
 </repo_nature>
