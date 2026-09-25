@@ -73,7 +73,7 @@
     },
     "eval_next": "gemini --set diagnosis,responsibility (D29) after quota reset ~14:00 ICT"
   },
-  "next": "Gemini --set diagnosis,responsibility; approve D27 -> H12 P05-B; .env.example pacer",
+  "next": "H12 P05-B -> (P05-C || P05-E) -> P05-D -> P05-F; Gemini --set diagnosis,responsibility after ~14:00 ICT",
   "approved": [
     "P01",
     "P03-code",
@@ -81,9 +81,11 @@
     "P02-g1-code",
     "P02-ui",
     "H10-openrouter",
-    "H11-vyce"
+    "H11-vyce",
+    "D27"
   ],
   "llm_provider": "vyce (deepseek-v4-flash, temporary D28; gate provider gemini D26)",
-  "decisions_latest": "D29 (D27 pending)",
-  "pending_approval": "D27 (SPEC-P05 §10, SPEC-P04 §8) + Q1-Q10"
+  "decisions_latest": "D29",
+  "in_progress": "H12 P05-B (dispatch foundation)",
+  "pushed": "origin/main = a0f832a (2026-09-26)"
 }
