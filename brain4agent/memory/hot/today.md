@@ -104,5 +104,8 @@ Phân tích OpenClaw + ZaloClaw (monas-team) với tài khoản Zalo cá nhân �
 - Người dùng: "toàn bộ quá trình tôi đều duyệt cho bạn làm" ⇒ Đ27 ĐÃ DUYỆT (Q1–Q10 giữ giá trị tạm), đồng bộ 00-ARCH §4/§7 + SPEC-P02 §3.5, H12 (P05-B) `a0f832a`, push `origin/main` = `a0f832a`, phóng worker 🟠.
 - R12 (P05-B) ✅: SO đo lại DB rỗng riêng — gate 0, `npm test` 296, `test:db` 165, 0 skip, `sim_claims` 0/`--break` 1. Chấp nhận 2 file ngoài danh sách tên (`job-state.ts` = máy trạng thái, `job-code.ts` export ALPHABET). Phóng H13 (P05-C) ∥ H14 (P05-E). Push `daf5239`.
 
+- Cả hai worker bị ngắt 3:10 vì giới hạn phiên Claude ⇒ chạy tiếp bằng SendMessage lúc 04:05 (chưa commit gì nên không mất việc).
+- R14 vòng 1 🔁: route đình chỉ thợ nhả cuốc trước khi đặt `suspended` + bỏ sót `access_granted` (lộ PII) ⇒ Đ30 SPEC-P05 §10.17 (G27). R13 vòng 1 🔁: 11/67 ca golden nằm nguyên văn trong prompt thợ (G28). Hai vòng 2 xong ⇒ SO đo cả cây DB rỗng: gate 0, `npm test` 317, `test:db` 192, 0 skip; bằng chứng đỏ độc lập (tắt chốt chặn ⇒ 1/6 đỏ) ⇒ R13 ✅, R14 ✅.
+
 ### ⏭ Treo
-- R13/R14 ⇒ SO đo lại; review 🔴 prompt + golden thợ; lượt Gemini `--set diagnosis,responsibility` sau ~14h (quota ngày); duyệt Đ27 + Q1–Q10; quyết 3 file presentation; câu hỏi đường lùi khẩn cấp khi model sập.
+- Lượt Gemini sau ~14h: H08 `--set diagnosis,responsibility` + golden thợ `vendor-intent.mjs`; review 🔴 prompt + golden thợ; lượt Gemini `--set diagnosis,responsibility` sau ~14h (quota ngày); duyệt Đ27 + Q1–Q10; quyết 3 file presentation; câu hỏi đường lùi khẩn cấp khi model sập.

@@ -164,3 +164,11 @@ Không chạy `test:db`/model thật vòng này theo đúng yêu cầu H13 §7 (
 - Golden model-quality (`claim_recall≥0.95`) vẫn CHƯA được đo lại với prompt mới (H13 §7 cấm chạy model thật vòng này) — cần lượt chấm Gemini thật (cùng lượt H08, theo phán quyết Q1 của SO) để biết prompt mới có cải thiện `claim_recall` hay không; số 0.852–0.926 ở mục 5 (vòng 1) đo trên PROMPT CŨ (đã sửa), không còn phản ánh trạng thái hiện tại.
 
 Dòng cuối: ⏳ Chờ người duyệt.
+
+## SO phán vòng 2 (2026-09-26)
+- SO đo lại cả cây sau khi H13/H14 vòng 2 nhả (DB rỗng riêng `lq_so1314`, đã drop): `npm run gate` (không DB) 0 — `npm test` 317 (web 36 · zalo-worker 37 · core 244) · migrate/seed/seed:sim 0 · `test:db` 0 — 192 (core 141 · web 24 · zalo-worker 27) · 0 skip · `sim_claims` 0 hai người thắng.
+- Rò golden: `vendor-golden-leak.test.ts` 2/2 xanh; SO so độc lập: 0 chuỗi trong ngoặc kép trùng golden, 0 câu golden (≥ 8 ký tự) nằm ở bất kỳ đâu trong prompt; golden không đổi (`git diff 533948e..6290c9b -- evals/` rỗng); bằng chứng đỏ là đỏ THẬT trên prompt cũ (11/11) ✅.
+- `defer`: chấp nhận — máy chấm chỉ tính `claim` cho `claim_recall`, `defer` rơi vào nhóm "không phải claim" cho `false_claim`. Không thêm nhãn mới lúc này (Idea Vault).
+- Chỉ số golden thợ (`claim_recall ≥ 0.95`, `false_claim = 0`, `price_exact ≥ 0.90`) là CỔNG MODEL còn mở — chấm bằng Gemini cùng lượt H08 (Đ26); số Vyce vòng 1 đo trên prompt cũ, chỉ tham khảo.
+
+✅ DUYỆT

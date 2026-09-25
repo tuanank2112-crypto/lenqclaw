@@ -60,9 +60,12 @@ Thứ tự (Đ13, Đ15): `P01 → P03 → P05 → P06 → P08`; P04 tối thiể
 - **Unique index một phần cho mã vào tòa còn hiệu lực** (`access_passes.code`) — R12 Q3: 6 ký tự / 31 chữ ≈ 8,9·10⁸ tổ hợp, trùng gần như không xảy ra ở 1–2 tòa; làm khi mở nhiều tòa.
 - **Siết `JOB_CODE_RE` của lưới trích mã cuốc** (R13 Q3): dạng không gạch nối khớp nhầm từ thường ("check" ⇒ `C-HECK`); hiện vô hại vì mã phải tồn tại trong DB, nhưng tốn một lượt tra.
 - **`p05-helpers.createJob` dùng `generateJobCode()`** thay mã viết tay (R13 Q3).
+- **Nhãn `defer` chính thức cho ý định thợ** ("để em xem đã", "tí em báo") — hiện ngoài enum, máy chấm đọc là "không phải nhận"; cân nhắc khi đo thấy agent xử nhầm thành `decline`.
 - **Nhận tin nhắn thoại của thợ** (speech-to-text) — thợ quen gửi voice.
 
 ## Đã hoàn thành (Done)
+
+- [x] **2026-09-26 — P05-B nền + P05-C agent thợ + P05-E dashboard tối thiểu (Đ27, Đ30):** migration 006, dịch vụ chốt thợ/cấp quyền/slot/đồng hồ, PiiGate; agent thợ hiểu ý bằng model + 9 tool; `/tickets` duyệt cấp quyền, `/gate`, `/vendors`, `/jobs`, SimBoard Tick; `suspendVendor` có thứ tự + chốt chặn giao việc (vá lỗ PII phát hiện khi duyệt). `npm test` 317, `test:db` 192, 0 skip. Cổng model (G08–G10, golden thợ) chờ Gemini.
 
 - [x] **2026-09-26 — Máy chấm có cờ `--set` (Đ29, R08 vòng 5 ✅):** chấm bù theo route — `emergency`/`consent` giữ số real-run-1 (triage không đổi), chỉ chấm lại `diagnosis`/`responsibility` khi prompt agent chính đổi. Vòng 4 Gemini ⛔ quota (G26); Đ28 tạm chạy dev bằng `vyce/deepseek-v4-flash`.
 

@@ -248,9 +248,9 @@ Thứ tự bắt buộc (Đ13, Đ15): `P01 (nền tảng + SimTransport) → P03
 - [x] H08 vòng 3 — chấm bằng `vyce/deepseek-v4-flash` ⇒ trượt 3 bộ, dừng (Đ26) — `c367fea`
 - [ ] 🖐 Quota/billing Gemini ⇒ H08 vòng 4 chấm đủ 4 bộ bằng Gemini 3.6 flash, phán R08
 - [x] 🖐 SO duyệt Đ27 (SPEC-P05 §10 + SPEC-P04 §8) và chốt/giữ giá trị tạm Q1–Q10 (SPEC-P05 §10.16) — 2026-09-26 00:40, người dùng duyệt toàn bộ quá trình; Q1–Q10 giữ giá trị tạm
-- [ ] P04 tối thiểu cho P05 — WP P05-E (SPEC-P04 §8, 🟠; `/jobs` 🟢): `/tickets` duyệt/từ chối, `/gate`, `/vendors` + "Đã thu phí", policy, SimBoard, `/api/dev/sim/tick` — G07
+- [x ] P04 tối thiểu cho P05 — WP P05-E (SPEC-P04 §8, 🟠; `/jobs` 🟢): `/tickets` duyệt/từ chối, `/gate`, `/vendors` + "Đã thu phí", policy, SimBoard, `/api/dev/sim/tick` — G07 — R14 ✅ 2026-09-26 sau vòng 2 (Đ30 `suspendVendor` + chốt chặn giao việc), G07 local ✅
 - [x ] P05-B — nền: migration 006, dịch vụ dispatch/access/slots/timers, PiiGate, seed thợ, `sim_claims.mjs`, máy đo mở rộng (SPEC-P05 §10.12, 🟠) — G11, G12, G12b, G15 — `ed7fe06`…`86a77b9`, R12 ✅ 2026-09-26 (SO đo lại: `npm test` 296, `test:db` 165, `sim_claims` 0 hai người thắng)
-- [ ] P05-C — agent thợ: triage thợ, `vendor-agent`, 9 tool, golden `vendor_intent.jsonl` + `scripts/eval/vendor-intent.mjs` (🟠 thi công, 🔴 review prompt/golden)
+- [x ] P05-C — agent thợ: triage thợ, `vendor-agent`, 9 tool, golden `vendor_intent.jsonl` + `scripts/eval/vendor-intent.mjs` (🟠 thi công, 🔴 review prompt/golden) — mã R13 ✅ 2026-09-26 sau vòng 2 (rò golden vào prompt); cổng model golden thợ chờ lượt Gemini
 - [ ] P05-D — phía cư dân: `open_service_case` ISO + bằng chứng đồng ý, `publish_job_to_group`, `respond_to_quote`, mốc thời gian, prompt `resident.ts` (🟠, CHỜ H08 nhả file; chấm lại 1 lượt `eval:golden` sau khi đổi prompt) — G16a
 - [ ] P05-F — thẩm định đối kháng P05 (🔴, agent khác, ≥3 cách phá)
 - [ ] P06 — Bước 8 (G13, G16 trọn bước 0→8 trên kênh giả lập)

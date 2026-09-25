@@ -165,3 +165,10 @@ Web `test:db` (24 ca) và `p05-suspend.db.test.ts` (6 ca) chạy 3 lần liên t
 - Câu hỏi mở #1 (vòng 2): giữ `'closed'` hay thêm migration cho `tickets.status='cancelled'`?
 
 ⏳ Chờ người duyệt.
+
+## SO phán vòng 2 (2026-09-26)
+- SO đo lại cả cây sau khi H13/H14 vòng 2 nhả (DB rỗng riêng `lq_so1314`, đã drop): `npm run gate` (không DB) 0 — `npm test` 317 (web 36 · zalo-worker 37 · core 244) · migrate/seed/seed:sim 0 · `test:db` 0 — 192 (core 141 · web 24 · zalo-worker 27) · 0 skip · `sim_claims` 0 hai người thắng.
+- Bằng chứng đỏ độc lập của SO: tắt chốt chặn `dispatchToVendor` (`access.ts:269`) ⇒ `p05-suspend.db.test.ts` 1 fail / 6 (ca b2) ⇒ hoàn nguyên, `git diff` rỗng ✅. Worker tự phát hiện ca (b) xanh giả (`not_assigned` che chốt chặn) và bổ sung ca (b2) cô lập — đúng.
+- Câu hỏi mở #1 (`tickets.status` không có `cancelled`): giữ `'closed'` + `decision_note` ghi lý do; KHÔNG thêm migration (SO sửa SPEC-P05 §10.17 cho khớp). #2: chấp nhận.
+
+✅ DUYỆT
