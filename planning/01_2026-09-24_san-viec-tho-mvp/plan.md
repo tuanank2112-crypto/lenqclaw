@@ -145,6 +145,18 @@ Lý do: Gemini hết quota, OpenRouter 0 USD. Vyce là proxy dạng OpenAI ⇒ n
 Lý do: vòng 3 H08 bằng `vyce/deepseek-v4-flash` — khẩn cấp bỏ sót 1 + báo nhầm 8%, đồng ý nhận nhầm 2, chẩn đoán 2/40 (hỏi dồn 3 câu, không lưu nháp sớm, triage độ tin mâu thuẫn), triage quá hạn 11% dù 8 s. Là chất lượng model, không phải adapter (tool có được gọi). Không sửa prompt cho model không dùng thật (dễ làm lệch hành vi trên Gemini). Nhánh `vyce` giữ trong mã (R11 ✅) nhưng KHÔNG dùng cho agent cư dân. Lượt chấm kế: Gemini 3.6 flash (trực tiếp khi có quota/billing, hoặc OpenRouter khi có tín dụng), đủ 4 bộ, prompt đang treo.
 **Lật được:** có — model khác phải chấm đủ 4 bộ đạt ngưỡng mới dùng.
 
+### Đ27 — 2026-09-25 23:17 · Chốt thi công P05 (bước 4–7) trên kênh giả lập + P04 tối thiểu (Super Orchestrator giao, architect soạn — CHỜ DUYỆT)
+Hợp đồng ở [SPEC-P05 §10](specs/SPEC-P05-Dispatch.md) và [SPEC-P04 §8](specs/SPEC-P04-Vendor-Console.md); bổ sung [01-CONTRACTS](specs/01-CONTRACTS.md) §1/§4/§5/§6/§7/§8/§9, [TESTING](specs/TESTING-ACCEPTANCE.md) §2–§4, §6, [OPERATIONS](specs/OPERATIONS.md) §2–§3. Các quyết định chính:
+- **Hiểu ý thợ bằng model (Đ21 áp cho thợ):** `triageVendorMessage` (route `triage`) + agent thợ (route `vendor_parse`) gọi tool; code chỉ là lưới tất định (trích mã cuốc `C-XXXX`, đọc giá, danh sách cụm khớp BẰNG NHAU) và bằng chứng ý định nằm TRONG tool (`IntentNotConfirmedError`). Thay SPEC-P05 §2.1, 01-CONTRACTS §7, SPEC-P02 §3.5 (luật bắt tin nhóm 3 điều kiện thay regex).
+- **Tác nhân:** agent cư dân đăng nhóm (`publish_job_to_group`, cùng lượt sau `open_service_case`) và trả lời báo giá vượt khung (`respond_to_quote`); agent thợ chốt (`claim_job` UPDATE có điều kiện BB-05 + 7 điều kiện BB-10), xác nhận, xin cấp quyền, giao việc (`dispatch_to_vendor` do **sự kiện hệ thống** `access_approved` — dòng `inbound_events` `sender_uid='system'` — kích hoạt sau khi BQL duyệt); timer và BQL là tác nhân đúng các dòng 01-CONTRACTS §5; ba lưới an toàn (đăng/xin quyền/phát lại) có audit riêng để đo tần suất agent quên.
+- **Đồng hồ không pg-boss:** `runTimers(now)` trong runner `core:run` (`TIMER_INTERVAL_MS`), tham số `now` ⇒ test bằng đồng hồ giả; `/api/dev/sim/tick` cho demo. Hạn giữ `HOLD_MINUTES=10`, `DISPATCH_TIMEOUT_MIN=45` (07–21h, ngoài giờ tới 08:00), nhắc BQL `ACCESS_REMIND_MIN=30`.
+- **Quy ước `jobs.window_start/end` (chốt Đ19-3):** ghi bởi `open_service_case(window_start, window_end, note)` ISO 8601; NULL tới `case_open`, bắt buộc từ đó; agent cư dân nhận mốc "Bây giờ" trong ngữ cảnh. Bằng chứng đồng ý = chuỗi tin sau mốc `awaiting_consent` (mới nhất trước), không chỉ tin cuối.
+- **Slot (Đ14) trên bảng đã có:** migration 006 chỉ thêm `vendor_groups`, cột đồng hồ và `reminded_at`; dùng thử 1 lần theo `one_trial_ever`; gia hạn = slot cũ `expired` + slot mới nối ngày; "Đã thu phí" chỉ trên web (2 dòng ledger); tham số phí GIẢ chờ người chốt.
+- **P04 tối thiểu:** `/tickets` duyệt/từ chối `access_request` (lý do bắt buộc), `/gate` (thay `/passes`), `/vendors` + "Đã thu phí"/duyệt/đình chỉ/đặt trần, `/jobs` (🟢), SimBoard thêm khung DM thợ + chọn nhóm + Tick.
+- **WP:** P05-B nền (🟠) → P05-C agent thợ (🟠, review prompt 🔴) ∥ P05-E web (🟠) → P05-D phía cư dân (🟠, **chờ H08 nhả `prompts/resident.ts`**, chấm lại 1 lượt golden sau khi đổi prompt) → P05-F thẩm định đối kháng (🔴). Số đo architect đã chạy thử trên DB tách riêng: đua 200 claim/50 cuốc ⇒ 0 hai người thắng (bản hỏng: 20), đua 50 xin slot/1 chỗ ⇒ 1+49, G12b bắt 2 dòng xấu.
+- 🖐 Câu hỏi mở Q1–Q10 tại SPEC-P05 §10.16 (tham số phí; thợ bị từ chối có nhận lại cuốc; lời mời chờ có giữ chỗ; hạn im lặng giá; trần giá; 4 nhóm Zalo/tòa; giờ hành chính…), mỗi câu có giá trị TẠM để thi công không kẹt.
+**Lật được:** lớp hiểu ý thợ (tắt bằng `VENDOR_INTENT_MIN=1.01` ⇒ chỉ còn cụm an toàn) — chi phí thấp; sự kiện hệ thống ⇒ gọi thẳng dịch vụ từ route duyệt — chi phí thấp nhưng bỏ bước 7 khỏi agent (trái Đ10). Mọi hằng số là env.
+
 ### Quyết định bị thay thế
 | Mốc cũ | Phát biểu cũ | Thay bằng | Lý do |
 | :-- | :-- | :-- | :-- |
@@ -169,6 +181,15 @@ Lý do: vòng 3 H08 bằng `vyce/deepseek-v4-flash` — khẩn cấp bỏ sót 1
 | `docs/DESIGN.md` v0.1 | Trợ lý BQL tổng quát: booking tiện ích, hỏi đáp, ticket | Đ01 | Người dùng chọn ngách sàn việc thợ; booking tiện ích vào Idea Vault; hỏi đáp chỉ còn phần quy chế trách nhiệm; ticket BQL là nhánh rẽ |
 | Hội thoại 2026-09-24 | "Bỏ cơ chế ai nhanh người đó ăn" | Đ04 | Tốc độ chốt là giá trị, an toàn khi việc đã chuẩn hoá và thợ đã duyệt |
 | `docs/DESIGN.md` v0.1 | Một tài khoản Zalo | Đ02 | Tách rủi ro khoá tài khoản |
+| SPEC-P05 §2.1, 01-CONTRACTS §7 (đoạn "parse tất định"), 00-ARCH §4 bước 5 + §7 | Worker parse tất định `nhận C-XXXX`/`OK` thành sự kiện; "chỉ parse lệnh nhận <mã>" | Đ27 (SPEC-P05 §10.4) | Đ21 của người dùng: bắt từ khoá khó và dễ sai — model hiểu ý, code là lưới tất định + luật trong tool (SO đồng bộ 00-ARCH — ngoài phạm vi architect) |
+| SPEC-P02 §3.5 | Nhóm `market`: chỉ đưa vào pipeline tin khớp regex nhận/ok, tin khác không lưu | Đ27 (SPEC-P05 §10.4.3): bắt tin nhóm khi có mã cuốc, người gửi đang giữ cuốc, hoặc nhóm có cuốc đang đăng | Regex không bắt được cách nói của thợ; luật 3 điều kiện vẫn không lưu lịch sử nhóm (SO đồng bộ SPEC-P02) |
+| SPEC-P04 §4 | Trang bảo vệ `/passes` | Đ27: `/gate` | Code P01 (`policy.ts`, `app/gate`) đã dùng `/gate` (SPEC-P01 §7) |
+| SPEC-P05 §5 + `.env.example` | `DISPATCH_TIMEOUT` 45 phút / `DISPATCH_TIMEOUT_MIN=30` | Đ27: `DISPATCH_TIMEOUT_MIN`, mặc định 45 | Một tên, một số; `.env.example` sửa cùng WP-B |
+| 01-CONTRACTS §7, SPEC-P03 §11.5 (cách thi công) | `open_service_case(window_options, note)`; đồng ý chỉ xét tin mới nhất `ctx.latestText` | Đ27 (SPEC-P05 §10.7): `open_service_case(window_start, window_end, note)` ISO ghi `jobs.window_*`; bằng chứng đồng ý = chuỗi tin sau mốc, mới nhất trước | Cần khung giờ cho thẻ cuốc/mã vào (Đ19-3); "đồng ý" rồi lượt sau chọn giờ bị từ chối oan |
+| Đ19 (3) | `jobs.window_start/end` để NULL ở P03, chốt ở SPEC-P05 | Đ27 §10.2.2 | Đã chốt quy ước |
+| 01-CONTRACTS §5 | `confirmed` chỉ có đường `→ access_pending` / `→ cancelled` | Đ27: thêm `confirmed → published` (thợ rút / BQL đình chỉ) | Không có đường thoát khi thợ rút hoặc bị đình chỉ sau xác nhận |
+| 01-CONTRACTS §8, OPERATIONS §2 | pg-boss cho timer cuốc | Đ27 (SPEC-P05 §10.8): `runTimers(now)` trong runner `core:run` | Đ22 đã bỏ pg-boss; đồng hồ tham số hoá để test |
+| 01-CONTRACTS §7 | `publish_job_to_group` thuộc bảng tool phía thợ; `set_availability`, `register_vendor` trong P05 | Đ27: `publish_job_to_group` là tool agent cư dân (cùng lượt sau `open_service_case`); onboarding thợ dời SPEC-P04 §3 gói sau | Bước 4 do agent đang nói với cư dân thực hiện; đăng ký thợ không cần cho kênh giả lập (seed) |
 
 ## 3. Work Packages
 
@@ -210,8 +231,12 @@ Thứ tự bắt buộc (Đ13, Đ15): `P01 (nền tảng + SimTransport) → P03
 - [x] H11 — nhánh `vyce` (01-CONTRACTS §2d) dùng chung phần dịch OpenAI của §2c — `ffbd609`, R11 ✅ 2026-09-25; `npm test` 251, `test:db` 122
 - [x] H08 vòng 3 — chấm bằng `vyce/deepseek-v4-flash` ⇒ trượt 3 bộ, dừng (Đ26) — `c367fea`
 - [ ] 🖐 Quota/billing Gemini ⇒ H08 vòng 4 chấm đủ 4 bộ bằng Gemini 3.6 flash, phán R08
-- [ ] P04 — Dashboard tối thiểu (G07)
-- [ ] P05 — Agent bước 4–7 (G11, G12, G12b)
+- [ ] 🖐 SO duyệt Đ27 (SPEC-P05 §10 + SPEC-P04 §8) và chốt/giữ giá trị tạm Q1–Q10 (SPEC-P05 §10.16)
+- [ ] P04 tối thiểu cho P05 — WP P05-E (SPEC-P04 §8, 🟠; `/jobs` 🟢): `/tickets` duyệt/từ chối, `/gate`, `/vendors` + "Đã thu phí", policy, SimBoard, `/api/dev/sim/tick` — G07
+- [ ] P05-B — nền: migration 006, dịch vụ dispatch/access/slots/timers, PiiGate, seed thợ, `sim_claims.mjs`, máy đo mở rộng (SPEC-P05 §10.12, 🟠) — G11, G12, G12b, G15
+- [ ] P05-C — agent thợ: triage thợ, `vendor-agent`, 9 tool, golden `vendor_intent.jsonl` + `scripts/eval/vendor-intent.mjs` (🟠 thi công, 🔴 review prompt/golden)
+- [ ] P05-D — phía cư dân: `open_service_case` ISO + bằng chứng đồng ý, `publish_job_to_group`, `respond_to_quote`, mốc thời gian, prompt `resident.ts` (🟠, CHỜ H08 nhả file; chấm lại 1 lượt `eval:golden` sau khi đổi prompt) — G16a
+- [ ] P05-F — thẩm định đối kháng P05 (🔴, agent khác, ≥3 cách phá)
 - [ ] P06 — Bước 8 (G13, G16 trọn bước 0→8 trên kênh giả lập)
 - [ ] P08 — Sổ lợi ích ba bên (G17)
 - [x] P02 giai đoạn 1 — mã + test máy (SPEC-P02 §9, Đ22): H07 `a60731e..bf58e37` (2 vòng), R07 ✅ 2026-09-25; zca-js 2.2.0; `npm test` 229, `test:db` 110

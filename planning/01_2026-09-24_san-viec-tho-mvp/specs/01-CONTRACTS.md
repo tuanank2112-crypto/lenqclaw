@@ -12,12 +12,14 @@ packages/core/src/
   adapters/model.ts       nơi DUY NHẤT gọi LLM (@anthropic-ai/sdk)
   adapters/transport.ts   nơi DUY NHẤT nói với zca-js (qua worker) — xem §8
   pipeline/               step0-ingest … step8-close-case (mỗi bước pipeline v0.2 một file)
-  agent/                  resident-agent.ts, vendor-agent.ts, tools/*.ts, prompts/*.md
-  services/               pricing.ts, dispatch.ts, reveal.ts, access-pass.ts, scoring.ts, responsibility.ts
+  agent/                  resident-agent.ts, vendor-agent.ts, tools/*.ts, prompts/*.ts (hằng TS, không .md — R03),
+                          triage.ts, vendor-triage.ts, vendor-intent.ts, consent.ts, conversation.ts, vendor-tool-context.ts (Đ27)
+  services/               job-state.ts, audit.ts (P01) · dispatch.ts, access.ts, slots.ts, timers.ts, system-events.ts,
+                          vendor-messages.ts, pii-gate.ts, vn-time.ts, dispatch-config.ts (P05 — Đ27, SPEC-P05 §10) · pricing.ts, scoring.ts (P06)
   retrieval/              port từ build phase (§8 của 00-ARCHITECTURE)
 db/migrations/NNN_*.sql   đánh số tăng dần, có bảng schema_migrations
 scripts/                  check_adapter_boundary.mjs, check_agent_tools.mjs, eval_golden.mjs, sim_claims.mjs
-evals/golden/             diagnosis.jsonl, responsibility.jsonl, emergency.jsonl, pii_probe.jsonl
+evals/golden/             diagnosis.jsonl, responsibility.jsonl, emergency.jsonl, consent.jsonl, pii_probe.jsonl, vendor_intent.jsonl (Đ27)
 ```
 
 npm workspaces; `packages/core` export ESM; TypeScript `strict: true`.
@@ -30,7 +32,7 @@ export function sql<T>(text: string, params?: unknown[]): Promise<T[]>;
 export function tx<T>(fn: (q: typeof sql) => Promise<T>): Promise<T>;
 
 // adapters/model.ts
-export interface ModelCall { route: 'diagnose' | 'responsibility' | 'acceptance' | 'vendor_parse' | 'compose' | 'triage'; // 'triage': Đ21, SPEC-P03 §11.10
+export interface ModelCall { route: 'diagnose' | 'responsibility' | 'acceptance' | 'vendor_parse' | 'compose' | 'triage'; // 'triage': Đ21, SPEC-P03 §11.10 · 'vendor_parse': vòng chính agent thợ (Đ27, SPEC-P05 §10.5.3; env MODEL_VENDOR_PARSE)
   system: string; messages: MessageParam[]; tools?: Tool[]; images?: ImageRef[]; }
 export function callModel(c: ModelCall): Promise<{ message: Message; usage: Usage; model: string }>;
 // model mặc định: env MODEL_DEFAULT (mặc định 'claude-opus-5'); override theo route: MODEL_<ROUTE>.
@@ -163,6 +165,23 @@ create table audit_log (id bigserial primary key, actor_type text, actor_id text
 
 Ghi chú: thứ tự FK khi tạo bảng tuân `db/migrations` (job_categories trước vendor_skills). Số chiều embedding chốt khi chọn model embedding ở P03 (Đ mới nếu khác 1024).
 
+**Đ27 (migration `006_dispatch_slots.sql`, chỉ THÊM — SPEC-P05 §10.2.1; đã áp thử sau 001–005 ngày 2026-09-25):**
+
+```sql
+create table vendor_groups (building_id uuid not null references buildings,
+  trade_group text not null check (trade_group in ('dien_nuoc','khoa','dien_lanh','xay_sua')),
+  zalo_account_id text not null default 'market' references zalo_accounts, thread_id text not null,   -- id nhóm Zalo thật hoặc 'sim-market-<trade_group>'
+  created_at timestamptz default now(), primary key (building_id, trade_group), unique (zalo_account_id, thread_id));
+alter table jobs add column publish_expires_at timestamptz;           -- đồng hồ đăng (SPEC-P05 §10.8.1)
+alter table jobs add column republish_count int not null default 0;   -- đăng lại vì hết hạn giữ (≤ MAX_HOLD_REPUBLISH)
+alter table jobs add column timeout_republished_at timestamptz;       -- đăng lại vì DISPATCH_TIMEOUT (1 lần)
+alter table job_offers add column over_band boolean not null default false;  -- báo giá vượt khung chờ cư dân
+alter table vendor_slots add column reminded_at timestamptz;          -- nhắc hết hạn slot (1 lần)
+alter table tickets add column reminded_at timestamptz;               -- nhắc BQL duyệt access_request (1 lần)
+-- + 5 index: jobs(status, publish_expires_at), jobs(status, hold_expires_at), vendor_slots(building_id, trade_group, period_end) where status='active', access_passes(job_id), job_events(job_id, to_status, created_at)
+```
+Quy ước `jobs.window_start/window_end` (chốt Đ19-3): khung giờ thợ đến do cư dân chọn, ghi bởi `open_service_case` (ISO 8601 có múi giờ), NULL trước `case_open`, BẮT BUỘC khác NULL từ `case_open` — SPEC-P05 §10.2.2. Giá thợ báo ở `job_offers.price` (CẤM cột `jobs.vendor_price`).
+
 ## §5. Máy trạng thái cuốc (`jobs.status`) — v0.2 (Đ10)
 
 | Từ | Sang | Tool / tác nhân | Điều kiện & hiệu ứng |
@@ -170,17 +189,18 @@ Ghi chú: thứ tự FK khi tạo bảng tuân `db/migrations` (job_categories t
 | — | `drafting` | `save_job_draft` | cư dân `active` |
 | `drafting` | `routed_bql` | `push_bql_ticket` | verdict `bql`/`unclear` ⇒ ticket `bql_responsibility`/`unclear` lên dashboard |
 | `drafting` | `awaiting_consent` | `classify_responsibility` | verdict `resident` có citation hợp lệ |
-| `awaiting_consent` | `case_open` | `open_service_case` | cư dân đồng ý tìm thợ ⇒ ticket `service_case`; `jobs.case_ticket_id` |
+| `awaiting_consent` | `case_open` | `open_service_case` | cư dân đồng ý tìm thợ (bằng chứng ở lượt SAU — SPEC-P05 §10.7.2) ⇒ ticket `service_case`; `jobs.case_ticket_id`; ghi `window_start/end` (Đ27) |
 | `awaiting_consent` | `cancelled` | cư dân / timer 24h | |
-| `case_open` | `published` | `publish_job_to_group` | tin cuốc vào nhóm thợ qua outbox |
-| `published` | `held` | parse "nhận C-xxxx" (tất định) | thợ `active`, đúng kỹ năng/tòa; `hold_expires_at=now()+10m` |
-| `held` | `confirmed` | `confirm_assignment` | thợ trả "OK" trong hạn giữ |
-| `held` | `published` | timer | hết hạn giữ ⇒ `no_show_count+1`, đăng lại (≤2 lần) |
-| `confirmed` | `access_pending` | `request_access` | ticket `access_request` lên dashboard; `jobs.access_ticket_id` |
-| `access_pending` | `access_granted` | BQL bấm Duyệt | ticket `approved` ⇒ tạo `access_passes` |
-| `access_pending` | `published` | BQL bấm Từ chối | agent báo thợ, gỡ gán, đăng lại |
-| `access_granted` | `dispatched` | `dispatch_to_vendor` | gửi số căn + SĐT + mã vào cho đúng thợ được gán |
-| `published` | `unassigned` | timer | quá `DISPATCH_TIMEOUT` ⇒ ticket `no_vendor` |
+| `case_open` | `published` | `publish_job_to_group` (agent cư dân, cùng lượt sau `open_service_case`) / lưới timer `publishFallback` 2 phút (Đ27) | cần `window_start`; `category_code` NULL ⇒ `'khac'`; `JobCard` đã che PII vào outbox nhóm `vendor_groups`; đặt `publish_expires_at` |
+| `published` | `held` | `claim_job` (agent thợ — ý định model + lưới tất định, Đ27) | 7 điều kiện BB-10 (SPEC-P05 §10.3.1); UPDATE có điều kiện (BB-05); `hold_expires_at = now + HOLD_MINUTES` (10); thua đua ⇒ tool trả `{won:false}` |
+| `held` | `confirmed` | `confirm_assignment` / `respond_to_quote(accept)` (Đ27) | thợ OK trong hạn giữ; `mode='quote'` cần giá khớp tin thợ; giá > `price_high × 1,3` ⇒ VẪN `held` chờ cư dân (`job_offers.over_band`) |
+| `held` | `published` | timer / `decline_hold` / `respond_to_quote(decline)` / BQL đình chỉ | `data.reason ∈ {hold_expired, quote_consent_timeout, vendor_declined, quote_declined, vendor_suspended}`; gỡ `assigned_vendor_id`; `hold_expired` ⇒ `no_show_count+1`, đăng lại ≤ `MAX_HOLD_REPUBLISH` (2), quá ⇒ để đồng hồ đăng xử lý |
+| `confirmed` | `published` | `decline_hold` (thợ rút) / BQL đình chỉ — cặp MỚI (Đ27) | gỡ gán, đăng lại (không tăng `republish_count`) |
+| `confirmed` | `access_pending` | `request_access` (agent thợ, cùng lượt sau `confirm_assignment`) / lưới timer 2 phút | ticket `access_request` lên dashboard; `jobs.access_ticket_id` |
+| `access_pending` | `access_granted` | BQL bấm Duyệt (`decideAccessRequest`, actor `staff`) | ticket `approved` ⇒ tạo `access_passes` ⇒ sự kiện hệ thống `access_approved` ⇒ agent thợ `dispatch_to_vendor` (Đ27) |
+| `access_pending` | `published` | BQL bấm Từ chối (lý do bắt buộc) / thợ rút / đình chỉ | ticket `rejected` + `decision_note`; gỡ gán; đăng lại; thợ bị từ chối KHÔNG nhận lại cuốc này (`job_offers.note='access_rejected'`) |
+| `access_granted` | `dispatched` | `dispatch_to_vendor` (agent thợ, lượt do sự kiện hệ thống kích hoạt) | ticket `approved` ∧ đúng thợ ∧ có mã vào còn hiệu lực ⇒ `JobReveal` DM thợ + báo cư dân |
+| `published` | `unassigned` | timer | `publish_expires_at` (`computePublishExpiry`, `DISPATCH_TIMEOUT_MIN` 45 trong 07–21h, ngoài giờ tới 08:00): lần đầu ⇒ đăng lại `mode='quote'`; lần hai ⇒ `unassigned` + ticket `no_vendor` + báo cư dân |
 | `dispatched` | `in_progress` | thợ "đến C-xxxx" / bảo vệ bấm đã vào | |
 | `in_progress` | `awaiting_acceptance` | thợ "xong C-xxxx <giá>" + ảnh sau | |
 | `awaiting_acceptance` | `accepted` | cư dân xác nhận / im 48h | |
@@ -204,6 +224,9 @@ type JobCard = { code: string; category_name: string; building_code: string; win
 type JobReveal = JobCard & { apartment_code: string; floor: number; resident_phone: string; access_pass_code: string };
 //  JobReveal chỉ được tạo trong dispatch_to_vendor khi jobs.status='access_granted' (BB-11).
 type Party = { type: 'resident' | 'vendor' | 'staff' | 'unknown'; id: string | null; account: 'bql' | 'market' };
+type TradeGroup = 'dien_nuoc' | 'khoa' | 'dien_lanh' | 'xay_sua';   // Đ27
+// Đ27: VendorToolContext (agent/vendor-tool-context.ts) và VendorTriageResult (agent/vendor-triage.ts) — SPEC-P05 §10.5.2, §10.4.1.
+// AgentTool<TInput, TOutput, TCtx = ToolContext> (tool-kit.ts) — tool phía thợ dùng TCtx = VendorToolContext.
 ```
 
 ## §7. Tool của agent (v0.2 — agent điều phối, Đ10)
@@ -218,8 +241,10 @@ Mọi tool `strict: true`. `resident_id`, `apartment_id`, `building_id`, `job_id
 | `search_regulations(query)` | 2 | truy hồi quy chế `{section_id, heading, body, status, effective}` |
 | `classify_responsibility(verdict)` | 2 | service kiểm BB-03, có thể ép `unclear`; trả verdict đã chốt |
 | `push_bql_ticket(summary)` | 2a | tạo ticket BQL kèm trích dẫn; chỉ khi verdict `bql`/`unclear` |
-| `open_service_case(window_options, note)` | 3 | chỉ khi verdict `resident` và cư dân đã đồng ý trong lượt hiện tại |
+| `open_service_case(window_start, window_end, note)` | 3 | Đ27: chỉ khi verdict `resident` và có bằng chứng đồng ý ở lượt SAU (chuỗi tin sau mốc — SPEC-P05 §10.7.2); ISO 8601 ⇒ `jobs.window_*` |
 | `get_price_band(category_code)` | 3–4 | đọc `price_book`, có thể rỗng |
+| `publish_job_to_group(job_code)` | 4 | Đ27: chuyển về phía cư dân — gọi cùng lượt ngay sau `open_service_case`; dựng `JobCard` (không PII theo kiểu + PiiGate), outbox nhóm `vendor_groups`; cuốc phải của chính cư dân |
+| `respond_to_quote(job_code, accept)` | 5b | Đ27: cư dân trả lời báo giá vượt khung; `accept=true` cần bằng chứng đồng ý; `false` ⇒ nhả cuốc, không tính bùng |
 | `get_my_cases()` | mọi lúc | case/cuốc của chính cư dân |
 | `report_problem(text)` | 8 | tạo tranh chấp |
 | `handoff_to_staff(reason)` | mọi lúc | chuyển người |
@@ -228,14 +253,16 @@ Mọi tool `strict: true`. `resident_id`, `apartment_id`, `building_id`, `job_id
 
 | Tool | Bước | Làm gì · chốt chặn bên trong |
 | :-- | :-- | :-- |
-| `publish_job_to_group(job_code)` | 4 | dựng `JobCard` từ job (không PII theo kiểu), đưa vào outbox nhóm |
-| `confirm_assignment(job_code)` | 5 | chỉ khi `held` và người trả "OK" chính là thợ đang giữ |
-| `request_access(job_code, note)` | 6 | tạo ticket `access_request` (tên thợ, khung giờ, căn) cho dashboard |
-| `dispatch_to_vendor(job_code)` | 7 | chỉ khi ticket cấp quyền `approved`; gửi `JobReveal` cho đúng thợ, báo cư dân |
-| `close_case(job_code)` | 8 | chỉ khi `accepted`; cập nhật điểm thợ, giá thật vào bảng giá, hẹn bảo hành |
-| `register_vendor(profile)`, `set_availability(slots)`, `get_my_assignments()` | — | onboarding & tra cứu của thợ |
+| `claim_job(job_code)` | 5 | Đ27: cần bằng chứng ý định (model ≥ `VENDOR_INTENT_MIN` hoặc cụm an toàn BẰNG NHAU); 7 điều kiện BB-10; UPDATE có điều kiện (BB-05); thua ⇒ `{won:false}` |
+| `confirm_assignment(job_code, price_vnd)` | 5 | chỉ khi `held`, đúng thợ, trong hạn giữ; `quote` cần giá khớp tin thợ (lưới tất định); vượt khung >30% ⇒ `awaiting_resident_price_consent` |
+| `decline_hold(job_code)` | 5 | Đ27: thợ rút ⇒ `held/confirmed/access_pending → published` |
+| `request_access(job_code, note)` | 6 | tạo ticket `access_request` (tên thợ, SĐT thợ, điểm, căn, khung giờ trong `summary`) cho dashboard; gọi cùng lượt sau `confirm_assignment` |
+| `dispatch_to_vendor(job_code)` | 7 | chỉ khi ticket cấp quyền `approved` + mã vào còn hiệu lực; `JobReveal` DM thợ (không trả cho model), báo cư dân; kích hoạt bởi sự kiện hệ thống `access_approved` |
+| `get_my_assignments()`, `get_my_slot()`, `request_slot(trade_group, building_code)`, `handoff_to_staff(reason)` | — | Đ27: tra cứu (không PII), slot/dùng thử/danh sách chờ (Đ14), chuyển người — SPEC-P05 §10.6, §10.9 |
+| `close_case(job_code)` | 8 | P06: chỉ khi `accepted`; cập nhật điểm thợ, giá thật vào bảng giá, hẹn bảo hành |
+| `register_vendor(profile)`, `set_availability(slots)` | — | onboarding thợ — SPEC-P04 §3, CHƯA làm ở P05 (vùng cấm SPEC-P05 §10.14) |
 
-Lệnh của thợ trong nhóm ("nhận C-xxxx", "OK", "đến C-xxxx", "xong C-xxxx 350k") được **parse tất định** thành sự kiện; agent nhận sự kiện và gọi tool tương ứng. Tool chốt (`held`) là câu UPDATE có điều kiện — agent không chọn người thắng.
+Đ27 (thay câu "parse tất định" cũ — Đ21 của người dùng): tin của thợ đi qua **lớp hiểu ý bằng model** (`triageVendorMessage`, SPEC-P05 §10.4) + **lưới tất định** (trích mã cuốc `C-XXXX`, đọc giá, danh sách cụm khớp BẰNG NHAU); agent thợ (route `vendor_parse`) gọi tool; tool tự kiểm bằng chứng ý định + trạng thái + BB-10. Tool chốt (`held`) vẫn là câu UPDATE có điều kiện — agent không chọn người thắng. Lệnh bước 8 ("đến", "xong <giá>") là P06.
 
 CẤM tool: gửi tin tới thread không thuộc cuộc/case hiện tại, liệt kê danh bạ, đọc file, exec, đổi cấu hình, duyệt ticket thay BQL.
 
@@ -252,7 +279,9 @@ type SessionState = 'logged_out' | 'qr_pending' | 'connected' | 'kicked' | 'reco
 
 **`SimTransport` (Đ13 — làm trong P01, dùng trước Zalo):** cùng interface `Transport`, ghi/đọc đúng bảng `inbound_events`/`outbox` nhưng nguồn là **màn chat dev** trên `apps/web` (`/dev/sim`, chỉ bật khi `DATA_MODE=sim`): 3 khung song song — cư dân (thread user), nhóm thợ (thread group, chọn thợ đang gõ), và link sang dashboard BQL. Có nút "phát lại kịch bản" chạy file `evals/scenarios/*.jsonl` để test đầu-cuối không cần người. Chuyển sang Zalo thật = đổi `TRANSPORT=zalo`, không sửa core.
 
-Worker và core nói chuyện qua Postgres (bảng `inbound_events`, `outbox`, `zalo_accounts`) + `pg-boss`; KHÔNG gọi HTTP trực tiếp giữa hai tiến trình.
+Worker và core nói chuyện qua Postgres (bảng `inbound_events`, `outbox`, `zalo_accounts`); KHÔNG gọi HTTP trực tiếp giữa hai tiến trình. pg-boss: KHÔNG dùng tới P07 (Đ17/Đ22/Đ27) — runner `core:run` tuần tự + đồng hồ `runTimers(now)` (SPEC-P05 §10.8).
+
+**Sự kiện hệ thống (Đ27, SPEC-P05 §10.8.2):** server ghi `inbound_events` với `zalo_msg_id = 'sys-<uuid>'`, `sender_uid = 'system'`, `payload.kind = 'system'` để kích hoạt MỘT lượt agent (vd `access_approved` ⇒ agent thợ `dispatch_to_vendor`). `sender_uid = 'system'` là giá trị DÀNH RIÊNG: `simInbound` và `/api/dev/sim/send` từ chối; worker Zalo không bao giờ sinh (uid Zalo là số). Quy ước thread DM: `thread_type='user'` ⇒ `thread_id = zalo_uid` của người đó (đúng với Zalo; kênh giả lập PHẢI theo cho thợ). `runScenario(path, handler = echoHandler)`; route phát lại `/api/dev/sim/replay` truyền `routeInboundEvent`.
 
 ## §9. Bảng lỗi & hành vi caller
 
@@ -261,7 +290,7 @@ Worker và core nói chuyện qua Postgres (bảng `inbound_events`, `outbox`, `
 | `ConflictError` | chuyển trạng thái sai `from` | không retry; đọc lại job, trả tin trạng thái hiện tại |
 | `PiiGateError` | dựng tin cho thợ có PII trước `access_granted` | log `audit_log` mức cao, không gửi gì cho thợ |
 | `AccessNotApprovedError` | `dispatch_to_vendor` khi ticket cấp quyền chưa `approved` | agent chờ; quá 30 phút trong giờ ⇒ nhắc BQL trên dashboard |
-| `IneligibleVendorError` | thợ không active/không đúng kỹ năng/tòa | trả lời thợ lý do ngắn, không lộ chi tiết cuốc |
+| `IneligibleVendorError` | `message` bắt đầu bằng mã lý do `not_active` \| `no_building` \| `no_skill` \| `no_slot` \| `blocked_no_show` \| `rejected_by_bql` \| `window_overlap` \| `not_assigned` (Đ27, SPEC-P05 §10.3.1) | trả lời thợ lý do ngắn qua DM, không lộ chi tiết cuốc, KHÔNG trả lời trong nhóm |
 | `ModelUnavailableError` | LLM 429/5xx sau retry | xin lỗi cư dân + hẹn trả lời; bước 1 khẩn cấp vẫn chạy |
 | `RegulationUnavailable` | không truy hồi được quy chế | verdict `unclear` ⇒ ticket |
 | `ConsentMissingError` | `open_service_case` khi tin cư dân không phải đồng ý hợp lệ (SPEC-P03 §11.5) | agent hỏi lại: "anh/chị trả lời ĐỒNG Ý để em tìm thợ" |
@@ -269,6 +298,11 @@ Worker và core nói chuyện qua Postgres (bảng `inbound_events`, `outbox`, `
 | `InvalidToolInput` | input tool sai `input_schema` (§2b) | `tool_result is_error`, tool không chạy; model tự sửa ở vòng sau |
 | `TransportDeadError` | phiên Zalo `kicked`/`dead` | dừng gửi, giữ outbox `queued`, báo động (OPERATIONS §5) |
 | `RateLimitedError` | Zalo trả lỗi giới hạn / mã 221 / không có msgId | pacer lùi ≥30 phút cho tài khoản đó |
+| `JobNotFoundError` (Đ27) | mã cuốc không tồn tại hoặc không thuộc người đang nói | "Không tìm thấy mã cuốc <code>"; không lộ cuốc khác |
+| `IntentNotConfirmedError` (Đ27) | `claim_job`/`confirm_assignment`/`decline_hold` không có bằng chứng ý định (SPEC-P05 §10.4.4) | hỏi thợ trả lời đúng mẫu ("nhận C-XXXX"); không gọi lại tool cùng lượt |
+| `HoldExpiredError` (Đ27) | OK/giá sau `hold_expires_at` — tool đã nhả cuốc | "Hết hạn giữ, cuốc đã đăng lại — nhắn «nhận <code>» nếu còn muốn" |
+| `QuoteRequiredError` (Đ27) | cuốc `quote` thiếu giá / giá không khớp tin thợ | hỏi giá ("Anh báo giá bao nhiêu? vd 350k") |
+| `SlotUnavailableError` (Đ27) | chưa đặt trần / chưa cấu hình nhóm / tòa mơ hồ | báo thợ liên hệ BQL; admin thấy trên `/vendors` |
 
 ## §2b. Nhà cung cấp LLM — Gemini mặc định (Đ18, 2026-09-24)
 
