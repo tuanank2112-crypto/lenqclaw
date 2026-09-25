@@ -1,0 +1,24 @@
+=== Khoi that OpenRouter (01-CONTRACTS §2c, H10 muc e) — 2026-09-25 ===
+Lenh: npx tsx --env-file=.env <script tam trong scratchpad, KHONG commit>
+1 lan goi mang that (callModel route=diagnose, model mac dinh google/gemini-3.6-flash).
+
+Ket qua: HTTP 402 tu OpenRouter (goi mang that) — dung bang "Loi" cua §2c:
+  code: ModelUnavailableError
+  loai: OpenRouterCreditExhaustedError (khong retry, khong fallback — dung hop dong)
+  model yeu cau: google/gemini-3.6-flash
+  ly do (than OpenRouter, da bo phan dinh danh key/workspace): "This request
+    requires more credits, or fewer max_tokens. You requested up to 16000
+    tokens, but can only afford 10128."
+
+Nhan xet: key OpenRouter nguoi dung dua co han muc tin dung/ngay thap hon
+16000 token — la gioi han max_tokens CO DINH theo 01-CONTRACTS §2c ("CAM
+temperature/top_p/reasoning" + max_tokens:16000, khong duoc doi). Voi han
+muc nay, MOI loi goi that (diagnose lan callTriageModel) deu se 402 vi CUNG
+mot body max_tokens=16000 — khong phai loi code, ma la gioi han credit thuc
+te cua key. Adapter xu ly DUNG hop dong: nem ModelUnavailableError, KHONG
+retry, KHONG fallback (xac nhan boi 1 lan fetch duy nhat, khong co lan goi
+model du phong nao ke tiep).
+
+Dung 1/3 lan goi that duoc phep — dung lai vi 2 loi con lai (neu goi lai
+callModel/callTriageModel) se cho CUNG mot ket qua 402 (gioi han tinh theo
+ngay, khong phai tam thoi) — khong sinh them bang chung moi.

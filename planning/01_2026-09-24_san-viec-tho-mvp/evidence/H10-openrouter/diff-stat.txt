@@ -1,0 +1,8 @@
+ .env.example                        |  16 +-
+ packages/core/src/adapters/model.ts | 358 ++++++++++++++++++++++++++++++++++--
+ scripts/check_adapter_boundary.mjs  |   9 +
+ scripts/eval/score.mjs              |  14 +-
+ 4 files changed, 376 insertions(+), 21 deletions(-)
+
+model.openrouter.test.ts la file MOI (chua track) — them dong sau:
+262 packages/core/src/adapters/model.openrouter.test.ts
