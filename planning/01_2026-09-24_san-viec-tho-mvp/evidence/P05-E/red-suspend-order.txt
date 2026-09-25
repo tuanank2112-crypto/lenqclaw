@@ -1,0 +1,38 @@
+$ npx vitest run --config vitest.db.config.ts src/dbtests/zzz-scratch-suspend-race.db.test.ts (suspendVendor buoc 1 TAM DAO xuong CUOI)
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mD:/lenqclaw/packages/core[39m
+
+[90mstdout[2m | src/dbtests/zzz-scratch-suspend-race.db.test.ts[2m > [22m[2mSCRATCH RACE — dao thu tu suspendVendor (khong commit)[2m > [22m[2mBUG: claimJob dong thoi cua CHINH tho bi dinh chi co the thang lai cuoc vua nha
+[22m[39mSCRATCH RACE: raceWon=true (BUG neu true — chinh tho bi dinh chi nhan lai duoc cuoc vua nha)
+
+ [31m❯[39m src/dbtests/zzz-scratch-suspend-race.db.test.ts [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 310[2mms[22m[39m
+[31m   [31m×[31m SCRATCH RACE — dao thu tu suspendVendor (khong commit)[2m > [22mBUG: claimJob dong thoi cua CHINH tho bi dinh chi co the thang lai cuoc vua nha[90m 140[2mms[22m[31m[39m
+[31m     → expected true to be false // Object.is equality[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 1 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/dbtests/zzz-scratch-suspend-race.db.test.ts[2m > [22mSCRATCH RACE — dao thu tu suspendVendor (khong commit)[2m > [22mBUG: claimJob dong thoi cua CHINH tho bi dinh chi co the thang lai cuoc vua nha
+[31m[1mAssertionError[22m: expected true to be false // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+[36m [2m❯[22m src/dbtests/zzz-scratch-suspend-race.db.test.ts:[2m82:21[22m[39m
+    [90m 80| [39m    [90m// dang chay. Voi ban DAO thu tu (buoc 1 chay CUOI), assertion nay[39m…
+    [90m 81| [39m    [90m// BAI (do) — dung la bang chung buoc 1 phai chay VA COMMIT DAU TI[39m…
+    [90m 82| [39m    [34mexpect[39m(raceWon)[33m.[39m[34mtoBe[39m([35mfalse[39m)[33m;[39m
+    [90m   | [39m                    [31m^[39m
+    [90m 83| [39m  })[33m;[39m
+    [90m 84| [39m})[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m   Start at [22m 04:51:00
+[2m   Duration [22m 977ms[2m (transform 151ms, setup 0ms, collect 424ms, tests 310ms, environment 0ms, prepare 86ms)[22m
+
+EXIT:1

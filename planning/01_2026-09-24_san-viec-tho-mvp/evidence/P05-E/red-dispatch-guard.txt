@@ -1,0 +1,38 @@
+$ npx vitest run --config vitest.db.config.ts src/dbtests/p05-suspend.db.test.ts (chot chan dispatchToVendor TAM VO HIEU HOA)
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mD:/lenqclaw/packages/core[39m
+
+ [31m❯[39m src/dbtests/p05-suspend.db.test.ts [2m([22m[2m6 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 736[2mms[22m[39m
+[31m   [31m×[31m suspendVendor (SPEC-P05 §10.17, Đ30)[2m > [22m(b2) chot chan doc lap: cuoc VAN access_granted + VAN gan dung tho, nhung vendors.status != active => dispatchToVendor IneligibleVendorError(vendor_suspended), 0 tin JobReveal[90m 109[2mms[22m[31m[39m
+[31m     → promise resolved "{ …(2) }" instead of rejecting[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 1 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/dbtests/p05-suspend.db.test.ts[2m > [22msuspendVendor (SPEC-P05 §10.17, Đ30)[2m > [22m(b2) chot chan doc lap: cuoc VAN access_granted + VAN gan dung tho, nhung vendors.status != active => dispatchToVendor IneligibleVendorError(vendor_suspended), 0 tin JobReveal
+[31m[1mAssertionError[22m: promise resolved "{ …(2) }" instead of rejecting[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- [Error: rejected promise][39m
+[31m+ Object {[39m
+[31m+   "jobId": "8e48325a-a80f-4927-9588-569a70816f1b",[39m
+[31m+   "passCode": "ER8JDA",[39m
+[31m+ }[39m
+
+[36m [2m❯[22m src/dbtests/p05-suspend.db.test.ts:[2m161:96[22m[39m
+    [90m159| [39m    [35mawait[39m [34msql[39m([32m`update vendors set status = 'suspended' where id = $1`[39m[33m,[39m…
+    [90m160| [39m
+    [90m161| [39m    [35mawait[39m [34mexpect[39m([34mdispatchToVendor[39m({ jobCode[33m:[39m job[33m.[39mcode[33m,[39m vendorId[33m:[39m f[33m.[39mven…
+    [90m   | [39m                                                                                               [31m^[39m
+    [90m162| [39m      code[33m:[39m [32m'IneligibleVendorError'[39m[33m,[39m
+    [90m163| [39m      message[33m:[39m expect[33m.[39m[34mstringContaining[39m([32m'vendor_suspended'[39m)[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m5 passed[39m[22m[90m (6)[39m
+[2m   Start at [22m 04:48:09
+[2m   Duration [22m 1.42s[2m (transform 161ms, setup 0ms, collect 432ms, tests 736ms, environment 0ms, prepare 92ms)[22m
+
+EXIT:1
