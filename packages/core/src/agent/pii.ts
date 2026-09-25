@@ -128,7 +128,13 @@ export function detectEmergency(text: string): string | null {
   return null;
 }
 
-const PHONE_RE = /(?<!\d)(?:\+?84|0)(?:[\s.\-()]*\d){8,10}(?!\d)/g;
+// SPEC-P05-Dispatch.md §10.10 (Đ27, P05-C — R12 Q2): xuat 2 mau nay de
+// `services/pii-gate.ts` import lai thay vi lap regex rieng (ban lap cu da
+// bi go bo o file do). Hai regex nay dung o day VOI CO GLOBAL (`g`) cho
+// `redactPii` (dung `.replace`); `pii-gate.ts` chi can `.test()` nen tu tao
+// bien KHONG-global tu nguon chuoi giong het (tranh bug `lastIndex` cua
+// regex global khi dung lai giua nhieu lan goi — da ghi trong pii-gate.ts).
+export const PHONE_RE = /(?<!\d)(?:\+?84|0)(?:[\s.\-()]*\d){8,10}(?!\d)/g;
 // SPEC-P03 §11.3(2): (1) apartments.code that cua toa (xu ly rieng, can DB —
 // xem redactPiiForBuilding); (2) sau tu khoa can|can ho|phong|p. la ma;
 // (3) chu(1-2)+so(3-4) khong phan biet hoa thuong.
@@ -138,7 +144,7 @@ const PHONE_RE = /(?<!\d)(?:\+?84|0)(?:[\s.\-()]*\d){8,10}(?!\d)/g;
 // la manh vo giua tu co dau), nhung do lai cho chac thay vi suy luan.
 const APT_AFTER_KEYWORD_RE =
   /(?<![\p{L}\p{N}])(c[ăa]n\s*h[ộo]|c[ăa]n|ph[òo]ng|p\.)(\s*)([A-Za-z]{0,2}[\s.\-]?\d{1,2}[\s.\-]?\d{2})/giu;
-const APT_GENERIC_RE = /(?<![\p{L}\p{N}])[A-Za-z]{1,2}[\s.\-]?\d{3,4}(?![\p{L}\p{N}])/gu;
+export const APT_GENERIC_RE = /(?<![\p{L}\p{N}])[A-Za-z]{1,2}[\s.\-]?\d{3,4}(?![\p{L}\p{N}])/gu;
 
 /** Che SDT va ma can TRUOC khi dua vao ngu canh goi model (§11.3). Phien ban
  * THUAN (khong DB) — dung mau chung (2)+(3); ngoai le ma cuoc cua chinh cu

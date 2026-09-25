@@ -11,6 +11,7 @@ import { enqueue, type InboundEvent } from '../adapters/transport.js';
 import { audit } from '../services/audit.js';
 import type { InboundHandler } from '../sim/sim-transport.js';
 import { echoHandler } from '../sim/sim-transport.js';
+import { vendorHandler } from './vendor-agent.js';
 import { detectEmergency, redactPii, REGISTER_REPLY } from './pii.js';
 import { triageMessage, type TriageResult } from './triage.js';
 import { triggerEmergencyFlow } from './emergency.js';
@@ -380,13 +381,16 @@ export const residentHandler: InboundHandler = async (e: InboundEvent) => {
   await runResidentTurn(ctx, text, account, e.threadId, saved.id, categories);
 };
 
-/** Dieu phoi handler theo (account, threadType) — SPEC-P03 §10.1: "Account
- * bql + thread user => residentHandler". `market`/nhom khac van vong vong
- * lai (`echoHandler`) toi khi P05 thay. Goi tu apps/web (khong sua
- * `sim/sim-transport.ts`). */
+/** Dieu phoi handler theo (account, threadType) — SPEC-P03 §10.1 + Đ27
+ * (SPEC-P05-Dispatch.md §10.1): "Account bql + thread user => residentHandler";
+ * account `market` (DM lan nhom) => `vendorHandler` (P05-C). Goi tu apps/web
+ * (khong sua `sim/sim-transport.ts`). */
 export const routeInboundEvent: InboundHandler = async (e: InboundEvent) => {
   if (e.zaloAccountId === 'bql' && e.threadType === 'user') {
     return residentHandler(e);
+  }
+  if (e.zaloAccountId === 'market') {
+    return vendorHandler(e);
   }
   return echoHandler(e);
 };

@@ -3,13 +3,11 @@
 // `sendVendorMessage` (services/vendor-messages.ts) goi ham nay TRUOC
 // `enqueue`.
 //
-// Ghi chu pham vi: PHONE_RE/APT_GENERIC_RE duoi day LAP LAI (khong import)
-// cac mau cua `agent/pii.ts` (SPEC-P05 §10.10 noi "mau chung PHONE_RE/
-// APT_GENERIC_RE cua agent/pii.ts") — file do KHONG nam trong DUOC GHI cua
-// handoff nay (chi P03 duoc sua `agent/pii.ts`) nen khong the export them
-// hang so tu do; xem Cau hoi mo trong report R12.
+// R12 Q2 (P05-C): `agent/pii.ts` nay da xuat `PHONE_RE`/`APT_GENERIC_RE` —
+// import lai o day thay vi lap regex rieng nhu ban P05-B cu.
 
 import { PiiGateError } from '../domain/errors.js';
+import { PHONE_RE as PHONE_RE_GLOBAL, APT_GENERIC_RE as APT_GENERIC_RE_GLOBAL } from '../agent/pii.js';
 
 export interface ResidentGuard {
   phone: string | null;
@@ -19,10 +17,10 @@ export interface ResidentGuard {
   keepJobCodes: readonly string[];
 }
 
-// Lap voi agent/pii.ts (khong global-flag — chi dung .test(), tranh bug
-// lastIndex cua regex global).
-const PHONE_RE = /(?<!\d)(?:\+?84|0)(?:[\s.\-()]*\d){8,10}(?!\d)/u;
-const APT_GENERIC_RE = /(?<![\p{L}\p{N}])[A-Za-z]{1,2}[\s.\-]?\d{3,4}(?![\p{L}\p{N}])/u;
+// Tao lai TU NGUON chuoi cua agent/pii.ts KHONG co co global (chi dung
+// .test(), tranh bug lastIndex cua regex global khi tai su dung).
+const PHONE_RE = new RegExp(PHONE_RE_GLOBAL.source, PHONE_RE_GLOBAL.flags.replace('g', ''));
+const APT_GENERIC_RE = new RegExp(APT_GENERIC_RE_GLOBAL.source, APT_GENERIC_RE_GLOBAL.flags.replace('g', ''));
 
 function withJobCodesHidden(text: string, keepJobCodes: readonly string[]): string {
   let working = text.normalize('NFKC');
