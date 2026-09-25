@@ -91,28 +91,28 @@ const QC_DEMO_SECTIONS: KbSectionSeed[] = [
   },
 ];
 
-async function seedKbDocuments(): Promise<void> {
+async function seedKbDocuments(buildingId: string): Promise<void> {
   await tx(async (q) => {
     await q(
-      `insert into kb_documents (id, title, version, status, effective_from, effective_to)
-       values ($1,$2,$3,$4,$5,$6)
+      `insert into kb_documents (id, title, version, status, effective_from, effective_to, building_id)
+       values ($1,$2,$3,$4,$5,$6,$7)
        on conflict (id) do update set title = excluded.title, status = excluded.status,
-         effective_from = excluded.effective_from, effective_to = excluded.effective_to`,
-      ['QC-DEMO', 'MÔ PHỎNG — Quy chế phân định trách nhiệm sửa chữa', '1.0', 'approved', '2020-01-01', null]
+         effective_from = excluded.effective_from, effective_to = excluded.effective_to, building_id = excluded.building_id`,
+      ['QC-DEMO', 'MÔ PHỎNG — Quy chế phân định trách nhiệm sửa chữa', '1.0', 'approved', '2020-01-01', null, buildingId]
     );
     await q(
-      `insert into kb_documents (id, title, version, status, effective_from, effective_to)
-       values ($1,$2,$3,$4,$5,$6)
+      `insert into kb_documents (id, title, version, status, effective_from, effective_to, building_id)
+       values ($1,$2,$3,$4,$5,$6,$7)
        on conflict (id) do update set title = excluded.title, status = excluded.status,
-         effective_from = excluded.effective_from, effective_to = excluded.effective_to`,
-      ['QC-DEMO-DEP', 'MÔ PHỎNG — Quy định cũ đã thay thế (deprecated)', '0.1', 'deprecated', '2019-01-01', null]
+         effective_from = excluded.effective_from, effective_to = excluded.effective_to, building_id = excluded.building_id`,
+      ['QC-DEMO-DEP', 'MÔ PHỎNG — Quy định cũ đã thay thế (deprecated)', '0.1', 'deprecated', '2019-01-01', null, buildingId]
     );
     await q(
-      `insert into kb_documents (id, title, version, status, effective_from, effective_to)
-       values ($1,$2,$3,$4,$5,$6)
+      `insert into kb_documents (id, title, version, status, effective_from, effective_to, building_id)
+       values ($1,$2,$3,$4,$5,$6,$7)
        on conflict (id) do update set title = excluded.title, status = excluded.status,
-         effective_from = excluded.effective_from, effective_to = excluded.effective_to`,
-      ['QC-DEMO-EXP', 'MÔ PHỎNG — Quy định cũ đã hết hiệu lực', '0.1', 'approved', '2015-01-01', '2020-01-01']
+         effective_from = excluded.effective_from, effective_to = excluded.effective_to, building_id = excluded.building_id`,
+      ['QC-DEMO-EXP', 'MÔ PHỎNG — Quy định cũ đã hết hiệu lực', '0.1', 'approved', '2015-01-01', '2020-01-01', buildingId]
     );
 
     for (const s of QC_DEMO_SECTIONS) {
@@ -236,7 +236,7 @@ export async function runSeedSim(): Promise<RunSeedSimResult> {
   }
   const buildingId = buildings[0]!.id;
 
-  await seedKbDocuments();
+  await seedKbDocuments(buildingId);
   const residentsCount = await seedResidents(buildingId);
   await seedPriceBook(buildingId);
 

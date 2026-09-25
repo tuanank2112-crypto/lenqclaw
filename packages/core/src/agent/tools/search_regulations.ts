@@ -40,7 +40,7 @@ const definition: ToolDefinition = {
 export const searchRegulationsTool: AgentTool<SearchRegulationsInput, { results: RegulationResultItem[] }> = {
   definition,
   async run(ctx: ToolContext, input) {
-    const hits = await searchRegulations(input.query);
+    const hits = await searchRegulations(input.query, ctx.buildingId);
     await audit(sql, {
       actorType: 'agent',
       actorId: ctx.residentId,
