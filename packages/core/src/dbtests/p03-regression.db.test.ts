@@ -558,7 +558,10 @@ describe('P11 (N6) tin hien tai chi xuat hien DUNG MOT LAN trong messages luot d
     await resetOpen(uid);
     const s = scripted([msg([txt('x')], 'end_turn')]);
     setModelClientForTest(s.client);
-    const text = `Den nha tam nhap nhay ${randomUUID().slice(0, 6)}`;
+    // Dung hau to CHU CAI (khong so) de tranh vo tinh khop mau ma can
+    // (chu+so) cua chinh redactPii khi hex ngau nhien co so dung canh chu.
+    const suffix = randomUUID().replace(/[0-9]/g, 'x').slice(0, 8);
+    const text = `Den nha tam nhap nhay dac biet ${suffix}`;
     await send(uid, th('p11'), text);
     const n = s.calls[0]!.messages.filter((m) => typeof m.content === 'string' && m.content === text).length;
     expect(n).toBe(1);
@@ -683,5 +686,47 @@ describe('P16 (§11.10) lop hieu y — loi/JSON hong/qua han => null, chi con lo
     await send(uid, th('p16c'), 'sdt em 0901234567 can A-0107 dang hong dieu hoa');
     expect(captured.length).toBeGreaterThan(0);
     expect(captured[0]).not.toContain('0901234567');
+  });
+});
+
+// ---------------------------------------------------------------- (17) G10 — loi model khac ModelUnavailableError
+describe('P17 (G10) loi callModel KHAC ModelUnavailableError van bao "dang ban" NHUNG phai ghi audit rieng', () => {
+  it('P17 loi la Error thuong (khong phai ModelUnavailableError) => audit agent.model_error + BUSY_REPLY (khong nuot im)', async () => {
+    const uid = 'sim-res-1';
+    await resetOpen(uid);
+    const t = th('p17');
+    setModelClientForTest({
+      messages: {
+        async create() {
+          throw new Error('loi la khong lien quan ModelUnavailableError');
+        },
+      },
+    });
+    const before = (await sql<{ c: number }>(`select count(*)::int c from audit_log where action='agent.model_error'`))[0]!.c;
+    await send(uid, t, 'May lanh nha em bi hong nang');
+    const after = (await sql<{ c: number }>(`select count(*)::int c from audit_log where action='agent.model_error'`))[0]!.c;
+    const out = await outboxTexts(t);
+    log(`P17 audit_moi=${after - before} outbox=${JSON.stringify(out)}`);
+    expect(after - before).toBeGreaterThan(0);
+    expect(out.length).toBeGreaterThan(0);
+  });
+});
+
+// ---------------------------------------------------------------- (18) G6 — loi trang thai la loi CO KIEU
+describe('P18 (G6) loi sai trang thai trong tool la loi CO KIEU (khong phai Error thuong)', () => {
+  it('P18 push_bql_ticket khi job chua co verdict => tool_result is_error voi code ConflictError', async () => {
+    const uid = 'sim-res-2';
+    await resetOpen(uid);
+    const s = scripted([
+      msg([tu('p1', 'save_job_draft', draft({ category_code: 'khoa_cua' }))]),
+      msg([tu('p2', 'push_bql_ticket', { summary: 'chua co verdict' })]),
+      msg([txt('x')], 'end_turn'),
+    ]);
+    setModelClientForTest(s.client);
+    await send(uid, th('p18'), 'Khoa cua hong');
+    const tr = JSON.stringify(s.calls[2]!.messages.at(-1));
+    log(`P18 tool_result=${tr}`);
+    expect(tr.includes('"is_error":true')).toBe(true);
+    expect(tr.includes('ConflictError')).toBe(true);
   });
 });
