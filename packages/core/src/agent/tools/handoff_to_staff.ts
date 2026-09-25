@@ -10,7 +10,15 @@ export interface HandoffToStaffInput {
   reason: string;
 }
 
-const HUMAN_TAKEOVER_MINUTES = 30;
+const HUMAN_TAKEOVER_MIN_DEFAULT = 60;
+
+/** SPEC-P03 §11.6 (N3): so phut nguoi that tiep quan (env `HUMAN_TAKEOVER_MIN`,
+ * mac dinh 60). Xuat rieng de test don vi (khong can DB). */
+export function humanTakeoverMinutes(): number {
+  const raw = process.env.HUMAN_TAKEOVER_MIN?.trim();
+  const n = raw ? Number(raw) : NaN;
+  return Number.isFinite(n) && n > 0 ? n : HUMAN_TAKEOVER_MIN_DEFAULT;
+}
 
 const definition: ToolDefinition = {
   name: 'handoff_to_staff',
@@ -31,7 +39,7 @@ export const handoffToStaffTool: AgentTool<HandoffToStaffInput, { ok: true }> = 
   async run(ctx, input) {
     await sql(
       `update conversations set human_takeover_until = now() + ($1 || ' minutes')::interval where id = $2`,
-      [String(HUMAN_TAKEOVER_MINUTES), ctx.conversationId]
+      [String(humanTakeoverMinutes()), ctx.conversationId]
     );
     await audit(sql, {
       actorType: 'agent',
