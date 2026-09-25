@@ -1,0 +1,25 @@
+=== Khoi that Vyce AI (01-CONTRACTS §2d, H11 muc e) — 2026-09-25 ===
+Lenh: npx tsx --env-file=.env <script tam trong scratchpad, KHONG commit>
+DATA_MODE=sim, MODEL_PROVIDER=vyce, max_tokens=16000 (co dinh theo hop dong, khong doi).
+2 lan goi mang that (callModel route=diagnose voi 1 tool don gian, callTriageModel 1 cau) — con 1/3 lan chua dung.
+
+=== callModel (route=diagnose) ===
+stop_reason: tool_use
+tool_names: ["ping_tool"]
+usage: {"input_tokens":85,"output_tokens":5,"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"cache_creation":null,"server_tool_use":null,"service_tier":null}
+model: deepseek-v4-flash
+latency_ms: 1395
+
+=== callTriageModel ===
+stop_reason: end_turn
+usage: {"input_tokens":69,"output_tokens":291,"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"cache_creation":null,"server_tool_use":null,"service_tier":null}
+model: deepseek-v4-flash
+latency_ms: 3512 (TRIAGE_TIMEOUT_MS=4000)
+trong nguong TRIAGE_TIMEOUT_MS: true (con du 488 ms — sat nguong, xem Cau hoi mo o report)
+
+Nhan xet: ca hai lan goi thanh cong (200), model tra ve dung "deepseek-v4-flash"
+nhu SO probe da ghi. tool_use dich dung (ten tool, stop_reason). Latency route
+diagnose ~1,4 s (khop tam voi probe SO "~2,2 s"). Latency route triage 3,512 ms
+GAN SAT nguong TRIAGE_TIMEOUT_MS=4000 ms — trong luong that (Promise.race o
+tang triageMessage, ngoai pham vi H11) co the timeout that thuong xuyen hon
+gemini/openrouter, can luu y khi bat 'vyce' cho triage that.

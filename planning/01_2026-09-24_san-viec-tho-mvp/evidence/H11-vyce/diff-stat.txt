@@ -1,0 +1,8 @@
+ .env.example                        |  23 ++-
+ packages/core/src/adapters/model.ts | 299 ++++++++++++++++++++++++------------
+ scripts/check_adapter_boundary.mjs  |   9 ++
+ scripts/eval/score.mjs              |   8 +-
+ 4 files changed, 226 insertions(+), 113 deletions(-)
+
+model.vyce.test.ts la file MOI (chua track):
+242 packages/core/src/adapters/model.vyce.test.ts
