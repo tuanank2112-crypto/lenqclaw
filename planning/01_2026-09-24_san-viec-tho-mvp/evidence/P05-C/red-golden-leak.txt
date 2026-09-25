@@ -1,0 +1,77 @@
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mD:/lenqclaw/packages/core[39m
+
+ [31m❯[39m src/agent/prompts/vendor-golden-leak.test.ts [2m([22m[2m2 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[90m 14[2mms[22m[39m
+[31m   [31m×[31m Chong lot dap an golden vao prompt tho (H13 §7)[2m > [22mKHONG co chuoi nao trong prompt trung (sau chuan hoa) voi text cua bat ky ca golden nao[90m 12[2mms[22m[31m[39m
+[31m     → Prompt chua nguyen van cau golden (dap an lot vao prompt):
+vendor-triage.ts: "cho em cuoc nay" == V04 ("cho em cuoc nay")
+vendor-triage.ts: "ok" == V28 ("ok")
+vendor-triage.ts: "ok" == V28 ("ok")
+vendor-triage.ts: "dong y" == V32 ("dong y")
+vendor-triage.ts: "350k" == V39 ("350k")
+vendor-triage.ts: "em bao gia 400 nghin" == V43 ("em bao gia 400 nghin")
+vendor-triage.ts: "1tr2" == V41 ("1tr2")
+vendor-triage.ts: "thoi em ban" == V51 ("thoi em ban")
+vendor-triage.ts: "huy giup em" == V52 ("huy giup em")
+vendor-triage.ts: "giu slot dien nuoc giup em" == V62 ("giu slot dien nuoc giup em")
+vendor-triage.ts: "em muon dang ky nhom khoa" == V63 ("em muon dang ky nhom khoa")
+vendor-triage.ts: "slot cua em con bao lau" == V64 ("slot cua em con bao lau")
+vendor-triage.ts: "350k" == V39 ("350k")
+vendor-triage.ts: "thoi em ban" == V51 ("thoi em ban"): expected [ …(14) ] to deeply equal [][39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 1 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/agent/prompts/vendor-golden-leak.test.ts[2m > [22mChong lot dap an golden vao prompt tho (H13 §7)[2m > [22mKHONG co chuoi nao trong prompt trung (sau chuan hoa) voi text cua bat ky ca golden nao
+[31m[1mAssertionError[22m: Prompt chua nguyen van cau golden (dap an lot vao prompt):
+vendor-triage.ts: "cho em cuoc nay" == V04 ("cho em cuoc nay")
+vendor-triage.ts: "ok" == V28 ("ok")
+vendor-triage.ts: "ok" == V28 ("ok")
+vendor-triage.ts: "dong y" == V32 ("dong y")
+vendor-triage.ts: "350k" == V39 ("350k")
+vendor-triage.ts: "em bao gia 400 nghin" == V43 ("em bao gia 400 nghin")
+vendor-triage.ts: "1tr2" == V41 ("1tr2")
+vendor-triage.ts: "thoi em ban" == V51 ("thoi em ban")
+vendor-triage.ts: "huy giup em" == V52 ("huy giup em")
+vendor-triage.ts: "giu slot dien nuoc giup em" == V62 ("giu slot dien nuoc giup em")
+vendor-triage.ts: "em muon dang ky nhom khoa" == V63 ("em muon dang ky nhom khoa")
+vendor-triage.ts: "slot cua em con bao lau" == V64 ("slot cua em con bao lau")
+vendor-triage.ts: "350k" == V39 ("350k")
+vendor-triage.ts: "thoi em ban" == V51 ("thoi em ban"): expected [ …(14) ] to deeply equal [][39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- Array [][39m
+[31m+ Array [[39m
+[31m+   "vendor-triage.ts: \"cho em cuoc nay\" == V04 (\"cho em cuoc nay\")",[39m
+[31m+   "vendor-triage.ts: \"ok\" == V28 (\"ok\")",[39m
+[31m+   "vendor-triage.ts: \"ok\" == V28 (\"ok\")",[39m
+[31m+   "vendor-triage.ts: \"dong y\" == V32 (\"dong y\")",[39m
+[31m+   "vendor-triage.ts: \"350k\" == V39 (\"350k\")",[39m
+[31m+   "vendor-triage.ts: \"em bao gia 400 nghin\" == V43 (\"em bao gia 400 nghin\")",[39m
+[31m+   "vendor-triage.ts: \"1tr2\" == V41 (\"1tr2\")",[39m
+[31m+   "vendor-triage.ts: \"thoi em ban\" == V51 (\"thoi em ban\")",[39m
+[31m+   "vendor-triage.ts: \"huy giup em\" == V52 (\"huy giup em\")",[39m
+[31m+   "vendor-triage.ts: \"giu slot dien nuoc giup em\" == V62 (\"giu slot dien nuoc giup em\")",[39m
+[31m+   "vendor-triage.ts: \"em muon dang ky nhom khoa\" == V63 (\"em muon dang ky nhom khoa\")",[39m
+[31m+   "vendor-triage.ts: \"slot cua em con bao lau\" == V64 (\"slot cua em con bao lau\")",[39m
+[31m+   "vendor-triage.ts: \"350k\" == V39 (\"350k\")",[39m
+[31m+   "vendor-triage.ts: \"thoi em ban\" == V51 (\"thoi em ban\")",[39m
+[31m+ ][39m
+
+[36m [2m❯[22m src/agent/prompts/vendor-golden-leak.test.ts:[2m91:102[22m[39m
+    [90m 89| [39m    }
+    [90m 90| [39m
+    [90m 91| [39m    [34mexpect[39m(leaks[33m,[39m [32m`Prompt chua nguyen van cau golden (dap an lot vao p[39m…
+    [90m   | [39m                                                                                                     [31m^[39m
+    [90m 92| [39m  })[33m;[39m
+    [90m 93| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (2)[39m
+[2m   Start at [22m 04:52:07
+[2m   Duration [22m 515ms[2m (transform 42ms, setup 0ms, collect 53ms, tests 14ms, environment 0ms, prepare 156ms)[22m
+
+EXIT:1
