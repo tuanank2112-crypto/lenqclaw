@@ -112,6 +112,10 @@ Người dùng: "sử dụng key gemini" — máy không có credential Anthropi
 **Hệ quả:** golden `diagnosis`/`responsibility` chạy được bằng model thật khi có key trong `.env`; embedding Gemini (`gemini-embedding-001`) mở đường truy hồi lai — vẫn để Idea Vault (Đ17 b), chưa làm.
 **Lật được:** có — `MODEL_PROVIDER=anthropic` + key, đo lại golden. **Chi phí lật:** thấp (chỉ env).
 
+### Đ19 — 2026-09-25 · Chốt câu hỏi mở R03 (Super Orchestrator, 🔴)
+(1) SPEC-P03 §10.8 chỉ áp nhánh `anthropic`; Gemini theo 01-CONTRACTS §2b. (2) Không làm fallback phía server của Anthropic (SDK 0.68 không có `fallbacks`), dùng chung `MODEL_FALLBACKS` phía client; `max_tokens` 16000 cả hai nhánh. (3) `jobs.window_start/end` để NULL ở P03, chốt quy ước trong SPEC-P05 trước khi thi công P05. (4) G09/G10 chỉ đánh ✅ khi chấm qua vòng agent thật trên DB sim; máy chấm một lượt hiện có chỉ là khói cho adapter. Thi công: H04 (adapter Gemini) ∥ H05 (thẩm định P03).
+**Lật được:** (2) khi SDK có `fallbacks` — chi phí thấp; (4) không nên lật — số một lượt không đo đúng agent.
+
 ### Quyết định bị thay thế
 | Mốc cũ | Phát biểu cũ | Thay bằng | Lý do |
 | :-- | :-- | :-- | :-- |
@@ -124,6 +128,8 @@ Người dùng: "sử dụng key gemini" — máy không có credential Anthropi
 | Đ13 (phần phí) | Phí, slot, sổ phí ra khỏi phạm vi build | Đ14 | Người dùng: vẫn phải thu phí thợ vào nhóm, có miễn phí thời gian đầu; chỉ FOMO/marketing và P00/G0 là ngoài phạm vi |
 | SPEC-P01 §6 "Xử lý" | `processInbound` gọi handler trong transaction khoá dòng | Đ17 (a) | Trả lời trùng khi handler lỗi; giữ khoá suốt lượt LLM |
 | 00-ARCH §1 | "P01 không có SPEC riêng" | Đ16 | Quyết định P01 cần chỗ ghi có hợp đồng |
+| SPEC-P03 §10.8 | Fallback phía server `fallbacks: 'default'` | Đ19 (2) | SDK đã cài không có trường; dùng `MODEL_FALLBACKS` phía client |
+| SPEC-P03 §10.6 | Golden một lượt `callModel` đủ để chấm G09/G10 | Đ19 (4) | Không đo vòng tool thật của agent |
 | Đ06 (LLM) | LLM mặc định Claude `claude-opus-5` | Đ18 | Chỉ có key Gemini; Claude giữ làm lựa chọn qua env |
 | Đ11 (thứ tự) | `P01 → P04 → P02` | Đ13 | Agent trước: `P01 → P03 → P05 → P06`, P04 tối thiểu song song, Zalo sau |
 | Đề xuất Đ12 bản nháp (chat) | Hai hạng: thành viên trả tiền được ưu tiên 10 phút, nhóm mở cho thợ thường | Đ12 | Ai cũng mua thì ưu tiên mất nghĩa — người dùng bác |
@@ -161,8 +167,10 @@ Thứ tự bắt buộc (Đ13, Đ15): `P01 (nền tảng + SimTransport) → P03
 - [x] Viết [SPEC-P01](specs/SPEC-P01-Foundation.md) (Đ16)
 - [x] P01 — nền tảng + SimTransport (G01–G03 ✅ local; phần P01 của G16 = `runScenario(echo.jsonl)`) — `2cfbbe2`, R01 ✅ 2026-09-24 23:39:41 (vòng 2 sau thẩm định R02)
 - [ ] P03 — Agent cư dân bước 0–3 (G08–G10) — thi công xong `e3d2079` (R03 ⏳), SO đo lại 2026-09-25 xanh: typecheck/build/`npm test` 54/`test:db` 23 (DB rỗng)/gate = 0; **chờ thẩm định** (tạm dừng theo lệnh người)
-- [ ] H04 — adapter Gemini theo 01-CONTRACTS §2b (Đ18) + `MODEL_FALLBACKS` + chạy golden thật (key đã ở `.env`)
-- [ ] Chốt câu hỏi mở R03: (1) SPEC-P03 §10.8 còn ghi `claude-opus-5` ⇒ đồng bộ theo Đ18; (2) SDK `@anthropic-ai/sdk@0.68.0` không có `fallbacks` ⇒ nhánh anthropic dùng `MODEL_FALLBACKS` phía client; (3) quy ước `jobs.window_start/end` từ khung giờ gợi ý — trước P05; (4) `eval_golden` chấm một lượt đơn, chưa chạy vòng tool của agent thật — xét lại khi thẩm định
+- [ ] H04 — adapter Gemini theo 01-CONTRACTS §2b (Đ18, Đ19) + `MODEL_FALLBACKS` + khói golden bằng model thật (key đã ở `.env`)
+- [ ] H05 — thẩm định đối kháng P03 (dải `4955b5a..e3d2079`) ⇒ phán R03
+- [ ] Viết lại máy chấm G09/G10 qua vòng agent thật (Đ19-4) — sau H05
+- [x] Chốt câu hỏi mở R03 (Đ19, 2026-09-25): (1) SPEC-P03 §10.8 còn ghi `claude-opus-5` ⇒ đồng bộ theo Đ18; (2) SDK `@anthropic-ai/sdk@0.68.0` không có `fallbacks` ⇒ nhánh anthropic dùng `MODEL_FALLBACKS` phía client; (3) quy ước `jobs.window_start/end` từ khung giờ gợi ý — trước P05; (4) `eval_golden` chấm một lượt đơn, chưa chạy vòng tool của agent thật — xét lại khi thẩm định
 - [ ] P04 — Dashboard tối thiểu (G07)
 - [ ] P05 — Agent bước 4–7 (G11, G12, G12b)
 - [ ] P06 — Bước 8 (G13, G16 trọn bước 0→8 trên kênh giả lập)

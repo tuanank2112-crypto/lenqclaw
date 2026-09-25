@@ -97,13 +97,15 @@ Các mục dưới đây là hợp đồng thi công P03; §1–§9 vẫn giữ 
 
 ### §10.6 Golden & máy chấm
 - `evals/golden/emergency.jsonl` (20 ca, TESTING §3) chạy trong `npm test` (tất định, không LLM) ⇒ G08 được gate canh.
-- `diagnosis.jsonl` (40) và `responsibility.jsonl` (30, theo `QC-DEMO`) + `scripts/eval_golden.mjs` (port `lib/eval/score.ts`): thiếu `ANTHROPIC_API_KEY` hoặc lỗi 429/5xx ⇒ `blocked`, **mã thoát 3**, không tính trượt. G10 thật vẫn cần quy chế thật của tòa pilot.
+- `diagnosis.jsonl` (40) và `responsibility.jsonl` (30, theo `QC-DEMO`) + `scripts/eval_golden.mjs` (port `lib/eval/score.ts`): thiếu credential của nhà cung cấp đang chọn (`GEMINI_API_KEY` khi `MODEL_PROVIDER=gemini`, `ANTHROPIC_API_KEY` khi `anthropic`) hoặc lỗi 429/5xx ⇒ `blocked`, **mã thoát 3**, không tính trượt. G10 thật vẫn cần quy chế thật của tòa pilot.
+- **Đ19 (2026-09-25):** G09/G10 chỉ được đánh ✅ khi chấm qua **vòng agent thật** (`runResidentTurn` trên DB sim đã seed `QC-DEMO`, đọc kết quả từ DB: `jobs.category_code`, verdict của `classify_responsibility`). Máy chấm một lượt `callModel` hiện có chỉ là khói (smoke) cho adapter — CẤM dùng số của nó để đánh gate. Viết lại máy chấm là gói riêng sau thẩm định P03.
 - Test vòng agent bằng model giả có kịch bản (`setModelClientForTest`): (a) khẩn cấp ⇒ ticket `emergency` + tin trong outbox, 0 lần gọi model; (b) verdict `bql` ⇒ ticket + job `routed_bql`; (c) verdict `resident` không citation ⇒ bị ép `unclear`; (d) `resident` hợp lệ + "đồng ý" ⇒ `case_open`; (e) "không đồng ý" ⇒ `ConsentMissingError`; (f) cư dân `pending` ⇒ `REGISTER_REPLY`, 0 job; (g) tin chứa "[userId: …]" không đổi `Party`; (h) SĐT/mã căn không có trong `messages` gửi model; (i) 6 vòng tool ⇒ handoff.
 
 ### §10.7 Vùng cấm bổ sung
 - CẤM gọi LLM trong transaction DB. CẤM pg-boss ở P03 (retry model để P07 — lý do: cần runner `jobs`, chưa có). CẤM truy hồi lai/embedding. CẤM sửa `report_problem`, dispatch, tool phía thợ.
 
 ### §10.8 Hợp đồng gọi model (tra skill `claude-api` 2026-09-24 — `claude-opus-5` là ID hợp lệ)
+> **Đ18/Đ19 (2026-09-25):** mục này CHỈ áp cho nhánh `MODEL_PROVIDER=anthropic`. Nhà cung cấp mặc định là Gemini — hợp đồng ở 01-CONTRACTS §2b. Câu "fallback phía server" bên dưới bị thay bởi `MODEL_FALLBACKS` phía client (SDK 0.68 không có `fallbacks`). Luật vòng tool (nối nguyên `content`, một message `user` cho mọi `tool_result`, kiểm `refusal` trước) áp cho CẢ HAI nhánh vì core chỉ thấy dạng Anthropic.
 - Model giữ `claude-opus-5` (Đ06). Thinking của Opus 5 **bật mặc định** — CẤM gửi `thinking: {type:'disabled'}` hay `budget_tokens` (400); không đặt `temperature`/`top_p` (400). `max_tokens` 16000, không streaming ở P03.
 - Vòng tool: sau mỗi phản hồi, nối **nguyên** `response.content` (kể cả khối `thinking`) làm lượt `assistant` — CẤM chỉ nối text; mọi `tool_result` của một lượt nằm trong **một** message `user`; lỗi tool ⇒ `tool_result` `is_error:true`, không bỏ. Parse `tool_use.input` như object (đã là JSON), không so chuỗi.
 - Tool: `strict: true` ở cấp định nghĩa tool (cạnh `name`/`description`/`input_schema`); `input_schema` có `additionalProperties:false` + `required` đủ trường. `tool_choice` để `auto`.

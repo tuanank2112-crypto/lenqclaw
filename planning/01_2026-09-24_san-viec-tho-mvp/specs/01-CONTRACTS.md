@@ -280,6 +280,8 @@ Worker và core nói chuyện qua Postgres (bảng `inbound_events`, `outbox`, `
 | Chữ ký suy nghĩ | Gemini 3 trả `thoughtSignature` cùng `functionCall` và BẮT BUỘC nhận lại ở lượt sau trong cùng vòng tool (thiếu ⇒ 400). Adapter giữ bảng `tool_use.id → thoughtSignature` trong bộ nhớ tiến trình và gắn lại khi dịch `tool_use` vào. Lịch sử nạp từ DB chỉ có text ⇒ không cần chữ ký |
 | Kiểm input tool | Gemini không có `strict` ⇒ trước khi `run`, mỗi tool kiểm `input` theo `input_schema` (trường `required`, kiểu, enum, không khoá lạ); sai ⇒ `tool_result is_error` mã `InvalidToolInput`, không chạy tool |
 | Lỗi | 429/500/503/504, lỗi mạng, timeout ⇒ `ModelUnavailableError` (retry tối đa 2 lần, lùi 1 s rồi 3 s); 400/401/403/404 ⇒ ném lỗi gốc (lỗi cấu hình, không retry) |
-| Nhánh `anthropic` | Giữ nguyên hành vi hiện có + SPEC-P03 §10.8 (fallback `default`, refusal) |
+| Nhánh `anthropic` | Giữ hành vi hiện có + SPEC-P03 §10.8 (refusal, thinking, vòng tool). Fallback phía server KHÔNG làm (SDK `@anthropic-ai/sdk@0.68.0` không có `fallbacks` — Đ19); dùng chung cơ chế `MODEL_FALLBACKS` phía client, mặc định RỖNG khi provider `anthropic`. CẤM nâng SDK chỉ để lấy `fallbacks` |
+| Giới hạn ra | `max_tokens` = 16000 cho cả hai nhánh (Gemini: `generationConfig.maxOutputTokens`). CẤM đặt `temperature`/`top_p`/`thinkingConfig` — để mặc định của model |
+| Thử nghiệm | `setModelClientForTest` giữ nguyên cho nhánh anthropic; nhánh gemini có `setGeminiFetchForTest(fake: typeof fetch \| null)` — test dịch vào/ra, `thoughtSignature`, fallback, lỗi đều chạy bằng fetch giả, 0 mạng trong `npm test` |
 
 CẤM: SDK/endpoint Gemini ngoài `adapters/model.ts` (máy đo biên canh chuỗi `generativelanguage.googleapis.com` và `@google/genai`); log key hay URL có key; để core rẽ nhánh theo nhà cung cấp.
