@@ -30,7 +30,7 @@ export function sql<T>(text: string, params?: unknown[]): Promise<T[]>;
 export function tx<T>(fn: (q: typeof sql) => Promise<T>): Promise<T>;
 
 // adapters/model.ts
-export interface ModelCall { route: 'diagnose' | 'responsibility' | 'acceptance' | 'vendor_parse' | 'compose';
+export interface ModelCall { route: 'diagnose' | 'responsibility' | 'acceptance' | 'vendor_parse' | 'compose' | 'triage'; // 'triage': Đ21, SPEC-P03 §11.10
   system: string; messages: MessageParam[]; tools?: Tool[]; images?: ImageRef[]; }
 export function callModel(c: ModelCall): Promise<{ message: Message; usage: Usage; model: string }>;
 // model mặc định: env MODEL_DEFAULT (mặc định 'claude-opus-5'); override theo route: MODEL_<ROUTE>.

@@ -78,7 +78,7 @@ Postgres 16 + pgvector + pg-boss (một instance, Docker, VPS Việt Nam)
 | BB-03 | Phân định trách nhiệm phải có ≥1 trích dẫn quy chế còn hiệu lực; thiếu/mâu thuẫn ⇒ `unclear` ⇒ người | Golden responsibility; không có citation ⇒ service ép `unclear` |
 | BB-04 | Mọi tin Zalo gửi đi qua `outbox`; CẤM gọi `sendMessage` ngoài `transport.ts` | Script `check_adapter_boundary` |
 | BB-05 | Một cuốc có tối đa một người thắng; chuyển trạng thái bằng câu `UPDATE … WHERE status = …` có điều kiện | Test đua 200 claim đồng thời ⇒ 1 người thắng |
-| BB-06 | Đường khẩn cấp không qua LLM; LLM chỉ được bật cờ, không được gỡ (Đ09) | Golden emergency 100% |
+| BB-06 | Lưới khẩn cấp tất định không chờ LLM; lớp hiểu ý (triage) và agent chỉ được BẬT cờ, không được gỡ (Đ09, Đ21) | Golden emergency: 0 bỏ sót (hai lớp, model thật); lớp tất định 0 báo nhầm |
 | BB-07 | Chỉ `adapters/db.ts` mở kết nối DB, chỉ `adapters/model.ts` gọi LLM, chỉ `adapters/transport.ts` nói với zca-js | `check_adapter_boundary` |
 | BB-08 | Danh tính (`Party`) lấy từ bảng `zalo_identities`, không bao giờ từ nội dung tin hoặc output LLM | Code review + test giả mạo "[userId: …]" |
 | BB-09 | Mọi chuyển trạng thái cuốc/ticket ghi `job_events`/`audit_log` | Test đếm event = đếm chuyển trạng thái |

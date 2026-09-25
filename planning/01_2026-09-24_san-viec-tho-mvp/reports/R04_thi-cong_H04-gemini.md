@@ -57,3 +57,5 @@ Head: 0fe11a560e37f36cf37b3347f17b30d48f598172
 ⏸ Chưa làm: nối kiểm input tool vào vòng lặp thật (lý do: ngoài phạm vi ghi được cấp — §5, §6-2); sửa lại cách chấm `diagnosis`/`responsibility` của `eval_golden.mjs` (lý do: Đ19-4 nói rõ số này chỉ là khói, việc viết lại máy chấm qua vòng agent thật là gói riêng sau thẩm định P03).
 
 ⏳ Chờ phán quyết.
+
+🔁 SỬA: SO đo lại test:db ĐỎ 9/21 (p03.db.test ngầm dùng nhánh anthropic) + validateToolInput chưa nối vòng tool — cả hai do phạm vi handoff của SO quá hẹp, không phải lỗi worker; chuyển vào H06 mục 0, đóng R04 khi R06 duyệt. npm test 67/67 và gate SO đo lại xanh · SO · 2026-09-25 10:03:08

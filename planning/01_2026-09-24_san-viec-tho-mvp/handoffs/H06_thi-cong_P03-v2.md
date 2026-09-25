@@ -1,20 +1,21 @@
 1. Bạn là worker của repo này. Vai + luật hành xử: đọc `.agents/skills/vai-thi-cong/SKILL.md`. Loại handoff: THI CÔNG.
 2. Bước 0: `node ../brain4agent.release/.agents/skills/.xay-dung-nao-bo/scripts/init_brain.js --check` (từ root repo). `CẦN NÂNG CẤP` ⇒ chạy lại KHÔNG cờ đúng một lần → `--check` phải 0. Mã 2 ⇒ dừng, báo.
-3. Đọc theo thứ tự: `planning/01_2026-09-24_san-viec-tho-mvp/plan.md` §2 (Đ17–Đ20) → `specs/00-ARCHITECTURE.md` §6 → `specs/01-CONTRACTS.md` §2b, §4–§7, §9 → `specs/SPEC-P03-Resident-Agent.md` toàn bộ (**§11 là hợp đồng vòng này**, thắng §1–§10 chỗ mâu thuẫn) → `reports/R05_tham-dinh_P03.md` §7 (mã lệch C/N/G) → `evidence/P03-audit/attack-source.txt` → `docs/core.md`. Không đọc gì khác trước khi ghi dòng "hiểu việc".
+3. Đọc theo thứ tự: `planning/01_2026-09-24_san-viec-tho-mvp/plan.md` §2 (Đ17–Đ21) → `specs/00-ARCHITECTURE.md` §6 → `specs/01-CONTRACTS.md` §2b, §4–§7, §9 → `specs/SPEC-P03-Resident-Agent.md` toàn bộ (**§11 là hợp đồng vòng này**, thắng §1–§10 chỗ mâu thuẫn) → `reports/R05_tham-dinh_P03.md` §7 (mã lệch C/N/G) → `reports/R04_thi-cong_H04-gemini.md` §6 → `evidence/P03-audit/attack-source.txt` → `docs/core.md`. Không đọc gì khác trước khi ghi dòng "hiểu việc".
 
 ## 1. BỐI CẢNH TỰ CHỨA
-Repo `D:\lenqclaw`, nhánh `main`. P03 (agent cư dân: 8 tool, vòng tool, khẩn cấp, che PII, seed sim, golden) đã thi công ở `e3d2079`. Thẩm định đối kháng R05 tìm 7 lệch mức chặn và 14 lệch nên sửa; SO đã đo lại và phán R03 `🔁`. Hợp đồng vá: SPEC-P03 §11. Adapter Gemini (H04) đã vào `main` trước bạn: `tool-kit.ts` đã kiểm input theo schema (N4), `max_tokens` 16000 (N1) — KHÔNG làm lại, chỉ đừng phá.
+Repo `D:\lenqclaw`, nhánh `main`. P03 (agent cư dân: 8 tool, vòng tool, khẩn cấp, che PII, seed sim, golden) đã thi công ở `e3d2079`. Thẩm định đối kháng R05 tìm 7 lệch mức chặn và 14 lệch nên sửa; SO đã đo lại và phán R03 `🔁`. Hợp đồng vá: SPEC-P03 §11. Adapter Gemini (H04) đã vào `main` trước bạn: `validateToolInput` có trong `tool-kit.ts` nhưng CHƯA nối vào vòng tool; `max_tokens` 16000 (N1). Hậu quả H04 đo được: `main` hiện `test:db` ĐỎ 9/21 (`p03.db.test.ts` ngầm dùng nhánh anthropic, mặc định nay là gemini). Đ21 thêm lớp hiểu ý `triageMessage` (SPEC-P03 §11.10) — thay lưới từ khoá làm đường chính.
 Base: tự đo `git rev-parse HEAD` trước dòng sửa đầu tiên. Postgres dev đang chạy (`127.0.0.1:55432`, user/pass `lenqclaw`); tạo database riêng `lq_p03v2`, CẤM đụng database khác, drop khi xong. `.env` ở root có key Gemini — KHÔNG cần cho vòng này (mọi test dùng model giả); CẤM in/ghi key. Số đo nền: tự đo `npm test` và `npm run test:db` trên Base, ghi vào report.
 
 ## 2. PHẠM VI
-ĐƯỢC GHI: `packages/core/**`, `apps/web/**` (chỉ khi §11 buộc — vd `BUSY_REPLY`/takeover qua `/dev/sim`), `db/migrations/003_*.sql` (mới, chỉ thêm), `evals/golden/emergency.jsonl`, `package.json` (chỉ script `db:seed:sim`/`test:db` theo §11.7 C7), `scripts/` file MỚI nếu C7 cần (vd chạy lệnh kèm env đa nền tảng), `planning/01_2026-09-24_san-viec-tho-mvp/{reports/R06_thi-cong_P03-v2.md, evidence/P03-v2/**}`.
-CẤM ĐỤNG: `db/migrations/001_*.sql`, `002_*.sql`, `specs/**`, `plan.md`, `brain4agent/**`, `docs/**`, `AGENTS.md`, `CLAUDE.md`, `.agents/**`, `.claude/**`, `.env`, `scripts/check_*.mjs`, `scripts/gate.mjs`, `scripts/eval_golden.mjs`, `evals/golden/{diagnosis,responsibility}.jsonl`, nhánh dịch Gemini/Anthropic trong `adapters/model.ts`. VÙNG CẤM + LÝ DO: SPEC-P03 §7, §10.7, §11.9.
+ĐƯỢC GHI: `packages/core/**`, `apps/web/**` (chỉ khi §11 buộc — vd `BUSY_REPLY`/takeover qua `/dev/sim`), `db/migrations/003_*.sql` (mới, chỉ thêm), `evals/golden/emergency.jsonl`, `evals/golden/consent.jsonl` (mới), `package.json` (chỉ script `db:seed:sim`/`test:db` theo §11.7 C7), `scripts/` file MỚI nếu C7 cần (vd chạy lệnh kèm env đa nền tảng), `planning/01_2026-09-24_san-viec-tho-mvp/{reports/R06_thi-cong_P03-v2.md, evidence/P03-v2/**}`.
+CẤM ĐỤNG: `db/migrations/001_*.sql`, `002_*.sql`, `specs/**`, `plan.md`, `brain4agent/**`, `docs/**`, `AGENTS.md`, `CLAUDE.md`, `.agents/**`, `.claude/**`, `.env`, `scripts/check_*.mjs`, `scripts/gate.mjs`, `scripts/eval_golden.mjs`, `evals/golden/{diagnosis,responsibility}.jsonl`, nhánh dịch Gemini/Anthropic trong `adapters/model.ts` (chỉ được thêm route `triage` + model mặc định theo §11.10). VÙNG CẤM + LÝ DO: SPEC-P03 §7, §10.7, §11.9.
 
 ## 3. VIỆC PHẢI LÀM (xong khi: <lệnh> → <kết quả>)
-a. §11.1 + §11.2 khẩn cấp (C5, C4, G1) + mở rộng `emergency.jsonl`. Xong khi: test golden emergency trong `npm test` ⇒ 0 bỏ sót, ≤1 báo nhầm; test mới: 0/70 ca `diagnosis`+`responsibility` golden bị `detectEmergency` bắt.
+0. TRƯỚC mọi việc: `test:db` xanh lại trên Base — test DB tự đặt nhà cung cấp tường minh, không phụ thuộc mặc định; nối `validateToolInput` vào vòng tool (sai ⇒ `tool_result is_error` mã `InvalidToolInput`, tool không chạy). Xong khi: `test:db` exit 0 + test mới "input sai schema ⇒ tool không chạy".
+a. §11.1 + §11.2 + §11.10 khẩn cấp hai lớp + `triage.ts` (C5, C4, G1) + mở rộng `emergency.jsonl` (≥100 ca) + soạn `evals/golden/consent.jsonl` (≥40 ca). Xong khi: lớp 1 trong `npm test` ⇒ 0 báo nhầm trên ca gần-giống + 0/70 ca `diagnosis`/`responsibility`, in số độ phủ; các test §11.10 (model giả) xanh. Chấm hai lớp bằng model thật KHÔNG thuộc gói này (gói máy chấm sau).
 b. §11.3 che PII (C6, G8). Xong khi: test chạy 20 biến thể ca 1 của R05 qua `runResidentTurn` với model giả ghi request ⇒ 0 chuỗi thô.
 c. §11.4 citation + migration 003 (C1, N12). Xong khi: DB rỗng `npm run db:migrate` ⇒ `applied: 3`; ca 2g/2h/2i của R05 ⇒ `unclear`, quote lưu = đoạn body.
-d. §11.5 đồng ý (C2, C3). Xong khi: 8 câu ca 3 của R05 + đồng ý cùng lượt + đổi verdict ⇒ 0 case mở; "đồng ý", "ok ạ", "đồng ý, 9h sáng mai nhé" ở lượt sau ⇒ `case_open`.
+d. §11.5 đồng ý (C2, C3) gồm nhánh ý định `consent` của triage. Xong khi (model giả; triage giả trả `decline`/`defer`/`question` cho câu phủ định/hoãn): 8 câu ca 3 của R05 + đồng ý cùng lượt + đổi verdict ⇒ 0 case mở; "đồng ý", "ok ạ", "đồng ý, 9h sáng mai nhé" ở lượt sau ⇒ `case_open`.
 e. §11.6 (N2, N3, N6, N7, N8, N11, G9) và §11.7 (C7, N5, N9, N10, N14, G6, G7, G10).
 f. Chuyển MỌI ca ĐỎ trong `attack-source.txt` thành test hồi quy trong repo (tên test ghi mã ca R05), trừ ca thuộc §11.9 (liệt kê ở report kèm lý do).
 Xong khi (toàn gói): `npm ci`, `npm run typecheck`, `npm run build` (KHÔNG `DATABASE_URL`), `npm test`, `DATABASE_URL=…/lq_p03v2 npm run test:db` (DB rỗng), `npm run gate` đều exit 0; 0 skip; số test mỗi lệnh > số đo nền; `DATA_MODE=production npm run db:seed:sim` ⇒ exit 1; `test:db` đảo thứ tự file 3 lượt ⇒ exit 0 cả 3 (ghi lệnh đảo trong report).
@@ -26,8 +27,8 @@ Không `git add -A`/`.` — stage tường minh rồi `git commit -m … -- <đ�
 ## 5. BẢNG GÓI VIỆC → TẦNG
 | Gói | Tầng | Vì sao |
 | :-- | :-- | :-- |
-| a, b, c, d, e | 🟠 | luật chốt ở §11 kèm ca đỏ cụ thể; test tự biết đúng/sai |
-| f | 🟢 | chép ca có sẵn thành test |
+| 0, a, b, c, d, e | 🟠 | luật chốt ở §11 kèm ca đỏ cụ thể; test tự biết đúng/sai |
+| f, soạn ca golden | 🟢 | chép ca có sẵn thành test; soạn câu theo mẫu §11.1/§11.5 |
 Gặp quyết định chưa có trong §11 ⇒ dừng phần đó, ghi Câu hỏi mở.
 
 ## 6. REPORT PHẢI CÓ

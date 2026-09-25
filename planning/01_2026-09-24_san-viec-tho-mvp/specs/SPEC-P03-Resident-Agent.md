@@ -116,14 +116,17 @@ Các mục dưới đây là hợp đồng thi công P03; §1–§9 vẫn giữ 
 
 Mục này THAY các câu tương ứng ở §1, §10.2, §10.3, §10.5; chỗ nào §11 không nói thì §1–§10 giữ nguyên. Mã lệch = mã trong [R05](../reports/R05_tham-dinh_P03.md) §7. Bộ phá thử của thẩm định (`evidence/P03-audit/attack-source.txt`) là **hồi quy bắt buộc**: mọi ca ĐỎ ở R05 phải thành test, trừ ca ghi rõ ở vùng cấm §11.9.
 
-### §11.1 Khẩn cấp tất định (C5, G1) — thay danh sách §1
-- `detectEmergency(text)` so khớp **theo ranh giới từ** (dãy token nguyên, không so chuỗi con) trên HAI bản của tin:
-  - (A) bản thường hoá GIỮ dấu (NFC, chữ thường): `cháy`, `bốc cháy`, `hỏa hoạn`, `hoả hoạn`, `khói`, `bốc khói`, `kẹt thang`, `kẹt trong thang`, `mắc kẹt`, `ngập`, `rò gas`, `rò rỉ gas`, `xì gas`, `mùi gas`, `điện giật`, `giật điện`, `chập điện`, `tia lửa điện`, `cháy nổ`, `phát nổ`, `nước tràn hành lang`.
-  - (B) bản BỎ dấu — CHỈ các cụm không nhập nhằng khi mất dấu: `boc chay`, `dam chay`, `chay no`, `chay lon`, `nha chay`, `nha bi chay`, `hoa hoan`, `boc khoi`, `co khoi`, `khoi den`, `ket thang`, `ket trong thang`, `mac ket`, `ro gas`, `ro ri gas`, `xi gas`, `mui gas`, `dien giat`, `giat dien`, `chap dien`, `phat no`, `nuoc tran hanh lang`. CẤM từ đơn `chay`, `khoi`, `ngap` ở bản (B) — lý do: `chay` = cháy/chảy/chạy/chay, `khoi` = khói/khỏi.
-- Tiền xử lý chung: gộp dãy chữ cái đơn cách nhau bởi `.`, `-`, `_`, khoảng trắng thành một từ (`c.h.á.y`, `c h a y` ⇒ `cháy`/`chay`).
-- Tin khớp ⇒ ticket `kind='emergency'` + `EMERGENCY_REPLY`, **0 lần gọi model trong lượt đó** (G1 chốt: §10.6(a) thắng; câu "agent vẫn chạy sau đó" ở §1 nghĩa là lượt KẾ TIẾP chạy agent bình thường). `EMERGENCY_REPLY` thêm câu cuối: "Nếu không phải khẩn cấp, anh/chị nhắn lại mô tả để em hỗ trợ sửa chữa."
+### §11.1 Khẩn cấp — hai lớp: lưới tất định + lớp hiểu ý (C5, G1; Đ21 thay bản Đ20)
+Lý do đổi (người dùng 2026-09-25): bắt từ khoá không thể phủ hết cách người Việt nói (không dấu, teencode, vùng miền, nói gián tiếp "thấy mùi khét ngoài hành lang"). Hiểu ý giao cho model; code giữ lưới an toàn và luật. Đ09/BB-06 giữ nguyên: lưới tất định không chờ model, model chỉ được BẬT cờ.
+- **Lớp 1 — lưới tất định, ưu tiên CHÍNH XÁC** (`detectEmergency`, không gọi model, chạy trước mọi thứ): so theo ranh giới từ (dãy token nguyên, không so chuỗi con); tiền xử lý gộp dãy chữ cái đơn cách bởi `.`, `-`, `_`, khoảng trắng (`c.h.á.y` ⇒ `cháy`).
+  - (A) bản GIỮ dấu (NFC, chữ thường): `cháy`, `bốc cháy`, `hỏa hoạn`, `hoả hoạn`, `bốc khói`, `khói đen`, `kẹt thang`, `kẹt trong thang`, `mắc kẹt`, `rò gas`, `rò rỉ gas`, `xì gas`, `mùi gas`, `điện giật`, `giật điện`, `chập điện`, `tia lửa điện`, `cháy nổ`, `phát nổ`, `nước tràn hành lang`.
+  - (B) bản BỎ dấu, chỉ cụm không nhập nhằng: `boc chay`, `dam chay`, `chay no`, `nha chay`, `nha bi chay`, `hoa hoan`, `boc khoi`, `khoi den`, `ket thang`, `ket trong thang`, `mac ket`, `ro gas`, `ro ri gas`, `xi gas`, `mui gas`, `dien giat`, `giat dien`, `chap dien`, `phat no`, `nuoc tran hanh lang`. CẤM từ đơn bỏ dấu (`chay`, `khoi`, `ngap`).
+  - Ngưỡng (trong `npm test`, không model): 0 báo nhầm trên bộ gần-giống + 0/70 ca golden `diagnosis`/`responsibility`. Độ phủ của lớp 1 chỉ ghi số, không chặn cổng — phủ là việc của lớp 2.
+- **Lớp 2 — hiểu ý bằng model** (`triageMessage`, §11.10): mọi tin cư dân không trúng lớp 1 ⇒ gọi phân loại ý định. `emergency ≠ null` và `emergency_confidence ≥ TRIAGE_EMERGENCY_MIN` (env, mặc định `0.5` — nghiêng về bắt thừa) ⇒ đường khẩn cấp. Lỗi/quá hạn ⇒ chỉ còn lớp 1 + lớp 3, ghi `audit_log action='triage.unavailable'`.
+- **Lớp 3 — agent chính** bật `urgency='emergency'` (§11.2).
+- Đường khẩn cấp (chung ba lớp): ticket `kind='emergency'` + `EMERGENCY_REPLY` (bỏ jitter, vẫn qua outbox), **0 lần gọi model agent chính trong lượt đó** (G1: §10.6(a) thắng; lượt KẾ TIẾP chạy agent bình thường). `EMERGENCY_REPLY` thêm câu cuối: "Nếu không phải khẩn cấp, anh/chị nhắn lại mô tả để em hỗ trợ sửa chữa." ⇒ báo nhầm chỉ tốn cư dân một tin, bỏ sót mới là rủi ro — vì vậy lớp 2 nghiêng về bắt thừa.
 - Chống lặp: cư dân đã có ticket `emergency` còn mở tạo < 30 phút ⇒ KHÔNG tạo ticket mới, KHÔNG gửi lại `EMERGENCY_REPLY`, chạy agent bình thường.
-- Golden `emergency.jsonl` mở rộng: thêm mọi câu khẩn cấp/gần giống ở bộ phá R05 (ca 5a–5c) + ≥5 câu rò rỉ/chảy nước thường ngày. Ngưỡng giữ: 0 bỏ sót, ≤1 báo nhầm; 0 ca `diagnosis`/`responsibility` golden bị bắt nhầm. Không đạt bằng danh sách trên ⇒ Câu hỏi mở, CẤM tự thêm/bớt từ.
+- Golden: `emergency.jsonl` mở rộng ≥100 ca (≥50 khẩn cấp: có dấu/không dấu/teencode/vùng miền/gián tiếp; ≥50 gần giống: rò rỉ, chảy nước, "chạy máy", "khỏi bệnh", khói thuốc hàng xóm…), gồm mọi câu của bộ phá R05 ca 5. Chấm **hai lớp gộp bằng model thật**: 0 bỏ sót, báo nhầm ≤ 5%. Lớp 1 chấm riêng trong `npm test` theo ngưỡng chính xác ở trên.
 
 ### §11.2 Khẩn cấp phía model (C4)
 - `save_job_draft` với `urgency='emergency'` ⇒ trong tool chạy đúng đường §11.1 (ticket + `EMERGENCY_REPLY` qua outbox, cùng luật chống lặp). Cờ đơn điệu: job đã `emergency` thì input `normal` bị bỏ qua, output tool báo `urgency_locked: true`. Đây là lưới thứ hai cho biến thể §11.1 không bắt được.
@@ -143,7 +146,7 @@ Mục này THAY các câu tương ứng ở §1, §10.2, §10.3, §10.5; chỗ n
 ### §11.5 Đồng ý của cư dân (C2, C3) — thay luật `CONSENT` §10.3
 - `classify_responsibility` chỉ chạy khi job `drafting`; trạng thái khác ⇒ lỗi có kiểu `VerdictLockedError` (thêm vào `domain/errors.ts` + bảng §9: caller báo cư dân "đã kết luận, cần BQL xem lại").
 - `open_service_case` cần ĐỦ: job `awaiting_consent`; `jobs.responsibility.party = 'resident'`; tin đồng ý là tin `in` có `created_at` SAU `job_events.created_at` của chuyển `drafting→awaiting_consent` (tức ở lượt sau lượt hỏi).
-- Tin đồng ý (bỏ dấu, chữ thường, bỏ dấu câu cuối, bỏ tiểu từ `a|nhe|nha|luon|di|em|anh|chi|minh`): hoặc BẰNG một trong `dong y`, `toi dong y`, `em dong y`, `ok`, `oke`, `okay`, `duoc`, `chot`, `tim tho`, `tim tho giup`, `dat lich`, `co`; hoặc BẮT ĐẦU bằng một cụm đó rồi `,`/`.` và phần sau không chứa token `khong|ko|k|hong|hok|chua|dung|thoi|huy|suy nghi|hoi` — và cả tin không có `?`. Còn lại ⇒ `ConsentMissingError`. Prompt dặn agent: "trả lời ĐỒNG Ý để em tìm thợ".
+- Tin đồng ý (bỏ dấu, chữ thường, bỏ dấu câu cuối, bỏ tiểu từ `a|nhe|nha|luon|di|em|anh|chi|minh`): hoặc BẰNG một trong `dong y`, `toi dong y`, `em dong y`, `ok`, `oke`, `okay`, `duoc`, `chot`, `tim tho`, `tim tho giup`, `dat lich`, `co`; hoặc BẮT ĐẦU bằng một cụm đó rồi `,`/`.` và phần sau không chứa token `khong|ko|k|hong|hok|chua|dung|thoi|huy|suy nghi|hoi` — và cả tin không có `?`. Còn lại ⇒ xét lớp hiểu ý: `triage.intent = 'consent'` với `intent_confidence ≥ 0.8` của CHÍNH tin đó (kết quả do server lưu, agent chính không truyền vào được) ⇒ chấp nhận; `decline`/`defer`/`question`, độ tin thấp, hoặc triage lỗi ⇒ `ConsentMissingError` (Đ21). Prompt dặn agent khi hỏi lại: "anh/chị trả lời ĐỒNG Ý để em tìm thợ". Golden `consent.jsonl` ≥40 ca (phủ định, hoãn, hỏi lại, đồng ý kiểu miền/không dấu): 0 đồng ý sai, ≥ 90% đồng ý thật được nhận — chấm bằng model thật.
 
 ### §11.6 Hội thoại, im lặng khi người tiếp quản, trả lời luôn có (N2, N3, N6, N7, N8, N11, G9)
 - N11: `conversations.party_id` đã có và ≠ `Party` giải từ người gửi (BB-08) ⇒ không nạp lịch sử, `audit_log action='conversation.party_mismatch'`, `BUSY_REPLY`, không gọi model.
@@ -164,7 +167,16 @@ Mục này THAY các câu tương ứng ở §1, §10.2, §10.3, §10.5; chỗ n
 Cổng TESTING §1 xanh; `npm test` và `test:db` không giảm số test, 0 skip; bộ phá R05 chạy lại ⇒ mọi ca ĐỎ thành XANH (trừ §11.9); golden emergency mới đạt ngưỡng §11.1.
 
 ### §11.9 Vùng cấm vòng 2
-- CẤM phát hiện khẩn cấp bằng LLM hoặc so khớp mờ (BB-06 tất định; lưới thứ hai là §11.2).
+- CẤM để model GỠ cờ khẩn cấp hay để lớp 1 chờ kết quả model (BB-06). CẤM so khớp mờ ở lớp 1 (mờ là việc của lớp 2).
+- CẤM gửi tin chưa che PII vào triage; CẤM agent chính đọc/ghi kết quả triage qua tool.
 - CẤM che số viết bằng chữ ("không chín không…") — hiếm, chi phí cao, dễ che nhầm; ghi nhận là giới hạn.
 - CẤM viết lại máy chấm golden ở vòng này (Đ19-4 là gói riêng).
 - CẤM đổi định dạng mã cuốc `C-XXXX` (01-CONTRACTS §4).
+
+### §11.10 Lớp hiểu ý — `packages/core/src/agent/triage.ts` (Đ21)
+- `triageMessage(text: string, recent: string[]): Promise<TriageResult | null>` — `text` và tối đa 3 tin gần nhất ĐÃ che PII (§11.3). Gọi `callModel({route:'triage', …})` không tool; model trả JSON thuần; parse + kiểm schema lỗi ⇒ `null`.
+- `TriageResult = { emergency: 'fire'|'smoke'|'gas'|'electric'|'flood'|'elevator'|'other'|null; emergency_confidence: number; intent: 'describe_problem'|'consent'|'decline'|'defer'|'question'|'other'; intent_confidence: number }` (số trong `[0,1]`).
+- Model: route `triage` ⇒ env `MODEL_TRIAGE`, mặc định `gemini-3.5-flash-lite` (provider gemini) / `claude-haiku-4-5` (anthropic); KHÔNG rơi về `MODEL_DEFAULT`. Quá hạn `TRIAGE_TIMEOUT_MS` (mặc định 4000) ⇒ `null`; không retry, không `MODEL_FALLBACKS` (độ trễ quan trọng hơn).
+- Server lưu kết quả vào `messages.content.triage` của tin vào (và `agent_runs` route `triage`); `open_service_case` đọc từ đó. Prompt: `agent/prompts/triage.ts` — tiếng Việt, định nghĩa từng nhãn kèm ví dụ gần-giống, dặn "nghi ngờ khẩn cấp thì chọn khẩn cấp".
+- Chi phí: một lời gọi model rẻ mỗi tin cư dân; `agent_runs` tách route để đo.
+- Test (model giả, `npm test`/`test:db`): triage `null`/quá hạn ⇒ chỉ lớp 1; triage khẩn cấp ⇒ đường khẩn cấp, agent chính 0 lần gọi; triage `consent` nhưng cùng lượt hỏi ⇒ từ chối; JSON hỏng ⇒ `null`; request triage không chứa PII thô.
