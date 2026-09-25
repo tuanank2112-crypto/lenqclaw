@@ -62,6 +62,10 @@ describe('detectEmergency — lop 1 tat dinh (SPEC-P03 §11.1)', () => {
     expect(falsePositives.length).toBe(0);
   });
 
+  it.each(nearMiss)('$case_id gan giong KHONG duoc bao nham: $text', (c) => {
+    expect(detectEmergency(c.text)).toBeNull();
+  });
+
   it('0/70 ca golden diagnosis.jsonl+responsibility.jsonl bi lop 1 bat nham khan cap', () => {
     const diag = loadJsonl<{ case_id: string; text: string }>('diagnosis.jsonl');
     const resp = loadJsonl<{ case_id: string; symptom_query: string }>('responsibility.jsonl');
