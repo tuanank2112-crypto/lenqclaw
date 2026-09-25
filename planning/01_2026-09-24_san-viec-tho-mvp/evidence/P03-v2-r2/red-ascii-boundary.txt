@@ -1,0 +1,143 @@
+
+> @lenqclaw/core@0.0.1 test
+> vitest run --exclude "**/*.db.test.ts" src/agent/pii.test.ts
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mD:/lenqclaw/packages/core[39m
+
+[90mstdout[2m | src/agent/pii.test.ts[2m > [22m[2mdetectEmergency — lop 1 tat dinh (SPEC-P03 §11.1)[2m > [22m[2mdo phu lop 1 tren bo khan cap (chi ghi so, KHONG chan cong)
+[22m[39mlop 1 phu 30/50 ca khan cap (con lai giao lop 2).
+
+ [31m❯[39m src/agent/pii.test.ts [2m([22m[2m142 tests[22m[2m | [22m[31m35 failed[39m[2m)[22m[90m 138[2mms[22m[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'bốc cháy'" giua cau co dau hai phia: "'bếp bốc cháy nghi ngút'" => phai bat duoc[90m 5[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'bốc cháy'" giua cau co dau hai phia: "'nhà em bốc cháy rồi'" => phai bat duoc[90m 1[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'nhà cháy'" giua cau co dau hai phia: "'nhà em nhà cháy rồi'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'nhà bị cháy'" giua cau co dau hai phia: "'bếp nhà bị cháy nghi ngút'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'nhà bị cháy'" giua cau co dau hai phia: "'nhà em nhà bị cháy rồi'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'hỏa hoạn'" giua cau co dau hai phia: "'bếp hỏa hoạn nghi ngút'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'hỏa hoạn'" giua cau co dau hai phia: "'nhà em hỏa hoạn rồi'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'hoả hoạn'" giua cau co dau hai phia: "'nhà em hoả hoạn rồi'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'bốc khói'" giua cau co dau hai phia: "'bếp bốc khói nghi ngút'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'bốc khói'" giua cau co dau hai phia: "'nhà em bốc khói rồi'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'khói đen'" giua cau co dau hai phia: "'bếp khói đen nghi ngút'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'khói đen'" giua cau co dau hai phia: "'nhà em khói đen rồi'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'kẹt thang'" giua cau co dau hai phia: "'bếp kẹt thang nghi ngút'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'kẹt trong thang'" giua cau co dau hai phia: "'bếp kẹt trong thang nghi ngút'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'mắc kẹt'" giua cau co dau hai phia: "'bếp mắc kẹt nghi ngút'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'mắc kẹt'" giua cau co dau hai phia: "'nhà em mắc kẹt rồi'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'rò gas'" giua cau co dau hai phia: "'bếp rò gas nghi ngút'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'rò rỉ gas'" giua cau co dau hai phia: "'bếp rò rỉ gas nghi ngút'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'rò rỉ gas'" giua cau co dau hai phia: "'nhà em rò rỉ gas rồi'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'xì gas'" giua cau co dau hai phia: "'bếp xì gas nghi ngút'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'mùi gas'" giua cau co dau hai phia: "'bếp mùi gas nghi ngút'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'điện giật'" giua cau co dau hai phia: "'bếp điện giật nghi ngút'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'điện giật'" giua cau co dau hai phia: "'nhà em điện giật rồi'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'giật điện'" giua cau co dau hai phia: "'bếp giật điện nghi ngút'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'giật điện'" giua cau co dau hai phia: "'nhà em giật điện rồi'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'chập điện'" giua cau co dau hai phia: "'bếp chập điện nghi ngút'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'chập điện'" giua cau co dau hai phia: "'nhà em chập điện rồi'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'tia lửa điện'" giua cau co dau hai phia: "'bếp tia lửa điện nghi ngút'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'tia lửa điện'" giua cau co dau hai phia: "'nhà em tia lửa điện rồi'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'cháy nổ'" giua cau co dau hai phia: "'bếp cháy nổ nghi ngút'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'cháy nổ'" giua cau co dau hai phia: "'nhà em cháy nổ rồi'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'phát nổ'" giua cau co dau hai phia: "'bếp phát nổ nghi ngút'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'phát nổ'" giua cau co dau hai phia: "'nhà em phát nổ rồi'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'nước tràn hành lang'" giua cau co dau hai phia: "'bếp nước tràn hành lang nghi ngút'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'nước tràn hành lang'" giua cau co dau hai phia: "'nhà em nước tràn hành lang rồi'" => phai bat duoc[90m 0[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+
+[31m⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 35 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'bốc cháy'" giua cau co dau hai phia: "'bếp bốc cháy nghi ngút'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'bốc cháy'" giua cau co dau hai phia: "'nhà em bốc cháy rồi'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'nhà cháy'" giua cau co dau hai phia: "'nhà em nhà cháy rồi'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'nhà bị cháy'" giua cau co dau hai phia: "'bếp nhà bị cháy nghi ngút'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'nhà bị cháy'" giua cau co dau hai phia: "'nhà em nhà bị cháy rồi'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'hỏa hoạn'" giua cau co dau hai phia: "'bếp hỏa hoạn nghi ngút'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'hỏa hoạn'" giua cau co dau hai phia: "'nhà em hỏa hoạn rồi'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'hoả hoạn'" giua cau co dau hai phia: "'nhà em hoả hoạn rồi'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'bốc khói'" giua cau co dau hai phia: "'bếp bốc khói nghi ngút'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'bốc khói'" giua cau co dau hai phia: "'nhà em bốc khói rồi'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'khói đen'" giua cau co dau hai phia: "'bếp khói đen nghi ngút'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'khói đen'" giua cau co dau hai phia: "'nhà em khói đen rồi'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'kẹt thang'" giua cau co dau hai phia: "'bếp kẹt thang nghi ngút'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'kẹt trong thang'" giua cau co dau hai phia: "'bếp kẹt trong thang nghi ngút'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'mắc kẹt'" giua cau co dau hai phia: "'bếp mắc kẹt nghi ngút'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'mắc kẹt'" giua cau co dau hai phia: "'nhà em mắc kẹt rồi'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'rò gas'" giua cau co dau hai phia: "'bếp rò gas nghi ngút'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'rò rỉ gas'" giua cau co dau hai phia: "'bếp rò rỉ gas nghi ngút'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'rò rỉ gas'" giua cau co dau hai phia: "'nhà em rò rỉ gas rồi'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'xì gas'" giua cau co dau hai phia: "'bếp xì gas nghi ngút'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'mùi gas'" giua cau co dau hai phia: "'bếp mùi gas nghi ngút'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'điện giật'" giua cau co dau hai phia: "'bếp điện giật nghi ngút'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'điện giật'" giua cau co dau hai phia: "'nhà em điện giật rồi'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'giật điện'" giua cau co dau hai phia: "'bếp giật điện nghi ngút'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'giật điện'" giua cau co dau hai phia: "'nhà em giật điện rồi'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'chập điện'" giua cau co dau hai phia: "'bếp chập điện nghi ngút'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'chập điện'" giua cau co dau hai phia: "'nhà em chập điện rồi'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'tia lửa điện'" giua cau co dau hai phia: "'bếp tia lửa điện nghi ngút'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'tia lửa điện'" giua cau co dau hai phia: "'nhà em tia lửa điện rồi'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'cháy nổ'" giua cau co dau hai phia: "'bếp cháy nổ nghi ngút'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'cháy nổ'" giua cau co dau hai phia: "'nhà em cháy nổ rồi'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'phát nổ'" giua cau co dau hai phia: "'bếp phát nổ nghi ngút'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'phát nổ'" giua cau co dau hai phia: "'nhà em phát nổ rồi'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'nước tràn hành lang'" giua cau co dau hai phia: "'bếp nước tràn hành lang nghi ngút'" => phai bat duoc
+[31m[1m[7m FAIL [27m[22m[39m src/agent/pii.test.ts[2m > [22mdetectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\b)[2m > [22mcum "'nước tràn hành lang'" giua cau co dau hai phia: "'nhà em nước tràn hành lang rồi'" => phai bat duoc
+[31m[1mAssertionError[22m: expected null not to be null[39m
+[36m [2m❯[22m src/agent/pii.test.ts:[2m106:39[22m[39m
+    [90m104| [39m
+    [90m105| [39m  it[33m.[39m[34meach[39m(cases)([32m'cum "$term" giua cau co dau hai phia: "$text" => pha[39m…
+    [90m106| [39m    [34mexpect[39m([34mdetectEmergency[39m(text))[33m.[39mnot[33m.[39m[34mtoBeNull[39m()[33m;[39m
+    [90m   | [39m                                      [31m^[39m
+    [90m107| [39m  })[33m;[39m
+    [90m108| [39m})[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/35]⎯[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m35 failed[39m[22m[2m | [22m[1m[32m107 passed[39m[22m[90m (142)[39m
+[2m   Start at [22m 11:07:01
+[2m   Duration [22m 621ms[2m (transform 42ms, setup 0ms, collect 67ms, tests 138ms, environment 0ms, prepare 95ms)[22m
+
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path D:\lenqclaw\packages\core
+npm error workspace @lenqclaw/core@0.0.1
+npm error location D:\lenqclaw\packages\core
+npm error command failed
+npm error command C:\WINDOWS\system32\cmd.exe /d /s /c vitest run --exclude "**/*.db.test.ts" src/agent/pii.test.ts
+EXIT:1

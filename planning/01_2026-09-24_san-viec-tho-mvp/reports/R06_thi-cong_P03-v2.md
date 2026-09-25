@@ -117,4 +117,80 @@ Tự thẩm định nội bộ (không phải thẩm định nghiệm thu): ch�
 
 ⏳ Chờ người duyệt.
 
-🔁 SỬA: (1) CHẶN — collapseSpacedLetters dùng  chỉ-ASCII: SO đo "bếp bốc khói nghi ngút", "thang máy kẹt, có người mắc kẹt", "ngửi thấy mùi gas" ⇒ detectEmergency null (lưới có dấu tê liệt), sửa theo SPEC-P03 §11.1 bản mới + test mọi cụm giữa câu có dấu; (2) N10 đột biến m5–m7, test N7/N8/G7 còn thiếu (R06 §6); (3) session.test.ts chập chờn. Q1 SO chấp nhận (§11.1 A cập nhật), Q2/Q4 SO đã sửa 01-CONTRACTS, Q3 sang gói máy chấm. SO đo lại: npm test 103/103, test:db 70/70 DB rỗng, applied 3, seed guard 1, gate 0 · SO · 2026-09-25 11:03:51
+🔁 SỬA: (1) CHẶN — collapseSpacedLetters dùng `b` chỉ-ASCII: SO đo "bếp bốc khói nghi ngút", "thang máy kẹt, có người mắc kẹt", "ngửi thấy mùi gas" ⇒ detectEmergency null (lưới có dấu tê liệt), sửa theo SPEC-P03 §11.1 bản mới + test mọi cụm giữa câu có dấu; (2) N10 đột biến m5–m7, test N7/N8/G7 còn thiếu (R06 §6); (3) session.test.ts chập chờn. Q1 SO chấp nhận (§11.1 A cập nhật), Q2/Q4 SO đã sửa 01-CONTRACTS, Q3 sang gói máy chấm. SO đo lại: npm test 103/103, test:db 70/70 DB rỗng, applied 3, seed guard 1, gate 0 · SO · 2026-09-25 11:03:51
+
+## Vòng 2 — 2026-09-25 11:16 (+07:00)
+
+Vai: worker (vai-thi-cong) · loại: thi công · họ/model: Claude Sonnet 5 · phạm vi vòng 2: y nguyên H06 + `apps/web/lib/auth/session.test.ts` (cấp thêm theo phán quyết) · SPEC đã đọc lại: `specs/SPEC-P03-Resident-Agent.md` §11.1 (bản sửa, commit `8b88b68`) + `specs/01-CONTRACTS.md` §9 (3 lỗi mới).
+
+### 1. Mục CHẶN — `\b` không hiểu Unicode, lưới có dấu tê liệt
+
+**Căn nguyên (đo được, không chỉ suy luận):** `collapseSpacedLetters()` dùng `\b\p{L}(?:[.\-_ ]\p{L}){1,}\b`. JS `\b` chỉ dựa trên `\w` = `[A-Za-z0-9_]` (thuần ASCII) — với chữ có dấu, `\b` coi ký tự có dấu là "không phải từ" (non-word). Hệ quả: một ký tự ASCII đơn nằm SÁT (không qua khoảng trắng) một ký tự có dấu bị `\b` hiểu nhầm là ranh giới từ. Ví dụ "bốc" = b + ố + c: `\b` đặt ngay SAU "b" (vì "ố" là non-word với `\b`), nên "bếp bốc khói" bị đọc thành 2 "chữ cái đơn" `p` và `b` cách nhau bởi khoảng trắng ⇒ bị gộp thành "pb" ⇒ câu biến dạng thành "bếpbốc khói...", làm mất chính cụm khớp `bốc khói`.
+
+**Sửa (SPEC-P03 §11.1 bản mới, commit `8b88b68`):**
+- Đổi `\b` → ranh giới Unicode thật: `(?<![\p{L}\p{N}])` / `(?![\p{L}\p{N}])`.
+- Đổi ngưỡng gộp từ ≥2 lên **≥3** chữ cái đơn liên tiếp (đúng văn bản SPEC mới "gộp dãy ≥3 chữ cái đơn") — giảm rủi ro gộp nhầm 2 chữ ASCII thật sự đứng cạnh nhau.
+- Rà thêm 2 regex khác trong `pii.ts` còn dùng `\b` cạnh chữ có dấu: `APT_AFTER_KEYWORD_RE`, `APT_GENERIC_RE` — **đo bằng test thật** (không chỉ suy luận), cả hai không phát hiện lỗi tương đương nhưng đã đổi sang cùng ranh giới Unicode cho nhất quán (phòng hờ chuỗi vào có dạng "...ở căn 0105" không có khoảng trắng phân tách).
+
+**Test bắt buộc theo đúng yêu cầu (sinh từ vòng lặp trên chính 2 mảng export, không chép tay):** `pii.test.ts` — describe `"detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia"` lặp qua `EMERGENCY_TERMS_ACCENTED` (19 mục) + `EMERGENCY_TERMS_UNACCENTED` (19 mục) × 2 mẫu câu (`"bếp {cụm} nghi ngút"`, `"nhà em {cụm} rồi"`) = **78 ca**, mỗi ca `detectEmergency()` phải khác `null`.
+
+**Bằng chứng ĐỎ (bắt buộc):** chạy ĐÚNG bộ test mới này (trên `pii.ts` đã sửa) nhưng đổi tạm về `collapseSpacedLetters`/2 regex bản CŨ (`\b`, ngưỡng ≥2) — [red-ascii-boundary.txt](../evidence/P03-v2-r2/red-ascii-boundary.txt): **35/78 ca ĐỎ**, toàn bộ đều là các cụm GIỮ DẤU (danh sách A — đúng như SO mô tả "lưới có dấu tê liệt"; danh sách B bỏ dấu không dính lỗi này vì `normalizeVi` đã bỏ dấu trước, không còn ký tự "non-ASCII" để `\b` hiểu sai). Sau khi phục hồi bản sửa: `npm run test -w @lenqclaw/core -- src/agent/pii.test.ts` → **142/142 xanh** (bao gồm 78 ca mới + toàn bộ ca cũ, không giảm).
+
+Đối chiếu 3 câu SO đo trực tiếp trên `detectEmergency`: cả 3 đều khác `null` sau khi sửa (`"bếp bốc khói nghi ngút"` → `bốc khói`; `"thang máy kẹt, có người mắc kẹt"` → `mắc kẹt`; `"ngửi thấy mùi gas"` → `mùi gas`).
+
+### 2. Việc còn thiếu ở R06 §6 (N10, N7/N8, G7)
+
+- **N10** (đột biến m5–m7 của §10.8 phải "chết", thiết kế theo side-effect quan sát được — đúng theo gợi ý của SO): 3 test mới trong `p03-regression.db.test.ts`:
+  - `P19`: chèn một khối "lạ" (`type: 'thinking_stub'`, không phải `text`/`tool_use`) vào phản hồi lượt 1 cùng một `tool_use`; khẳng định khối lạ đó xuất hiện NGUYÊN VẸN trong message `assistant` của request lượt 2 (canh luật "nối nguyên `content`").
+  - `P20`: một phản hồi có 2 `tool_use`; khẳng định request lượt kế tiếp chỉ có ĐÚNG MỘT message `role=user` chứa CẢ HAI `tool_result` (canh luật "một message `user` cho mọi `tool_result`").
+  - `P21`: phản hồi `stop_reason='refusal'` kèm một `tool_use` trong `content`; khẳng định tool đó KHÔNG được chạy (0 dòng `audit_log` mới), KHÔNG có lượt gọi model tiếp theo, agent gọi `handoff_to_staff('model_refusal')` + trả `BUSY_REPLY` (canh luật "kiểm `refusal` TRƯỚC khi đọc `content`").
+- **N7** (`JobDraft` vào ngữ cảnh — nội dung, không chỉ gián tiếp): `P22` — lượt 2 gửi model phải chứa mã cuộc và triệu chứng đã lưu ở lượt 1 (đặt một chuỗi đánh dấu duy nhất vào `symptoms` để đối chiếu chắc chắn).
+- **N8** (category list trong system prompt — nội dung): `P23` — đọc `system` thật gửi lên (phải sửa `scripted()` test helper trong `p03-regression.db.test.ts`, trước đó KHÔNG lưu `system` vào `calls[]` nên không test được), đối chiếu với `job_categories` thật trong DB, không được thiếu mã nào trong mẫu lấy ra.
+- **G7** (biên UTC vs Asia/Ho_Chi_Minh): xuất `todayInVietnam()` khỏi `classify_responsibility.ts`, viết test THUẦN mới `classify_responsibility.test.ts` dùng `vi.useFakeTimers()` ghim đúng các mốc biên (20:00 UTC → VN đã sang ngày mới; 16:59 UTC → VN vẫn ngày cũ; giao thừa 23:59 UTC 31/12 → VN đã sang năm mới) — tất định, không phụ thuộc giờ chạy thật của máy CI (khác cách làm cũ trong `p03-regression.db.test.ts` từng có nhánh `if` tùy giờ chạy — đã bỏ, thay bằng `P24` chỉ còn xác nhận vòng agent thật không vỡ khi `effective_from` = hôm nay).
+
+### 3. `session.test.ts` chập chờn
+
+**Căn nguyên đo được:** chữ ký HMAC-SHA256 (32 byte) mã hoá base64url không đệm = 43 ký tự; 256 bit / 6 bit-mỗi-ký-tự = 42 dư 4, nên **ký tự CUỐI CÙNG chỉ mang 4 bit thật, 2 bit thấp là bit đệm** (luôn 0 lúc mã hoá, bị bỏ lúc giải mã). Test cũ đổi ký tự cuối giữa `'A'`(000000)/`'B'`(000001) — có xác suất chỉ đổi đúng 2 bit đệm đó, khiến `base64urlDecode` trả về Y NGUYÊN 32 byte chữ ký gốc và `crypto.subtle.verify` vẫn báo hợp lệ dù chuỗi cookie đã đổi.
+
+**Sửa:** đổi ký tự ĐẦU của phần chữ ký thay vì ký tự cuối — ký tự đầu luôn mã hoá 6 bit THẬT (bit 7..2 của byte đầu chữ ký), mọi thay đổi ký tự đều chắc chắn đổi giá trị byte giải mã.
+
+**Bằng chứng tất định:** [session-test-5x.txt](../evidence/P03-v2-r2/session-test-5x.txt) — `npm run test -w @lenqclaw/web` chạy 5 lần liên tiếp, cả 5 lần **17/17 xanh**, exit 0.
+
+### 4. Lệnh + exit code (nguyên văn, Head vòng 2)
+
+| Lệnh | Exit | Evidence |
+| :-- | :-- | :-- |
+| `npm run typecheck` | 0 | [typecheck](../evidence/P03-v2-r2/typecheck.txt) |
+| `npm run build` | 0 | [build](../evidence/P03-v2-r2/build.txt) |
+| `npm test` | 0 (**173/173**: web 17 + core 156) | [test](../evidence/P03-v2-r2/test.txt) |
+| `npm run db:migrate` (DB rỗng) → `applied: 3` | 0 | [migrate](../evidence/P03-v2-r2/migrate.txt) |
+| `DATABASE_URL=…/lq_p03v2 npm run test:db` (DB rỗng) | 0 (**76/76**: core 74 + web 2) | [test-db](../evidence/P03-v2-r2/test-db.txt) |
+| `npm run gate` | 0 (`GATE_OK`) | [gate](../evidence/P03-v2-r2/gate.txt) |
+| `DATA_MODE=production npm run db:seed:sim` | 1 | [red-seed-guard](../evidence/P03-v2-r2/red-seed-guard.txt) |
+| `test:db` đảo thứ tự file 3 lượt (DB rỗng mỗi lượt, seed 1/2/3) | 0, 0, 0 (74/74 cả 3) | [test-db-reversed](../evidence/P03-v2-r2/test-db-reversed.txt) |
+| `npm run test -w @lenqclaw/web` × 5 lần liên tiếp | 0 × 5 | [session-test-5x](../evidence/P03-v2-r2/session-test-5x.txt) |
+| `git diff --stat 8b88b68..65fe108` | — | [diff-stat](../evidence/P03-v2-r2/diff-stat.txt) |
+
+Số test tăng so với cả nền gốc (Base `f396bb5`: 67/21) lẫn vòng 1 (`ef48b48`: 103/70) — không giảm ở lệnh nào. 0 skip. Head vòng 2 (commit công việc, trước commit report): `65fe108`.
+
+### 5. `git diff --stat` + SHA
+
+[diff-stat](../evidence/P03-v2-r2/diff-stat.txt): 6 file, +251/−13.
+
+| SHA | Commit |
+| :-- | :-- |
+| `65fe108` | fix(core): Unicode-aware word boundaries in emergency/PII regex (R06 rework) |
+
+Phạm vi: `apps/web/lib/auth/session.test.ts` (cấp thêm), `packages/core/src/agent/pii.ts`, `packages/core/src/agent/pii.test.ts`, `packages/core/src/agent/tools/classify_responsibility.ts`, `packages/core/src/agent/tools/classify_responsibility.test.ts` (mới), `packages/core/src/dbtests/p03-regression.db.test.ts`. Không đụng file nào ngoài phạm vi được cấp (kể cả sau khi cấp thêm 1 file).
+
+### 6. Việc KHÔNG làm + lý do (còn lại sau vòng 2)
+
+- Vẫn không chấm golden 100 ca khẩn cấp (hai lớp gộp) / 44 ca đồng ý bằng model thật — không có `GEMINI_API_KEY`/`ANTHROPIC_API_KEY` thật trong môi trường này (như R06 vòng 1 §6).
+- Q3 (chữ ký `searchRegulations()`/`scripts/eval_golden.mjs`) theo phán quyết chuyển sang gói máy chấm riêng — không đụng `scripts/eval_golden.mjs` ở đây.
+- Không rà toàn bộ `apps/web/**` tìm thêm test flaky khác — chỉ sửa đúng `session.test.ts` được chỉ định; nếu còn test chập chờn khác trong `apps/web` thì đó là việc ngoài phạm vi được cấp của vòng này.
+
+### 7. Câu hỏi mở còn lại
+
+Không có câu hỏi mở mới. Q1/Q2/Q4 của vòng 1 đã được SO chốt (specs đã sửa); Q3 đã có hướng đi (gói máy chấm riêng).
+
+⏳ Chờ người duyệt.

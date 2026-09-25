@@ -1,0 +1,85 @@
+=== run 1 ===
+
+> @lenqclaw/web@0.0.1 test
+> vitest run --exclude "**/*.db.test.ts"
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mD:/lenqclaw/apps/web[39m
+
+ [32m✓[39m lib/auth/policy.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 4[2mms[22m[39m
+ [32m✓[39m lib/auth/session.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 15[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m17 passed[39m[22m[90m (17)[39m
+[2m   Start at [22m 11:13:57
+[2m   Duration [22m 553ms[2m (transform 52ms, setup 0ms, collect 125ms, tests 19ms, environment 0ms, prepare 229ms)[22m
+
+EXIT run 1: 0
+=== run 2 ===
+
+> @lenqclaw/web@0.0.1 test
+> vitest run --exclude "**/*.db.test.ts"
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mD:/lenqclaw/apps/web[39m
+
+ [32m✓[39m lib/auth/policy.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 5[2mms[22m[39m
+ [32m✓[39m lib/auth/session.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 12[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m17 passed[39m[22m[90m (17)[39m
+[2m   Start at [22m 11:13:58
+[2m   Duration [22m 465ms[2m (transform 77ms, setup 0ms, collect 179ms, tests 17ms, environment 0ms, prepare 229ms)[22m
+
+EXIT run 2: 0
+=== run 3 ===
+
+> @lenqclaw/web@0.0.1 test
+> vitest run --exclude "**/*.db.test.ts"
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mD:/lenqclaw/apps/web[39m
+
+ [32m✓[39m lib/auth/policy.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 4[2mms[22m[39m
+ [32m✓[39m lib/auth/session.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 13[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m17 passed[39m[22m[90m (17)[39m
+[2m   Start at [22m 11:14:00
+[2m   Duration [22m 530ms[2m (transform 95ms, setup 0ms, collect 171ms, tests 17ms, environment 0ms, prepare 318ms)[22m
+
+EXIT run 3: 0
+=== run 4 ===
+
+> @lenqclaw/web@0.0.1 test
+> vitest run --exclude "**/*.db.test.ts"
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mD:/lenqclaw/apps/web[39m
+
+ [32m✓[39m lib/auth/policy.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 4[2mms[22m[39m
+ [32m✓[39m lib/auth/session.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 11[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m17 passed[39m[22m[90m (17)[39m
+[2m   Start at [22m 11:14:01
+[2m   Duration [22m 441ms[2m (transform 56ms, setup 0ms, collect 107ms, tests 15ms, environment 2ms, prepare 224ms)[22m
+
+EXIT run 4: 0
+=== run 5 ===
+
+> @lenqclaw/web@0.0.1 test
+> vitest run --exclude "**/*.db.test.ts"
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mD:/lenqclaw/apps/web[39m
+
+ [32m✓[39m lib/auth/policy.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 4[2mms[22m[39m
+ [32m✓[39m lib/auth/session.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 14[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m17 passed[39m[22m[90m (17)[39m
+[2m   Start at [22m 11:14:03
+[2m   Duration [22m 494ms[2m (transform 70ms, setup 0ms, collect 121ms, tests 18ms, environment 0ms, prepare 243ms)[22m
+
+EXIT run 5: 0
