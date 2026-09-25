@@ -86,3 +86,11 @@ scripts/eval/score.mjs              |  14 +-
 🖐 Cần tay người: nạp thêm credit OpenRouter (hoặc key khác đủ hạn mức ≥16000 token/lượt) rồi cho chạy lại khói thật để lấy đường thành công (script tạm sẵn sàng) · 🤖 Agent làm được ngay: chạy lại khói thật ngay khi có key/credit đủ, không cần sửa code · ⭐ Nên làm trước: xác nhận credit key vì đây là gate còn thiếu duy nhất của gói (mọi test giả lập + đường lỗi 402 thật đã xanh) · ⏸ Chưa làm: đường thành công của khói thật (mục 3e phần "in ra stop_reason/tool name/usage" từ một lượt OK) — chưa làm được vì giới hạn credit môi trường thật, không phải lỗi code (xem mục 7).
 
 ⏳ Chờ người duyệt.
+
+## Duyệt — SO đo lại (2026-09-25 16:55)
+- Phạm vi `da8faac`: 5 file, đều trong mục 2 H10 ✅; `resident.ts` (của H08) không bị stage ✅.
+- DB rỗng `lq_so10`, cây `5b81b9c`: `typecheck` 0 · `build` (không `DATABASE_URL`) 0 · `npm test` 0 (184 + 37 + 24 = 245, 0 skip) · `test:db` 0 (84 + 11 + 27 = 122) · `gate` 0.
+- Bộ đo mới biết đỏ: đổi `data_collection` thành `'allow'` ⇒ 1/7 đỏ; cho 402 đi đường retry ⇒ 1/7 đỏ (đã khôi phục).
+- Q1/Q2: probe SO trước đó dùng `max_tokens: 200` nên lọt; `/api/v1/credits` ⇒ `total_credits: 0` — `limit: 250` của `/api/v1/key` là trần chi tiêu của key, KHÔNG phải số dư. 402 là đúng hợp đồng. Đường thành công qua mạng thật còn treo tới khi tài khoản có tín dụng (mục checklist riêng).
+
+✅ DUYỆT

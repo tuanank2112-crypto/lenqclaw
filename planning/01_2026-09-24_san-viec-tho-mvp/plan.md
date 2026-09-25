@@ -197,7 +197,8 @@ Thứ tự bắt buộc (Đ13, Đ15): `P01 (nền tảng + SimTransport) → P03
 - [x] P03 vòng 2 theo SPEC-P03 §11 (Đ20, Đ21 lớp hiểu ý) — H06 `f396bb5..65fe108` (2 vòng), R06 ✅, R03 ✅ — 2026-09-25; `npm test` 173, `test:db` 76, 0 skip
 - [ ] H08 — Máy chấm model thật (Đ19-4 + Đ21): G09/G10 qua vòng agent thật, golden emergency hai lớp (≥100) + consent (≥40); vá `eval_golden` gọi `searchRegulations` thiếu `buildingId` (R06 Q3); lệch sót sau R06: `handoff_to_staff` ghi cứng 30 phút thay vì env `HUMAN_TAKEOVER_MIN` mặc định 60 (§11.6) + `.env.example` thiếu `MODEL_TRIAGE`/`TRIAGE_*`/`HUMAN_TAKEOVER_MIN` — mở khoá G08–G10 · vòng 1 bị ngắt 12:31 (khẩn cấp 100/100, đồng ý 42/44, chẩn đoán 0/40 do lỗi cột — Đ23) ⇒ vòng 2
 - [x] Chốt câu hỏi mở R03 (Đ19, 2026-09-25): (1) SPEC-P03 §10.8 còn ghi `claude-opus-5` ⇒ đồng bộ theo Đ18; (2) SDK `@anthropic-ai/sdk@0.68.0` không có `fallbacks` ⇒ nhánh anthropic dùng `MODEL_FALLBACKS` phía client; (3) quy ước `jobs.window_start/end` từ khung giờ gợi ý — trước P05; (4) `eval_golden` chấm một lượt đơn, chưa chạy vòng tool của agent thật — xét lại khi thẩm định
-- [ ] H10 — nhánh OpenRouter trong adapter model (01-CONTRACTS §2c, Đ24) + khói thật 1 lời gọi
+- [x] H10 — nhánh OpenRouter trong adapter model (01-CONTRACTS §2c, Đ24) — `da8faac`, R10 ✅ 2026-09-25; `npm test` 245, `test:db` 122
+- [ ] 🖐 Tín dụng model cho lượt chấm vòng 3 H08: nạp OpenRouter (tài khoản 0 USD, 1 lượt ≈ 1 USD) HOẶC chờ hạn mức Gemini làm mới; kèm khói đường thành công OpenRouter
 - [ ] P04 — Dashboard tối thiểu (G07)
 - [ ] P05 — Agent bước 4–7 (G11, G12, G12b)
 - [ ] P06 — Bước 8 (G13, G16 trọn bước 0→8 trên kênh giả lập)
