@@ -125,17 +125,92 @@ async function checkForbiddenTools() {
   return hits;
 }
 
+// SPEC-P05-Dispatch.md §10.1.3/§10.10 (Đ27, P05-B): kieu `JobReveal` chi
+// duoc XUAT HIEN o `domain/types.ts` (khai bao) va `services/access.ts`
+// (noi DUY NHAT duoc tao — BB-11); `allowReveal: true` (gia tri, khong
+// phai khai bao kieu `allowReveal?: boolean`) chi duoc TRUYEN tu
+// `services/access.ts::dispatchToVendor`.
+const SRC_DIR = path.join(ROOT, 'packages', 'core', 'src');
+const SRC_EXT = new Set(['.ts', '.tsx', '.mts', '.cts']);
+const JOBREVEAL_ALLOWED = new Set(
+  [path.join('domain', 'types.ts'), path.join('services', 'access.ts')].map((p) => p.split(path.sep).join('/'))
+);
+const ALLOW_REVEAL_TRUE_ALLOWED = path.join('services', 'access.ts').split(path.sep).join('/');
+
+async function walkSrc(dir) {
+  let entries;
+  try {
+    entries = await readdir(dir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+  const files = [];
+  for (const entry of entries) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...(await walkSrc(full)));
+    } else if (SRC_EXT.has(path.extname(entry.name)) && !entry.name.endsWith('.test.ts')) {
+      files.push(full);
+    }
+  }
+  return files;
+}
+
+// Bo comment dong "//" va comment khoi truoc khi quet — tranh may do tu
+// bao dong gia tren CHINH cau giai thich luat nay (mau
+// scripts/check_adapter_boundary.mjs::findOutboxInsertOffsets).
+function stripComments(content) {
+  return content.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\/\/[^\n]*/g, ' ');
+}
+
+async function checkJobRevealScope() {
+  const files = await walkSrc(SRC_DIR);
+  const hits = [];
+  for (const file of files) {
+    const rel = path.relative(SRC_DIR, file).split(path.sep).join('/');
+    if (JOBREVEAL_ALLOWED.has(rel)) continue;
+    const content = stripComments(await readFile(file, 'utf8'));
+    if (/\bJobReveal\b/.test(content)) {
+      hits.push(`${path.relative(ROOT, file)}: nhac "JobReveal" ngoai domain/types.ts va services/access.ts`);
+    }
+  }
+  return hits;
+}
+
+async function checkAllowRevealScope() {
+  const files = await walkSrc(SRC_DIR);
+  const hits = [];
+  const re = /allowReveal\s*:\s*true\b/g;
+  for (const file of files) {
+    const rel = path.relative(SRC_DIR, file).split(path.sep).join('/');
+    if (rel === ALLOW_REVEAL_TRUE_ALLOWED) continue;
+    const content = stripComments(await readFile(file, 'utf8'));
+    if (re.test(content)) {
+      hits.push(`${path.relative(ROOT, file)}: "allowReveal: true" ngoai services/access.ts`);
+    }
+    re.lastIndex = 0;
+  }
+  return hits;
+}
+
 async function main() {
   const piiHits = await checkJobCard();
   const toolHits = await checkForbiddenTools();
+  const jobRevealHits = await checkJobRevealScope();
+  const allowRevealHits = await checkAllowRevealScope();
 
   for (const h of piiHits) console.log(`pii_key: ${h}`);
   for (const h of toolHits) console.log(`forbidden_tool: ${h}`);
+  for (const h of jobRevealHits) console.log(`jobreveal_leak: ${h}`);
+  for (const h of allowRevealHits) console.log(`allow_reveal_leak: ${h}`);
 
   console.log(`pii_keys_in_jobcard: ${piiHits.length}`);
   console.log(`forbidden_tools: ${toolHits.length}`);
+  console.log(`jobreveal_outside_allowed: ${jobRevealHits.length}`);
+  console.log(`allow_reveal_outside_access: ${allowRevealHits.length}`);
 
-  process.exit(piiHits.length + toolHits.length > 0 ? 1 : 0);
+  const total = piiHits.length + toolHits.length + jobRevealHits.length + allowRevealHits.length;
+  process.exit(total > 0 ? 1 : 0);
 }
 
 main().catch((err) => {

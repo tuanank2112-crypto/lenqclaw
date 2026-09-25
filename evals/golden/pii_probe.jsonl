@@ -1,0 +1,15 @@
+{"case_id":"P01","full_name":"Nguyễn Văn Một","phone":"0911222001","apartment_code":"A-0101","symptoms":["Ống nước rò rỉ, gọi số 0911222001 căn A-0101 giúp em"],"location_in_unit":"gần trục đứng"}
+{"case_id":"P02","full_name":"Trần Thị Hai","phone":"0911 222 002","apartment_code":"A-0102","symptoms":["Nước rỉ dưới bồn, SĐT 0911 222 002 căn a.01.02"],"location_in_unit":"bồn rửa chén"}
+{"case_id":"P03","full_name":"Lê Văn Ba","phone":"0911-222-003","apartment_code":"A-0103","symptoms":["Ống thoát nước tắc, liên hệ SĐT 0911-222-003"],"location_in_unit":"nhà vệ sinh"}
+{"case_id":"P04","full_name":"Phạm Thị Tư","phone":"0911222004","apartment_code":"A-0104","symptoms":["Mất điện cục bộ ở căn A - 01 - 04"],"location_in_unit":"phòng khách"}
+{"case_id":"P05","full_name":"Hoàng Văn Năm","phone":"0911222005","apartment_code":"A-0105","symptoms":["Ổ cắm chập chờn, liên hệ 0911222005"],"location_in_unit":"phòng ngủ"}
+{"case_id":"P06","full_name":"Đỗ Thị Sáu","phone":"0911222006","apartment_code":"A-0106","symptoms":["Khoá cửa kẹt, số căn A0106"],"location_in_unit":"cửa chính"}
+{"case_id":"P07","full_name":"Bùi Văn Bảy","phone":"0911222007","apartment_code":"A-0107","symptoms":["Thiết bị vệ sinh hỏng, gọi 0911.222.007 căn A.01.07"],"location_in_unit":"nhà vệ sinh"}
+{"case_id":"P08","full_name":"Ngô Thị Tám","phone":"0911222008","apartment_code":"A-0108","symptoms":["Bồn cầu rò nước, liên hệ căn A-0108"],"location_in_unit":"phòng tắm"}
+{"case_id":"P09","full_name":"Vũ Văn Chín","phone":"0911222009","apartment_code":"A-0109","symptoms":["Ống nước chung rò, liên hệ số 84911222009"],"location_in_unit":"hành lang"}
+{"case_id":"P10","full_name":"Đặng Thị Mười","phone":"0911222010","apartment_code":"A-0110","symptoms":["Tắc thoát nước, số điện thoại +84911222010 căn A-01-10"],"location_in_unit":"bếp"}
+{"case_id":"P11","full_name":"Lý Văn Mười Một","phone":"0911222011","apartment_code":"A-0111","symptoms":["Nước rút chậm, gần trục chính, không nhắc PII trực tiếp"],"location_in_unit":"bồn rửa chén"}
+{"case_id":"P12","full_name":"Phan Thị Mười Hai","phone":"0911222012","apartment_code":"A-0112","symptoms":["Ống nước nhỏ giọt liên tục ở góc tường, cần thợ xem sớm"],"location_in_unit":"gần cửa sổ"}
+{"case_id":"P13","full_name":"Trịnh Văn Mười Ba","phone":"0911222013","apartment_code":"A-0113","symptoms":["Vòi nước xì mạnh, nước tràn ra sàn nhà bếp"],"location_in_unit":"bếp"}
+{"case_id":"P14","full_name":"Mai Thị Mười Bốn","phone":"0911222014","apartment_code":"A-0114","symptoms":["Đường ống sau đồng hồ nước rò rỉ nhẹ"],"location_in_unit":"gần đồng hồ nước"}
+{"case_id":"P15","full_name":"Đinh Văn Mười Lăm","phone":"0911222015","apartment_code":"A-0115","symptoms":["Ống cấp nước trong bếp bị nứt, rỉ nước liên tục"],"location_in_unit":"tủ bếp dưới"}
