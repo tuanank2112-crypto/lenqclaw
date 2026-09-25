@@ -54,3 +54,11 @@ Gemini hết quota, OpenRouter 0 USD ⇒ Đ25: chấm bằng `MODEL_PROVIDER=vyc
 - Lệnh: tạo lại `lq_h08` (DB rỗng) → migrate + seed + `DATA_MODE=sim` seed:sim → `MODEL_PROVIDER=vyce DATA_MODE=sim TRIAGE_TIMEOUT_MS=8000 npx tsx --env-file=.env scripts/eval_golden.mjs > evidence/eval-real/real-run-3.txt` (env đặt TRƯỚC nên thắng `.env`; kiểm dòng đầu evidence in đúng provider). Chạy ĐỦ 4 bộ, MỘT lần, với prompt `resident.ts` đang treo — không ghép số với lượt Gemini.
 - Đạt cả 4 ⇒ commit `resident.ts` (`fix(core): …`). Trượt ⇒ còn đúng 1 vòng sửa prompt theo mục 3d ⇒ `real-run-4.txt`; vẫn trượt ⇒ nộp số + Câu hỏi mở. Lỗi 402/429 dồn dập ⇒ dừng, nộp `blocked`.
 - Ghi vào R08 mục "## Vòng 3": bảng bộ → ngưỡng → số (ghi rõ cặp `vyce/deepseek-v4-flash`), token/latency theo route, số ca triage quá hạn (audit `triage.unavailable`), diff prompt. Dòng cuối `⏳ Chờ người duyệt.`. Drop `lq_h08` khi xong.
+
+## 9. PHỤ LỤC VÒNG 4 (SO, 2026-09-25 22:55) — thắng mục 1–8 khi khác
+Đ26: gate G08–G10 chấm bằng Gemini `gemini-3.6-flash`. SO probe 22:50 ⇒ HTTP 200 (quota đã hồi).
+- Lệnh: tạo lại `lq_h08` (DB rỗng) → migrate + seed + `DATA_MODE=sim` seed:sim → `MODEL_PROVIDER=gemini DATA_MODE=sim DATABASE_URL=…/lq_h08 npx tsx --env-file=.env scripts/eval_golden.mjs > evidence/eval-real/real-run-4.txt` (chặn tiền cảnh; kiểm dòng đầu in `provider=gemini`). Đủ 4 bộ, MỘT lần, prompt `resident.ts` đang treo KHÔNG sửa trước lượt này.
+- Đạt cả 4 ⇒ commit `resident.ts` (`fix(core): …`, stage đúng 1 file) rồi chụp lại `typecheck/test/gate` (+`test:db` trên `lq_h08` rỗng) vào `evidence/eval-real/*-v4.txt`.
+- Trượt ⇒ còn đúng 1 vòng sửa prompt theo mục 3d ⇒ `real-run-5.txt`; vẫn trượt ⇒ nộp số + Câu hỏi mở, KHÔNG commit prompt.
+- 429 `RESOURCE_EXHAUSTED` dồn dập (máy chấm báo bộ `blocked`) ⇒ dừng, nộp `blocked`, KHÔNG chuyển provider.
+- Ghi R08 mục "## Vòng 4": bảng bộ → ngưỡng → số (cặp `gemini/gemini-3.6-flash`), so với real-run-1, token/latency theo route + `triage.unavailable` (đo từ DB trước khi drop), diff prompt nếu có vòng sửa. Dòng cuối `⏳ Chờ người duyệt.`. Commit report + evidence `docs(plan-01): report R08 round 4`. Drop `lq_h08` khi xong.
