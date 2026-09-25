@@ -116,3 +116,5 @@ Tự thẩm định nội bộ (không phải thẩm định nghiệm thu): ch�
 - ⏸ Chưa làm: N10, test biên giờ VN cho G7, test nội dung N7/N8, chấm golden bằng model thật (khẩn cấp+đồng ý) — lý do từng mục ở §6.
 
 ⏳ Chờ người duyệt.
+
+🔁 SỬA: (1) CHẶN — collapseSpacedLetters dùng  chỉ-ASCII: SO đo "bếp bốc khói nghi ngút", "thang máy kẹt, có người mắc kẹt", "ngửi thấy mùi gas" ⇒ detectEmergency null (lưới có dấu tê liệt), sửa theo SPEC-P03 §11.1 bản mới + test mọi cụm giữa câu có dấu; (2) N10 đột biến m5–m7, test N7/N8/G7 còn thiếu (R06 §6); (3) session.test.ts chập chờn. Q1 SO chấp nhận (§11.1 A cập nhật), Q2/Q4 SO đã sửa 01-CONTRACTS, Q3 sang gói máy chấm. SO đo lại: npm test 103/103, test:db 70/70 DB rỗng, applied 3, seed guard 1, gate 0 · SO · 2026-09-25 11:03:51

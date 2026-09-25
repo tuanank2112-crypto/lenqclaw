@@ -264,6 +264,9 @@ Worker và core nói chuyện qua Postgres (bảng `inbound_events`, `outbox`, `
 | `IneligibleVendorError` | thợ không active/không đúng kỹ năng/tòa | trả lời thợ lý do ngắn, không lộ chi tiết cuốc |
 | `ModelUnavailableError` | LLM 429/5xx sau retry | xin lỗi cư dân + hẹn trả lời; bước 1 khẩn cấp vẫn chạy |
 | `RegulationUnavailable` | không truy hồi được quy chế | verdict `unclear` ⇒ ticket |
+| `ConsentMissingError` | `open_service_case` khi tin cư dân không phải đồng ý hợp lệ (SPEC-P03 §11.5) | agent hỏi lại: "anh/chị trả lời ĐỒNG Ý để em tìm thợ" |
+| `VerdictLockedError` | `classify_responsibility` khi job không còn `drafting` (SPEC-P03 §11.5) | không đổi verdict; báo cư dân "đã kết luận, cần BQL xem lại" + `handoff_to_staff` |
+| `InvalidToolInput` | input tool sai `input_schema` (§2b) | `tool_result is_error`, tool không chạy; model tự sửa ở vòng sau |
 | `TransportDeadError` | phiên Zalo `kicked`/`dead` | dừng gửi, giữ outbox `queued`, báo động (OPERATIONS §5) |
 | `RateLimitedError` | Zalo trả lỗi giới hạn / mã 221 / không có msgId | pacer lùi ≥30 phút cho tài khoản đó |
 
