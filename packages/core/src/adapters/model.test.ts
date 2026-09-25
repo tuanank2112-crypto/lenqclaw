@@ -29,9 +29,11 @@ describe('callModel (adapters/model.ts)', () => {
     setModelClientForTest(null);
     delete process.env.MODEL_DEFAULT;
     delete process.env.MODEL_DIAGNOSE;
+    delete process.env.MODEL_PROVIDER;
   });
 
   it('dung dung model theo route va gan cache_control tren system', async () => {
+    process.env.MODEL_PROVIDER = 'anthropic';
     process.env.MODEL_DIAGNOSE = 'claude-test-diagnose';
     const captured: { body?: { model: string; system: unknown } } = {};
     const fake: ModelClientLike = {
@@ -53,6 +55,7 @@ describe('callModel (adapters/model.ts)', () => {
   });
 
   it('529 sau retry cua SDK => ModelUnavailableError', async () => {
+    process.env.MODEL_PROVIDER = 'anthropic';
     const fake: ModelClientLike = {
       messages: {
         create: async () => {
@@ -68,6 +71,7 @@ describe('callModel (adapters/model.ts)', () => {
   });
 
   it('429 => ModelUnavailableError', async () => {
+    process.env.MODEL_PROVIDER = 'anthropic';
     const fake: ModelClientLike = {
       messages: {
         create: async () => {
@@ -83,6 +87,7 @@ describe('callModel (adapters/model.ts)', () => {
   });
 
   it('R02-tham-dinh G3: loi mang/timeout (APIConnectionError) => ModelUnavailableError, khong rot tho', async () => {
+    process.env.MODEL_PROVIDER = 'anthropic';
     const fake: ModelClientLike = {
       messages: {
         create: async () => {
@@ -98,6 +103,7 @@ describe('callModel (adapters/model.ts)', () => {
   });
 
   it('R02-tham-dinh D7: images duoc dua vao content block cua tin nhan cuoi', async () => {
+    process.env.MODEL_PROVIDER = 'anthropic';
     let captured: MessageCreateParamsNonStreaming | null = null;
     const fake: ModelClientLike = {
       messages: {
