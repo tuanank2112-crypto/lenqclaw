@@ -99,5 +99,7 @@ Phân tích OpenClaw + ZaloClaw (monas-team) với tài khoản Zalo cá nhân �
 - R08 vòng 4 (`3be813e`): Docker tắt ⇒ worker tự bật lại; quota Gemini cạn giữa lượt ⇒ diagnosis/responsibility blocked, emergency 97/100 (nhiễu hạ tầng) ⇒ SO phán ⛔ DỪNG (G26). Phát hiện: model sập toàn phần ⇒ khẩn cấp gián tiếp chỉ còn lưới từ khoá.
 - 3 file presentation lạ xuất hiện 23:50 (1 ở root) — không phải của agent, chờ người.
 
+- **Đ28 (người dùng):** "dùng tạm deepseek trong vyce" ⇒ `.env` `MODEL_PROVIDER=vyce` (key dán lại trùng key cũ; probe 200, 1,4 s). Gate vẫn theo Đ26 — không chấm lại bằng DeepSeek.
+
 ### ⏭ Treo
-- 🖐 quota/billing Gemini; duyệt Đ27 + Q1–Q10; quyết 3 file presentation; câu hỏi đường lùi khẩn cấp khi model sập.
+- 🖐 quota/billing Gemini (cho gate); duyệt Đ27 + Q1–Q10; quyết 3 file presentation; câu hỏi đường lùi khẩn cấp khi model sập.

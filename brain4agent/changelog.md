@@ -29,6 +29,7 @@ Tất cả các quyết định kiến trúc và lịch sử nâng cấp phiên 
 - Đ24 (2026-09-25, người dùng đưa key OpenRouter) Nhánh `MODEL_PROVIDER=openrouter` (fetch, `data_collection: deny`, fallback phía client) để chấm bằng CÙNG model Gemini khi quota Gemini trực tiếp hết; mặc định sản phẩm vẫn `gemini`.
 - Đ25 (2026-09-25, người dùng đưa key Vyce: "chọn deepseek cũng được") Nhánh `MODEL_PROVIDER=vyce` (proxy dạng OpenAI `https://vyceai.com/v1`, `deepseek-v4-flash`) dùng chung phần dịch với `openrouter`; chỉ chạy khi `DATA_MODE=sim`; G08–G10 chỉ có giá trị cho cặp provider/model đã chấm.
 - Đ26 (2026-09-25) DeepSeek v4 flash qua Vyce trượt 3/4 bộ golden (bỏ sót khẩn cấp, nhận nhầm đồng ý) ⇒ cổng G08–G10 chấm bằng Gemini 3.6 flash; nhánh `vyce` giữ trong mã nhưng không dùng cho agent cư dân.
+- Đ28 (2026-09-26, người dùng) tạm dùng `vyce/deepseek-v4-flash` làm provider chạy dev khi Gemini cạn quota (R08 vòng 4 ⛔, G26); gate G08–G10 vẫn chỉ đóng bằng lượt chấm đạt ngưỡng (Đ26). Đ27 (SPEC-P05 §10 + SPEC-P04 §8) CHỜ DUYỆT.
 ### Superseded
 - Đ13 (thứ tự Zalo sau cùng) và SPEC-P02 §2.1/§3.4 (pg-boss) — thay bởi Đ22.
 - SPEC-P03 §1/§10.2/§10.3 (danh sách `EMERGENCY_TERMS` so chuỗi con, regex PII hẹp, `CONSENT` regex chứa) — thay bởi Đ20/Đ21.

@@ -157,9 +157,14 @@ Hợp đồng ở [SPEC-P05 §10](specs/SPEC-P05-Dispatch.md) và [SPEC-P04 §8]
 - 🖐 Câu hỏi mở Q1–Q10 tại SPEC-P05 §10.16 (tham số phí; thợ bị từ chối có nhận lại cuốc; lời mời chờ có giữ chỗ; hạn im lặng giá; trần giá; 4 nhóm Zalo/tòa; giờ hành chính…), mỗi câu có giá trị TẠM để thi công không kẹt.
 **Lật được:** lớp hiểu ý thợ (tắt bằng `VENDOR_INTENT_MIN=1.01` ⇒ chỉ còn cụm an toàn) — chi phí thấp; sự kiện hệ thống ⇒ gọi thẳng dịch vụ từ route duyệt — chi phí thấp nhưng bỏ bước 7 khỏi agent (trái Đ10). Mọi hằng số là env.
 
+### Đ28 — 2026-09-26 · Tạm dùng `vyce/deepseek-v4-flash` làm provider chạy dev (người dùng chốt)
+Người dùng: "dùng tạm deepseek trong vyce" — Gemini cạn quota giữa lượt chấm (R08 vòng 4 ⛔, G26). `.env` `MODEL_PROVIDER=vyce` (vẫn chỉ `DATA_MODE=sim`, 01-CONTRACTS §2d). Phạm vi: chạy thử `/dev/sim`, runner `core:run` + Zalo dev, phát triển P05. **Đ26 giữ nguyên cho gate:** G08–G10 chỉ đóng bằng lượt chấm model đạt ngưỡng; DeepSeek đã trượt ở vòng 3 nên KHÔNG chạy lại máy chấm với nó (tốn ~1 triệu token, biết trước trượt), KHÔNG sửa prompt riêng cho DeepSeek (G25). Hệ quả người dùng phải biết: với DeepSeek, agent có thể bỏ sót khẩn cấp gián tiếp và hỏi dồn nhiều câu một lượt — chỉ dùng với dữ liệu mô phỏng / Zalo phụ của chính người dùng.
+**Lật được:** có — đổi `MODEL_PROVIDER=gemini` khi có quota/billing; không đổi mã.
+
 ### Quyết định bị thay thế
 | Mốc cũ | Phát biểu cũ | Thay bằng | Lý do |
 | :-- | :-- | :-- | :-- |
+| Đ26 (phần "DeepSeek bị loại") | DeepSeek qua Vyce không được dùng | Đ28 | Chỉ loại khỏi gate; tạm dùng làm provider chạy dev khi Gemini cạn quota |
 | Đ03 (bản đầu) | "LLM chỉ đề xuất, code quyết định" ⇒ pipeline 10 bước, 7 bước là dịch vụ | Đ10 | Agent phải là người điều phối; luật chuyển vào trong tool thay vì tước bước khỏi agent |
 | 00-ARCH §4 bản đầu | Hệ thống tự cấp thẻ vào tòa khi thợ xác nhận | Đ10 (b) | BQL giữ quyền duyệt người vào tòa |
 | SPEC-P05 bản đầu | Nhắn riêng top 3 thợ song song với đăng nhóm | Đ10 | Đăng thẳng nhóm thợ; nhắn riêng vào Idea Vault |

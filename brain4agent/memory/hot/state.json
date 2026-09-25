@@ -82,7 +82,7 @@
     "H10-openrouter",
     "H11-vyce"
   ],
-  "llm_provider": "gemini",
-  "decisions_latest": "D27 (pending)",
+  "llm_provider": "vyce (deepseek-v4-flash, temporary D28; gate provider gemini D26)",
+  "decisions_latest": "D28 (D27 pending)",
   "pending_approval": "D27 (SPEC-P05 §10, SPEC-P04 §8) + Q1-Q10"
 }
