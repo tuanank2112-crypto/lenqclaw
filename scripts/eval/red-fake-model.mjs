@@ -9,21 +9,17 @@
 // Chay: DATABASE_URL=postgres://lenqclaw:lenqclaw@127.0.0.1:55432/lq_h08 \
 //   node --import tsx scripts/eval/red-fake-model.mjs
 // Can DB da `npm run db:migrate && npm run db:seed && DATA_MODE=sim npm run db:seed:sim`.
+//
+// Co `--set <ten>[,<ten>]` (H08 §10, Đ29) — loc bo nao chay, dung chung logic
+// `scripts/eval/args.mjs`/`run.mjs` voi CLI that. Khong cho => du 4 bo nhu cu.
 
 process.env.MODEL_PROVIDER = 'anthropic';
 process.env.ANTHROPIC_API_KEY = 'fake-key-red-test-not-real';
 
 import path from 'node:path';
-import {
-  GOLDEN_DIR,
-  loadJsonl,
-  loadFixtureIds,
-  scoreDiagnosisSet,
-  scoreResponsibilitySet,
-  scoreEmergencySet,
-  scoreConsentSet,
-  decideExit,
-} from './score.mjs';
+import { parseSetArg, setsLabel } from './args.mjs';
+import { runSelectedSets } from './run.mjs';
+import { GOLDEN_DIR, loadJsonl, loadFixtureIds, decideExit } from './score.mjs';
 
 function fakeMessage(content, stopReason = 'end_turn') {
   return {
@@ -73,6 +69,13 @@ function makeGarbageTriageClient() {
 }
 
 async function main() {
+  const parsedSet = parseSetArg(process.argv.slice(2));
+  if (!parsedSet.ok) {
+    console.error(`RED_TEST_ARG_ERROR: ${parsedSet.error}`);
+    process.exit(2);
+  }
+  const sets = parsedSet.sets;
+
   const { sql, tx, closeDb } = await import('@lenqclaw/core/adapters/db');
   const { simInbound, processInbound } = await import('@lenqclaw/core/sim/sim-transport');
   const { routeInboundEvent } = await import('@lenqclaw/core/agent/resident-agent');
@@ -87,36 +90,28 @@ async function main() {
   let exitCode = 1;
   try {
     const { buildingId, apartmentIds } = await loadFixtureIds(sql);
-    const deps = { sql, tx, simInbound, processInbound, routeInboundEvent, buildingId, apartmentIds };
+    const agentDeps = { sql, tx, simInbound, processInbound, routeInboundEvent, buildingId, apartmentIds };
 
-    const emergencyCases = await loadJsonl(path.join(GOLDEN_DIR, 'emergency.jsonl'));
-    const consentCases = await loadJsonl(path.join(GOLDEN_DIR, 'consent.jsonl'));
-    const diagnosisCases = await loadJsonl(path.join(GOLDEN_DIR, 'diagnosis.jsonl'));
-    const responsibilityCases = await loadJsonl(path.join(GOLDEN_DIR, 'responsibility.jsonl'));
+    const cases = {
+      emergency: await loadJsonl(path.join(GOLDEN_DIR, 'emergency.jsonl')),
+      consent: await loadJsonl(path.join(GOLDEN_DIR, 'consent.jsonl')),
+      diagnosis: await loadJsonl(path.join(GOLDEN_DIR, 'diagnosis.jsonl')),
+      responsibility: await loadJsonl(path.join(GOLDEN_DIR, 'responsibility.jsonl')),
+    };
 
-    const emergency = await scoreEmergencySet({ detectEmergency, triageMessage }, emergencyCases, 0.5);
-    console.log(
-      `[RED] emergency: pass=${emergency.pass}/${emergency.total} false_negative=${emergency.falseNegative} ok=${emergency.ok}`
-    );
+    console.log(`[RED] sets=${setsLabel(sets)}`);
 
-    const consent = await scoreConsentSet({ hasExplicitConsent, triageMessage, redactPii }, consentCases);
-    console.log(`[RED] consent: pass=${consent.pass}/${consent.total} recall=${(consent.recall * 100).toFixed(1)}% ok=${consent.ok}`);
+    const results = await runSelectedSets({
+      sets,
+      emergencyDeps: { detectEmergency, triageMessage },
+      consentDeps: { hasExplicitConsent, triageMessage, redactPii },
+      agentDeps,
+      cases,
+      triageEmergencyMin: 0.5,
+      log: (line) => console.log(`[RED] ${line}`),
+    });
 
-    const diagnosis = await scoreDiagnosisSet(deps, diagnosisCases);
-    console.log(
-      diagnosis.blocked
-        ? `[RED] diagnosis: blocked (${diagnosis.reason})`
-        : `[RED] diagnosis: pass=${diagnosis.pass}/${diagnosis.scored} rate=${(diagnosis.rate * 100).toFixed(1)}% ok=${diagnosis.ok}`
-    );
-
-    const responsibility = await scoreResponsibilitySet(deps, responsibilityCases);
-    console.log(
-      responsibility.blocked
-        ? `[RED] responsibility: blocked (${responsibility.reason})`
-        : `[RED] responsibility: pass=${responsibility.pass}/${responsibility.scored} rate=${(responsibility.rate * 100).toFixed(1)}% ok=${responsibility.ok}`
-    );
-
-    exitCode = decideExit({ emergency, consent, diagnosis, responsibility });
+    exitCode = decideExit(results);
     if (exitCode === 0) {
       console.error('RED_TEST_FAIL: model gia/rac van duoc cham OK (exit 0) — may cham KHONG biet do.');
     } else {
