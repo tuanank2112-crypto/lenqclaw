@@ -61,3 +61,28 @@ Ghi chú: lần chạy `test:db` đầu tiên (baseline) và lần thứ hai (ch
 - Bộ đo mới biết đỏ: bỏ kiểm vai trong route logout ⇒ 2/4 test đỏ ✅ (đã khôi phục file).
 
 🔁 SỬA: mục 3 "Xong khi" — `test:db` phải xanh ỔN ĐỊNH: thêm `fileParallelism: false` vào `apps/web/vitest.db.config.ts` (mở phạm vi cho đúng file này), rồi `npm run test:db -w @lenqclaw/web` xanh 5 lần liên tiếp + `npm run test:db` toàn bộ trên DB rỗng exit 0; evidence `evidence/P02-ui/{test-db-v2,web-db-5x}.txt`.
+
+## Vòng 2 — sửa fileParallelism (2026-09-25)
+
+Head vòng 2: `a7c3bc633add3a3a29cbedcab6dc7af10c6e1578` — test(web): disable fileParallelism in vitest.db.config.ts
+
+### Lệnh + exit code
+| Lệnh | Exit | Evidence |
+| :-- | :-- | :-- |
+| `docker exec … DROP DATABASE lq_h09; CREATE DATABASE lq_h09;` rồi `npm run test:db` (DB rỗng, toàn bộ workspace) | 0 | [test-db-v2](../evidence/P02-ui/test-db-v2.txt) |
+| `npm run test:db -w @lenqclaw/web` × 5 lần liên tiếp (cùng DB `lq_h09`, không reset giữa các lần) | 0/0/0/0/0 | [web-db-5x](../evidence/P02-ui/web-db-5x.txt) |
+
+### Số test
+- `test:db` toàn bộ: core 84/84/0/0, web 11/11/0/0, zalo-worker 27/27/0/0 (`applied: 5`), tổng 122/122/0/0 — khớp số vòng 1 (không giảm).
+- 5 lần chạy riêng `@lenqclaw/web`: mỗi lần đều "Test Files 3 passed (3)" / "Tests 11 passed (11)", exit 0 cả 5 lần (trước sửa: đỏ 2/5 theo review SO).
+
+### SHA
+- `a7c3bc6` — test(web): disable fileParallelism in vitest.db.config.ts (phạm vi mở thêm ĐÚNG file `apps/web/vitest.db.config.ts`, không đụng file nào khác).
+
+### Việc KHÔNG làm + lý do
+- Không sửa lại 2 file test (`zalo-login.db.test.ts`, `zalo-logout.db.test.ts`) — căn nguyên là thiếu `fileParallelism: false`, không phải lỗi trong 2 test đó; sửa config đủ để triệt tận gốc như `core`/`zalo-worker` đã làm.
+
+### Câu hỏi mở
+- Không có.
+
+⏳ Chờ người duyệt.
