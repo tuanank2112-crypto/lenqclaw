@@ -60,10 +60,10 @@ project-root/
 ├── apps/web/                         # Next.js 15: auth 3 vai (cookie HMAC), /dev/sim, trang tạm /tickets /gate — P01
 ├── apps/zalo-worker/                 # khung rỗng, chờ P02
 ├── packages/core/src/                # adapters/{db,model,transport} · domain/{types,errors,password} · services/{job-state,audit} · sim/ · db/{migrate,seed,seed-sim}
-│                                     # agent/{resident-agent,pii,job-code,tool-context,prompts/resident.ts,tools/*} · retrieval/search-regulations.ts (P03)
-├── db/migrations/                    # 001_init.sql (DDL 01-CONTRACTS §4) · 002_search.sql (unaccent + tsv, P03)
-├── scripts/                          # check_adapter_boundary.mjs · check_agent_tools.mjs · gate.mjs · eval_golden.mjs (exit 3 = blocked)
-├── evals/                            # scenarios/echo.jsonl · golden/{emergency,diagnosis,responsibility}.jsonl
+│                                     # agent/{resident-agent,emergency,triage,pii,job-code,tool-context,prompts/{resident,triage}.ts,tools/*} · retrieval/search-regulations.ts (P03)
+├── db/migrations/                    # 001_init.sql (DDL 01-CONTRACTS §4) · 002_search.sql (unaccent + tsv) · 003_kb_building.sql (quy chế theo tòa, Đ20)
+├── scripts/                          # check_adapter_boundary.mjs · check_agent_tools.mjs · gate.mjs · eval_golden.mjs (exit 3 = blocked) · seed-sim-for-test.mjs
+├── evals/                            # scenarios/echo.jsonl · golden/{emergency(100),consent(44),diagnosis,responsibility}.jsonl
 ├── compose.yaml · compose.dev.yaml   # Postgres pgvector:pg16; dev publish 127.0.0.1:55432
 └── package.json                      # npm workspaces (apps/*, packages/*), v0.0.1
 ```

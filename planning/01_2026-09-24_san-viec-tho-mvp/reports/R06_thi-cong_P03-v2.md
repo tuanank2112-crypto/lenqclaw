@@ -194,3 +194,5 @@ Phạm vi: `apps/web/lib/auth/session.test.ts` (cấp thêm), `packages/core/src
 Không có câu hỏi mở mới. Q1/Q2/Q4 của vòng 1 đã được SO chốt (specs đã sửa); Q3 đã có hướng đi (gói máy chấm riêng).
 
 ⏳ Chờ người duyệt.
+
+✅ DUYỆT · SO · 2026-09-25 11:21:44 · vòng 2: SO đo lại npm test 173/173, test:db 76/76 DB rỗng, gate 0, phạm vi 6 file; probe lớp 1 bắt "bốc khói"/"mắc kẹt"/"mùi gas"/"chập điện" giữa câu có dấu, 0 báo nhầm "chảy/chạy/khỏi/bóng đèn cháy"

@@ -25,9 +25,11 @@ P04 dashboard TỐI THIỂU song song (2 điểm duyệt + dòng thời gian age
   · thẻ "Hiệu quả tháng" (BQL) · LUẬT CÂN BẰNG: thu nhập trung vị/slot < MIN_EARNINGS_TO_FEE lần phí ⇒ ngừng cấp slot mới. SPEC-P08 chưa viết.
 P01 XONG 2026-09-24 (R01 ✅, G01–G03 local): monorepo + DB + adapter + auth 3 vai + SimTransport /dev/sim; kiểm bằng `npm run gate` + `npm run test:db`.
 Đ16 SPEC-P01 · Đ17 chốt thi công P03 (SPEC-P03 §10: nhận-trước-xử-lý-sau, truy hồi từ khoá, QC-DEMO). Git: github.com/tuanank2112-crypto/lenqclaw (private).
-P03 THI CÔNG XONG (e3d2079, SO đo lại xanh 2026-09-25) — CHƯA thẩm định; tạm dừng theo lệnh người. Kế: thẩm định P03 ∥ H04 adapter Gemini.
+P03 MÃ ĐÃ DUYỆT 2026-09-25 (thẩm định R05 tìm 7 lỗi chặn ⇒ Đ20 SPEC-P03 §11 ⇒ H06 hai vòng, head 65fe108; npm test 173, test:db 76).
+Adapter Gemini xong (H04). Đ21 (người dùng): HIỂU Ý BẰNG MODEL (triageMessage: khẩn cấp + đồng ý), từ khoá chỉ là lưới an toàn chính xác.
 Đ18: LLM mặc định Gemini gemini-3.6-flash (key ở .env, gitignore); 01-CONTRACTS §2b. Đời 2 của Gemini 404 với key này (G13).
-Còn chờ người: giữ/bỏ bước cư dân "Đồng ý"; FREE_TRIAL_DAYS, SLOT_FEE_MONTHLY, SLOT_MIN_JOBS_PER_VENDOR, BQL_SHARE_PCT, MIN_EARNINGS_TO_FEE. Bước kế: thẩm định P03, rồi H04.
+Còn chờ người: giữ/bỏ bước cư dân "Đồng ý"; FREE_TRIAL_DAYS, SLOT_FEE_MONTHLY, SLOT_MIN_JOBS_PER_VENDOR, BQL_SHARE_PCT, MIN_EARNINGS_TO_FEE; push.
+Bước kế: máy chấm bằng model thật (G08–G10: vòng agent thật, golden khẩn cấp 100 + đồng ý 44) rồi SPEC-P05.
 Đọc theo thứ tự: plan.md §2 (Đ01–Đ09) → specs/00-ARCHITECTURE.md → 01-CONTRACTS.md → SPEC gói đang làm.
 Sơ đồ: docs/images/08-pipeline-chuan.png. Bối cảnh chiến lược: docs/SYSTEM-MAP.md. docs/DESIGN.md = v0.1 đã bị thu hẹp (Đ01).
 </repo_nature>
@@ -38,7 +40,7 @@ Sơ đồ: docs/images/08-pipeline-chuan.png. Bối cảnh chiến lược: docs
 - Data/State: PostgreSQL 16 + pgvector + pg-boss, Docker trên VPS Việt Nam IP tĩnh. Worker↔core nói qua bảng inbound_events/outbox.
 - Bất biến cứng: BB-01 agent làm mọi bước qua tool, tool tự kiểm luật · BB-02 thợ chỉ thấy JobCard (không PII) tới access_granted ·
   BB-03 trách nhiệm phải có trích dẫn, thiếu ⇒ unclear ⇒ người · BB-04 mọi tin Zalo ra qua outbox pacer · BB-05 một cuốc một người thắng
-  (UPDATE có điều kiện) · BB-06 khẩn cấp tất định · BB-07 adapter duy nhất cho db/model/transport · BB-08 danh tính từ zalo_identities ·
+  (UPDATE có điều kiện) · BB-06 khẩn cấp: lưới tất định không chờ LLM, triage/agent chỉ BẬT cờ · BB-07 adapter duy nhất cho db/model/transport · BB-08 danh tính từ zalo_identities ·
   BB-11 chỉ giao số căn/mã vào khi ticket access_request đã được BQL duyệt.
 - Cổng G0 (số đo kiểm chứng tay P00) chưa xanh ⇒ CẤM thi công P05 dispatch tự động (Đ07).
 - Tái dùng build phase (D:uild phase): retrieval + eligibility + citation, mẫu precheck→ghi→biên nhận, bộ chấm golden — PORT, không copy.

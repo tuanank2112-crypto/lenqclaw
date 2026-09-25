@@ -177,11 +177,11 @@ Thứ tự bắt buộc (Đ13, Đ15): `P01 (nền tảng + SimTransport) → P03
 - [x] 🖐 `git init` + remote riêng tư `github.com/tuanank2112-crypto/lenqclaw` — commit nền `478bf32` đã push (2026-09-24)
 - [x] Viết [SPEC-P01](specs/SPEC-P01-Foundation.md) (Đ16)
 - [x] P01 — nền tảng + SimTransport (G01–G03 ✅ local; phần P01 của G16 = `runScenario(echo.jsonl)`) — `2cfbbe2`, R01 ✅ 2026-09-24 23:39:41 (vòng 2 sau thẩm định R02)
-- [ ] P03 — Agent cư dân bước 0–3 (G08–G10) — thi công xong `e3d2079` (R03 ⏳), SO đo lại 2026-09-25 xanh: typecheck/build/`npm test` 54/`test:db` 23 (DB rỗng)/gate = 0; **chờ thẩm định** (tạm dừng theo lệnh người)
-- [ ] H04 — adapter Gemini theo 01-CONTRACTS §2b (Đ18, Đ19) + `MODEL_FALLBACKS` + khói golden bằng model thật (key đã ở `.env`) — thi công `390dc54..0fe11a5`, R04 🔁 (test:db đỏ 9/21 + chưa nối kiểm input, do phạm vi SO) ⇒ vá ở H06 mục 0
+- [ ] P03 — Agent cư dân bước 0–3 (G08–G10) — MÃ ĐÃ DUYỆT (R03 ✅ sau thẩm định R05 + vòng 2 H06, head `65fe108`); gate G08–G10 còn chờ máy chấm model thật (dòng dưới)
+- [x] H04 — adapter Gemini theo 01-CONTRACTS §2b (Đ18, Đ19) + `MODEL_FALLBACKS` + khói golden bằng model thật (key đã ở `.env`) — thi công `390dc54..0fe11a5`, R04 🔁 (test:db đỏ 9/21 + chưa nối kiểm input, do phạm vi SO) ⇒ vá ở H06 mục 0; R04 ✅ 2026-09-25
 - [x] H05 — thẩm định P03: R05 ✅ (7 chặn, 14 nên sửa) ⇒ R03 🔁 — 2026-09-25
-- [ ] P03 vòng 2 theo SPEC-P03 §11 (Đ20, Đ21 lớp hiểu ý) — handoff H06
-- [ ] Viết lại máy chấm G09/G10 qua vòng agent thật (Đ19-4) — sau H05
+- [x] P03 vòng 2 theo SPEC-P03 §11 (Đ20, Đ21 lớp hiểu ý) — H06 `f396bb5..65fe108` (2 vòng), R06 ✅, R03 ✅ — 2026-09-25; `npm test` 173, `test:db` 76, 0 skip
+- [ ] Máy chấm model thật (Đ19-4 + Đ21): G09/G10 qua vòng agent thật, golden emergency hai lớp (≥100) + consent (≥40); vá `eval_golden` gọi `searchRegulations` thiếu `buildingId` (R06 Q3); lệch sót sau R06: `handoff_to_staff` ghi cứng 30 phút thay vì env `HUMAN_TAKEOVER_MIN` mặc định 60 (§11.6) + `.env.example` thiếu `MODEL_TRIAGE`/`TRIAGE_*`/`HUMAN_TAKEOVER_MIN` — mở khoá G08–G10
 - [x] Chốt câu hỏi mở R03 (Đ19, 2026-09-25): (1) SPEC-P03 §10.8 còn ghi `claude-opus-5` ⇒ đồng bộ theo Đ18; (2) SDK `@anthropic-ai/sdk@0.68.0` không có `fallbacks` ⇒ nhánh anthropic dùng `MODEL_FALLBACKS` phía client; (3) quy ước `jobs.window_start/end` từ khung giờ gợi ý — trước P05; (4) `eval_golden` chấm một lượt đơn, chưa chạy vòng tool của agent thật — xét lại khi thẩm định
 - [ ] P04 — Dashboard tối thiểu (G07)
 - [ ] P05 — Agent bước 4–7 (G11, G12, G12b)

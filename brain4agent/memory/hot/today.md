@@ -51,3 +51,17 @@ Phân tích OpenClaw + ZaloClaw (monas-team) với tài khoản Zalo cá nhân �
 - Trạng thái `unassigned`/`disputed` chưa có đường ra (01-CONTRACTS §5) — chốt khi soạn P05/P06.
 - Giữ hay bỏ bước cư dân "Đồng ý"; chốt tham số phí + `MIN_EARNINGS_TO_FEE`; viết SPEC-P08.
 - Cần quy chế thật của tòa pilot để làm golden `responsibility` (G10).
+
+## 🏁 Phiên 2026-09-25 (chiều) — Thẩm định P03, adapter Gemini, vòng vá, lớp hiểu ý
+- Bước 0 exit 0; Docker Desktop tắt ⇒ bật lại để có Postgres dev.
+- **Đ19** chốt 4 câu hỏi mở R03 (provider tách, fallback phía client, `max_tokens` 16000, G09/G10 chỉ chấm qua vòng agent thật).
+- H04 (worker 🟠) adapter Gemini ∥ H05 (thẩm định 🔴 ngữ cảnh sạch) chạy song song. R05: cổng xanh nhưng bộ phá đỏ 27/40 ⇒ 7 lỗi chặn; SO đo lại xác nhận ⇒ R05 ✅, R03 🔁.
+- **Đ20** SPEC-P03 §11 (vòng vá). Người dùng hỏi C1 ("BQL không ăn tiền cuốc") ⇒ giữ: BQL thu phí slot nên trích dẫn buộc kết luận là thứ giữ lòng tin cư dân. Người dùng: "bắt key rất khó và dễ sai" ⇒ **Đ21 lớp hiểu ý** `triageMessage` (khẩn cấp + đồng ý), từ khoá lùi thành lưới an toàn. Lưu memory `intent-by-model-not-keywords`.
+- R04 🔁 vì `test:db` đỏ 9/21 (lỗi phạm vi handoff của SO) ⇒ gộp vào H06 mục 0.
+- H06 vòng 1: 103/70 test; SO probe câu thật ⇒ lưới có dấu tê liệt (`\b` chỉ ASCII, G14) ⇒ 🔁; vòng 2 (cùng worker) vá + test sinh từ mảng + bằng chứng đỏ 35/78 ⇒ 173/76 ⇒ R06 ✅, R03 ✅, R04 ✅.
+- Lệch sót sau R06: `handoff_to_staff` ghi cứng 30 phút (§11.6 đòi env `HUMAN_TAKEOVER_MIN` = 60), `.env.example` thiếu biến triage — đưa vào gói kế.
+
+### ⏭ Treo / cần người
+- Push các commit hôm nay (chưa push). Giữ/bỏ bước "Đồng ý"; tham số phí.
+- Gói kế: máy chấm model thật (G08–G10) — cần key Gemini trong `.env` (đã có).
+

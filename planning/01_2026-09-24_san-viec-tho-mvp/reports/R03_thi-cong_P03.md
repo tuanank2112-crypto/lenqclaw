@@ -74,3 +74,5 @@ Không gói nào phải leo lên 🔴 (không gặp quyết định thiếu tron
 ⏳ Chờ người duyệt.
 
 🔁 SỬA: C1–C7, N2–N3, N5–N14, G1/G6–G10 theo SPEC-P03 §11 (Đ20) — vòng 2 giao ở handoffs/H06_thi-cong_P03-v2.md · SO · 2026-09-25 09:51:29
+
+✅ DUYỆT · SO · 2026-09-25 11:21:44 · mọi lệch C1–C7/N/G đã vá ở H06 (R06 ✅, head 65fe108)

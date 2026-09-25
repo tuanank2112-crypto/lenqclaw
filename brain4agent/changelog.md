@@ -21,13 +21,19 @@ Tất cả các quyết định kiến trúc và lịch sử nâng cấp phiên 
 - Đ16 P01 có SPEC riêng (`SPEC-P01-Foundation.md`): test không DB tách `test:db`, cookie HMAC tự viết, SQL thuần, SimTransport vọng lại, seed nền.
 - Đ17 Chốt thi công P03 (`SPEC-P03` §10): `processInbound` nhận-trước-xử-lý-sau; truy hồi quy chế chỉ từ khoá; đồng ý của cư dân kiểm tất định trong tool; quy chế `QC-DEMO` mô phỏng; golden cần LLM trả `blocked` khi thiếu key.
 - Đ18 LLM mặc định là Gemini (`gemini-3.6-flash`, dự phòng `gemini-3-flash-preview`, `gemini-3.5-flash-lite`) sau cùng adapter `callModel`; Claude giữ qua `MODEL_PROVIDER=anthropic`. Người dùng chốt 2026-09-24 (chỉ có key Gemini).
+- Đ19 (2026-09-25) Chốt câu hỏi mở R03: SPEC-P03 §10.8 chỉ cho nhánh anthropic; fallback phía client `MODEL_FALLBACKS` cho cả hai nhà cung cấp; `max_tokens` 16000; `window_start/end` NULL tới SPEC-P05; G09/G10 chỉ ✅ khi chấm qua vòng agent thật.
+- Đ20 (2026-09-25) Vòng 2 P03 sau thẩm định R05 (SPEC-P03 §11): citation cùng nhãn + cùng tòa (`kb_documents.building_id`), quote từ DB; verdict khoá sau `drafting`; đồng ý chỉ ở lượt sau; che PII theo mã căn trong DB + regex có dấu phân cách; khẩn cấp theo ranh giới từ.
+- Đ21 (2026-09-25, người dùng: "bắt key rất khó và dễ sai") Lớp hiểu ý `triageMessage` (model rẻ, JSON, 4 s) cho khẩn cấp và đồng ý; từ khoá lùi về lưới an toàn ưu tiên chính xác, không chờ model (Đ09 giữ). C1 giữ: BQL thu phí slot ⇒ trích dẫn buộc chặt kết luận là thứ giữ lòng tin cư dân.
 ### Superseded
+- SPEC-P03 §1/§10.2/§10.3 (danh sách `EMERGENCY_TERMS` so chuỗi con, regex PII hẹp, `CONSENT` regex chứa) — thay bởi Đ20/Đ21.
+- SPEC-P03 §10.8 fallback phía server Anthropic và golden một lượt làm thước đo G09/G10 — thay bởi Đ19.
 - Đ06 phần LLM (Claude `claude-opus-5` mặc định) — thay bởi Đ18.
 - `processInbound` gọi handler trong transaction khoá dòng (SPEC-P01 §6 bản đầu) — thay bởi Đ17 (a): gây trả lời trùng và kẹt pool khi đồng thời.
 - Phí theo cuốc, slot tháng, sổ phí, cổng G0 chặn P05 — ra khỏi phạm vi build (Đ13).
 - Pipeline 10 bước bản đầu (7 bước "dịch vụ tất định", tự cấp thẻ vào tòa, nhắn riêng top 3 thợ) — thay bởi Đ10.
 - `docs/DESIGN.md` v0.1 (trợ lý BQL tổng quát) bị thu hẹp bởi Đ01.
 ### Added
+- **P03 vòng 2 + adapter Gemini (2026-09-25, R03/R04/R06 ✅):** `adapters/model.ts` nhánh Gemini + `callTriageModel`; `agent/{emergency,triage}.ts`, `prompts/triage.ts`; migration `003_kb_building.sql`; `scripts/seed-sim-for-test.mjs`; golden `emergency.jsonl` 100 ca, `consent.jsonl` 44 ca; bộ hồi quy `p03-regression.db.test.ts` từ bộ phá thẩm định. `npm test` 173, `test:db` 76.
 - **P03 agent cư dân (thi công xong, chờ thẩm định):** migration `002_search.sql` (`immutable_unaccent`, `kb_sections.tsv` sinh tự động), `retrieval/search-regulations.ts`, 8 tool `agent/tools/*`, `resident-agent.ts` (khẩn cấp tất định, vòng tool ≤6, che PII trước model), `db:seed:sim` (QC-DEMO + cư dân mô phỏng), golden `emergency`/`diagnosis`/`responsibility` + `scripts/eval_golden.mjs` (thiếu credential ⇒ exit 3).
 - **P01 nền tảng (mã nguồn đầu tiên):** `apps/web`, `apps/zalo-worker` (khung), `packages/core`, `db/migrations/001_init.sql`, `scripts/{check_adapter_boundary,check_agent_tools,gate}.mjs`, `compose*.yaml`, `evals/scenarios/echo.jsonl`; `docs/core.md`, `docs/web.md`, `docs/zalo-worker.md`. Repo git + GitHub private.
 - `docs/images/09-dashboard-bql-mockup.png`, `docs/images/10-kinh-te-ba-ben.png`.

@@ -20,7 +20,8 @@ Nhóm bảng:
 - **Cuốc:** `job_categories` (có `trade_group`), `price_book` (p25/p50/p75 theo loại × tòa), `jobs` (máy trạng thái 01-CONTRACTS §5), `job_offers`, `job_events`, `job_photos`, `access_passes`, `ratings`.
 - **Phí vào nhóm (Đ14):** `slot_capacity` (trần theo tòa × nhóm nghề), `vendor_slots` (`is_trial`, một slot active mỗi thợ × tòa × nhóm nghề, dùng thử 1 lần), `slot_waitlist`, `ledger_entries` (chỉ `slot_fee`/`bql_share`/`waiver`/`adjustment`, không phí theo cuốc).
 - **Sổ lợi ích (Đ15, dự kiến ở SPEC-P08):** view tổng hợp theo tháng — thu nhập mỗi thợ (từ `jobs.final_price` đã `closed`), tỷ lệ thu nhập/phí theo (tòa × nhóm nghề), case agent xử lý trọn, lượt vào tòa có duyệt; không thêm bảng tiền mới ngoài `ledger_entries`.
-- **BQL:** `tickets`, `kb_documents`, `kb_sections` (tsv + embedding), `audit_log`.
+- **BQL:** `tickets`, `kb_documents` (`building_id` từ migration 003 — quy chế thuộc đúng một tòa, Đ20), `kb_sections` (tsv + embedding), `audit_log`.
+- **Hiểu ý (Đ21):** kết quả `triageMessage` lưu trong `messages.content.triage` của tin vào; `agent_runs.route='triage'` tách chi phí. Tool `open_service_case` đọc từ đó — agent chính không truyền được.
 
 Luồng:
 1. Kênh (`SimTransport` khi phát triển, Zalo worker khi chạy thật — Đ13) → `inbound_events` (chống trùng) → `processInbound`: nhận-trước bằng `UPDATE … SET processed_at … RETURNING`, handler chạy NGOÀI transaction, mỗi tin tối đa một lần (Đ17 a) → pipeline core. pg-boss dời sang P07.

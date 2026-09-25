@@ -19,8 +19,8 @@ Thứ tự (Đ13, Đ15): `P01 → P03 → P05 → P06 → P08`; P04 tối thiể
 - [x] `git init` + remote private `github.com/tuanank2112-crypto/lenqclaw` — 2026-09-24
 - [x] P01 — Nền tảng + SimTransport (chat giả lập `/dev/sim`, kịch bản `evals/scenarios`) — G01–G03 ✅ local, 2026-09-24
 - [ ] P04 — Dashboard BQL tối thiểu + thợ & slot + sổ phí + dữ liệu mô phỏng (🟠) — song song từ P03
-- [ ] P03 — Agent cư dân bước 0–3: khẩn cấp, chẩn đoán, phân loại trách nhiệm, ticket BQL / ticket case (🔴/🟠) — **thi công xong, SO đo lại xanh 2026-09-25, chờ thẩm định**
-- [ ] H04 — adapter Gemini (Đ18) + model dự phòng + golden thật
+- [ ] P03 — Agent cư dân bước 0–3 (🔴/🟠) — **mã đã duyệt 2026-09-25** (thẩm định R05 + vòng vá H06); còn gate G08–G10 chờ máy chấm model thật
+- [ ] **Kế tiếp:** máy chấm bằng model thật (Đ19-4 + Đ21): G09/G10 qua vòng agent thật, golden khẩn cấp hai lớp (100 ca) + đồng ý (44 ca); vá `eval_golden` thiếu `buildingId`, `HUMAN_TAKEOVER_MIN`, `.env.example`
 - [ ] P05 — Agent bước 4–7: job ẩn danh → nhóm thợ giữ slot → chốt → ticket cấp quyền → giao việc + luật slot/dùng thử (🔴)
 - [ ] P06 — Agent bước 8: theo dõi, nghiệm thu, đóng case, điểm thợ, giá thật (🟠)
 - [ ] P08 — Sổ lợi ích ba bên: phiếu hoàn thành, bảng thu nhập thợ, thẻ Hiệu quả tháng, luật cân bằng slot (🟠)
@@ -34,6 +34,9 @@ Thứ tự (Đ13, Đ15): `P01 → P03 → P05 → P06 → P08`; P04 tối thiể
 - **Tinh gọn UI dashboard BQL** — người dùng: "ổn nhưng chưa tối ưu, rối mắt, fix sau" (Đ11).
 
 ## 💡 Kho Ý Tưởng & Backlog (Idea Vault)
+
+- **Lớp hiểu ý cho thợ và BQL (Đ21 mở rộng):** cùng mẫu triage cho tin "nhận"/báo giá của thợ ở P05 và phản hồi BQL — thay regex bằng ý định + luật trong code.
+- **Hiển thị `triage` trong dòng thời gian agent (P04):** BQL thấy vì sao một tin bị coi là khẩn cấp/đồng ý.
 
 
 *Đã cân nhắc, chưa làm ở vòng 0.1 — giữ lý do để không lật lại khi chưa có căn cứ mới.*
@@ -52,6 +55,8 @@ Thứ tự (Đ13, Đ15): `P01 → P03 → P05 → P06 → P08`; P04 tối thiể
 - **Nhận tin nhắn thoại của thợ** (speech-to-text) — thợ quen gửi voice.
 
 ## Đã hoàn thành (Done)
+
+- [x] **2026-09-25 — P03 mã được duyệt + adapter Gemini:** thẩm định đối kháng R05 tìm 7 lỗi chặn (trích dẫn ngược nhãn, mở case cùng lượt, đồng ý bằng regex, khẩn cấp `chay`=cháy/chảy, 16/20 PII lọt, chốt `DATA_MODE` vô hiệu) ⇒ Đ20 SPEC-P03 §11 + Đ21 lớp hiểu ý (triage) ⇒ H06 hai vòng (vòng 2 vá `\b` ASCII làm tê liệt lưới có dấu). Adapter Gemini H04 (fetch, `thoughtSignature`, fallback, kiểm input tool). `npm test` 173, `test:db` 76, 0 skip.
 
 - [x] **2026-09-24 — P01 Nền tảng (R01 ✅ sau thẩm định R02):** npm workspaces, migration 001 + seed nền, adapter db/model/transport, máy trạng thái cuốc, SimTransport + `/dev/sim`, auth 3 vai cookie HMAC, `npm run gate`; 40 test (28 unit + 12 DB). Thẩm định đối kháng tìm 2 lỗi chặn ở máy đo (bỏ lọt import nhiều dòng, khoá `phone?:`) — đã vá ở vòng 2.
 

@@ -32,21 +32,28 @@
   },
   "last_milestone": {
     "id": "P03",
-    "verdict": "pending_audit",
-    "built_at": "2026-09-25",
-    "head": "e3d2079",
+    "verdict": "approved_code",
+    "approved_at": "2026-09-25",
+    "head": "65fe108",
     "tests": {
-      "unit": 54,
-      "db": 23,
+      "unit": 173,
+      "db": 76,
       "fail": 0,
       "skip": 0
     },
-    "so_remeasured": true
+    "so_remeasured": true,
+    "gates_pending": [
+      "G08",
+      "G09",
+      "G10"
+    ]
   },
-  "next": "audit P03, then H04 Gemini adapter",
+  "next": "real-model scorer for G08-G10 (agent loop, emergency 100 + consent 44), then SPEC-P05",
   "approved": [
-    "P01"
+    "P01",
+    "P03-code",
+    "H04-gemini"
   ],
   "llm_provider": "gemini",
-  "paused_by_user": "2026-09-25"
+  "decisions_latest": "D21"
 }
