@@ -136,3 +136,5 @@ Tiếp theo
 ⏸ Chưa làm: chạy thật với Zalo, vì cần người quét QR.
 
 ⏳ Chờ người duyệt.
+
+✅ DUYỆT · SO · 2026-09-25 12:08:34 · phần máy SPEC-P02 §9.5: SO đo lại npm test 229/229, test:db 110/110 DB rỗng (applied 4), phạm vi đúng, AES-256-GCM IV ngẫu nhiên, log không nhận cookie/imei; nghiệm thu người (quét QR, live.txt) là mục riêng

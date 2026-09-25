@@ -193,7 +193,8 @@ Thứ tự bắt buộc (Đ13, Đ15): `P01 (nền tảng + SimTransport) → P03
 - [ ] P05 — Agent bước 4–7 (G11, G12, G12b)
 - [ ] P06 — Bước 8 (G13, G16 trọn bước 0→8 trên kênh giả lập)
 - [ ] P08 — Sổ lợi ích ba bên (G17)
-- [ ] P02 giai đoạn 1 — Zalo `bql` trên máy dev (SPEC-P02 §9, Đ22) — handoff H07; nghiệm thu người quét QR
+- [x] P02 giai đoạn 1 — mã + test máy (SPEC-P02 §9, Đ22): H07 `a60731e..bf58e37` (2 vòng), R07 ✅ 2026-09-25; zca-js 2.2.0; `npm test` 229, `test:db` 110
+- [ ] 🖐 P02 giai đoạn 1 — nghiệm thu người: quét QR Zalo phụ, nhắn thử agent (`evidence/P02/live.txt`)
 - [ ] P02 giai đoạn 2 — `market` + nhóm thợ + ảnh (cùng P05) (G04–G06 đủ)
 - [ ] P07 — deploy VPS, mọi gate cột `vps` ✅ (G14)
 - [ ] Đồng bộ não (Ma Trận 6 Điểm) + changelog `0.1.0`
