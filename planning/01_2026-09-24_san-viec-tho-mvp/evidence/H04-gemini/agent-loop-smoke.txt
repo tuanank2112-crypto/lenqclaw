@@ -1,0 +1,7 @@
+TOOL_USE_SEQUENCE: tool.save_job_draft
+AGENT_RUNS:
+  route=diagnose model=gemini-3.5-flash-lite input_tokens=1955 output_tokens=85 outcome=ok
+  route=diagnose model=gemini-3.5-flash-lite input_tokens=2089 output_tokens=80 outcome=ok
+  route=diagnose model=gemini-3.5-flash-lite input_tokens=2206 output_tokens=41 outcome=ok
+LAST_OUTBOX_BODY: {"text":"Dạ em ghi nhận tình trạng vòi nước bị rỉ ạ. Xin anh/chị cho em biết vòi nước này ở khu vực nào (phòng bếp hay phòng tắm) ạ?"}
+EXIT:0

@@ -1,0 +1,195 @@
+
+> @lenqclaw/core@0.0.1 test:db
+> tsx scripts/require-database-url.ts && vitest run --config vitest.db.config.ts
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mD:/lenqclaw/packages/core[39m
+
+ [31m❯[39m src/dbtests/p03.db.test.ts [2m([22m[2m11 tests[22m[2m | [22m[31m9 failed[39m[2m)[22m[33m 385[2mms[22m[39m
+[31m   [31m×[31m SPEC-P03 §10.6(b) — verdict bql => ticket bql_responsibility + job routed_bql[2m > [22mday du vong: save_job_draft -> search_regulations -> classify_responsibility(bql) -> push_bql_ticket[90m 42[2mms[22m[31m[39m
+[31m     → expected 'drafting' to be 'routed_bql' // Object.is equality[39m
+[31m   [31m×[31m SPEC-P03 §10.6(c) — verdict resident khong citation => bi ep unclear[2m > [22mclassify_responsibility(resident, citations=[]) => forced unclear, job routed_bql[90m 35[2mms[22m[31m[39m
+[31m     → expected undefined to be 'routed_bql' // Object.is equality[39m
+[31m   [31m×[31m SPEC-P03 §10.6(d)+(e) — resident hop le: dong y => case_open; khong dong y => ConsentMissingError[2m > [22m(d) verdict resident hop le + "dong y" => case_open, ticket service_case[90m 27[2mms[22m[31m[39m
+[31m     → expected undefined to be 'awaiting_consent' // Object.is equality[39m
+[31m   [31m×[31m SPEC-P03 §10.6(d)+(e) — resident hop le: dong y => case_open; khong dong y => ConsentMissingError[2m > [22m(e) "khong dong y" => ConsentMissingError, job giu awaiting_consent[90m 29[2mms[22m[31m[39m
+[31m     → expected 'drafting' to be 'awaiting_consent' // Object.is equality[39m
+[31m   [31m×[31m SPEC-P03 §10.6(g) — chuoi "[userId: ...]" khong doi Party (BB-08)[2m > [22mgia mao userId trong noi dung tin nhan khong lam doi resident_id cua job[90m 36[2mms[22m[31m[39m
+[31m     → expected null not to be null[39m
+[31m   [31m×[31m SPEC-P03 §10.6(h) — SDT/ma can KHONG co trong messages gui model[2m > [22mche PII truoc khi dua vao ngu canh model[90m 26[2mms[22m[31m[39m
+[31m     → expected 0 to be greater than 0[39m
+[31m   [31m×[31m SPEC-P03 §10.6(i) — het 6 vong tool ma khong co text cuoi => handoff[2m > [22m6 lan goi tool lien tiep => handoff_to_staff + BUSY_REPLY[90m 39[2mms[22m[31m[39m
+[31m     → expected +0 to be 6 // Object.is equality[39m
+[31m   [31m×[31m BB-03 — nguon het hieu luc / deprecated va hai citation ngược nhau => unclear[2m > [22mcitation deprecated + het hieu luc => khong con citation hop le => forced unclear[90m 50[2mms[22m[31m[39m
+[31m     → expected undefined to be 'unclear' // Object.is equality[39m
+[31m   [31m×[31m BB-03 — nguon het hieu luc / deprecated va hai citation ngược nhau => unclear[2m > [22mhai citation con hieu luc nhung ket luan nguoc nhau (sec05 BQL vs sec06 CU DAN) => unclear[90m 28[2mms[22m[31m[39m
+[31m     → expected undefined to be 'unclear' // Object.is equality[39m
+ [32m✓[39m src/dbtests/p01.db.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 622[2mms[22m[39m
+   [33m[2m✓[22m[39m 1) runMigrations — DB rong -> schema day du (SPEC-P01 §9)[2m > [22mlan dau: applied=2 (001_init.sql + 002_search.sql), moi bang ton tai [33m317[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 9 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/dbtests/p03.db.test.ts[2m > [22mSPEC-P03 §10.6(b) — verdict bql => ticket bql_responsibility + job routed_bql[2m > [22mday du vong: save_job_draft -> search_regulations -> classify_responsibility(bql) -> push_bql_ticket
+[31m[1mAssertionError[22m: expected 'drafting' to be 'routed_bql' // Object.is equality[39m
+
+Expected: [32m"routed_bql"[39m
+Received: [31m"drafting"[39m
+
+[36m [2m❯[22m src/dbtests/p03.db.test.ts:[2m186:25[22m[39m
+    [90m184| [39m
+    [90m185| [39m    [35mconst[39m job [33m=[39m [35mawait[39m [34mjobByResident[39m(residentId)[33m;[39m
+    [90m186| [39m    [34mexpect[39m(job[33m?.[39mstatus)[33m.[39m[34mtoBe[39m([32m'routed_bql'[39m)[33m;[39m
+    [90m   | [39m                        [31m^[39m
+    [90m187| [39m
+    [90m188| [39m    [35mconst[39m tickets [33m=[39m [35mawait[39m sql[33m<[39m{ kind[33m:[39m string }[33m>[39m([32m`select kind from tick[39m…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/dbtests/p03.db.test.ts[2m > [22mSPEC-P03 §10.6(c) — verdict resident khong citation => bi ep unclear[2m > [22mclassify_responsibility(resident, citations=[]) => forced unclear, job routed_bql
+[31m[1mAssertionError[22m: expected undefined to be 'routed_bql' // Object.is equality[39m
+
+[32m- Expected:[39m 
+"routed_bql"
+
+[31m+ Received:[39m 
+undefined
+
+[36m [2m❯[22m src/dbtests/p03.db.test.ts:[2m232:25[22m[39m
+    [90m230| [39m
+    [90m231| [39m    [35mconst[39m job [33m=[39m [35mawait[39m [34mjobByResident[39m(residentId)[33m;[39m
+    [90m232| [39m    [34mexpect[39m(job[33m?.[39mstatus)[33m.[39m[34mtoBe[39m([32m'routed_bql'[39m)[33m;[39m
+    [90m   | [39m                        [31m^[39m
+    [90m233| [39m    [34mexpect[39m((job[33m?.[39mresponsibility [35mas[39m { party[33m:[39m string } [33m|[39m [35mnull[39m)[33m?.[39mparty)[33m.[39m[34mt[39m…
+    [90m234| [39m  })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/dbtests/p03.db.test.ts[2m > [22mSPEC-P03 §10.6(d)+(e) — resident hop le: dong y => case_open; khong dong y => ConsentMissingError[2m > [22m(d) verdict resident hop le + "dong y" => case_open, ticket service_case
+[31m[1mAssertionError[22m: expected undefined to be 'awaiting_consent' // Object.is equality[39m
+
+[32m- Expected:[39m 
+"awaiting_consent"
+
+[31m+ Received:[39m 
+undefined
+
+[36m [2m❯[22m src/dbtests/p03.db.test.ts:[2m277:25[22m[39m
+    [90m275| [39m
+    [90m276| [39m    [35mlet[39m job [33m=[39m [35mawait[39m [34mjobByResident[39m(residentId)[33m;[39m
+    [90m277| [39m    [34mexpect[39m(job[33m?.[39mstatus)[33m.[39m[34mtoBe[39m([32m'awaiting_consent'[39m)[33m;[39m
+    [90m   | [39m                        [31m^[39m
+    [90m278| [39m
+    [90m279| [39m    [35mconst[39m { client[33m:[39m c2 } [33m=[39m [34mmakeScriptedClient[39m([
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/dbtests/p03.db.test.ts[2m > [22mSPEC-P03 §10.6(d)+(e) — resident hop le: dong y => case_open; khong dong y => ConsentMissingError[2m > [22m(e) "khong dong y" => ConsentMissingError, job giu awaiting_consent
+[31m[1mAssertionError[22m: expected 'drafting' to be 'awaiting_consent' // Object.is equality[39m
+
+Expected: [32m"awaiting_consent"[39m
+Received: [31m"drafting"[39m
+
+[36m [2m❯[22m src/dbtests/p03.db.test.ts:[2m336:25[22m[39m
+    [90m334| [39m
+    [90m335| [39m    [35mlet[39m job [33m=[39m [35mawait[39m [34mjobByResident[39m(residentId)[33m;[39m
+    [90m336| [39m    [34mexpect[39m(job[33m?.[39mstatus)[33m.[39m[34mtoBe[39m([32m'awaiting_consent'[39m)[33m;[39m
+    [90m   | [39m                        [31m^[39m
+    [90m337| [39m
+    [90m338| [39m    [35mconst[39m { client[33m:[39m c2[33m,[39m calls } [33m=[39m [34mmakeScriptedClient[39m([
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/dbtests/p03.db.test.ts[2m > [22mSPEC-P03 §10.6(g) — chuoi "[userId: ...]" khong doi Party (BB-08)[2m > [22mgia mao userId trong noi dung tin nhan khong lam doi resident_id cua job
+[31m[1mAssertionError[22m: expected null not to be null[39m
+[36m [2m❯[22m src/dbtests/p03.db.test.ts:[2m404:21[22m[39m
+    [90m402| [39m
+    [90m403| [39m    [35mconst[39m job [33m=[39m [35mawait[39m [34mjobByResident[39m(realResidentId)[33m;[39m
+    [90m404| [39m    [34mexpect[39m(job)[33m.[39mnot[33m.[39m[34mtoBeNull[39m()[33m;[39m
+    [90m   | [39m                    [31m^[39m
+    [90m405| [39m    [35mconst[39m rows [33m=[39m [35mawait[39m sql[33m<[39m{ resident_id[33m:[39m string }[33m>[39m([32m`select resident_i[39m…
+    [90m406| [39m    [34mexpect[39m(rows[[34m0[39m][33m![39m[33m.[39mresident_id)[33m.[39m[34mtoBe[39m(realResidentId)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/dbtests/p03.db.test.ts[2m > [22mSPEC-P03 §10.6(h) — SDT/ma can KHONG co trong messages gui model[2m > [22mche PII truoc khi dua vao ngu canh model
+[31m[1mAssertionError[22m: expected 0 to be greater than 0[39m
+[36m [2m❯[22m src/dbtests/p03.db.test.ts:[2m439:26[22m[39m
+    [90m437| [39m    )[33m;[39m
+    [90m438| [39m
+    [90m439| [39m    [34mexpect[39m(calls[33m.[39mlength)[33m.[39m[34mtoBeGreaterThan[39m([34m0[39m)[33m;[39m
+    [90m   | [39m                         [31m^[39m
+    [90m440| [39m    [35mfor[39m ([35mconst[39m call [35mof[39m calls) {
+    [90m441| [39m      [35mconst[39m serialized [33m=[39m [33mJSON[39m[33m.[39m[34mstringify[39m(call[33m.[39mmessages)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/dbtests/p03.db.test.ts[2m > [22mSPEC-P03 §10.6(i) — het 6 vong tool ma khong co text cuoi => handoff[2m > [22m6 lan goi tool lien tiep => handoff_to_staff + BUSY_REPLY
+[31m[1mAssertionError[22m: expected +0 to be 6 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 6[39m
+[31m+ 0[39m
+
+[36m [2m❯[22m src/dbtests/p03.db.test.ts:[2m464:26[22m[39m
+    [90m462| [39m    [35mawait[39m [34msendResidentMessage[39m([32m'sim-res-3'[39m[33m,[39m threadId[33m,[39m [32m'Em can hoi vai t[39m…
+    [90m463| [39m
+    [90m464| [39m    [34mexpect[39m(calls[33m.[39mlength)[33m.[39m[34mtoBe[39m([34m6[39m)[33m;[39m
+    [90m   | [39m                         [31m^[39m
+    [90m465| [39m
+    [90m466| [39m    [35mconst[39m reply [33m=[39m [35mawait[39m [34mlastOutboxText[39m(threadId)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/dbtests/p03.db.test.ts[2m > [22mBB-03 — nguon het hieu luc / deprecated va hai citation ngược nhau => unclear[2m > [22mcitation deprecated + het hieu luc => khong con citation hop le => forced unclear
+[31m[1mAssertionError[22m: expected undefined to be 'unclear' // Object.is equality[39m
+
+[32m- Expected:[39m 
+"unclear"
+
+[31m+ Received:[39m 
+undefined
+
+[36m [2m❯[22m src/dbtests/p03.db.test.ts:[2m518:70[22m[39m
+    [90m516| [39m
+    [90m517| [39m    [35mconst[39m job [33m=[39m [35mawait[39m [34mjobByResident[39m(residentId)[33m;[39m
+    [90m518| [39m    [34mexpect[39m((job[33m?.[39mresponsibility [35mas[39m { party[33m:[39m string } [33m|[39m [35mnull[39m)[33m?.[39mparty)[33m.[39m[34mt[39m…
+    [90m   | [39m                                                                     [31m^[39m
+    [90m519| [39m  })[33m;[39m
+    [90m520| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/dbtests/p03.db.test.ts[2m > [22mBB-03 — nguon het hieu luc / deprecated va hai citation ngược nhau => unclear[2m > [22mhai citation con hieu luc nhung ket luan nguoc nhau (sec05 BQL vs sec06 CU DAN) => unclear
+[31m[1mAssertionError[22m: expected undefined to be 'unclear' // Object.is equality[39m
+
+[32m- Expected:[39m 
+"unclear"
+
+[31m+ Received:[39m 
+undefined
+
+[36m [2m❯[22m src/dbtests/p03.db.test.ts:[2m562:70[22m[39m
+    [90m560| [39m
+    [90m561| [39m    [35mconst[39m job [33m=[39m [35mawait[39m [34mjobByResident[39m(residentId)[33m;[39m
+    [90m562| [39m    [34mexpect[39m((job[33m?.[39mresponsibility [35mas[39m { party[33m:[39m string } [33m|[39m [35mnull[39m)[33m?.[39mparty)[33m.[39m[34mt[39m…
+    [90m   | [39m                                                                     [31m^[39m
+    [90m563| [39m  })[33m;[39m
+    [90m564| [39m})[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/9]⎯[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[31m9 failed[39m[22m[2m | [22m[1m[32m12 passed[39m[22m[90m (21)[39m
+[2m   Start at [22m 09:57:45
+[2m   Duration [22m 2.23s[2m (transform 207ms, setup 0ms, collect 635ms, tests 1.01s, environment 1ms, prepare 194ms)[22m
+
+npm error Lifecycle script `test:db` failed with error:
+npm error code 1
+npm error path D:\lenqclaw\packages\core
+npm error workspace @lenqclaw/core@0.0.1
+npm error location D:\lenqclaw\packages\core
+npm error command failed
+npm error command C:\WINDOWS\system32\cmd.exe /d /s /c tsx scripts/require-database-url.ts && vitest run --config vitest.db.config.ts
+EXIT:1

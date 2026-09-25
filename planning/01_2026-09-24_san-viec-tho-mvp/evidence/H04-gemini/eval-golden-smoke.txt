@@ -1,0 +1,5 @@
+emergency: total=20 pass=20 false_positive=0 false_negative=0 ok=true
+diagnosis: total=40 pass=0 ok=false
+responsibility: total=30 pass=21 ok=false
+EVAL_GOLDEN_FAIL: co bo chua dat nguong.
+EXIT:1

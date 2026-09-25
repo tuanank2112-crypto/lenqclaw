@@ -1,0 +1,8 @@
+=== CAY THAT (exit phai 0) ===
+violations: 0
+EXIT:0
+
+=== WORKTREE NGOAI REPO VOI FILE VI PHAM GIA LAP (exit phai 1) ===
+packages/core/src/agent/bad-gemini-leak.ts:2: chuoi "generativelanguage.googleapis.com" ngoai adapters/model.ts
+violations: 1
+EXIT:1

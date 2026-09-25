@@ -1,0 +1,10 @@
+ .env.example                                    |  10 +-
+ packages/core/src/adapters/model.gemini.test.ts | 220 +++++++++++++
+ packages/core/src/adapters/model.test.ts        |  12 +-
+ packages/core/src/adapters/model.ts             | 419 +++++++++++++++++++++---
+ packages/core/src/agent/tools/tool-kit.test.ts  |  71 ++++
+ packages/core/src/agent/tools/tool-kit.ts       |  97 ++++++
+ packages/core/src/domain/errors.ts              |  11 +
+ scripts/check_adapter_boundary.mjs              |  16 +
+ scripts/eval_golden.mjs                         |  33 +-
+ 9 files changed, 836 insertions(+), 53 deletions(-)

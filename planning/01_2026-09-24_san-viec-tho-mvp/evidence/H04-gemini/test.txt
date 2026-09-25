@@ -1,0 +1,45 @@
+
+> lenqclaw@0.0.1 test
+> npm run test --workspaces --if-present
+
+
+> @lenqclaw/web@0.0.1 test
+> vitest run --exclude "**/*.db.test.ts"
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mD:/lenqclaw/apps/web[39m
+
+ [32m✓[39m lib/auth/policy.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 8[2mms[22m[39m
+ [32m✓[39m lib/auth/session.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 32[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m17 passed[39m[22m[90m (17)[39m
+[2m   Start at [22m 09:57:28
+[2m   Duration [22m 668ms[2m (transform 84ms, setup 0ms, collect 184ms, tests 40ms, environment 1ms, prepare 391ms)[22m
+
+
+> @lenqclaw/zalo-worker@0.0.1 test
+> echo "@lenqclaw/zalo-worker: no tests in P01 (P02 scope)"
+
+"@lenqclaw/zalo-worker: no tests in P01 (P02 scope)"
+
+> @lenqclaw/core@0.0.1 test
+> vitest run --exclude "**/*.db.test.ts"
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mD:/lenqclaw/packages/core[39m
+
+ [32m✓[39m src/agent/pii.test.ts [2m([22m[2m26 tests[22m[2m)[22m[90m 13[2mms[22m[39m
+ [32m✓[39m src/services/job-state.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 10[2mms[22m[39m
+ [32m✓[39m src/adapters/model.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 11[2mms[22m[39m
+ [32m✓[39m src/domain/password.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 193[2mms[22m[39m
+ [32m✓[39m src/agent/tools/tool-kit.test.ts [2m([22m[2m7 tests[22m[2m)[22m[90m 8[2mms[22m[39m
+ [32m✓[39m src/adapters/model.gemini.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 4043[2mms[22m[39m
+   [33m[2m✓[22m[39m callModel — nhanh gemini (01-CONTRACTS §2b)[2m > [22m503 x3 (het retry) o model chinh => thu MODEL_FALLBACKS, thanh cong, model = fallback [33m4026[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m6 passed[39m[22m[90m (6)[39m
+[2m      Tests [22m [1m[32m50 passed[39m[22m[90m (50)[39m
+[2m   Start at [22m 09:57:30
+[2m   Duration [22m 4.87s[2m (transform 375ms, setup 0ms, collect 1.15s, tests 4.28s, environment 2ms, prepare 1.18s)[22m
+
+EXIT:0
