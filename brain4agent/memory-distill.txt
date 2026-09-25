@@ -33,7 +33,7 @@ Adapter Gemini xong (H04). Đ21 (người dùng): HIỂU Ý BẰNG MODEL (triage
 MÁY CHẤM MODEL THẬT (H08, `scripts/eval/`): lượt 1 khẩn cấp 100/100 · đồng ý 92% (0 nhận nhầm) · chẩn đoán 97,3% · TRÁCH NHIỆM 86,7% < 90% ⇒ G08–G10 CHƯA ✅.
   Prompt resident.ts sửa (thiếu căn cứ ⇒ unclear ngay) CHƯA COMMIT, chờ lượt chấm Gemini đủ 4 bộ (gate gắn với cặp model đã chấm).
 Còn chờ người: quota/billing Gemini đủ ~600 lượt gọi cho một lượt chấm (G26); duyệt Đ27 + Q1–Q10; 3 file presentation lạ (1 ở root); provider cho pilot thật; giữ/bỏ bước cư dân "Đồng ý"; FREE_TRIAL_DAYS, SLOT_FEE_MONTHLY, SLOT_MIN_JOBS_PER_VENDOR, BQL_SHARE_PCT, MIN_EARNINGS_TO_FEE; push; thu hồi key OpenRouter + Vyce đã dán trong chat.
-H08 vòng 4 (2026-09-26) ⛔ blocked quota giữa lượt ⇒ G08–G10 vẫn ⬜, prompt `resident.ts` vẫn treo. Đ27 (SPEC-P05 §10 + SPEC-P04 §8, `7dd16e4`) CHỜ DUYỆT: hiểu ý thợ bằng model, runTimers không pg-boss, migration 006, WP B→(C∥E)→D→F.
+H08 vòng 4 (2026-09-26) ⛔ quota giữa lượt; Đ29 chấm bù theo route: G08 khẩn cấp + đồng ý giữ số real-run-1, chỉ chấm lại diagnosis/responsibility bằng Gemini (`eval_golden.mjs --set`, R08 vòng 5 ✅) ⇒ G08–G10 vẫn ⬜, `resident.ts` vẫn treo. Đ27 (SPEC-P05 §10 + SPEC-P04 §8, `7dd16e4`) CHỜ DUYỆT: hiểu ý thợ bằng model, runTimers không pg-boss, migration 006, WP B→(C∥E)→D→F.
 Bước kế: duyệt Đ27 ⇒ H12 P05-B (nền, không model) · lượt chấm H08 khi có quota · thử người /zalo + agent qua Zalo thật · `.env.example` pacer (SO) · SPEC-P05 chốt thi công.
 Đọc theo thứ tự: plan.md §2 (Đ01–Đ09) → specs/00-ARCHITECTURE.md → 01-CONTRACTS.md → SPEC gói đang làm.
 Sơ đồ: docs/images/08-pipeline-chuan.png. Bối cảnh chiến lược: docs/SYSTEM-MAP.md. docs/DESIGN.md = v0.1 đã bị thu hẹp (Đ01).

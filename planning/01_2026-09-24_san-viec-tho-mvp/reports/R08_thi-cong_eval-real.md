@@ -224,3 +224,9 @@ Không có câu hỏi mở mới — vòng này thuần kỹ thuật (thêm cờ
 Chạy MỘT lượt `--set diagnosis,responsibility` với Gemini thật (giữ nguyên `resident.ts` đang treo hoặc sửa theo mục 3d nếu trượt), so với real-run-1 cho hai bộ này; `emergency`/`consent` GIỮ số real-run-1 (không chấm lại) theo đúng Đ29, trừ khi `triage.ts`/`triage.ts` (agent) hoặc `MODEL_TRIAGE` đổi.
 
 ⏳ Chờ người duyệt.
+
+## SO phán vòng 5 (2026-09-26)
+- SO đo lại: `0347210` chỉ 5 file `scripts/eval*` ✅ · `08f3830` chỉ report + evidence ✅ · `resident.ts` không bị stage ✅ · `node scripts/eval_golden.mjs --set bogus` ⇒ exit 2 ✅ · `set-flag.test.mjs` trên DB rỗng riêng của SO (`lq_so_v5`, đã drop) ⇒ 7/7 + phần DB PASS, `red-fake-model --set responsibility` chỉ chạy bộ responsibility (0/30) và 3 bộ `skipped` ✅ · `npm run gate` (không DB) exit 0, core 190 test, 0 skip ✅.
+- H08 CHƯA đóng: còn lượt Gemini `--set diagnosis,responsibility` (Đ29) khi quota ngày hồi.
+
+✅ DUYỆT: vòng 5 (cờ `--set`, Đ29).

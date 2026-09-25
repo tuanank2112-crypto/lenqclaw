@@ -100,6 +100,7 @@ Phân tích OpenClaw + ZaloClaw (monas-team) với tài khoản Zalo cá nhân �
 - 3 file presentation lạ xuất hiện 23:50 (1 ở root) — không phải của agent, chờ người.
 
 - **Đ28 (người dùng):** "dùng tạm deepseek trong vyce" ⇒ `.env` `MODEL_PROVIDER=vyce` (key dán lại trùng key cũ; probe 200, 1,4 s). Gate vẫn theo Đ26 — không chấm lại bằng DeepSeek.
+- Người dùng hỏi "chỉ cần thay deepseek vào phần gemini chưa làm?" ⇒ không ghép số hai model, nhưng **Đ29** chấm bù theo route (triage không đổi ⇒ giữ số khẩn cấp/đồng ý real-run-1). H08 vòng 5: cờ `--set` (`0347210`, R08 ✅ sau SO đo lại DB rỗng riêng + gate 0).
 
 ### ⏭ Treo
-- 🖐 quota/billing Gemini (cho gate); duyệt Đ27 + Q1–Q10; quyết 3 file presentation; câu hỏi đường lùi khẩn cấp khi model sập.
+- Lượt Gemini `--set diagnosis,responsibility` sau ~14h (quota ngày); duyệt Đ27 + Q1–Q10; quyết 3 file presentation; câu hỏi đường lùi khẩn cấp khi model sập.

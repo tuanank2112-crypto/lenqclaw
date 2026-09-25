@@ -38,8 +38,6 @@ Thứ tự (Đ13, Đ15): `P01 → P03 → P05 → P06 → P08`; P04 tối thiể
 
 ## 💡 Kho Ý Tưởng & Backlog (Idea Vault)
 
-- Máy chấm: cờ chọn bộ (`--set responsibility`) để chạy lại riêng bộ trượt, tiết kiệm token (một lượt đủ 4 bộ ≈ 1 triệu token vào). Chưa làm vì ngoài phạm vi H08.
-
 - **Khoá chống chạy hai bản worker/runner** (advisory lock Postgres) — giai đoạn 1 chỉ là luật vận hành (R07 Q5).
 
 - **Lớp hiểu ý cho thợ và BQL (Đ21 mở rộng):** cùng mẫu triage cho tin "nhận"/báo giá của thợ ở P05 và phản hồi BQL — thay regex bằng ý định + luật trong code.
@@ -62,6 +60,8 @@ Thứ tự (Đ13, Đ15): `P01 → P03 → P05 → P06 → P08`; P04 tối thiể
 - **Nhận tin nhắn thoại của thợ** (speech-to-text) — thợ quen gửi voice.
 
 ## Đã hoàn thành (Done)
+
+- [x] **2026-09-26 — Máy chấm có cờ `--set` (Đ29, R08 vòng 5 ✅):** chấm bù theo route — `emergency`/`consent` giữ số real-run-1 (triage không đổi), chỉ chấm lại `diagnosis`/`responsibility` khi prompt agent chính đổi. Vòng 4 Gemini ⛔ quota (G26); Đ28 tạm chạy dev bằng `vyce/deepseek-v4-flash`.
 
 - [x] **2026-09-25 — Máy chấm model thật + sửa cột danh mục + UI Zalo + nhánh OpenRouter:** lượt chấm đầu ra chẩn đoán 0/40 ⇒ SO tìm lỗi sản phẩm `save_job_draft` không ghi cột `jobs.category_code` (Đ23, SPEC-P03 §11.11) ⇒ sửa xong chẩn đoán 97,3%. Máy chấm mới `scripts/eval/{score,red-fake-model}.mjs` chạy vòng agent thật, biết đỏ với model giả. H09 đăng xuất/QR (R09 ✅ sau vòng test DB web chập chờn). H10 nhánh `openrouter` (Đ24, 01-CONTRACTS §2c, R10 ✅). `npm test` 245, `test:db` 122, 0 skip.
 

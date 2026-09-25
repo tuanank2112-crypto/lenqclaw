@@ -70,9 +70,10 @@
       "consent": "42/44, 0 false accept",
       "diagnosis": "blocked 40/40",
       "responsibility": "blocked 30/30"
-    }
+    },
+    "eval_next": "gemini --set diagnosis,responsibility (D29) after quota reset ~14:00 ICT"
   },
-  "next": "Human: Gemini quota/billing for ~600 calls; approve D27 -> H12 P05-B; eval re-run; .env.example pacer",
+  "next": "Gemini --set diagnosis,responsibility; approve D27 -> H12 P05-B; .env.example pacer",
   "approved": [
     "P01",
     "P03-code",
@@ -83,6 +84,6 @@
     "H11-vyce"
   ],
   "llm_provider": "vyce (deepseek-v4-flash, temporary D28; gate provider gemini D26)",
-  "decisions_latest": "D28 (D27 pending)",
+  "decisions_latest": "D29 (D27 pending)",
   "pending_approval": "D27 (SPEC-P05 §10, SPEC-P04 §8) + Q1-Q10"
 }
