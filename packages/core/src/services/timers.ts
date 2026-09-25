@@ -11,7 +11,7 @@ import { transitionJob } from './job-state.js';
 import { readDispatchConfig, type DispatchConfig } from './dispatch-config.js';
 import { isOfficeHours, fmtWindowVn, computePublishExpiry } from './vn-time.js';
 import { publishJobToGroup, releaseHold, type JobRow } from './dispatch.js';
-import { requestAccess } from './access.js';
+import { requestAccess, withdrawGranted } from './access.js';
 import { enqueueSystemEvent } from './system-events.js';
 import { expireSlots, remindSlotExpiry, expireWaitlistInvites } from './slots.js';
 import { sendResidentOfJob, WAITING_BQL_RESIDENT, NO_VENDOR_RESIDENT } from './vendor-messages.js';
@@ -172,12 +172,23 @@ async function requestAccessFallback(now: Date, cfg: DispatchConfig): Promise<nu
  * thong — phat lai (≤3 lan), du 3 => audit `dispatch.stuck` MOT LAN. */
 async function reemitStuckGranted(now: Date, cfg: DispatchConfig): Promise<number> {
   const threshold = new Date(now.getTime() - cfg.dispatchReemitMin * 60_000);
-  const rows = await sql<{ id: string }>(`select id from jobs where status = 'access_granted' and updated_at <= $1`, [
-    threshold,
-  ]);
+  const rows = await sql<{ id: string; assigned_vendor_id: string | null }>(
+    `select id, assigned_vendor_id from jobs where status = 'access_granted' and updated_at <= $1`,
+    [threshold]
+  );
   let n = 0;
   for (const r of rows) {
     try {
+      // SPEC-P05-Dispatch.md §10.17 (Đ30): tho khong con `active` (bi dinh
+      // chi giua luc duoc duyet va luc giao viec) => rut cuoc thay vi phat
+      // lai su kien he thong (tranh JobReveal cho tho khong con hop le).
+      if (r.assigned_vendor_id) {
+        const vendorRows = await sql<{ status: string }>(`select status from vendors where id = $1`, [r.assigned_vendor_id]);
+        if (vendorRows[0]?.status !== 'active') {
+          await withdrawGranted({ jobId: r.id, now, reason: 'vendor_suspended', actor: { type: 'timer', id: null } });
+          continue;
+        }
+      }
       const countRows = await sql<{ c: number; last: string | null }>(
         `select count(*)::int as c, max(created_at) as last from audit_log where action = 'system.access_approved_reemit' and target = $1`,
         [r.id]

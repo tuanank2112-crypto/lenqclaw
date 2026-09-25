@@ -18,6 +18,7 @@ const EXPECTED_PAIRS: Array<[JobStatus, JobStatus]> = [
   ['access_pending', 'access_granted'],
   ['access_pending', 'published'],
   ['access_granted', 'dispatched'],
+  ['access_granted', 'published'],
   ['published', 'unassigned'],
   ['dispatched', 'in_progress'],
   ['in_progress', 'awaiting_acceptance'],

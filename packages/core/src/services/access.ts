@@ -262,6 +262,13 @@ export async function dispatchToVendor(args: { jobCode: string; vendorId: string
     if (job.status !== 'access_granted') {
       throw new ConflictError(`dispatchToVendor: cuộc đang ở "${job.status}", cần "access_granted".`);
     }
+    // SPEC-P05-Dispatch.md §10.17 (Đ30): chot chan thu hai — tho bi dinh
+    // chi GIUA luc duoc duyet va luc giao viec van khong duoc nhan JobReveal
+    // (BB-02/BB-10). Kiem TRUOC khi dung reveal, khong chuyen trang thai.
+    const vendorStatusRows = await q<{ status: string }>(`select status from vendors where id = $1`, [args.vendorId]);
+    if (vendorStatusRows[0]?.status !== 'active') {
+      throw new IneligibleVendorError('vendor_suspended');
+    }
     const ticketRows = await q<{ status: string }>(`select status from tickets where id = $1 and kind = 'access_request'`, [
       job.access_ticket_id,
     ]);
@@ -354,4 +361,60 @@ export async function dispatchToVendor(args: { jobCode: string; vendorId: string
   );
 
   return { jobId: outcome.jobId, passCode: outcome.passCode };
+}
+
+/** SPEC-P05-Dispatch.md §10.17 (Đ30): rut cuoc `access_granted` (BQL đã
+ * duyệt cấp quyền, chưa giao việc) — dùng khi đình chỉ thợ (`suspendVendor`)
+ * hoặc khi `reemitStuckGranted` gặp thợ không còn `active`. Khuôn "sau
+ * commit" giống nhánh từ chối của `decideAccessRequest`. */
+export async function withdrawGranted(args: {
+  jobId: string;
+  now: Date;
+  reason: 'vendor_suspended';
+  actor: { type: 'agent' | 'timer' | 'staff'; id: string | null };
+}): Promise<void> {
+  const outcome = await tx(async (q) => {
+    const rows = await q<JobRow>(`select * from jobs where id = $1 for update`, [args.jobId]);
+    const job = rows[0];
+    if (!job) throw new JobNotFoundError();
+    if (job.status !== 'access_granted') {
+      throw new ConflictError(`withdrawGranted: cuộc đang ở "${job.status}", cần "access_granted".`);
+    }
+    await transitionJob(q, {
+      jobId: args.jobId,
+      from: 'access_granted',
+      to: 'published',
+      actorType: args.actor.type,
+      actorId: args.actor.id,
+      data: { reason: args.reason },
+    });
+    await q(`update access_passes set revoked_at = $1 where job_id = $2 and revoked_at is null`, [args.now, args.jobId]);
+    if (job.access_ticket_id) {
+      // Cau hoi mo (vong 2, xem R14): SPEC §10.17 ghi ticket "=> cancelled"
+      // nhung `tickets.status` CHECK (001_init.sql) khong co gia tri
+      // 'cancelled' (chi 'open'|'in_progress'|'approved'|'rejected'|'done'|
+      // 'closed') va them migration moi ngoai PHAM VI duoc mo cua vong nay.
+      // Dung 'closed' (gia tri hop le gan nghia nhat: ticket khong con hanh
+      // dong duoc nua) + decision_note ghi ro ly do that.
+      await q(
+        `update tickets set status = 'closed', decided_at = $1, decision_note = $2 where id = $3 and status = 'approved'`,
+        [args.now, `Đóng do ${args.reason}`, job.access_ticket_id]
+      );
+    }
+    await q(
+      `update jobs set assigned_vendor_id = null, hold_expires_at = null, updated_at = now() where id = $1 and status = 'published'`,
+      [args.jobId]
+    );
+    await audit(q, {
+      actorType: args.actor.type,
+      actorId: args.actor.id,
+      action: 'dispatch.withdrawn',
+      target: args.jobId,
+      data: { reason: args.reason, from: 'access_granted' },
+    });
+    return { jobId: job.id, jobCode: job.code };
+  });
+
+  await publishJobToGroup({ jobId: outcome.jobId, actor: args.actor, now: args.now, reason: 'access_rejected' });
+  await sendResidentOfJob(outcome.jobId, SEARCHING_AGAIN_RESIDENT);
 }

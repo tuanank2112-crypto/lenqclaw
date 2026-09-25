@@ -42,6 +42,9 @@ export const TRANSITIONS: ReadonlyArray<Transition> = [
   { from: 'access_pending', to: 'access_granted' },
   { from: 'access_pending', to: 'published' },
   { from: 'access_granted', to: 'dispatched' },
+  // SPEC-P05-Dispatch.md §10.17 (Đ30): dinh chi tho sau khi BQL da duyet
+  // cap quyen nhung chua giao (`withdrawGranted`) — chua co duong thoat.
+  { from: 'access_granted', to: 'published' },
   { from: 'published', to: 'unassigned' },
   { from: 'dispatched', to: 'in_progress' },
   { from: 'in_progress', to: 'awaiting_acceptance' },

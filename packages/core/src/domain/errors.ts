@@ -160,6 +160,17 @@ export class IntentNotConfirmedError extends Error {
   }
 }
 
+/** SPEC-P05-Dispatch.md §10.17 (Đ30): `suspendVendor` khong tim thay
+ * `vendors.id` — khac voi thieu quyen/sai trang thai (khong phai
+ * `ConflictError`). Caller (web): 404. */
+export class VendorNotFoundError extends Error {
+  readonly code = 'VendorNotFoundError';
+  constructor(message = 'Khong tim thay tho nay.') {
+    super(message);
+    this.name = 'VendorNotFoundError';
+  }
+}
+
 /** Loi lap trinh: cap (from -> to) khong nam trong bang §5 01-CONTRACTS.
  * CAM caller bat loi nay de "xu ly tiep" (SPEC-P01 §5) — no bao mot bug o
  * noi goi transitionJob, khong phai mot tinh huong nghiep vu binh thuong. */
