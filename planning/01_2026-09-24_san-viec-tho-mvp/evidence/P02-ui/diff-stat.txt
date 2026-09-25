@@ -1,0 +1,12 @@
+ apps/web/app/api/zalo/[account]/logout/route.ts    | 44 ++++++++++
+ apps/web/app/api/zalo/status/route.ts              |  4 +-
+ apps/web/app/zalo/ZaloBoard.tsx                    | 89 ++++++++++++++++++--
+ apps/web/app/zalo/display.test.ts                  | 36 ++++++++
+ apps/web/app/zalo/display.ts                       | 39 +++++++++
+ apps/web/tests/zalo-logout.db.test.ts              | 91 ++++++++++++++++++++
+ apps/zalo-worker/src/account-session.ts            | 22 ++++-
+ apps/zalo-worker/src/dbtests/p02-worker.db.test.ts | 96 ++++++++++++++++++++++
+ apps/zalo-worker/src/main.ts                       |  2 +
+ apps/zalo-worker/src/store.ts                      | 45 +++++++++-
+ db/migrations/005_zalo_ui.sql                      |  6 ++
+ 11 files changed, 459 insertions(+), 15 deletions(-)

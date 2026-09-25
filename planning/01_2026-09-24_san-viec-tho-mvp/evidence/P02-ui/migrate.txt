@@ -1,0 +1,20 @@
+
+> lenqclaw@0.0.1 test:db
+> npm run db:migrate && npm run db:seed && node --import tsx scripts/seed-sim-for-test.mjs && npm run test:db -w @lenqclaw/core && npm run test:db -w @lenqclaw/web && npm run test:db -w @lenqclaw/zalo-worker --if-present
+
+
+> lenqclaw@0.0.1 db:migrate
+> tsx packages/core/src/db/migrate.ts
+
+-- applying 001_init.sql
+-- applying 002_search.sql
+-- applying 003_kb_building.sql
+-- applying 004_zalo_login.sql
+-- applying 005_zalo_ui.sql
+applied: 5
+
+> lenqclaw@0.0.1 db:seed
+> tsx packages/core/src/db/seed.ts
+
+seed: job_categories=12 apartments=20
+seed-sim(test:db): kb_sections=14 residents=4 price_book=6
