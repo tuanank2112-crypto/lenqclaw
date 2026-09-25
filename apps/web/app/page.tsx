@@ -12,6 +12,7 @@ export default async function HomePage() {
           <li><a href="/tickets">Ticket</a></li>
           <li><a href="/gate">Bao ve (gate)</a></li>
           {session.role === 'bql_admin' ? <li><a href="/dev/sim">Man chat gia lap (dev)</a></li> : null}
+          {session.role === 'bql_admin' ? <li><a href="/zalo">Kết nối Zalo</a></li> : null}
           <li><a href="/api/auth/logout">Dang xuat</a></li>
         </ul>
       ) : (

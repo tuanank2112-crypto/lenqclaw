@@ -12,6 +12,7 @@ import type { StaffRole } from '@lenqclaw/core';
  * | /tickets/*           | ok        | ok        | no    | -> /login      |
  * | /gate/*              | ok        | no        | ok    | -> /login      |
  * | /admin/*, /dev/*     | ok        | no        | no    | -> /login      |
+ * | /zalo, /api/zalo/*   | ok        | no        | no    | -> /login      |  (SPEC-P02 §9.2)
  * | duong khac           | no        | no        | no    | -> /login      |
  *
  * `role=null` (chua dang nhap) chi duoc `true` cho /login va /api/auth/*;
@@ -35,6 +36,10 @@ export function canAccess(role: StaffRole | null, pathname: string): boolean {
   if (matchesSegment(pathname, '/tickets')) return role === 'bql_admin' || role === 'bql_staff';
   if (matchesSegment(pathname, '/gate')) return role === 'bql_admin' || role === 'guard';
   if (matchesSegment(pathname, '/admin') || matchesSegment(pathname, '/dev') || matchesSegment(pathname, '/api/dev')) {
+    return role === 'bql_admin';
+  }
+  // SPEC-P02 §9.2: trang ket noi Zalo + API dang nhap QR — chi bql_admin.
+  if (matchesSegment(pathname, '/zalo') || matchesSegment(pathname, '/api/zalo')) {
     return role === 'bql_admin';
   }
   return false;
