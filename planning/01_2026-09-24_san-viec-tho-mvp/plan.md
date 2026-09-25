@@ -164,7 +164,7 @@ Người dùng: "dùng tạm deepseek trong vyce" — Gemini cạn quota giữa 
 ### Đ29 — 2026-09-26 · Chấm bù theo route: chỉ chấm lại bộ bị ảnh hưởng bởi prompt đã đổi (Super Orchestrator, 🔴)
 Người dùng hỏi "chỉ cần thay phần chưa làm là được?". Không ghép số hai model (khi chạy thật một model làm mọi bước — Đ26 giữ). Nhưng gate gắn với **cặp (model, prompt) của từng route**: `emergency`/`consent` chấm route `triage` (prompt `triage.ts`, model `MODEL_TRIAGE`) — KHÔNG đổi từ real-run-1 ⇒ số real-run-1 (100/100; 42/44, 0 nhận nhầm) GIỮ giá trị cho G08. `diagnosis`/`responsibility` chấm agent chính (prompt `resident.ts` đang treo) ⇒ chỉ hai bộ này phải chấm lại bằng Gemini.
 - Máy chấm thêm cờ `--set <tên>[,<tên>]` (H08 §10). Chạy thiếu bộ ⇒ in rõ bộ nào không chạy; exit theo các bộ đã chạy.
-- Số real-run-1 chỉ còn giá trị khi `triage.ts`, `MODEL_TRIAGE` và `triage.ts`-liên quan trong `packages/core/src/agent/triage.ts` không đổi so với commit của real-run-1; đổi một trong số đó ⇒ chấm lại `emergency`+`consent`.
+- Số real-run-1 chỉ còn giá trị khi `packages/core/src/agent/prompts/triage.ts`, `packages/core/src/agent/triage.ts` và `MODEL_TRIAGE` không đổi so với commit của real-run-1; đổi một trong số đó ⇒ chấm lại `emergency`+`consent`.
 **Lật được:** có — chấm đủ 4 bộ một lượt khi có billing.
 
 ### Quyết định bị thay thế
