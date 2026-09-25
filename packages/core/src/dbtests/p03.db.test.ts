@@ -9,6 +9,15 @@ import { sql, closeDb } from '../adapters/db.js';
 import { setModelClientForTest, type ModelClientLike } from '../adapters/model.js';
 import { simInbound, processInbound } from '../sim/sim-transport.js';
 import { residentHandler } from '../agent/resident-agent.js';
+import { runMigrations } from '../db/migrate.js';
+import { runSeed } from '../db/seed.js';
+import { runSeedSim } from '../db/seed-sim.js';
+
+// Đ18/Đ19 + 01-CONTRACTS §2b: MODEL_PROVIDER=gemini la MAC DINH tu H04, con
+// scripted client cua file nay (`setModelClientForTest`) chi mo phong duoc
+// NHANH ANTHROPIC — file test PHAI tu dat provider tuong minh, khong duoc
+// phu thuoc mac dinh toan cuc (H06 §3.0, thay the R04 cau hoi mo #1).
+process.env.MODEL_PROVIDER = 'anthropic';
 
 interface CapturedCall {
   system: unknown;
@@ -112,11 +121,21 @@ async function jobByResident(residentId: string): Promise<{ id: string; status: 
   return rows[0] ?? null;
 }
 
+// N9 (R05): file nay KHONG duoc phu thuoc thu tu chay so voi cac file
+// *.db.test.ts khac (vd p01.db.test.ts tu drop+tao lai schema public trong
+// beforeAll cua no) — tu dung migrate+seed+seed-sim o DAY, idempotent, bat
+// ke file nao da chay truoc.
 beforeAll(async () => {
-  const buildings = await sql<{ id: string }>(`select id from buildings where code='TOA-A' limit 1`);
-  if (buildings.length === 0) {
-    throw new Error('p03.db.test.ts: khong co du lieu nen — chay npm run db:migrate && db:seed truoc.');
-  }
+  process.env.DATA_MODE = 'sim';
+  await runMigrations();
+  await runSeed();
+  await runSeedSim();
+  // Chong lap khan cap (§11.1, 30 phut) co the ro ri giua CAC FILE
+  // *.db.test.ts (cung DB, chay tuan tu — vitest.db.config.ts
+  // fileParallelism:false) — don sach ticket emergency con mo truoc khi
+  // chay cac test cua file nay, tranh test tao ticket that su moi bi
+  // "chong lap" boi ticket cua file khac tao truoc do.
+  await sql(`update tickets set status = 'closed' where kind = 'emergency' and status = 'open'`);
 });
 
 afterAll(async () => {
@@ -131,7 +150,10 @@ describe('SPEC-P03 §10.6(a) — khan cap: ticket emergency + outbox, 0 lan goi 
   it('tao ticket kind=emergency va tra EMERGENCY_REPLY, khong goi model', async () => {
     setModelClientForTest(makePoisonClient());
     const threadId = `p03-a-${randomUUID().slice(0, 8)}`;
-    await sendResidentMessage('sim-res-1', threadId, 'Nha em bi chay, khoi boc len nhieu qua!');
+    // §11.1 (Đ21): lop 1 uu tien CHINH XAC — dung cum ghep "bốc cháy" (khong
+    // con bat tu don "chay"/"cháy" de tranh bao nham tren tu vung sua chua
+    // thuong, vd golden responsibility R22 "ổ cắm ... bị cháy").
+    await sendResidentMessage('sim-res-1', threadId, 'Nhà em đang bốc cháy, khói bốc lên nghi ngút!');
 
     const tickets = await sql<{ id: string; kind: string }>(
       `select id, kind from tickets where kind = 'emergency' order by created_at desc limit 1`
