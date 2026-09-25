@@ -1,0 +1,6 @@
+ scripts/eval/args.mjs           |  57 +++++++++
+ scripts/eval/red-fake-model.mjs | 132 ++++++++++++++++++++
+ scripts/eval/run.mjs            | 107 +++++++++++++++++
+ scripts/eval/set-flag.test.mjs  | 235 ++++++++++++++++++++++++++++++++++++
+ scripts/eval_golden.mjs         | 258 ++++++++++++++++------------------------
+ 5 files changed, 635 insertions(+), 154 deletions(-)

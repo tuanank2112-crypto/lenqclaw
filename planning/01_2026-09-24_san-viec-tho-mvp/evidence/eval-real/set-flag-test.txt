@@ -1,0 +1,43 @@
+PASS: parseSetArg([]) tra ve sets=null, shouldRun true cho ca 4 ten
+PASS: parseSetArg(["--set","diagnosis,responsibility"]) chi chon 2 bo
+PASS: parseSetArg(["--set","bogus"]) tra ok:false kem thong bao ten la
+PASS: parseSetArg(["--set"]) thieu gia tri cung tra ok:false
+PASS: runSelectedSets({sets:[diagnosis,responsibility]}) khong goi scoreEmergencySet/scoreConsentSet
+PASS: runSelectedSets voi sets=null (khong --set) goi CA 4 ham cham
+PASS: node scripts/eval_golden.mjs --set bogus => exit 2 (khong can DB/credential)
+
+SET_FLAG_TEST (phan 1, khong DB): 7 passed, 0 failed
+
+=== Phan 2: red-fake-model.mjs --set responsibility (can DATABASE_URL) ===
+[RED] sets=responsibility
+[RED] emergency: skipped (--set)
+[RED] consent: skipped (--set)
+[RED] diagnosis: skipped (--set)
+[RED] responsibility: total=30 scored=30 pass=0 rate=0.0% citation_ok=0/0 blocked=0 ok=false
+[RED]   - R01: ky vong=bql thuc te=null
+[RED]   - R02: ky vong=bql thuc te=null
+[RED]   - R03: ky vong=resident thuc te=null
+[RED]   - R04: ky vong=resident thuc te=null
+[RED]   - R05: ky vong=bql thuc te=null
+[RED]   - R06: ky vong=bql thuc te=null
+[RED]   - R07: ky vong=resident thuc te=null
+[RED]   - R08: ky vong=resident thuc te=null
+[RED]   - R09: ky vong=bql thuc te=null
+[RED]   - R10: ky vong=resident thuc te=null
+[RED]   - R11: ky vong=unclear thuc te=null
+[RED]   - R12: ky vong=resident thuc te=null
+[RED]   - R13: ky vong=resident thuc te=null
+[RED]   - R14: ky vong=resident thuc te=null
+[RED]   - R15: ky vong=resident thuc te=null
+[RED]   - R16: ky vong=resident thuc te=null
+[RED]   - R17: ky vong=resident thuc te=null
+[RED]   - R18: ky vong=bql thuc te=null
+[RED]   - R19: ky vong=bql thuc te=null
+[RED]   - R20: ky vong=bql thuc te=null
+[RED]   - ... va 10 ca khac
+RED_TEST_OK: may cham bao do dung nhu ky vong (exit 1 != 0).
+
+SET_FLAG_TEST_DB: red-fake-model --set responsibility exit=0 (PASS)
+
+SET_FLAG_TEST_FINAL: PASS
+SETFLAG_EXIT=0

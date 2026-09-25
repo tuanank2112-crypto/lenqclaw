@@ -167,3 +167,60 @@ Không đổi so mục 3/5/Vòng 3 — `resident.ts` vẫn GIỮ NGUYÊN diff c�
 - Gate G08–G10 giữ ⬜. Lượt kế chỉ chạy khi người xác nhận quota/billing đủ cho một lượt đủ 4 bộ (hoặc duyệt chấm chia bộ theo ngày, cùng model + prompt).
 
 ⛔ DỪNG: quota Gemini cạn giữa lượt (route diagnose 96% lỗi, triage 99% lỗi) — chờ người chốt quota/billing trước lượt chấm kế.
+
+## Vòng 5 (2026-09-26, Đ29 — cham bu theo route, CHUA chay luot that)
+
+Bối cảnh (Đ29, plan.md §2): gate gắn với cặp (model, prompt) theo TỪNG ROUTE — `emergency`/`consent` chấm route `triage` (prompt `triage.ts`, KHÔNG đổi từ real-run-1) nên số real-run-1 (100/100; 42/44, 0 nhận nhầm) GIỮ giá trị cho G08; `diagnosis`/`responsibility` chấm agent chính (prompt `resident.ts` đang treo) nên chỉ hai bộ này cần chấm lại. Việc của vòng này CHỈ là thêm cờ chọn bộ cho máy chấm (H08 §10) — **KHÔNG chạy lượt thật** (Gemini vẫn chờ quota), `resident.ts` GIỮ NGUYÊN chưa commit (mục 3/5).
+
+### Việc đã làm
+
+1. `scripts/eval/args.mjs` (mới): `parseSetArg(argv)` thuần (không `process.exit`) — không có `--set` ⇒ `{ok:true, sets:null}` (chạy đủ 4 bộ, hành vi cũ); có `--set <tên>[,<tên>]` hợp lệ ⇒ `{ok:true, sets:Set}`; thiếu giá trị hoặc tên lạ ⇒ `{ok:false, error}`. `shouldRun(sets, name)` + `setsLabel(sets)`.
+2. `scripts/eval/run.mjs` (mới): `runSelectedSets(...)` — vòng lặp chạy/in log CHUNG cho cả `scripts/eval_golden.mjs` (CLI thật) và `scripts/eval/red-fake-model.mjs` (kịch bản đỏ), nhận `scorers` tiêm được (mặc định = hàm thật từ `score.mjs`) để test gọi trực tiếp với hàm cham GIẢ, không cần DB. Bộ không chạy ⇒ in `<tên>: skipped (--set)`; `results` trả về CHỈ chứa key của bộ đã chạy ⇒ `decideExit(results)` tự động bỏ qua bộ skip (không đọc lại logic `decideExit` trong `score.mjs`).
+3. `scripts/eval_golden.mjs`: parse `--set` NGAY ĐẦU `main()`, tên lạ ⇒ `console.error` + `process.exit(2)` — kiểm TRƯỚC `hasCredential()` (không cần DB/credential để báo lỗi cờ). Dòng đầu log giữ `provider=…` + thêm `sets=…` (`all` khi không lọc). Gọi `runSelectedSets(...)` thay cho gọi tuần tự 4 hàm cham như bản cũ; `decideExit(results)` thay vì object cứng 4 khoá.
+4. `scripts/eval/red-fake-model.mjs`: thêm `--set` (dùng chung `args.mjs`/`run.mjs`), giữ nguyên client model GIẢ (`setModelClientForTest`/`setTriageClientForTest`, không gọi mạng) và ngữ nghĩa exit cũ (`RED_TEST_OK` khi `decideExit(results) !== 0`).
+5. `scripts/eval/set-flag.test.mjs` (mới, test THUẦN): Phần 1 (không DB) — (3) không cờ ⇒ `sets=null`, `shouldRun` true cho cả 4 tên; (2) tên lạ ⇒ `parseSetArg` trả `ok:false` VÀ end-to-end `node scripts/eval_golden.mjs --set bogus` ⇒ exit 2 thật (không cần DB/credential); (1) `runSelectedSets({sets:[diagnosis,responsibility]})` với 4 hàm cham GIẢ (spy) ⇒ `scoreEmergencySet`/`scoreConsentSet` bị gọi thì THROW (chứng minh KHÔNG được gọi — đếm=0), `scoreDiagnosisSet`/`scoreResponsibilitySet` được gọi đúng 1 lần, `results` chỉ có 2 khoá; thêm ca đối chứng `sets=null` gọi đủ cả 4. Phần 2 (BẮT BUỘC `DATABASE_URL` — DB `lq_h08` rỗng đã migrate+seed+seed:sim): chạy THẬT `node --import tsx scripts/eval/red-fake-model.mjs --set responsibility` (client model vẫn GIẢ, không mạng) ⇒ xác nhận vẫn `RED_TEST_OK` (đỏ đúng) khi chỉ lọc MỘT bộ.
+
+### Lệnh + exit code (nguyên văn) + số test
+
+| Bước | Lệnh | Exit | Evidence |
+| :-- | :-- | :-- | :-- |
+| Phần 1 test (không DB) | `node scripts/eval/set-flag.test.mjs` (không `DATABASE_URL`) | 1 (đúng kỳ vọng script tự dừng ở "phần 2 chưa chạy vì thiếu `DATABASE_URL`" — 7/7 PASS phần 1) | chạy tay, không lưu riêng (xem phần dưới, evidence gộp `set-flag-test.txt` là bản CÓ `DATABASE_URL`, chạy đủ cả 2 phần) |
+| DB setup | tạo lại `lq_h08` rỗng → `db:migrate` → `db:seed` → `DATA_MODE=sim db:seed:sim` | 0 | (không redirect riêng, log ngắn) |
+| `npm run typecheck` (không `DATABASE_URL`) | | 0 | [typecheck-v5](../evidence/eval-real/typecheck-v5.txt) |
+| `npm test` (không `DATABASE_URL`) | | 0 — Test Files 4+6+11=21 passed, Tests 24+37+190=**251 passed** (baseline vòng 4: 238 — tăng do nhánh H09 chạy song song trên cùng cây, KHÔNG phải test của gói này; gói này không thêm test vào bất kỳ workspace vitest nào vì `scripts/` không phải workspace) | [test-v5](../evidence/eval-real/test-v5.txt) |
+| `DATABASE_URL=…/lq_h08 npm run test:db` (DB rỗng) | | 0 — Tests core+web+zalo-worker đều pass (dòng cuối mỗi khối `passed`) | [test-db-v5](../evidence/eval-real/test-db-v5.txt) |
+| `npm run gate` (không `DATABASE_URL`) | | 0 | [gate-v5](../evidence/eval-real/gate-v5.txt) |
+| `DATABASE_URL=…/lq_h08 node scripts/eval/set-flag.test.mjs` (đủ cả 2 phần) | | 0 — `SET_FLAG_TEST (phan 1, khong DB): 7 passed, 0 failed`; `SET_FLAG_TEST_DB: red-fake-model --set responsibility exit=0 (PASS)`; `SET_FLAG_TEST_FINAL: PASS` | [set-flag-test](../evidence/eval-real/set-flag-test.txt) |
+| `git diff --stat` (Base `f85f02d`..commit mã) | | — 5 files, +635/-154 (`args.mjs`, `run.mjs`, `set-flag.test.mjs` mới; `eval_golden.mjs`, `red-fake-model.mjs` sửa) | [diff-stat-v5](../evidence/eval-real/diff-stat-v5.txt) |
+
+Bằng chứng cốt lõi (trích từ `set-flag-test.txt`, phần 2 DB): với `--set responsibility`, log in đúng `[RED] emergency: skipped (--set)` / `[RED] consent: skipped (--set)` / `[RED] diagnosis: skipped (--set)`, CHỈ bộ `responsibility` chạy thật (`total=30 scored=30 pass=0 rate=0.0% ok=false`), và `RED_TEST_OK: may cham bao do dung nhu ky vong (exit 1 != 0)` ⇒ script thoát 0 (đỏ đúng, đúng MỘT bộ). Chứng minh (1) và ý "`red-fake-model` vẫn đỏ với `--set responsibility`" của H08 §10.
+
+`git grep -n "AIza"` (repo, trừ các dòng tài liệu hoa mô tả chính chuỗi kiểm tra trong handoff/report cũ — không phải key thật) và `grep -rn "AIza" evidence/eval-real/`: rỗng trong `evidence/eval-real/`.
+
+### Commit
+
+`0347210` `feat(scripts): add --set filter to eval scorer (D29)` — 5 files, +635/-154 (`scripts/eval/args.mjs`, `scripts/eval/run.mjs`, `scripts/eval/set-flag.test.mjs` mới; `scripts/eval_golden.mjs`, `scripts/eval/red-fake-model.mjs` sửa). `resident.ts` GIỮ NGUYÊN CHƯA COMMIT (không stage, không đụng nội dung).
+
+### Bảng phân công thực tế
+
+| Gói | Tầng yêu cầu | Họ/model đã dùng |
+| :-- | :-- | :-- |
+| Cờ `--set` cho `eval_golden.mjs`/`red-fake-model.mjs` + `args.mjs`/`run.mjs` | 🟠 | Sonnet 5 |
+| `set-flag.test.mjs` (test THUẦN chứng minh 3 điều H08 §10 yêu cầu) | 🟠 | Sonnet 5 |
+
+### Việc KHÔNG làm + lý do
+
+- **Không chạy lượt chấm thật với Gemini** — H08 §10 CẤM tường minh ("CẤM chạy máy chấm với model thật ở vòng này"); Gemini vẫn đang chờ quota theo Câu hỏi mở vòng 4.
+- **Không đụng `resident.ts`** — CẤM tường minh, prompt vẫn treo chưa commit từ vòng 1.
+- **Không đổi ngưỡng, không đổi golden, không đổi ngữ nghĩa exit của bộ đã chạy** — chỉ thêm lớp lọc bên ngoài `decideExit`/`score.mjs`, không sửa logic chấm của từng bộ.
+- **Không sửa `scripts/eval/score.mjs`** — không cần thiết; toàn bộ logic lọc nằm ở `args.mjs`/`run.mjs` mới, `score.mjs` giữ nguyên 100%.
+
+### Câu hỏi mở (vòng 5)
+
+Không có câu hỏi mở mới — vòng này thuần kỹ thuật (thêm cờ), không đụng số đo/ngưỡng. Câu hỏi mở còn treo từ vòng 4 (quota Gemini) vẫn giữ nguyên, chưa có cập nhật.
+
+### Bước kế tiếp (khi quota đủ)
+
+Chạy MỘT lượt `--set diagnosis,responsibility` với Gemini thật (giữ nguyên `resident.ts` đang treo hoặc sửa theo mục 3d nếu trượt), so với real-run-1 cho hai bộ này; `emergency`/`consent` GIỮ số real-run-1 (không chấm lại) theo đúng Đ29, trừ khi `triage.ts`/`triage.ts` (agent) hoặc `MODEL_TRIAGE` đổi.
+
+⏳ Chờ người duyệt.
