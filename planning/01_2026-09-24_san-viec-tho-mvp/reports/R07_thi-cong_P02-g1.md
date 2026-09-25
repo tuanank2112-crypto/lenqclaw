@@ -115,3 +115,24 @@ Tiếp theo
 ⏳ Chờ người duyệt.
 
 🔁 SỬA: test:db đỏ — p01.db.test.ts ghi cứng applied=3 (SO cấp quyền sửa, đổi thành đếm số file migration); Q2/Q4/Q5/Q6 chốt ở SPEC-P02 §9.7 · SO · 2026-09-25 12:05:23
+
+## Vòng 2 — 2026-09-25 12:07:07
+Vai: worker (vai-thi-cong) · loại: thi công (vòng sửa 🔁) · họ/model: Claude Opus 5.5 (1M) · hiểu việc: bỏ số migration ghi cứng trong p01, giữ Q2 kèm test handoff, không đụng `.env.example`, không build/ci / xong khi `npm test` 0 + `test:db` (DB rỗng `lq_h07b`) đủ chuỗi 0, 0 skip
+Base: 5a5b6b1 · Head: bf58e37
+
+| Lệnh | Exit | Test (pass/fail/skip) | Evidence |
+| :-- | :-- | :-- | :-- |
+| `npm test` | 0 | web 19 · zalo-worker 37 · core 173 = 229/0/0 | [test](../evidence/P02-v2/test.txt) |
+| DB rỗng `DATABASE_URL=…/lq_h07b npm run test:db` (đủ chuỗi, `applied: 4`) | 0 | core 81 · web 7 · zalo-worker 22 = 110/0/0 | [test-db](../evidence/P02-v2/test-db.txt) |
+
+- `bf58e37` sửa hai file. [p01.db.test.ts](../../../packages/core/src/dbtests/p01.db.test.ts): `applied` lần đầu = số file `db/migrations/*.sql`, đọc thư mục ngay trong test; tiêu đề ca không còn con số; lần 2 vẫn `applied=0`. [p02-worker.db.test.ts](../../../apps/zalo-worker/src/dbtests/p02-worker.db.test.ts): ca "takeover do handoff_to_staff (không có tin nhân viên gửi tay) ⇒ tin chờ (BUSY_REPLY) VẪN gửi (§9.7 Q2)" đã có từ vòng 1 (outbox `sent`); vòng này đổi tiêu đề và đổi nội dung tin thành `BUSY_REPLY`. Ca huỷ khi nhân viên gửi tay giữ nguyên.
+- Không đụng `.env.example`. Không chạy `npm run build` hay `npm ci` (H08 đang chạy). DB `lq_h07b` đã drop. Ký tự điều khiển trong file đã sửa: 0.
+- Câu hỏi mở: không có.
+
+Tiếp theo
+🖐 Cần tay người: quét QR bằng Zalo phụ theo §7 và ghi `evidence/P02/live.txt`. SO thêm các biến `PACER_*` và `ZALO_ACCOUNTS` vào `.env.example`.
+🤖 Agent làm được ngay: không còn việc trong phạm vi H07.
+⭐ Nên làm trước: chạy thử người, vì đây là cổng §9.5 duy nhất chưa đo.
+⏸ Chưa làm: chạy thật với Zalo, vì cần người quét QR.
+
+⏳ Chờ người duyệt.
