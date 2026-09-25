@@ -1,0 +1,39 @@
+provider=vyce building=f5162a3c-222a-4a88-b066-c4a7457ff6b5 apartments=20
+emergency: total=100 pass=91 layer1_hits=44 layer2_calls=56 layer2_hits=13 false_positive=8 (8.0%) false_negative=1 ok=false
+  - E02: bo sot
+  - E57: bao nham
+  - E59: bao nham
+  - E67: bao nham
+  - E68: bao nham
+  - E75: bao nham
+  - E76: bao nham
+  - E85: bao nham
+  - E93: bao nham
+consent: total=44 pass=41 false_accept=2 recall=96.0% ok=false
+  - K25: bo sot dong y that
+  - K31: dong y sai (that ra khong dong y)
+  - K43: dong y sai (that ra khong dong y)
+diagnosis: total=40 scored=40 pass=2 rate=5.0% avg_questions=3.80 blocked=0 ok=false
+  - D01: ky vong=ong_nuoc_ro thuc te=null
+  - D02: ky vong=ong_nuoc_ro thuc te=null
+  - D03: ky vong=ong_nuoc_ro thuc te=null
+  - D04: ky vong=thiet_bi_ve_sinh thuc te=null
+  - D05: ky vong=thiet_bi_ve_sinh thuc te=null
+  - D06: ky vong=thiet_bi_ve_sinh thuc te=null
+  - D07: ky vong=tac_thoat_nuoc thuc te=null
+  - D08: ky vong=tac_thoat_nuoc thuc te=null
+  - D09: ky vong=tac_thoat_nuoc thuc te=null
+  - D10: ky vong=dien_mat_cuc_bo thuc te=null
+  - D11: ky vong=dien_mat_cuc_bo thuc te=null
+  - D12: ky vong=dien_mat_cuc_bo thuc te=null
+  - D13: ky vong=o_cam_cong_tac thuc te=null
+  - D14: ky vong=o_cam_cong_tac thuc te=null
+  - D15: ky vong=o_cam_cong_tac thuc te=null
+  - D16: ky vong=khoa_cua thuc te=null
+  - D18: ky vong=khoa_cua thuc te=null
+  - D19: ky vong=dieu_hoa_khong_mat thuc te=null
+  - D20: ky vong=dieu_hoa_khong_mat thuc te=null
+  - D21: ky vong=dieu_hoa_khong_mat thuc te=null
+  - ... va 18 ca khac
+STOPPED_BY_SO: deepseek-v4-flash duoi nguong, khong sua prompt cho model khong dung that
+EXIT:1

@@ -67,4 +67,45 @@ CHƯA COMMIT: `packages/core/src/agent/prompts/resident.ts` — 1 file, +3/-3 (g
 - SO đã soát `e6f2e08` (§11.11): cả 3 nhánh ghi cột cùng câu lệnh với `draft`, thứ tự tham số đúng. Đo lại toàn gói để SAU lượt chấm vòng 3 (tránh đo khi H10 đang sửa adapter trên cùng cây).
 - Việc còn lại của H08 (vòng 3, sau R10 ✅): `MODEL_PROVIDER=openrouter` chạy lại đủ 4 bộ một lần với prompt đang treo ⇒ `real-run-3.txt`; đạt ⇒ commit prompt; trượt ⇒ còn đúng 1 vòng sửa theo mục 3d.
 
+## Vòng 3 (2026-09-25, provider `vyce`/`deepseek-v4-flash` — Đ25 sau khi OpenRouter 0 USD)
+
+Lệnh: `lq_h08` tạo lại rỗng → migrate + seed + `DATA_MODE=sim` seed:sim → `MODEL_PROVIDER=vyce DATA_MODE=sim TRIAGE_TIMEOUT_MS=8000 npx tsx --env-file=.env scripts/eval_golden.mjs`. Dòng đầu evidence xác nhận đúng provider: `provider=vyce building=f5162a3c-222a-4a88-b066-c4a7457ff6b5 apartments=20`. Prompt `resident.ts` đang treo (mục 5) GIỮ NGUYÊN để chạy, KHÔNG sửa thêm cho lượt này.
+
+**SO dừng giữa chừng lúc 17:46** (bộ `responsibility` chưa kịp chạy) sau khi đọc số của 3 bộ đầu, quyết định KHÔNG làm vòng sửa prompt cho DeepSeek — số kém là do chất lượng model (đã đối chiếu DB: tool VẪN được gọi — 13 `save_job_draft`, 8 `search_regulations`, 4 `classify_responsibility` — nhưng DeepSeek hỏi dồn 3 câu một lượt, không lưu nháp sớm; triage trả `emergency=null` kèm `emergency_confidence` 0.95–1, tức model tự mâu thuẫn), không phải lỗi adapter `vyce` (nhánh đã duyệt R11 ✅). Tiến trình bị dừng tay (`TaskStop`), nối `STOPPED_BY_SO: deepseek-v4-flash duoi nguong, khong sua prompt cho model khong dung that` + `EXIT:1` vào [real-run-3](../evidence/eval-real/real-run-3.txt).
+
+### Bảng bộ → ngưỡng → số (vyce/deepseek-v4-flash) — **bằng chứng so sánh model, KHÔNG phải số dùng để đóng gate G08–G10** (gate đóng bằng lượt Gemini/OpenRouter đạt ngưỡng)
+
+| Bộ | Ngưỡng | Số đo (vyce/deepseek-v4-flash) | Đạt/trượt |
+| :-- | :-- | :-- | :-- |
+| emergency | 0 bỏ sót, báo nhầm ≤5% | 91/100 pass, layer1=44 layer2=13/56, **bỏ sót=1** (E02), **báo nhầm=8 (8.0%)** | ❌ |
+| consent | 0 nhận nhầm, recall ≥90% | 41/44 pass, **nhận nhầm=2** (K31, K43), recall=96.0% (bỏ sót K25) | ❌ |
+| diagnosis | ≥85% đúng category_code | 2/40 scored=40, **rate=5.0%**, avg_questions=3.80, blocked=0 | ❌ |
+| responsibility | ≥90% đúng party, citation 100% | **KHÔNG CHẠY TỚI** — SO dừng trước khi bộ này bắt đầu | — |
+
+Đối chiếu cùng bộ golden, cùng prompt (chưa sửa), lượt Gemini real-run-1: emergency 100/100, consent 42/44 (0 nhận nhầm), diagnosis 36/37 (97.3%) — chênh lệch lớn xác nhận kết luận của SO: `deepseek-v4-flash` dưới ngưỡng dùng thật cho P03 ở cấu hình hiện tại, không phải lỗi mã.
+
+### Số ca triage quá hạn/lỗi
+
+`audit_log action='triage.unavailable'` (tự đo trên `lq_h08` trước khi drop, không lấy lời kể): **33** ca (trên tổng 297 lượt gọi route `triage`, ~11%) dù `TRIAGE_TIMEOUT_MS=8000` (gấp đôi mặc định 4000) — `deepseek-v4-flash` chậm/lỗi ở route triage đáng kể hơn Gemini.
+
+### Token/latency theo route (toàn bộ `agent_runs` của lượt vyce, đo trực tiếp trên DB trước khi drop)
+
+| route | calls | input_tokens | output_tokens | avg_latency_ms |
+| :-- | :-- | :-- | :-- | :-- |
+| diagnose | 215 | 701795 | 47078 | 4765 |
+| triage | 297 | 352395 | 47768 | 3453 |
+
+Số lượt gọi tool (`audit_log action LIKE 'tool.%'`): `save_job_draft`=13, `search_regulations`=8, `classify_responsibility`=4 — xác nhận quan sát của SO: trên 40 ca diagnosis, phần lớn (27/40) KHÔNG có nổi một lần `save_job_draft` trong 4 lượt (DeepSeek dồn câu hỏi, không lưu nháp sớm như prompt yêu cầu ở bước 1).
+
+### Diff prompt (không đổi so mục 3/5 — vẫn CHƯA COMMIT)
+
+Không có thay đổi mới ở vòng 3 — `resident.ts` giữ nguyên diff đã ghi ở mục 3/5 (giữ nguyên để chạy theo đúng lệnh, không sửa thêm cho một lượt biết trước là model yếu). Xem [diff-stat](../evidence/eval-real/diff-stat.txt) (không cập nhật ở vòng này vì không có commit mã mới) và diff nguyên văn ở mục 5.
+
+### Đã làm theo lệnh dừng vòng 3
+
+1. Dừng tiến trình (`TaskStop` 2 task nền), giữ nguyên `real-run-3.txt`, nối `STOPPED_BY_SO`+`EXIT:1`.
+2. KHÔNG commit, KHÔNG sửa thêm `resident.ts` — vẫn treo chờ lượt Gemini/OpenRouter.
+3. Mục "## Vòng 3" này + evidence commit riêng `docs(plan-01): report R08 round 3`.
+4. `lq_h08` đã drop sau khi đo xong `audit_log`/`agent_runs` (mục trên).
+
 ⏳ Chờ người duyệt.
