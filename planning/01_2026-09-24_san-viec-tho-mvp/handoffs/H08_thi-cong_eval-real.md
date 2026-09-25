@@ -62,3 +62,11 @@ Gemini hết quota, OpenRouter 0 USD ⇒ Đ25: chấm bằng `MODEL_PROVIDER=vyc
 - Trượt ⇒ còn đúng 1 vòng sửa prompt theo mục 3d ⇒ `real-run-5.txt`; vẫn trượt ⇒ nộp số + Câu hỏi mở, KHÔNG commit prompt.
 - 429 `RESOURCE_EXHAUSTED` dồn dập (máy chấm báo bộ `blocked`) ⇒ dừng, nộp `blocked`, KHÔNG chuyển provider.
 - Ghi R08 mục "## Vòng 4": bảng bộ → ngưỡng → số (cặp `gemini/gemini-3.6-flash`), so với real-run-1, token/latency theo route + `triage.unavailable` (đo từ DB trước khi drop), diff prompt nếu có vòng sửa. Dòng cuối `⏳ Chờ người duyệt.`. Commit report + evidence `docs(plan-01): report R08 round 4`. Drop `lq_h08` khi xong.
+
+## 10. PHỤ LỤC VÒNG 5 (SO, 2026-09-26) — thắng mục 1–9 khi khác
+Đ29 (plan.md): chấm bù theo route. Việc của vòng này CHỈ là thêm cờ chọn bộ cho máy chấm — CHƯA chạy lượt thật (Gemini chờ quota).
+- `scripts/eval_golden.mjs` (+ `scripts/eval/score.mjs` nếu cần): nhận `--set <tên>[,<tên>]`, tên thuộc `emergency|consent|diagnosis|responsibility`; không cờ ⇒ đủ 4 bộ như cũ. Tên lạ ⇒ in lỗi, exit 2. Bộ không chạy ⇒ in dòng `<tên>: skipped (--set)`; `decideExit` chỉ xét các bộ đã chạy (bộ `skipped` KHÔNG làm exit 3). Dòng đầu vẫn in `provider=…` + thêm `sets=…`.
+- Không đổi ngưỡng, không đổi golden, không đổi prompt, không đổi ngữ nghĩa exit của bộ đã chạy.
+- Xong khi: test (model giả, không DB hoặc test:db tuỳ chỗ máy chấm đang test) chứng minh (1) `--set diagnosis,responsibility` không gọi bộ khác, (2) tên lạ ⇒ exit 2, (3) không cờ ⇒ hành vi cũ; `red-fake-model` vẫn đỏ với `--set responsibility`; `npm run typecheck`, `npm test`, `npm run gate` exit 0, số test không giảm, 0 skip. `test:db` chạy trên DB rỗng `lq_h08` nếu có test DB mới (drop khi xong).
+- Commit `feat(scripts): add --set filter to eval scorer (D29)`; report ghi mục "## Vòng 5" trong R08, evidence `evidence/eval-real/{set-flag-test,gate-v5}.txt`, dòng cuối `⏳ Chờ người duyệt.`, commit `docs(plan-01): report R08 round 5`.
+- CẤM chạy máy chấm với model thật ở vòng này; CẤM đụng `resident.ts` (vẫn treo), `specs/**`, `plan.md`, `brain4agent/**`.

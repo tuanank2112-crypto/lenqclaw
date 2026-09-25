@@ -161,9 +161,16 @@ Hợp đồng ở [SPEC-P05 §10](specs/SPEC-P05-Dispatch.md) và [SPEC-P04 §8]
 Người dùng: "dùng tạm deepseek trong vyce" — Gemini cạn quota giữa lượt chấm (R08 vòng 4 ⛔, G26). `.env` `MODEL_PROVIDER=vyce` (vẫn chỉ `DATA_MODE=sim`, 01-CONTRACTS §2d). Phạm vi: chạy thử `/dev/sim`, runner `core:run` + Zalo dev, phát triển P05. **Đ26 giữ nguyên cho gate:** G08–G10 chỉ đóng bằng lượt chấm model đạt ngưỡng; DeepSeek đã trượt ở vòng 3 nên KHÔNG chạy lại máy chấm với nó (tốn ~1 triệu token, biết trước trượt), KHÔNG sửa prompt riêng cho DeepSeek (G25). Hệ quả người dùng phải biết: với DeepSeek, agent có thể bỏ sót khẩn cấp gián tiếp và hỏi dồn nhiều câu một lượt — chỉ dùng với dữ liệu mô phỏng / Zalo phụ của chính người dùng.
 **Lật được:** có — đổi `MODEL_PROVIDER=gemini` khi có quota/billing; không đổi mã.
 
+### Đ29 — 2026-09-26 · Chấm bù theo route: chỉ chấm lại bộ bị ảnh hưởng bởi prompt đã đổi (Super Orchestrator, 🔴)
+Người dùng hỏi "chỉ cần thay phần chưa làm là được?". Không ghép số hai model (khi chạy thật một model làm mọi bước — Đ26 giữ). Nhưng gate gắn với **cặp (model, prompt) của từng route**: `emergency`/`consent` chấm route `triage` (prompt `triage.ts`, model `MODEL_TRIAGE`) — KHÔNG đổi từ real-run-1 ⇒ số real-run-1 (100/100; 42/44, 0 nhận nhầm) GIỮ giá trị cho G08. `diagnosis`/`responsibility` chấm agent chính (prompt `resident.ts` đang treo) ⇒ chỉ hai bộ này phải chấm lại bằng Gemini.
+- Máy chấm thêm cờ `--set <tên>[,<tên>]` (H08 §10). Chạy thiếu bộ ⇒ in rõ bộ nào không chạy; exit theo các bộ đã chạy.
+- Số real-run-1 chỉ còn giá trị khi `triage.ts`, `MODEL_TRIAGE` và `triage.ts`-liên quan trong `packages/core/src/agent/triage.ts` không đổi so với commit của real-run-1; đổi một trong số đó ⇒ chấm lại `emergency`+`consent`.
+**Lật được:** có — chấm đủ 4 bộ một lượt khi có billing.
+
 ### Quyết định bị thay thế
 | Mốc cũ | Phát biểu cũ | Thay bằng | Lý do |
 | :-- | :-- | :-- | :-- |
+| H08 §8–§9 | Mỗi lượt chấm chạy ĐỦ 4 bộ một lần | Đ29 | Gate gắn cặp (model, prompt) theo route; bộ triage không đổi thì giữ số cũ |
 | Đ26 (phần "DeepSeek bị loại") | DeepSeek qua Vyce không được dùng | Đ28 | Chỉ loại khỏi gate; tạm dùng làm provider chạy dev khi Gemini cạn quota |
 | Đ03 (bản đầu) | "LLM chỉ đề xuất, code quyết định" ⇒ pipeline 10 bước, 7 bước là dịch vụ | Đ10 | Agent phải là người điều phối; luật chuyển vào trong tool thay vì tước bước khỏi agent |
 | 00-ARCH §4 bản đầu | Hệ thống tự cấp thẻ vào tòa khi thợ xác nhận | Đ10 (b) | BQL giữ quyền duyệt người vào tòa |
