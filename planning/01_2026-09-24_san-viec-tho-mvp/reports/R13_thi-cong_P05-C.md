@@ -116,3 +116,12 @@ Không có gói nào phải dừng hỏi giữa chừng vì thiếu quyết đ�
 3. Idea Vault (không chặn): (a) siết `JOB_CODE_RE` để tránh trùng với từ tiếng Anh thông dụng dạng "Cxxxx"; (b) sửa `p05-helpers.ts::createJob` dùng `generateJobCode()` thay vì cắt UUID hex.
 
 Dòng cuối: ⏳ Chờ người duyệt.
+
+## SO phán vòng 1 (2026-09-26, review 🔴 prompt + golden)
+- Phạm vi `bf926e1` sạch (22 file, đúng danh sách H13 mục 2; `routeInboundEvent` chỉ thêm nhánh `market`; `resident.ts` không bị stage) ✅. Test chạy lại để SAU khi H14 vòng 2 nhả cây (đang sửa core cùng cây).
+- Prompt `vendor.ts`: đúng hướng — cấm nhắc PII cư dân, không bịa giá, `request_access` cùng lượt, sự kiện hệ thống ⇒ `dispatch_to_vendor` ✅.
+- **Lỗi chặn — golden lọt vào prompt (vi phạm "CẤM chèn đáp án golden vào prompt"):** SO chuẩn hoá (bỏ dấu, chữ thường) rồi so mọi chuỗi trong ngoặc kép của `prompts/{vendor-triage,vendor}.ts` với `text` của `vendor_intent.jsonl` ⇒ **11/67 ca trùng nguyên văn**: V04 "cho em cuốc này", V28 "ok", V32 "đồng ý", V39 "350k", V41 "1tr2", V43 "em báo giá 400 nghìn", V51 "thôi em bận", V52 "hủy giúp em", V62 "giữ slot điện nước giúp em", V63 "em muốn đăng ký nhóm khoá", V64 "slot của em còn bao lâu". Số golden khi đó đo trí nhớ, không đo hiểu ý.
+- Q1 (đóng gói khi golden model còn treo): mã được duyệt khi sửa xong lỗi trên; chỉ số golden thợ trở thành cổng model như G08–G10, chấm bằng Gemini cùng lượt H08 (Đ26). Q2: P05-D CHỜ lượt Gemini H08 nhả `resident.ts` (WP-D sửa cùng file). Q3: đưa vào Idea Vault (siết `JOB_CODE_RE` — "check" ⇒ `C-HECK`; `p05-helpers.createJob` dùng `generateJobCode`).
+- `defer` có trong golden (2 ca) nhưng không có trong enum `intent` của prompt triage ⇒ làm rõ ở vòng 2.
+
+🔁 SỬA: prompt thợ không được chứa câu golden — H13 mục 7.

@@ -58,6 +58,8 @@ Thứ tự (Đ13, Đ15): `P01 → P03 → P05 → P06 → P08`; P04 tối thiể
 - **Truy hồi lai (từ khoá + embedding) cho quy chế** — Đ17: P03 chỉ dùng từ khoá. Đ18 (Gemini) mở đường dùng `gemini-embedding-001`; làm khi đo thấy truy hồi từ khoá hụt hoặc kho quy chế lớn lên.
 - **Nâng vitest 5 / Next 16 để vá `npm audit`** (7 lỗ, đều ở công cụ dev hoặc postcss của Next) — cần Đ mới vì Next 16 lệch Đ06; xét ở P07.
 - **Unique index một phần cho mã vào tòa còn hiệu lực** (`access_passes.code`) — R12 Q3: 6 ký tự / 31 chữ ≈ 8,9·10⁸ tổ hợp, trùng gần như không xảy ra ở 1–2 tòa; làm khi mở nhiều tòa.
+- **Siết `JOB_CODE_RE` của lưới trích mã cuốc** (R13 Q3): dạng không gạch nối khớp nhầm từ thường ("check" ⇒ `C-HECK`); hiện vô hại vì mã phải tồn tại trong DB, nhưng tốn một lượt tra.
+- **`p05-helpers.createJob` dùng `generateJobCode()`** thay mã viết tay (R13 Q3).
 - **Nhận tin nhắn thoại của thợ** (speech-to-text) — thợ quen gửi voice.
 
 ## Đã hoàn thành (Done)
