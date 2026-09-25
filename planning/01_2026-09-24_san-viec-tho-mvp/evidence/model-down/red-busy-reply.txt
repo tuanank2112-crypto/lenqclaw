@@ -1,0 +1,92 @@
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mD:/lenqclaw/packages/core[39m
+
+[90mstdout[2m | src/dbtests/p03-model-down.db.test.ts[2m > [22m[2m§11.12 (Đ31) đường lùi khi model sập[2m > [22m[2m(a) callModel ném ModelUnavailableError => outbox đúng 1 tin chứa hotline BQL, 1 handoff model_unavailable, audit có
+[22m[39mMODELDOWN| (a) outbox=["Em đang bận, sẽ trả lời trong vài phút."] handoff_moi=0
+
+[90mstdout[2m | src/dbtests/p03-model-down.db.test.ts[2m > [22m[2m§11.12 (Đ31) đường lùi khi model sập[2m > [22m[2m(b) callModel ném lỗi KHÁC ModelUnavailableError => vẫn hotline + handoff model_unavailable, THÊM audit agent.model_error
+[22m[39mMODELDOWN| (b) outbox=["Em đang bận, sẽ trả lời trong vài phút."] handoff_moi=0 model_error_moi=1
+
+[90mstdout[2m | src/dbtests/p03-model-down.db.test.ts[2m > [22m[2m§11.12 (Đ31) đường lùi khi model sập[2m > [22m[2m(c) tin kế tiếp trong thời gian im lặng (handoff vừa đặt) => 0 lần gọi model, 0 handoff mới
+[22m[39mMODELDOWN| (c) calls_truoc=1 calls_sau=2 handoff_1=0 handoff_2=0 outbox_them=1
+
+[90mstdout[2m | src/dbtests/p03-model-down.db.test.ts[2m > [22m[2m§11.12 (Đ31) đường lùi khi model sập[2m > [22m[2m(d) triage null nhưng agent chính trả lời bình thường => KHÔNG hotline, KHÔNG handoff
+[22m[39mMODELDOWN| (d) outbox=["Da ghi nhan, em se ho tro anh/chi ngay."] handoff_moi=0
+
+ [31m❯[39m src/dbtests/p03-model-down.db.test.ts [2m([22m[2m4 tests[22m[2m | [22m[31m3 failed[39m[2m)[22m[33m 395[2mms[22m[39m
+[31m   [31m×[31m §11.12 (Đ31) đường lùi khi model sập[2m > [22m(a) callModel ném ModelUnavailableError => outbox đúng 1 tin chứa hotline BQL, 1 handoff model_unavailable, audit có[90m 94[2mms[22m[31m[39m
+[31m     → expected [ Array(1) ] to deeply equal [ Array(1) ][39m
+[31m   [31m×[31m §11.12 (Đ31) đường lùi khi model sập[2m > [22m(b) callModel ném lỗi KHÁC ModelUnavailableError => vẫn hotline + handoff model_unavailable, THÊM audit agent.model_error[90m 54[2mms[22m[31m[39m
+[31m     → expected [ Array(1) ] to deeply equal [ Array(1) ][39m
+[31m   [31m×[31m §11.12 (Đ31) đường lùi khi model sập[2m > [22m(c) tin kế tiếp trong thời gian im lặng (handoff vừa đặt) => 0 lần gọi model, 0 handoff mới[90m 54[2mms[22m[31m[39m
+[31m     → expected 2 to be 1 // Object.is equality[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 3 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/dbtests/p03-model-down.db.test.ts[2m > [22m§11.12 (Đ31) đường lùi khi model sập[2m > [22m(a) callModel ném ModelUnavailableError => outbox đúng 1 tin chứa hotline BQL, 1 handoff model_unavailable, audit có
+[31m[1mAssertionError[22m: expected [ Array(1) ] to deeply equal [ Array(1) ][39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  Array [[22m
+[32m-   "Xin lỗi, hệ thống đang gián đoạn. Ban quản lý đã nhận tin của anh/chị và sẽ liên hệ lại. Nếu đang có cháy, khói, mùi gas, điện giật, kẹt thang máy hay nước tràn, anh/chị gọi ngay hotline BQL 1900-0000.",[39m
+[31m+   "Em đang bận, sẽ trả lời trong vài phút.",[39m
+[2m  ][22m
+
+[36m [2m❯[22m src/dbtests/p03-model-down.db.test.ts:[2m140:17[22m[39m
+    [90m138| [39m    [35mconst[39m expected [33m=[39m [33mMODEL_DOWN_REPLY[39m([34mbqlHotline[39m())[33m;[39m
+    [90m139| [39m    [34mlog[39m([32m`(a) outbox=[39m[36m${[39m[33mJSON[39m[33m.[39m[34mstringify[39m(out)[36m}[39m[32m handoff_moi=[39m[36m${[39mafter [33m-[39m befor…
+    [90m140| [39m    [34mexpect[39m(out)[33m.[39m[34mtoEqual[39m([expected])[33m;[39m
+    [90m   | [39m                [31m^[39m
+    [90m141| [39m    [34mexpect[39m(out[[34m0[39m])[33m.[39m[34mtoContain[39m([34mbqlHotline[39m())[33m;[39m
+    [90m142| [39m    [34mexpect[39m(after [33m-[39m before)[33m.[39m[34mtoBe[39m([34m1[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/dbtests/p03-model-down.db.test.ts[2m > [22m§11.12 (Đ31) đường lùi khi model sập[2m > [22m(b) callModel ném lỗi KHÁC ModelUnavailableError => vẫn hotline + handoff model_unavailable, THÊM audit agent.model_error
+[31m[1mAssertionError[22m: expected [ Array(1) ] to deeply equal [ Array(1) ][39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  Array [[22m
+[32m-   "Xin lỗi, hệ thống đang gián đoạn. Ban quản lý đã nhận tin của anh/chị và sẽ liên hệ lại. Nếu đang có cháy, khói, mùi gas, điện giật, kẹt thang máy hay nước tràn, anh/chị gọi ngay hotline BQL 1900-0000.",[39m
+[31m+   "Em đang bận, sẽ trả lời trong vài phút.",[39m
+[2m  ][22m
+
+[36m [2m❯[22m src/dbtests/p03-model-down.db.test.ts:[2m164:17[22m[39m
+    [90m162| [39m    [35mconst[39m expected [33m=[39m [33mMODEL_DOWN_REPLY[39m([34mbqlHotline[39m())[33m;[39m
+    [90m163| [39m    [34mlog[39m([32m`(b) outbox=[39m[36m${[39m[33mJSON[39m[33m.[39m[34mstringify[39m(out)[36m}[39m[32m handoff_moi=[39m[36m${[39mhandoffAfter …
+    [90m164| [39m    [34mexpect[39m(out)[33m.[39m[34mtoEqual[39m([expected])[33m;[39m
+    [90m   | [39m                [31m^[39m
+    [90m165| [39m    [34mexpect[39m(handoffAfter [33m-[39m handoffBefore)[33m.[39m[34mtoBe[39m([34m1[39m)[33m;[39m
+    [90m166| [39m    [34mexpect[39m(errAfter [33m-[39m errBefore)[33m.[39m[34mtoBe[39m([34m1[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/dbtests/p03-model-down.db.test.ts[2m > [22m§11.12 (Đ31) đường lùi khi model sập[2m > [22m(c) tin kế tiếp trong thời gian im lặng (handoff vừa đặt) => 0 lần gọi model, 0 handoff mới
+[31m[1mAssertionError[22m: expected 2 to be 1 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 1[39m
+[31m+ 2[39m
+
+[36m [2m❯[22m src/dbtests/p03-model-down.db.test.ts:[2m187:24[22m[39m
+    [90m185| [39m    [35mconst[39m outAfter [33m=[39m [35mawait[39m [34moutboxTexts[39m(t)[33m;[39m
+    [90m186| [39m    [34mlog[39m([32m`(c) calls_truoc=[39m[36m${[39mcallsBefore[36m}[39m[32m calls_sau=[39m[36m${[39mcallsAfter[36m}[39m[32m handof[39m…
+    [90m187| [39m    [34mexpect[39m(callsAfter)[33m.[39m[34mtoBe[39m(callsBefore)[33m;[39m [90m// 0 lan goi model THEM[39m
+    [90m   | [39m                       [31m^[39m
+    [90m188| [39m    [34mexpect[39m(handoffAfterSecond)[33m.[39m[34mtoBe[39m(handoffAfterFirst)[33m;[39m [90m// 0 handoff m[39m…
+    [90m189| [39m    [34mexpect[39m(outAfter[33m.[39mlength)[33m.[39m[34mtoBe[39m(outBefore[33m.[39mlength)[33m;[39m [90m// im lang, khong [39m…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (4)[39m
+[2m   Start at [22m 05:26:36
+[2m   Duration [22m 1.57s[2m (transform 327ms, setup 0ms, collect 935ms, tests 395ms, environment 0ms, prepare 94ms)[22m
+
+EXIT:1

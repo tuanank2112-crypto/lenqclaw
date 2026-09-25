@@ -1,0 +1,194 @@
+
+> lenqclaw@0.0.1 gate
+> node scripts/gate.mjs
+
+
+=== gate: typecheck ===
+
+> lenqclaw@0.0.1 typecheck
+> npm run build -w @lenqclaw/core && npm run typecheck --workspaces --if-present
+
+
+> @lenqclaw/core@0.0.1 build
+> tsc -p tsconfig.json
+
+
+> @lenqclaw/web@0.0.1 typecheck
+> tsc --noEmit
+
+
+> @lenqclaw/zalo-worker@0.0.1 typecheck
+> tsc --noEmit -p tsconfig.typecheck.json
+
+
+> @lenqclaw/core@0.0.1 typecheck
+> tsc --noEmit -p tsconfig.typecheck.json
+
+
+=== gate: build ===
+
+> lenqclaw@0.0.1 build
+> npm run build -w @lenqclaw/core && npm run build --workspaces --if-present
+
+
+> @lenqclaw/core@0.0.1 build
+> tsc -p tsconfig.json
+
+
+> @lenqclaw/web@0.0.1 build
+> next build
+
+   ▲ Next.js 15.5.26
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 2.2s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/10) ...
+   Generating static pages (2/10) 
+   Generating static pages (4/10) 
+   Generating static pages (7/10) 
+ ✓ Generating static pages (10/10)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
+┌ ƒ /                                      163 B         103 kB
+├ ○ /_not-found                            987 B         104 kB
+├ ƒ /api/auth/login                        163 B         103 kB
+├ ƒ /api/auth/logout                       163 B         103 kB
+├ ƒ /api/dev/sim/replay                    163 B         103 kB
+├ ƒ /api/dev/sim/send                      163 B         103 kB
+├ ƒ /api/dev/sim/thread                    163 B         103 kB
+├ ƒ /api/dev/sim/tick                      163 B         103 kB
+├ ƒ /api/tickets/[id]/decision             163 B         103 kB
+├ ƒ /api/vendors/[id]/slots/paid           163 B         103 kB
+├ ƒ /api/vendors/[id]/status               163 B         103 kB
+├ ƒ /api/vendors/capacity                  163 B         103 kB
+├ ƒ /api/zalo/[account]/login              163 B         103 kB
+├ ƒ /api/zalo/[account]/logout             163 B         103 kB
+├ ƒ /api/zalo/status                       163 B         103 kB
+├ ƒ /dev/sim                             1.83 kB         104 kB
+├ ƒ /gate                                  163 B         103 kB
+├ ƒ /jobs                                3.44 kB         106 kB
+├ ƒ /jobs/[code]                           163 B         103 kB
+├ ○ /login                                 764 B         103 kB
+├ ƒ /tickets                               889 B         104 kB
+├ ƒ /vendors                             1.55 kB         104 kB
+└ ƒ /zalo                                2.07 kB         105 kB
++ First Load JS shared by all             103 kB
+  ├ chunks/18-498168fb58dcd546.js        46.4 kB
+  ├ chunks/87c73c54-24122e7b92478d00.js  54.2 kB
+  └ other shared chunks (total)          1.97 kB
+
+
+ƒ Middleware                             34.8 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+> @lenqclaw/zalo-worker@0.0.1 build
+> tsc -p tsconfig.json
+
+
+> @lenqclaw/core@0.0.1 build
+> tsc -p tsconfig.json
+
+
+=== gate: test ===
+
+> lenqclaw@0.0.1 test
+> npm run test --workspaces --if-present
+
+
+> @lenqclaw/web@0.0.1 test
+> vitest run --exclude "**/*.db.test.ts"
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mD:/lenqclaw/apps/web[39m
+
+ [32m✓[39m app/zalo/display.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 4[2mms[22m[39m
+ [32m✓[39m app/api/zalo/policy.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 4[2mms[22m[39m
+ [32m✓[39m lib/auth/policy.test.ts [2m([22m[2m20 tests[22m[2m)[22m[90m 9[2mms[22m[39m
+ [32m✓[39m lib/auth/session.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 19[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[32m36 passed[39m[22m[90m (36)[39m
+[2m   Start at [22m 05:29:36
+[2m   Duration [22m 567ms[2m (transform 144ms, setup 0ms, collect 290ms, tests 35ms, environment 1ms, prepare 629ms)[22m
+
+
+> @lenqclaw/zalo-worker@0.0.1 test
+> vitest run --exclude "**/*.db.test.ts"
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mD:/lenqclaw/apps/zalo-worker[39m
+
+ [32m✓[39m src/config.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 8[2mms[22m[39m
+ [32m✓[39m src/crypto.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 11[2mms[22m[39m
+ [32m✓[39m src/watchdog.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 34[2mms[22m[39m
+ [32m✓[39m src/pacer-policy.test.ts [2m([22m[2m15 tests[22m[2m)[22m[90m 63[2mms[22m[39m
+ [32m✓[39m src/inbound.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 3[2mms[22m[39m
+ [32m✓[39m src/main.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 2338[2mms[22m[39m
+   [33m[2m✓[22m[39m zalo-worker main — khoa phien[2m > [22mthieu ZALO_SESSION_KEY ⇒ exit 1 [33m864[2mms[22m[39m
+   [33m[2m✓[22m[39m zalo-worker main — khoa phien[2m > [22mkhoa sai do dai ⇒ exit 1, khong in lai gia tri [33m763[2mms[22m[39m
+   [33m[2m✓[22m[39m zalo-worker main — khoa phien[2m > [22mkhoa dung nhung ZALO_ACCOUNTS=market ⇒ exit 1 (§9.6) [33m709[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m6 passed[39m[22m[90m (6)[39m
+[2m      Tests [22m [1m[32m37 passed[39m[22m[90m (37)[39m
+[2m   Start at [22m 05:29:37
+[2m   Duration [22m 2.89s[2m (transform 396ms, setup 0ms, collect 1.46s, tests 2.46s, environment 2ms, prepare 1.11s)[22m
+
+
+> @lenqclaw/core@0.0.1 test
+> vitest run --exclude "**/*.db.test.ts"
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mD:/lenqclaw/packages/core[39m
+
+ [32m✓[39m src/agent/prompts/vendor-golden-leak.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 7[2mms[22m[39m
+ [32m✓[39m src/services/vn-time.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 9[2mms[22m[39m
+ [32m✓[39m src/services/job-state.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 11[2mms[22m[39m
+ [32m✓[39m src/agent/vendor-intent.test.ts [2m([22m[2m24 tests[22m[2m)[22m[90m 23[2mms[22m[39m
+ [32m✓[39m src/adapters/model.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 11[2mms[22m[39m
+[90mstdout[2m | src/agent/tools/open_service_case.test.ts[2m > [22m[2mhasExplicitConsent — lop danh sach tu tat dinh (SPEC-P03 §11.5)[2m > [22m[2mdo phu cua rieng lop regex tren ca dong y that (con lai giao lop hieu y/triage — §11.5)
+[22m[39mlop regex phu 23/25 ca dong y that.
+
+ [32m✓[39m src/agent/tools/open_service_case.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 9[2mms[22m[39m
+[90mstdout[2m | src/agent/pii.test.ts[2m > [22m[2mdetectEmergency — lop 1 tat dinh (SPEC-P03 §11.1)[2m > [22m[2mdo phu lop 1 tren bo khan cap (chi ghi so, KHONG chan cong)
+[22m[39mlop 1 phu 44/50 ca khan cap (con lai giao lop 2).
+
+ [32m✓[39m src/agent/pii.test.ts [2m([22m[2m142 tests[22m[2m)[22m[90m 206[2mms[22m[39m
+ [32m✓[39m src/agent/tools/tool-kit.test.ts [2m([22m[2m7 tests[22m[2m)[22m[90m 9[2mms[22m[39m
+ [32m✓[39m src/services/pii-gate.test.ts [2m([22m[2m6 tests[22m[2m)[22m[90m 11[2mms[22m[39m
+ [32m✓[39m src/services/vendor-messages.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 36[2mms[22m[39m
+ [32m✓[39m src/services/dispatch-config.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 7[2mms[22m[39m
+ [32m✓[39m src/agent/tools/classify_responsibility.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 40[2mms[22m[39m
+ [32m✓[39m src/agent/tools/handoff_to_staff.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 5[2mms[22m[39m
+ [32m✓[39m src/agent/vendor-triage.test.ts [2m([22m[2m7 tests[22m[2m)[22m[90m 6[2mms[22m[39m
+ [32m✓[39m src/domain/password.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 203[2mms[22m[39m
+ [32m✓[39m src/adapters/model.vyce.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 4040[2mms[22m[39m
+   [33m[2m✓[22m[39m callModel — nhanh vyce (01-CONTRACTS §2d)[2m > [22m429 x3 (het retry) o model chinh => thu MODEL_FALLBACKS, thanh cong, model = fallback (dung chung retry voi §2c) [33m4018[2mms[22m[39m
+ [32m✓[39m src/adapters/model.openrouter.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 4038[2mms[22m[39m
+   [33m[2m✓[22m[39m callModel — nhanh openrouter (01-CONTRACTS §2c)[2m > [22m429 x3 (het retry) o model chinh => thu MODEL_FALLBACKS, thanh cong, model = fallback [33m4014[2mms[22m[39m
+ [32m✓[39m src/adapters/model.gemini.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 4029[2mms[22m[39m
+   [33m[2m✓[22m[39m callModel — nhanh gemini (01-CONTRACTS §2b)[2m > [22m503 x3 (het retry) o model chinh => thu MODEL_FALLBACKS, thanh cong, model = fallback [33m4011[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m18 passed[39m[22m[90m (18)[39m
+[2m      Tests [22m [1m[32m244 passed[39m[22m[90m (244)[39m
+[2m   Start at [22m 05:29:41
+[2m   Duration [22m 4.93s[2m (transform 1.10s, setup 0ms, collect 3.76s, tests 12.70s, environment 6ms, prepare 3.62s)[22m
+
+
+=== gate: check_adapter_boundary ===
+violations: 0
+
+=== gate: check_agent_tools ===
+pii_keys_in_jobcard: 0
+forbidden_tools: 0
+jobreveal_outside_allowed: 0
+allow_reveal_outside_access: 0
+
+GATE_OK: tat ca cac buoc deu xanh.
+EXIT:0

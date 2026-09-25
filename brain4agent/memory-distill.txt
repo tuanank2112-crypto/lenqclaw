@@ -36,6 +36,7 @@ Còn chờ người: quota/billing Gemini đủ ~600 lượt gọi cho một lư
 H08 vòng 4 (2026-09-26) ⛔ quota giữa lượt; Đ29 chấm bù theo route: G08 khẩn cấp + đồng ý giữ số real-run-1, chỉ chấm lại diagnosis/responsibility bằng Gemini (`eval_golden.mjs --set`, R08 vòng 5 ✅) ⇒ G08–G10 vẫn ⬜, `resident.ts` vẫn treo. Đ27 (SPEC-P05 §10 + SPEC-P04 §8) ĐÃ DUYỆT 2026-09-26 (người dùng duyệt toàn bộ quá trình; Q1–Q10 giữ giá trị tạm): hiểu ý thợ bằng model, runTimers không pg-boss, migration 006, WP B→(C∥E)→D→F.
 P05-B nền XONG (R12 ✅ 2026-09-26: migration 006, dịch vụ dispatch/access/slots/timers, PiiGate; `npm test` 296, `test:db` 165, `sim_claims` 0 hai người thắng).
 P05-C agent thợ (R13 ✅) + P05-E dashboard (R14 ✅) XONG MÃ 2026-09-26; Đ30 `suspendVendor` có thứ tự + chốt chặn `dispatchToVendor` (vá lỗ PII). `npm test` 317, `test:db` 192.
+Đ31: model sập ⇒ trả lời kèm hotline BQL + `handoff_to_staff(model_unavailable)` (R15 ✅, `test:db` 196).
 Bước kế: lượt Gemini (H08 `--set diagnosis,responsibility` + golden thợ) ⇒ nhả `resident.ts` ⇒ P05-D ⇒ P05-F thẩm định · lượt Gemini `--set diagnosis,responsibility` sau ~14h · thử người /zalo + agent qua Zalo thật · `.env.example` pacer (SO) · SPEC-P05 chốt thi công.
 Đọc theo thứ tự: plan.md §2 (Đ01–Đ09) → specs/00-ARCHITECTURE.md → 01-CONTRACTS.md → SPEC gói đang làm.
 Sơ đồ: docs/images/08-pipeline-chuan.png. Bối cảnh chiến lược: docs/SYSTEM-MAP.md. docs/DESIGN.md = v0.1 đã bị thu hẹp (Đ01).

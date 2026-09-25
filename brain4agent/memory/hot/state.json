@@ -85,15 +85,16 @@
     "D27",
     "P05-B",
     "P05-C-code",
-    "P05-E"
+    "P05-E",
+    "D31-model-down"
   ],
   "llm_provider": "vyce (deepseek-v4-flash, temporary D28; gate provider gemini D26)",
-  "decisions_latest": "D30",
+  "decisions_latest": "D31",
   "in_progress": null,
   "pushed": "origin/main = a0f832a (2026-09-26)",
   "tests_now": {
     "unit": 317,
-    "db": 192,
+    "db": 196,
     "skip": 0
   }
 }

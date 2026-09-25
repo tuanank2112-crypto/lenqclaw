@@ -1,0 +1,22 @@
+git rev-parse HEAD:
+bdb3fd997e64a3879fcdd0af42db73ab9aa579d0
+
+git diff --stat (phạm vi đã ghi):
+ docs/core.md                              |  4 ++--
+ packages/core/src/agent/emergency.ts      |  5 ++---
+ packages/core/src/agent/pii.ts            | 19 +++++++++++++++++++
+ packages/core/src/agent/resident-agent.ts | 12 +++++++++---
+ 4 files changed, 32 insertions(+), 8 deletions(-)
+
+git status --porcelain (toàn repo, để xác nhận không đụng file cấm):
+ M docs/core.md
+ M packages/core/src/agent/emergency.ts
+ M packages/core/src/agent/pii.ts
+ M packages/core/src/agent/prompts/resident.ts
+ M packages/core/src/agent/resident-agent.ts
+?? docs/lenqclaw_presentation_transcript.pdf
+?? docs/presentation-transcript.html
+?? lenqclaw_presentation_transcript.pdf
+?? packages/core/src/dbtests/p03-model-down.db.test.ts
+?? planning/01_2026-09-24_san-viec-tho-mvp/evidence/model-down/
+?? planning/01_2026-09-24_san-viec-tho-mvp/reports/R15_thi-cong_model-down.md
