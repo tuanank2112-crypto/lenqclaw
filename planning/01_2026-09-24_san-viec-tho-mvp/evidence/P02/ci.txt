@@ -1,0 +1,15 @@
+# npm ci @ 2026-09-25T11:56:08+07:00
+npm warn deprecated crypto-js@4.2.0: Active development of CryptoJS has been discontinued. This library is no longer maintained.
+
+added 124 packages, and audited 128 packages in 17s
+
+22 packages are looking for funding
+  run `npm fund` for details
+
+7 vulnerabilities (4 moderate, 2 high, 1 critical)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+EXIT npm ci: 0

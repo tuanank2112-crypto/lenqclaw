@@ -1,0 +1,155 @@
+# phan con lai cua chuoi test:db (bi && chan sau khi core do): web + zalo-worker, cung DB lq_h07
+
+> @lenqclaw/web@0.0.1 test:db
+> tsx ../../packages/core/scripts/require-database-url.ts && vitest run --config vitest.db.config.ts
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mD:/lenqclaw/apps/web[39m
+
+ [32m✓[39m tests/zalo-login.db.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 86[2mms[22m[39m
+ [32m✓[39m tests/00-login.db.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 204[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m7 passed[39m[22m[90m (7)[39m
+[2m   Start at [22m 12:01:25
+[2m   Duration [22m 1.28s[2m (transform 201ms, setup 0ms, collect 1.26s, tests 290ms, environment 0ms, prepare 368ms)[22m
+
+EXIT web test:db: 0
+
+> @lenqclaw/zalo-worker@0.0.1 test:db
+> tsx ../../packages/core/scripts/require-database-url.ts && vitest run --config vitest.db.config.ts
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mD:/lenqclaw/apps/zalo-worker[39m
+
+{"t":"2026-09-25T05:01:29.069Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T05:01:29.077Z","event":"zalo.inbound","account":"bql","outcome":"inserted","msg_type":"webchat"}
+{"t":"2026-09-25T05:01:29.084Z","event":"zalo.inbound","account":"bql","outcome":"duplicate","msg_type":"webchat"}
+{"t":"2026-09-25T05:01:29.085Z","event":"zalo.inbound","account":"bql","outcome":"duplicate","msg_type":"webchat"}
+{"t":"2026-09-25T05:01:29.094Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T05:01:29.099Z","event":"zalo.inbound","account":"bql","outcome":"inserted","msg_type":"chat.photo"}
+{"t":"2026-09-25T05:01:29.108Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T05:01:29.111Z","event":"zalo.inbound","account":"bql","outcome":"ignored_group","msg_type":"webchat"}
+{"t":"2026-09-25T05:01:29.121Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T05:01:29.131Z","event":"zalo.inbound","account":"bql","outcome":"inserted","msg_type":"webchat"}
+{"t":"2026-09-25T05:01:29.132Z","event":"zalo.inbound","account":"bql","outcome":"inserted","msg_type":"webchat"}
+{"t":"2026-09-25T05:01:29.150Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T05:01:29.157Z","event":"zalo.inbound","account":"bql","outcome":"self_staff_takeover","msg_type":"webchat"}
+{"t":"2026-09-25T05:01:29.176Z","event":"pacer.sent","account":"bql","outbox_id":23}
+{"t":"2026-09-25T05:01:29.186Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T05:01:29.195Z","event":"zalo.inbound","account":"bql","outcome":"self_bot_echo","msg_type":"webchat"}
+{"t":"2026-09-25T05:01:29.205Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T05:01:29.215Z","event":"pacer.sent","account":"bql","outbox_id":25}
+{"t":"2026-09-25T05:01:29.228Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T05:01:29.231Z","event":"zalo.closed","account":"bql","code":3003,"decision":"kicked"}
+{"t":"2026-09-25T05:01:29.233Z","event":"zalo.state","account":"bql","state":"kicked"}
+{"t":"2026-09-25T05:01:29.251Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T05:01:29.251Z","event":"zalo.closed","account":"bql","code":3000,"decision":"kicked"}
+{"t":"2026-09-25T05:01:29.254Z","event":"zalo.state","account":"bql","state":"kicked"}
+{"t":"2026-09-25T05:01:29.265Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T05:01:29.266Z","event":"zalo.closed","account":"bql","code":1006,"decision":"reconnect"}
+{"t":"2026-09-25T05:01:29.268Z","event":"zalo.state","account":"bql","state":"reconnecting"}
+{"t":"2026-09-25T05:01:29.269Z","event":"zalo.reconnect_failed","account":"bql","attempt":1,"error":"Error: mang"}
+{"t":"2026-09-25T05:01:29.271Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T05:01:29.284Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T05:01:29.284Z","event":"zalo.closed","account":"bql","code":1006,"decision":"reconnect"}
+{"t":"2026-09-25T05:01:29.286Z","event":"zalo.state","account":"bql","state":"reconnecting"}
+{"t":"2026-09-25T05:01:29.286Z","event":"zalo.reconnect_failed","account":"bql","attempt":1,"error":"Error: mang"}
+{"t":"2026-09-25T05:01:29.286Z","event":"zalo.reconnect_failed","account":"bql","attempt":2,"error":"Error: mang"}
+{"t":"2026-09-25T05:01:29.286Z","event":"zalo.reconnect_failed","account":"bql","attempt":3,"error":"Error: mang"}
+{"t":"2026-09-25T05:01:29.286Z","event":"zalo.reconnect_failed","account":"bql","attempt":4,"error":"Error: mang"}
+{"t":"2026-09-25T05:01:29.286Z","event":"zalo.reconnect_failed","account":"bql","attempt":5,"error":"Error: mang"}
+{"t":"2026-09-25T05:01:29.286Z","event":"zalo.reconnect_failed","account":"bql","attempt":6,"error":"Error: mang"}
+{"t":"2026-09-25T05:01:29.286Z","event":"zalo.reconnect_failed","account":"bql","attempt":7,"error":"Error: mang"}
+{"t":"2026-09-25T05:01:29.286Z","event":"zalo.reconnect_failed","account":"bql","attempt":8,"error":"Error: mang"}
+{"t":"2026-09-25T05:01:29.286Z","event":"zalo.reconnect_failed","account":"bql","attempt":9,"error":"Error: mang"}
+{"t":"2026-09-25T05:01:29.286Z","event":"zalo.reconnect_failed","account":"bql","attempt":10,"error":"Error: mang"}
+{"t":"2026-09-25T05:01:29.289Z","event":"zalo.state","account":"bql","state":"dead"}
+{"t":"2026-09-25T05:01:29.302Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T05:01:29.302Z","event":"zalo.closed","account":"bql","code":1006,"decision":"reconnect"}
+{"t":"2026-09-25T05:01:29.304Z","event":"zalo.state","account":"bql","state":"reconnecting"}
+{"t":"2026-09-25T05:01:29.306Z","event":"zalo.state","account":"bql","state":"logged_out"}
+{"t":"2026-09-25T05:01:29.318Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T05:01:29.336Z","event":"zalo.probe_failed","account":"bql","error":"Error: probe"}
+{"t":"2026-09-25T05:01:29.336Z","event":"zalo.closed","account":"bql","code":1006,"decision":"reconnect"}
+{"t":"2026-09-25T05:01:29.339Z","event":"zalo.state","account":"bql","state":"reconnecting"}
+{"t":"2026-09-25T05:01:29.341Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T05:01:29.351Z","event":"zalo.state","account":"bql","state":"logged_out"}
+{"t":"2026-09-25T05:01:29.364Z","event":"zalo.qr_start","account":"bql"}
+{"t":"2026-09-25T05:01:29.366Z","event":"zalo.qr_event","account":"bql","type":"qr"}
+{"t":"2026-09-25T05:01:29.375Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T05:01:29.389Z","event":"zalo.qr_start","account":"bql"}
+{"t":"2026-09-25T05:01:29.390Z","event":"zalo.qr_event","account":"bql","type":"qr"}
+{"t":"2026-09-25T05:01:29.391Z","event":"zalo.qr_event","account":"bql","type":"scanned"}
+{"t":"2026-09-25T05:01:29.395Z","event":"zalo.state","account":"bql","state":"logged_out"}
+{"t":"2026-09-25T05:01:29.409Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T05:01:29.434Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T05:01:29.563Z","event":"pacer.sent","account":"bql","outbox_id":27}
+{"t":"2026-09-25T05:01:29.573Z","event":"pacer.sent","account":"bql","outbox_id":28}
+{"t":"2026-09-25T05:01:29.581Z","event":"pacer.sent","account":"bql","outbox_id":29}
+{"t":"2026-09-25T05:01:29.591Z","event":"pacer.sent","account":"bql","outbox_id":30}
+{"t":"2026-09-25T05:01:29.601Z","event":"pacer.sent","account":"bql","outbox_id":31}
+{"t":"2026-09-25T05:01:29.612Z","event":"pacer.sent","account":"bql","outbox_id":32}
+{"t":"2026-09-25T05:01:29.622Z","event":"pacer.sent","account":"bql","outbox_id":33}
+{"t":"2026-09-25T05:01:29.633Z","event":"pacer.sent","account":"bql","outbox_id":34}
+{"t":"2026-09-25T05:01:29.650Z","event":"pacer.sent","account":"bql","outbox_id":35}
+{"t":"2026-09-25T05:01:29.661Z","event":"pacer.sent","account":"bql","outbox_id":36}
+{"t":"2026-09-25T05:01:29.730Z","event":"pacer.sent","account":"bql","outbox_id":37}
+{"t":"2026-09-25T05:01:29.742Z","event":"pacer.sent","account":"bql","outbox_id":38}
+{"t":"2026-09-25T05:01:29.752Z","event":"pacer.sent","account":"bql","outbox_id":39}
+{"t":"2026-09-25T05:01:29.762Z","event":"pacer.sent","account":"bql","outbox_id":40}
+{"t":"2026-09-25T05:01:29.773Z","event":"pacer.sent","account":"bql","outbox_id":41}
+{"t":"2026-09-25T05:01:29.782Z","event":"pacer.sent","account":"bql","outbox_id":47}
+{"t":"2026-09-25T05:01:29.792Z","event":"pacer.sent","account":"bql","outbox_id":48}
+{"t":"2026-09-25T05:01:29.803Z","event":"pacer.sent","account":"bql","outbox_id":50}
+{"t":"2026-09-25T05:01:29.811Z","event":"pacer.sent","account":"bql","outbox_id":51}
+{"t":"2026-09-25T05:01:29.822Z","event":"pacer.sent","account":"bql","outbox_id":52}
+{"t":"2026-09-25T05:01:29.896Z","event":"pacer.sent","account":"bql","outbox_id":53}
+{"t":"2026-09-25T05:01:29.906Z","event":"pacer.sent","account":"bql","outbox_id":54}
+{"t":"2026-09-25T05:01:29.915Z","event":"pacer.sent","account":"bql","outbox_id":55}
+{"t":"2026-09-25T05:01:29.925Z","event":"pacer.sent","account":"bql","outbox_id":56}
+{"t":"2026-09-25T05:01:29.934Z","event":"pacer.sent","account":"bql","outbox_id":57}
+{"t":"2026-09-25T05:01:29.944Z","event":"pacer.sent","account":"bql","outbox_id":58}
+{"t":"2026-09-25T05:01:29.954Z","event":"pacer.sent","account":"bql","outbox_id":60}
+{"t":"2026-09-25T05:01:29.965Z","event":"pacer.sent","account":"bql","outbox_id":62}
+{"t":"2026-09-25T05:01:29.977Z","event":"pacer.sent","account":"bql","outbox_id":61}
+{"t":"2026-09-25T05:01:29.988Z","event":"pacer.sent","account":"bql","outbox_id":63}
+{"t":"2026-09-25T05:01:30.082Z","event":"pacer.sent","account":"bql","outbox_id":64}
+{"t":"2026-09-25T05:01:30.095Z","event":"pacer.sent","account":"bql","outbox_id":65}
+{"t":"2026-09-25T05:01:30.108Z","event":"pacer.sent","account":"bql","outbox_id":67}
+{"t":"2026-09-25T05:01:30.119Z","event":"pacer.sent","account":"bql","outbox_id":69}
+{"t":"2026-09-25T05:01:30.130Z","event":"pacer.sent","account":"bql","outbox_id":70}
+{"t":"2026-09-25T05:01:30.139Z","event":"pacer.sent","account":"bql","outbox_id":72}
+{"t":"2026-09-25T05:01:30.150Z","event":"pacer.sent","account":"bql","outbox_id":71}
+{"t":"2026-09-25T05:01:30.159Z","event":"pacer.sent","account":"bql","outbox_id":73}
+{"t":"2026-09-25T05:01:30.168Z","event":"pacer.sent","account":"bql","outbox_id":75}
+{"t":"2026-09-25T05:01:30.709Z","event":"pacer.sent","account":"bql","outbox_id":42}
+{"t":"2026-09-25T05:01:30.722Z","event":"pacer.sent","account":"bql","outbox_id":59}
+{"t":"2026-09-25T05:01:30.733Z","event":"pacer.sent","account":"bql","outbox_id":74}
+{"t":"2026-09-25T05:01:30.778Z","event":"pacer.sent","account":"bql","outbox_id":43}
+{"t":"2026-09-25T05:01:30.792Z","event":"pacer.sent","account":"bql","outbox_id":44}
+{"t":"2026-09-25T05:01:30.802Z","event":"pacer.sent","account":"bql","outbox_id":45}
+{"t":"2026-09-25T05:01:30.811Z","event":"pacer.sent","account":"bql","outbox_id":68}
+{"t":"2026-09-25T05:01:30.818Z","event":"pacer.sent","account":"bql","outbox_id":46}
+{"t":"2026-09-25T05:01:30.825Z","event":"pacer.sent","account":"bql","outbox_id":76}
+{"t":"2026-09-25T05:01:30.832Z","event":"pacer.sent","account":"bql","outbox_id":49}
+{"t":"2026-09-25T05:01:30.841Z","event":"pacer.sent","account":"bql","outbox_id":66}
+{"t":"2026-09-25T05:01:30.855Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T05:01:30.873Z","event":"pacer.sent","account":"bql","outbox_id":77}
+{"t":"2026-09-25T05:01:30.884Z","event":"pacer.sent","account":"bql","outbox_id":78}
+{"t":"2026-09-25T05:01:30.895Z","event":"pacer.sent","account":"bql","outbox_id":79}
+{"t":"2026-09-25T05:01:31.011Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T05:01:31.019Z","event":"pacer.backoff","account":"bql","reason":"no_msg_id","backoff_ms":1800000}
+{"t":"2026-09-25T05:01:31.025Z","event":"pacer.sent","account":"bql","outbox_id":80}
+{"t":"2026-09-25T05:01:31.034Z","event":"zalo.state","account":"bql","state":"connected"}
+{"t":"2026-09-25T05:01:31.046Z","event":"pacer.backoff","account":"bql","reason":"rate_limit_error","backoff_ms":1800000}
+{"t":"2026-09-25T05:01:31.059Z","event":"zalo.state","account":"bql","state":"connected"}
+ [32m✓[39m src/dbtests/p02-worker.db.test.ts [2m([22m[2m22 tests[22m[2m)[22m[33m 2040[2mms[22m[39m
+   [33m[2m✓[22m[39m pacer tren DB (§5, §8)[2m > [22mgia lap 50 tin / 20 nguoi qua outbox that + dong ho ao ⇒ gui het, 0 vi pham bang §5 [33m1416[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m22 passed[39m[22m[90m (22)[39m
+[2m   Start at [22m 12:01:28
+[2m   Duration [22m 2.97s[2m (transform 206ms, setup 0ms, collect 667ms, tests 2.04s, environment 0ms, prepare 93ms)[22m
+
+EXIT zalo-worker test:db: 0

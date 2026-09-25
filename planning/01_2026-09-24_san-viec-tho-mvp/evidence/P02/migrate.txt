@@ -1,0 +1,11 @@
+# DB rong lq_h07: npm run db:migrate
+
+> lenqclaw@0.0.1 db:migrate
+> tsx packages/core/src/db/migrate.ts
+
+-- applying 001_init.sql
+-- applying 002_search.sql
+-- applying 003_kb_building.sql
+-- applying 004_zalo_login.sql
+applied: 4
+EXIT db:migrate: 0

@@ -1,0 +1,61 @@
+# npx tsx apps/zalo-worker/src/tools/pacer-sim.ts 2026
+pacer-sim seed=2026 messages=50 recipients=20
+config: {"threadGapMs":3000,"threadJitterMs":2000,"maxPerMinute":10,"maxRecipients":15,"recipientWindowMs":600000,"maxChars":1800,"typingMinMs":1000,"typingMaxMs":3000,"seenMinMs":2000,"seenMaxMs":6000,"backoffMs":1800000,"tickMs":1000}
+--- thoi diem gui (giay tu t=0) ---
+t=    0s  u01
+t=    1s  u02
+t=    2s  u03
+t=    3s  u04
+t=    4s  u05
+t=    5s  u06
+t=    6s  u07
+t=    7s  u08
+t=    8s  u09
+t=    9s  u10
+t=   60s  u11
+t=   61s  u12
+t=   62s  u13
+t=   63s  u14
+t=   64s  u15
+t=   65s  u10
+t=   66s  u07
+t=   67s  u14
+t=   68s  u13
+t=   69s  u04
+t=  120s  u05
+t=  121s  u14
+t=  122s  u06
+t=  123s  u01
+t=  124s  u02
+t=  125s  u13
+t=  126s  u08
+t=  127s  u03
+t=  128s  u04
+t=  129s  u07
+t=  180s  u09
+t=  181s  u12
+t=  182s  u01
+t=  183s  u05
+t=  184s  u06
+t=  185s  u09
+t=  188s  u06
+t=  192s  u06
+t=  196s  u06
+t=  660s  u16
+t=  664s  u17
+t=  665s  u18
+t=  666s  u16
+t=  669s  u17
+t=  671s  u16
+t=  721s  u19
+t=  724s  u20
+t=  725s  u19
+t=  729s  u20
+t=  730s  u19
+--- kiem bang §5 ---
+sent=50/50  xong_luc=730s
+khoang_cach_cung_thread_nho_nhat=4000 ms (yeu cau >= 3000 ms)
+max_tin_trong_60s=10 (yeu cau <= 10)
+max_nguoi_nhan_trong_10_phut=15 (yeu cau <= 15)
+violations: 0
+EXIT pacer-sim: 0

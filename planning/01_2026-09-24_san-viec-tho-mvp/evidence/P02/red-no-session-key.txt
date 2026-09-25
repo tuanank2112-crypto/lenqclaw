@@ -1,0 +1,7 @@
+# npm run zalo:worker (env ZALO_SESSION_KEY bi xoa)
+
+> lenqclaw@0.0.1 zalo:worker
+> tsx apps/zalo-worker/src/main.ts
+
+ZALO_WORKER_CONFIG_ERROR: ZALO_SESSION_KEY chua duoc cau hinh (can 32 byte, hex hoac base64).
+EXIT zalo:worker: 1
