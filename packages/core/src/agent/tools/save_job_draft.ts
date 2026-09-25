@@ -75,8 +75,11 @@ async function insertJob(ctx: ToolContext, draft: JobDraft): Promise<{ id: strin
       [ctx.residentId]
     );
     if (existing.length > 0) {
-      await q(`update jobs set draft = $1, updated_at = now() where id = $2`, [
+      // §11.11: cot `category_code` la nguon chan ly — ghi CUNG cau lenh voi
+      // `draft` o CA nhanh dung lai job 'drafting' da co (G9).
+      await q(`update jobs set draft = $1, category_code = $2, updated_at = now() where id = $3`, [
         JSON.stringify(draft),
+        draft.category_code,
         existing[0]!.id,
       ]);
       return { id: existing[0]!.id, code: existing[0]!.code };
@@ -86,9 +89,9 @@ async function insertJob(ctx: ToolContext, draft: JobDraft): Promise<{ id: strin
       const code = generateJobCode();
       try {
         const rows = await q<{ id: string }>(
-          `insert into jobs (code, building_id, apartment_id, resident_id, draft, status)
-           values ($1,$2,$3,$4,$5,'drafting') returning id`,
-          [code, ctx.buildingId, ctx.apartmentId, ctx.residentId, JSON.stringify(draft)]
+          `insert into jobs (code, building_id, apartment_id, resident_id, draft, category_code, status)
+           values ($1,$2,$3,$4,$5,$6,'drafting') returning id`,
+          [code, ctx.buildingId, ctx.apartmentId, ctx.residentId, JSON.stringify(draft), draft.category_code]
         );
         return { id: rows[0]!.id, code };
       } catch (err) {
@@ -133,9 +136,11 @@ export const saveJobDraftTool: AgentTool<SaveJobDraftInput, SaveJobDraftOutput> 
       ctx.jobId = created.id;
       code = created.code;
     } else {
+      // §11.11: nhanh cap nhat theo `ctx.jobId` cung ghi cot `category_code`
+      // trong CUNG cau lenh voi `draft` — `null` ghi de thanh `null`.
       const rows = await sql<{ code: string }>(
-        `update jobs set draft = $1, updated_at = now() where id = $2 returning code`,
-        [JSON.stringify(draft), ctx.jobId]
+        `update jobs set draft = $1, category_code = $2, updated_at = now() where id = $3 returning code`,
+        [JSON.stringify(draft), draft.category_code, ctx.jobId]
       );
       code = rows[0]!.code;
     }
