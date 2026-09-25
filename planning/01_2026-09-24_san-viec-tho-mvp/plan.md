@@ -129,6 +129,10 @@ Thêm lớp hiểu ý `triageMessage` (model rẻ, JSON, quá hạn 4 s) cho m�
 Lý do: P03 đã duyệt, P02 không phụ thuộc P05/P06; rủi ro Zalo là ẩn số lớn nhất ⇒ gặp sớm. Giai đoạn 1 ([SPEC-P02 §9](specs/SPEC-P02-Zalo-Transport.md)): tài khoản `bql`, máy dev IP nhà, chỉ text, không pg-boss (runner `core:run` tuần tự + cột `login_requested_at`), gắn Zalo thật vào cư dân mô phỏng bằng `dev:link-zalo`; thử bằng Zalo phụ của người dùng, chưa mời cư dân thật (Luật 91/2025, OPERATIONS §9). Chạy song song với gói máy chấm model thật.
 **Lật được:** có — `TRANSPORT=sim`; chi phí thấp.
 
+### Đ23 — 2026-09-25 · Cột `jobs.category_code` là nguồn chân lý của danh mục (Super Orchestrator, 🔴)
+Lý do: lượt chấm model thật đầu tiên (H08) ra chẩn đoán 0/40 vì `save_job_draft` chỉ ghi danh mục vào JSON `draft`, không ghi cột — lỗi sản phẩm (khung giá ticket case luôn rỗng, P05 ghép thợ sẽ gãy), không chỉ lỗi máy chấm. Hợp đồng: [SPEC-P03 §11.11](specs/SPEC-P03-Resident-Agent.md). Giao trong H08 vòng 2 (worker trước bị ngắt giữa lượt chấm); H08 được mở phạm vi thêm `save_job_draft.ts` + test.
+**Lật được:** có — chỉ một câu lệnh ghi trong tool.
+
 ### Quyết định bị thay thế
 | Mốc cũ | Phát biểu cũ | Thay bằng | Lý do |
 | :-- | :-- | :-- | :-- |
@@ -187,7 +191,7 @@ Thứ tự bắt buộc (Đ13, Đ15): `P01 (nền tảng + SimTransport) → P03
 - [x] H04 — adapter Gemini theo 01-CONTRACTS §2b (Đ18, Đ19) + `MODEL_FALLBACKS` + khói golden bằng model thật (key đã ở `.env`) — thi công `390dc54..0fe11a5`, R04 🔁 (test:db đỏ 9/21 + chưa nối kiểm input, do phạm vi SO) ⇒ vá ở H06 mục 0; R04 ✅ 2026-09-25
 - [x] H05 — thẩm định P03: R05 ✅ (7 chặn, 14 nên sửa) ⇒ R03 🔁 — 2026-09-25
 - [x] P03 vòng 2 theo SPEC-P03 §11 (Đ20, Đ21 lớp hiểu ý) — H06 `f396bb5..65fe108` (2 vòng), R06 ✅, R03 ✅ — 2026-09-25; `npm test` 173, `test:db` 76, 0 skip
-- [ ] H08 — Máy chấm model thật (Đ19-4 + Đ21): G09/G10 qua vòng agent thật, golden emergency hai lớp (≥100) + consent (≥40); vá `eval_golden` gọi `searchRegulations` thiếu `buildingId` (R06 Q3); lệch sót sau R06: `handoff_to_staff` ghi cứng 30 phút thay vì env `HUMAN_TAKEOVER_MIN` mặc định 60 (§11.6) + `.env.example` thiếu `MODEL_TRIAGE`/`TRIAGE_*`/`HUMAN_TAKEOVER_MIN` — mở khoá G08–G10
+- [ ] H08 — Máy chấm model thật (Đ19-4 + Đ21): G09/G10 qua vòng agent thật, golden emergency hai lớp (≥100) + consent (≥40); vá `eval_golden` gọi `searchRegulations` thiếu `buildingId` (R06 Q3); lệch sót sau R06: `handoff_to_staff` ghi cứng 30 phút thay vì env `HUMAN_TAKEOVER_MIN` mặc định 60 (§11.6) + `.env.example` thiếu `MODEL_TRIAGE`/`TRIAGE_*`/`HUMAN_TAKEOVER_MIN` — mở khoá G08–G10 · vòng 1 bị ngắt 12:31 (khẩn cấp 100/100, đồng ý 42/44, chẩn đoán 0/40 do lỗi cột — Đ23) ⇒ vòng 2
 - [x] Chốt câu hỏi mở R03 (Đ19, 2026-09-25): (1) SPEC-P03 §10.8 còn ghi `claude-opus-5` ⇒ đồng bộ theo Đ18; (2) SDK `@anthropic-ai/sdk@0.68.0` không có `fallbacks` ⇒ nhánh anthropic dùng `MODEL_FALLBACKS` phía client; (3) quy ước `jobs.window_start/end` từ khung giờ gợi ý — trước P05; (4) `eval_golden` chấm một lượt đơn, chưa chạy vòng tool của agent thật — xét lại khi thẩm định
 - [ ] P04 — Dashboard tối thiểu (G07)
 - [ ] P05 — Agent bước 4–7 (G11, G12, G12b)

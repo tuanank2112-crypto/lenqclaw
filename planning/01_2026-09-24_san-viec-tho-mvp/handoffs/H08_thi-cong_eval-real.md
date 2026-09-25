@@ -37,3 +37,14 @@ Không `git add -A`/`.` — stage tường minh rồi `git commit -m … -- <đ�
 Theo mẫu `../brain4agent.release/docs/HANDOFF_PROTOCOL.md` §7 (dòng 1 khai vai; dòng 2–4 `Handoff: handoffs/H08_thi-cong_eval-real.md`/`Base:`/`Head:`; 7 mục; bảng phân công thực tế; bảng "bộ → ngưỡng → số đo → đạt/trượt"; chi phí token ước tính cho một lần chạy). Dòng không rỗng cuối cùng khi nộp = `⏳ Chờ người duyệt.` — CẤM tự ghi phán quyết (không ai phán việc của mình), CẤM để trống (máy đo hồ sơ đòi dòng cuối là phán quyết hoặc ⏳). Commit report + evidence riêng `docs(plan-01): report R08` SAU commit công việc cuối.
 
 Report: `planning/01_2026-09-24_san-viec-tho-mvp/reports/R08_thi-cong_eval-real.md` · Evidence: `planning/01_2026-09-24_san-viec-tho-mvp/evidence/eval-real/real-run-1.txt`
+
+## 7. PHỤ LỤC VÒNG 2 (SO, 2026-09-25 14:10) — đọc SAU mục 1–6, thắng mục 1–6 khi khác
+Worker vòng 1 bị ngắt 12:31 giữa lượt chấm thật, CHƯA commit, CHƯA có R08. Cây làm việc còn nguyên phần dở: `scripts/eval_golden.mjs`, `scripts/eval/{score,red-fake-model}.mjs`, `.env.example`, `handoff_to_staff.ts`, `evidence/eval-real/*` (evidence cũ chụp TRƯỚC khi H07 vào `main` ⇒ typecheck/build/test:db đỏ vì lý do ngoài gói — BỎ, chụp lại hết). Bạn TIẾP TỤC từ cây này, không viết lại từ đầu; đọc kỹ phần dở trước khi sửa.
+Số vòng 1 (tham khảo, không nộp): khẩn cấp 100/100 (lớp 1 44, lớp 2 6/56, 0 báo nhầm); đồng ý 42/44, 0 nhận nhầm; chẩn đoán 0/40 `thực tế=null`; trách nhiệm chưa chạy.
+Căn nguyên chẩn đoán 0/40 (SO đã xác minh): `save_job_draft` không ghi cột `jobs.category_code` — lỗi sản phẩm. Hợp đồng sửa: `specs/SPEC-P03-Resident-Agent.md` §11.11 (Đ23).
+- MỞ PHẠM VI thêm: `packages/core/src/agent/tools/save_job_draft.ts` + test DB mới/sửa trong `packages/core/src/dbtests/` cho §11.11. Mọi CẤM khác giữ nguyên.
+- Thứ tự: (0) Bước 0 + đo nền `git rev-parse HEAD`, `npm test`, `test:db` trên DB rỗng `lq_h08` (drop/tạo lại) ⇒ `baseline.txt`; (1) §11.11 + test, commit `fix(core): …`; (2) hoàn tất mục 3a–3e, commit; (3) chụp lại TOÀN BỘ evidence mục 3; (4) `real-run-1.txt` = lượt thật đủ 4 bộ sau §11.11; trượt ngưỡng ⇒ vòng sửa prompt theo 3d (`real-run-2/3.txt`).
+- Máy chấm đọc danh mục từ CỘT (§11.11), không từ `draft`.
+- Worker H09 (UI Zalo) chạy song song: phạm vi `apps/**`, `db/migrations/005_*` — KHÔNG đụng. Nếu `test:db` của bạn đỏ vì migration 005 xuất hiện giữa chừng ⇒ ghi Câu hỏi mở, không sửa file của họ.
+- Lượt chạy thật tốn thời gian/token: chạy MỘT lần mỗi vòng, chặn tiền cảnh, redirect thẳng evidence; CẤM chạy lại chỉ để "đẹp số".
+- Report R08 ghi rõ "vòng 1 bị ngắt, vòng 2 tiếp tục" + số vòng 1 ở trên.

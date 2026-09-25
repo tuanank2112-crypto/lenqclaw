@@ -180,3 +180,11 @@ Cổng TESTING §1 xanh; `npm test` và `test:db` không giảm số test, 0 ski
 - Server lưu kết quả vào `messages.content.triage` của tin vào (và `agent_runs` route `triage`); `open_service_case` đọc từ đó. Prompt: `agent/prompts/triage.ts` — tiếng Việt, định nghĩa từng nhãn kèm ví dụ gần-giống, dặn "nghi ngờ khẩn cấp thì chọn khẩn cấp".
 - Chi phí: một lời gọi model rẻ mỗi tin cư dân; `agent_runs` tách route để đo.
 - Test (model giả, `npm test`/`test:db`): triage `null`/quá hạn ⇒ chỉ lớp 1; triage khẩn cấp ⇒ đường khẩn cấp, agent chính 0 lần gọi; triage `consent` nhưng cùng lượt hỏi ⇒ từ chối; JSON hỏng ⇒ `null`; request triage không chứa PII thô.
+
+### §11.11 Cột `jobs.category_code` là nguồn chân lý của danh mục (Đ23 — Super Orchestrator 🔴, 2026-09-25)
+- Lỗi tìm thấy khi chấm model thật (H08 lượt 1): `save_job_draft` chỉ ghi `category_code` vào JSON `jobs.draft`, cột `jobs.category_code` (01-CONTRACTS §4) không ai ghi ⇒ `open_service_case` tra khung giá với `null`, máy chấm G09 đọc cột ra `null` (0/40), P05 ghép thợ theo `vendor_skills` sẽ gãy.
+- BẮT BUỘC: `save_job_draft` ghi `jobs.category_code = input.category_code` trong CÙNG câu lệnh ghi `draft` — cả nhánh tạo mới (`insert`), nhánh dùng lại job `drafting` đã có (G9) và nhánh cập nhật theo `ctx.jobId`. `null` ghi đè thành `null` (cư dân sửa lại mô tả ⇒ danh mục mới thắng).
+- Đọc danh mục ở mọi nơi (tool, dashboard, P05, máy chấm) từ CỘT, không từ `draft->>'category_code'`. `draft.category_code` giữ nguyên để tương thích, luôn bằng cột.
+- CẤM: migration mới cho việc này (cột đã có từ `001_init.sql`); trigger DB đồng bộ hai nơi (logic nằm trong tool — BB-01); backfill dữ liệu (DB dev/sim dựng lại được).
+- Xong khi: test DB — gọi `save_job_draft` lần 1 (`ong_nuoc_ro`), lần 2 (`null`), lần 3 (`khoa_cua`) trên cùng cư dân ⇒ sau mỗi lần cột = draft = input; `open_service_case` trên job có danh mục + `price_book` ⇒ ticket case mang giá p50 (không còn nhánh `null`).
+
