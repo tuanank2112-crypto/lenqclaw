@@ -36,13 +36,14 @@ export async function loadJsonl(file) {
     .map((l) => JSON.parse(l));
 }
 
-/** SPEC-P03 §10.6, Đ17-e, Đ24: credential doc theo provider dang chon
- * (01-CONTRACTS §2b/§2c) — GEMINI_API_KEY (mac dinh) / ANTHROPIC_API_KEY /
- * OPENROUTER_API_KEY. */
+/** SPEC-P03 §10.6, Đ17-e, Đ24, Đ25: credential doc theo provider dang chon
+ * (01-CONTRACTS §2b/§2c/§2d) — GEMINI_API_KEY (mac dinh) / ANTHROPIC_API_KEY
+ * / OPENROUTER_API_KEY / VYCE_API_KEY. */
 export function currentProvider() {
   const p = process.env.MODEL_PROVIDER?.trim().toLowerCase();
   if (p === 'anthropic') return 'anthropic';
   if (p === 'openrouter') return 'openrouter';
+  if (p === 'vyce') return 'vyce';
   return 'gemini';
 }
 
@@ -50,6 +51,7 @@ export function credentialEnvName() {
   const p = currentProvider();
   if (p === 'anthropic') return 'ANTHROPIC_API_KEY';
   if (p === 'openrouter') return 'OPENROUTER_API_KEY';
+  if (p === 'vyce') return 'VYCE_API_KEY';
   return 'GEMINI_API_KEY';
 }
 

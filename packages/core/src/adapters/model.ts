@@ -34,7 +34,7 @@ import { ModelUnavailableError } from '../domain/errors.js';
 export { APIError, APIConnectionError };
 
 export type ModelRoute = 'diagnose' | 'responsibility' | 'acceptance' | 'vendor_parse' | 'compose' | 'triage';
-export type ModelProvider = 'gemini' | 'anthropic' | 'openrouter';
+export type ModelProvider = 'gemini' | 'anthropic' | 'openrouter' | 'vyce';
 
 export interface ImageRef {
   mediaType: 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif';
@@ -125,6 +125,13 @@ export function setOpenRouterFetchForTest(fake: typeof fetch | null): void {
   testFetchOpenRouter = fake;
 }
 
+/** Nhu tren, rieng cho nhanh vyce (01-CONTRACTS §2d) — co the dung DE RIENG
+ * voi fetch gia cua openrouter (2 bien khac nhau) du dung chung ham dich. */
+let testFetchVyce: typeof fetch | null = null;
+export function setVyceFetchForTest(fake: typeof fetch | null): void {
+  testFetchVyce = fake;
+}
+
 const ROUTE_ENV: Record<ModelRoute, string> = {
   diagnose: 'MODEL_DIAGNOSE',
   responsibility: 'MODEL_RESPONSIBILITY',
@@ -137,29 +144,35 @@ const ROUTE_ENV: Record<ModelRoute, string> = {
 const DEFAULT_MODEL_ANTHROPIC = 'claude-opus-5';
 const DEFAULT_MODEL_GEMINI = 'gemini-3.6-flash';
 const DEFAULT_MODEL_OPENROUTER = 'google/gemini-3.6-flash';
+const DEFAULT_MODEL_VYCE = 'deepseek-v4-flash';
 const DEFAULT_MODEL_TRIAGE_ANTHROPIC = 'claude-haiku-4-5';
 const DEFAULT_MODEL_TRIAGE_GEMINI = 'gemini-3.5-flash-lite';
 const DEFAULT_MODEL_TRIAGE_OPENROUTER = 'google/gemini-3.5-flash-lite';
+const DEFAULT_MODEL_TRIAGE_VYCE = 'deepseek-v4-flash';
 const DEFAULT_FALLBACKS_GEMINI = ['gemini-3-flash-preview', 'gemini-3.5-flash-lite'];
 const DEFAULT_FALLBACKS_OPENROUTER = ['google/gemini-3-flash-preview'];
 const MAX_OUTPUT_TOKENS = 16000;
 const GEMINI_RETRY_DELAYS_MS = [1000, 3000];
 const GEMINI_ENDPOINT_HOST = 'https://generativelanguage.googleapis.com/v1beta/models/';
 const OPENROUTER_DEFAULT_BASE_URL = 'https://openrouter.ai/api/v1';
+const VYCE_DEFAULT_BASE_URL = 'https://vyceai.com/v1';
 const DEFAULT_TRIAGE_TIMEOUT_MS = 4000;
 
-/** 01-CONTRACTS §2b/§2c: env MODEL_PROVIDER = 'gemini' (mac dinh) | 'anthropic'
- * | 'openrouter'. Đ24: doi mac dinh khoi 'gemini' can nguoi chot. */
+/** 01-CONTRACTS §2b/§2c/§2d: env MODEL_PROVIDER = 'gemini' (mac dinh) |
+ * 'anthropic' | 'openrouter' | 'vyce'. Đ24/Đ25: doi mac dinh khoi 'gemini'
+ * can nguoi chot. */
 export function resolveProvider(): ModelProvider {
   const raw = process.env.MODEL_PROVIDER?.trim().toLowerCase();
   if (raw === 'anthropic') return 'anthropic';
   if (raw === 'openrouter') return 'openrouter';
+  if (raw === 'vyce') return 'vyce';
   return 'gemini';
 }
 
 /** model = env MODEL_<ROUTE> ?? MODEL_DEFAULT ?? mac dinh theo provider
  * ('gemini-3.6-flash' khi gemini, 'claude-opus-5' khi anthropic,
- * 'google/gemini-3.6-flash' khi openrouter — 01-CONTRACTS §2c). */
+ * 'google/gemini-3.6-flash' khi openrouter — 01-CONTRACTS §2c,
+ * 'deepseek-v4-flash' khi vyce — 01-CONTRACTS §2d). */
 export function resolveModel(route: ModelRoute, provider: ModelProvider = resolveProvider()): string {
   const perRoute = process.env[ROUTE_ENV[route]]?.trim();
   if (perRoute) return perRoute;
@@ -167,6 +180,7 @@ export function resolveModel(route: ModelRoute, provider: ModelProvider = resolv
   if (def) return def;
   if (provider === 'anthropic') return DEFAULT_MODEL_ANTHROPIC;
   if (provider === 'openrouter') return DEFAULT_MODEL_OPENROUTER;
+  if (provider === 'vyce') return DEFAULT_MODEL_VYCE;
   return DEFAULT_MODEL_GEMINI;
 }
 
@@ -177,12 +191,13 @@ export function resolveTriageModel(provider: ModelProvider = resolveProvider()):
   if (perRoute) return perRoute;
   if (provider === 'anthropic') return DEFAULT_MODEL_TRIAGE_ANTHROPIC;
   if (provider === 'openrouter') return DEFAULT_MODEL_TRIAGE_OPENROUTER;
+  if (provider === 'vyce') return DEFAULT_MODEL_TRIAGE_VYCE;
   return DEFAULT_MODEL_TRIAGE_GEMINI;
 }
 
-/** MODEL_FALLBACKS (danh sach phay): dat env ap dung cho ca ba nhanh; khong
- * dat ⇒ mac dinh gemini/openrouter co danh sach du phong san, anthropic
- * RONG (Đ19-2). */
+/** MODEL_FALLBACKS (danh sach phay): dat env ap dung cho ca bon nhanh; khong
+ * dat ⇒ mac dinh gemini/openrouter co danh sach du phong san, anthropic/vyce
+ * RONG (Đ19-2, Đ25). */
 function resolveFallbackModels(provider: ModelProvider): string[] {
   const raw = process.env.MODEL_FALLBACKS;
   if (raw !== undefined) {
@@ -578,56 +593,62 @@ async function callGeminiOnce(model: string, c: ModelCall): Promise<{ message: M
 }
 
 // ---------------------------------------------------------------------------
-// Nhanh openrouter (01-CONTRACTS §2c, Đ24) — cung chu ky ModelCall/vao-ra
-// dang Anthropic; chi adapters/model.ts biet dinh dang OpenAI cua OpenRouter.
+// Nhanh OpenAI-compat DUNG CHUNG giua openrouter (01-CONTRACTS §2c, Đ24) va
+// vyce (§2d, Đ25) — cung chu ky ModelCall/vao-ra dang Anthropic; CHI
+// adapters/model.ts biet dinh dang OpenAI (`/chat/completions`). §2d CAM
+// nhan ban phan dich cua §2c ⇒ MOI ham dich/loi/retry duoi day dung CHUNG
+// cho ca hai nha cung cap, khac nhau CHI o `OpenAICompatConfig` (url, key,
+// header, co gui `provider.data_collection` hay khong).
 // ---------------------------------------------------------------------------
 
-interface ORToolCallOut {
+interface OAIToolCallOut {
   id: string;
   type: 'function';
   function: { name: string; arguments: string };
 }
-interface ORTextPart {
+interface OAITextPart {
   type: 'text';
   text: string;
 }
-interface ORImagePart {
+interface OAIImagePart {
   type: 'image_url';
   image_url: { url: string };
 }
-type ORContentPart = ORTextPart | ORImagePart;
-interface ORMessageOut {
+type OAIContentPart = OAITextPart | OAIImagePart;
+interface OAIMessageOut {
   role: 'system' | 'user' | 'assistant' | 'tool';
-  content?: string | ORContentPart[] | null;
-  tool_calls?: ORToolCallOut[];
+  content?: string | OAIContentPart[] | null;
+  tool_calls?: OAIToolCallOut[];
   tool_call_id?: string;
 }
-interface ORToolCallIn {
+interface OAIToolCallIn {
   id: string;
   type?: string;
   function: { name: string; arguments: string };
 }
-interface ORChoice {
-  message?: { content?: string | null; tool_calls?: ORToolCallIn[] };
+interface OAIChoice {
+  message?: { content?: string | null; tool_calls?: OAIToolCallIn[] };
   finish_reason?: string;
 }
-interface OROpenRouterError {
+interface OAIProviderError {
   code?: number | string;
   message?: string;
 }
-interface ORResponseBody {
-  choices?: ORChoice[];
+interface OAIResponseBody {
+  choices?: OAIChoice[];
   usage?: { prompt_tokens?: number; completion_tokens?: number; prompt_tokens_details?: { cached_tokens?: number } };
   model?: string;
-  error?: OROpenRouterError;
+  error?: OAIProviderError;
 }
 
-/** Loi retryable rieng cho nhanh openrouter (429/500/502/503/504/mang/timeout
- * — 01-CONTRACTS §2c "Loi"). 402 (het credit) KHONG di qua loai nay — nem
- * thang `ModelUnavailableError` (qua `OpenRouterCreditExhaustedError`) de
- * KHONG retry trong vong nay VA KHONG fallback sang model khac o `callModel`. */
-class OpenRouterRetryableError extends Error {}
-class OpenRouterCreditExhaustedError extends ModelUnavailableError {}
+/** Loi retryable dung chung cho ca hai nha cung cap OpenAI-compat
+ * (429/500/502/503/504/mang/timeout — 01-CONTRACTS §2c "Loi", ap dung ca
+ * §2d qua "dung chung phan loi"). 402 (het credit) KHONG di qua loai nay —
+ * nem thang `ModelUnavailableError` (qua `OpenAICompatCreditExhaustedError`)
+ * de KHONG retry trong vong nay VA KHONG fallback sang model khac o
+ * `callModel`. */
+class OpenAICompatRetryableError extends Error {}
+class OpenAICompatCreditExhaustedError extends ModelUnavailableError {}
 
 function toolResultBlockToString(content: unknown): string {
   if (typeof content === 'string') return content;
@@ -640,7 +661,7 @@ function toolResultBlockToString(content: unknown): string {
   return JSON.stringify(content);
 }
 
-function blockToORContentPart(block: ContentBlockParam): ORContentPart | null {
+function blockToOAIContentPart(block: ContentBlockParam): OAIContentPart | null {
   if (block.type === 'text') return { type: 'text', text: block.text };
   if (block.type === 'image') {
     if (block.source.type !== 'base64') return null;
@@ -652,7 +673,7 @@ function blockToORContentPart(block: ContentBlockParam): ORContentPart | null {
 /** Gop mot nhom khoi text/image (khong co tool_result) thanh MOT message
  * 'user' — 01-CONTRACTS §2c "Dich vao": chuoi (nhieu khoi text noi "\n")
  * khi KHONG co anh, mang part khi CO anh. */
-function flushORUserGroup(group: ContentBlockParam[]): ORMessageOut | null {
+function flushOAIUserGroup(group: ContentBlockParam[]): OAIMessageOut | null {
   if (group.length === 0) return null;
   const hasImage = group.some((b) => b.type === 'image');
   if (!hasImage) {
@@ -662,28 +683,29 @@ function flushORUserGroup(group: ContentBlockParam[]): ORMessageOut | null {
       .join('\n');
     return { role: 'user', content: text };
   }
-  const parts = group.map(blockToORContentPart).filter((p): p is ORContentPart => p !== null);
+  const parts = group.map(blockToOAIContentPart).filter((p): p is OAIContentPart => p !== null);
   return { role: 'user', content: parts };
 }
 
-/** 01-CONTRACTS §2c "Dich vao": system dau mang; assistant tool_use ⇒
- * tool_calls; MOI tool_result ⇒ mot message {role:'tool'} rieng, dat NGAY
- * sau message assistant chua tool_calls, dung thu tu. */
-function buildOpenRouterMessages(system: string, messages: MessageParam[]): ORMessageOut[] {
-  const out: ORMessageOut[] = [{ role: 'system', content: system }];
+/** 01-CONTRACTS §2c "Dich vao" (dung chung voi §2d): system dau mang;
+ * assistant tool_use ⇒ tool_calls; MOI tool_result ⇒ mot message
+ * {role:'tool'} rieng, dat NGAY sau message assistant chua tool_calls, dung
+ * thu tu. */
+function buildOAIMessages(system: string, messages: MessageParam[]): OAIMessageOut[] {
+  const out: OAIMessageOut[] = [{ role: 'system', content: system }];
   for (const m of messages) {
     const blocks: ContentBlockParam[] =
       typeof m.content === 'string' ? [{ type: 'text', text: m.content }] : m.content;
     if (m.role === 'assistant') {
       const textParts: string[] = [];
-      const toolCalls: ORToolCallOut[] = [];
+      const toolCalls: OAIToolCallOut[] = [];
       for (const b of blocks) {
         if (b.type === 'text') textParts.push(b.text);
         else if (b.type === 'tool_use') {
           toolCalls.push({ id: b.id, type: 'function', function: { name: b.name, arguments: JSON.stringify(b.input) } });
         }
       }
-      const assistantMsg: ORMessageOut = { role: 'assistant', content: textParts.length > 0 ? textParts.join('\n') : null };
+      const assistantMsg: OAIMessageOut = { role: 'assistant', content: textParts.length > 0 ? textParts.join('\n') : null };
       if (toolCalls.length > 0) assistantMsg.tool_calls = toolCalls;
       out.push(assistantMsg);
       continue;
@@ -695,7 +717,7 @@ function buildOpenRouterMessages(system: string, messages: MessageParam[]): ORMe
     let group: ContentBlockParam[] = [];
     for (const b of blocks) {
       if (b.type === 'tool_result') {
-        const flushed = flushORUserGroup(group);
+        const flushed = flushOAIUserGroup(group);
         if (flushed) out.push(flushed);
         group = [];
         const content = toolResultBlockToString(b.content);
@@ -704,21 +726,21 @@ function buildOpenRouterMessages(system: string, messages: MessageParam[]): ORMe
         group.push(b);
       }
     }
-    const tail = flushORUserGroup(group);
+    const tail = flushOAIUserGroup(group);
     if (tail) out.push(tail);
   }
   return out;
 }
 
-function toOpenRouterTools(tools: Tool[] | undefined): unknown {
+function toOAITools(tools: Tool[] | undefined): unknown {
   if (!tools || tools.length === 0) return undefined;
   return tools.map((t) => ({ type: 'function', function: { name: t.name, description: t.description, parameters: t.input_schema } }));
 }
 
-/** 01-CONTRACTS §2c "Dich ra": co tool_calls ⇒ luon 'tool_use' (bat ke
- * finish_reason); 'length' ⇒ max_tokens; 'content_filter' ⇒ refusal; con
- * lai (kem 'stop') ⇒ end_turn. */
-function determineOpenRouterStopReason(choice: ORChoice | undefined): Message['stop_reason'] {
+/** 01-CONTRACTS §2c "Dich ra" (dung chung voi §2d): co tool_calls ⇒ luon
+ * 'tool_use' (bat ke finish_reason); 'length' ⇒ max_tokens; 'content_filter'
+ * ⇒ refusal; con lai (kem 'stop') ⇒ end_turn. */
+function determineOAIStopReason(choice: OAIChoice | undefined): Message['stop_reason'] {
   const hasToolCalls = (choice?.message?.tool_calls?.length ?? 0) > 0;
   if (hasToolCalls) return 'tool_use';
   const finishReason = choice?.finish_reason;
@@ -729,7 +751,7 @@ function determineOpenRouterStopReason(choice: ORChoice | undefined): Message['s
 
 /** functionCall.arguments khong parse duoc JSON ⇒ input = {} de lop kiem
  * input tool (§2b "Kiem input tool") tra InvalidToolInput thay vi vo o day. */
-function openRouterMessageToContent(message: ORChoice['message']): ContentBlockParam[] {
+function oaiMessageToContent(message: OAIChoice['message']): ContentBlockParam[] {
   const out: ContentBlockParam[] = [];
   if (typeof message?.content === 'string' && message.content.length > 0) {
     out.push({ type: 'text', text: message.content, citations: null });
@@ -747,6 +769,137 @@ function openRouterMessageToContent(message: ORChoice['message']): ContentBlockP
   return out;
 }
 
+/** Cau hinh rieng cua tung nha cung cap OpenAI-compat — CHI khac nhau o
+ * day, moi logic dich/loi/retry dung CHUNG (§2d "CAM nhan ban"). */
+interface OpenAICompatConfig {
+  /** Ten hien trong thong bao loi ('OpenRouter' | 'Vyce'). */
+  label: string;
+  /** Endpoint DAY DU (da ghep base URL + '/chat/completions'). */
+  url: string;
+  apiKey: string;
+  extraHeaders?: Record<string, string>;
+  /** CHI openrouter (§2c) gui `provider.data_collection:'deny'`; §2d KHONG gui truong nay. */
+  includeDataCollectionDeny: boolean;
+  /** Fetch gia RIENG cua nha cung cap nay (setOpenRouterFetchForTest / setVyceFetchForTest). */
+  testFetch: typeof fetch | null;
+}
+
+async function fetchOpenAICompatOnce(cfg: OpenAICompatConfig, model: string, body: unknown, route: ModelRoute): Promise<OAIResponseBody> {
+  let fetchImpl: typeof fetch;
+  if (route === 'triage') {
+    // 01-CONTRACTS §2c/§2d "Thu nghiem": triage dung lai setTriageFetchForTest
+    // — cung ngu nghia "thieu cau hinh rieng cho triage => coi nhu khong kha
+    // dung" nhu nhanh gemini (xem ghi chu getAnthropicClient/fetchGeminiOnce).
+    if (!triageTestFetch && cfg.testFetch) {
+      throw new OpenAICompatRetryableError(`triage (${cfg.label}): chua cau hinh setTriageFetchForTest trong moi truong test.`);
+    }
+    fetchImpl = triageTestFetch ?? fetch;
+  } else {
+    fetchImpl = cfg.testFetch ?? fetch;
+  }
+  let res: Response;
+  try {
+    res = await fetchImpl(cfg.url, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        authorization: `Bearer ${cfg.apiKey}`,
+        ...(cfg.extraHeaders ?? {}),
+      },
+      body: JSON.stringify(body),
+    });
+  } catch (err) {
+    throw new OpenAICompatRetryableError(`Loi mang khi goi ${cfg.label} ${model}: ${err instanceof Error ? err.message : String(err)}`);
+  }
+  if (res.status === 402) {
+    const text = await res.text().catch(() => '');
+    throw new OpenAICompatCreditExhaustedError(`${cfg.label} ${model} het credit (402), khong retry/fallback: ${text.slice(0, 300)}`);
+  }
+  if (!res.ok) {
+    const status = res.status;
+    if (status === 429 || status === 500 || status === 502 || status === 503 || status === 504) {
+      throw new OpenAICompatRetryableError(`${cfg.label} ${model} tra loi ${status}.`);
+    }
+    const text = await res.text().catch(() => '');
+    throw new Error(`${cfg.label} ${model} tra loi ${status} (khong retry — loi cau hinh): ${text.slice(0, 300)}`);
+  }
+  const parsed = (await res.json()) as OAIResponseBody;
+  if (parsed.error) {
+    const code = parsed.error.code;
+    if (code === 429 || code === 500 || code === 502 || code === 503 || code === 504) {
+      throw new OpenAICompatRetryableError(`${cfg.label} ${model} body.error ${String(code)}: ${parsed.error.message ?? ''}`);
+    }
+    if (code === 402) {
+      throw new OpenAICompatCreditExhaustedError(`${cfg.label} ${model} body.error 402, khong retry/fallback: ${parsed.error.message ?? ''}`);
+    }
+    throw new Error(`${cfg.label} ${model} body.error ${String(code)}: ${parsed.error.message ?? ''}`);
+  }
+  return parsed;
+}
+
+/** 01-CONTRACTS §2c "Loi" (dung chung §2d): 429/500/502/503/504/mang/timeout
+ * ⇒ retry toi da 2 lan (lui 1s roi 3s) roi ModelUnavailableError, sau do
+ * MODEL_FALLBACKS o `callModel`; 402 nem thang tu `fetchOpenAICompatOnce`
+ * (khong qua vong nay); 400/401/403/404 nem loi goc. */
+async function callOpenAICompatWithRetry(cfg: OpenAICompatConfig, model: string, body: unknown, route: ModelRoute): Promise<OAIResponseBody> {
+  if (route === 'triage') {
+    return fetchOpenAICompatOnce(cfg, model, body, route);
+  }
+  let lastErr: unknown;
+  for (let attempt = 0; attempt <= GEMINI_RETRY_DELAYS_MS.length; attempt++) {
+    try {
+      return await fetchOpenAICompatOnce(cfg, model, body, route);
+    } catch (err) {
+      if (!(err instanceof OpenAICompatRetryableError)) throw err;
+      lastErr = err;
+      if (attempt === GEMINI_RETRY_DELAYS_MS.length) break;
+      await sleep(GEMINI_RETRY_DELAYS_MS[attempt]!);
+    }
+  }
+  throw new ModelUnavailableError(`Model ${model}: ${(lastErr as Error)?.message ?? 'khong kha dung'} sau retry.`);
+}
+
+async function callOpenAICompatOnce(cfg: OpenAICompatConfig, model: string, c: ModelCall): Promise<{ message: Message; usage: Usage }> {
+  const messagesWithImages = withImages(c.messages, c.images);
+  const body: Record<string, unknown> = {
+    model,
+    messages: buildOAIMessages(c.system, messagesWithImages),
+    tools: toOAITools(c.tools),
+    max_tokens: MAX_OUTPUT_TOKENS,
+  };
+  if (cfg.includeDataCollectionDeny) {
+    // 01-CONTRACTS §2c: BAT BUOC — khong cho nha cung cap dung du lieu cu
+    // dan de huan luyen (Luat 91/2025). §2d (vyce): KHONG gui truong nay.
+    body.provider = { data_collection: 'deny' };
+  }
+  const raw = await callOpenAICompatWithRetry(cfg, model, body, c.route);
+  const choice = raw.choices?.[0];
+  const content = oaiMessageToContent(choice?.message);
+  const stopReason = determineOAIStopReason(choice);
+  const usage: Usage = {
+    input_tokens: raw.usage?.prompt_tokens ?? 0,
+    output_tokens: raw.usage?.completion_tokens ?? 0,
+    cache_creation_input_tokens: 0,
+    cache_read_input_tokens: raw.usage?.prompt_tokens_details?.cached_tokens ?? 0,
+    cache_creation: null,
+    server_tool_use: null,
+    service_tier: null,
+  } as unknown as Usage;
+  const message = {
+    id: `msg_oai_${Date.now()}`,
+    type: 'message',
+    role: 'assistant',
+    content,
+    model,
+    stop_reason: stopReason,
+    stop_sequence: null,
+    usage,
+  } as unknown as Message;
+  return { message, usage };
+}
+
+// --- openrouter (§2c): cau hinh + wrapper mong goi ham dung chung o tren ---
+
 function getOpenRouterApiKey(): string {
   const key = process.env.OPENROUTER_API_KEY?.trim();
   if (!key) {
@@ -760,118 +913,56 @@ function openRouterBaseUrl(): string {
   return raw && raw.length > 0 ? raw : OPENROUTER_DEFAULT_BASE_URL;
 }
 
-async function fetchOpenRouterOnce(model: string, body: unknown, route: ModelRoute = 'diagnose'): Promise<ORResponseBody> {
-  const apiKey = getOpenRouterApiKey();
-  const url = `${openRouterBaseUrl()}/chat/completions`;
-  let fetchImpl: typeof fetch;
-  if (route === 'triage') {
-    // 01-CONTRACTS §2c "Thu nghiem": triage dung lai setTriageFetchForTest —
-    // cung ngu nghia "thieu cau hinh rieng cho triage => coi nhu khong kha
-    // dung" nhu nhanh gemini (xem ghi chu getAnthropicClient/fetchGeminiOnce).
-    if (!triageTestFetch && testFetchOpenRouter) {
-      throw new OpenRouterRetryableError('triage: chua cau hinh setTriageFetchForTest trong moi truong test.');
-    }
-    fetchImpl = triageTestFetch ?? fetch;
-  } else {
-    fetchImpl = testFetchOpenRouter ?? fetch;
-  }
-  let res: Response;
-  try {
-    res = await fetchImpl(url, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        authorization: `Bearer ${apiKey}`,
-        'x-title': 'lenqclaw',
-      },
-      body: JSON.stringify(body),
-    });
-  } catch (err) {
-    throw new OpenRouterRetryableError(`Loi mang khi goi OpenRouter ${model}: ${err instanceof Error ? err.message : String(err)}`);
-  }
-  if (res.status === 402) {
-    const text = await res.text().catch(() => '');
-    throw new OpenRouterCreditExhaustedError(`OpenRouter ${model} het credit (402), khong retry/fallback: ${text.slice(0, 300)}`);
-  }
-  if (!res.ok) {
-    const status = res.status;
-    if (status === 429 || status === 500 || status === 502 || status === 503 || status === 504) {
-      throw new OpenRouterRetryableError(`OpenRouter ${model} tra loi ${status}.`);
-    }
-    const text = await res.text().catch(() => '');
-    throw new Error(`OpenRouter ${model} tra loi ${status} (khong retry — loi cau hinh): ${text.slice(0, 300)}`);
-  }
-  const parsed = (await res.json()) as ORResponseBody;
-  if (parsed.error) {
-    const code = parsed.error.code;
-    if (code === 429 || code === 500 || code === 502 || code === 503 || code === 504) {
-      throw new OpenRouterRetryableError(`OpenRouter ${model} body.error ${String(code)}: ${parsed.error.message ?? ''}`);
-    }
-    if (code === 402) {
-      throw new OpenRouterCreditExhaustedError(`OpenRouter ${model} body.error 402, khong retry/fallback: ${parsed.error.message ?? ''}`);
-    }
-    throw new Error(`OpenRouter ${model} body.error ${String(code)}: ${parsed.error.message ?? ''}`);
-  }
-  return parsed;
-}
-
-/** 01-CONTRACTS §2c "Loi": 429/500/502/503/504/mang/timeout ⇒ retry toi da 2
- * lan (lui 1s roi 3s) roi ModelUnavailableError, sau do MODEL_FALLBACKS o
- * `callModel`; 402 nem thang tu `fetchOpenRouterOnce` (khong qua vong nay);
- * 400/401/403/404 nem loi goc. */
-async function callOpenRouterWithRetry(model: string, body: unknown, route: ModelRoute = 'diagnose'): Promise<ORResponseBody> {
-  if (route === 'triage') {
-    return fetchOpenRouterOnce(model, body, route);
-  }
-  let lastErr: unknown;
-  for (let attempt = 0; attempt <= GEMINI_RETRY_DELAYS_MS.length; attempt++) {
-    try {
-      return await fetchOpenRouterOnce(model, body, route);
-    } catch (err) {
-      if (!(err instanceof OpenRouterRetryableError)) throw err;
-      lastErr = err;
-      if (attempt === GEMINI_RETRY_DELAYS_MS.length) break;
-      await sleep(GEMINI_RETRY_DELAYS_MS[attempt]!);
-    }
-  }
-  throw new ModelUnavailableError(`Model ${model}: ${(lastErr as Error)?.message ?? 'khong kha dung'} sau retry.`);
-}
-
 async function callOpenRouterOnce(model: string, c: ModelCall): Promise<{ message: Message; usage: Usage }> {
-  const messagesWithImages = withImages(c.messages, c.images);
-  const body = {
+  return callOpenAICompatOnce(
+    {
+      label: 'OpenRouter',
+      url: `${openRouterBaseUrl()}/chat/completions`,
+      apiKey: getOpenRouterApiKey(),
+      extraHeaders: { 'x-title': 'lenqclaw' },
+      includeDataCollectionDeny: true,
+      testFetch: testFetchOpenRouter,
+    },
     model,
-    messages: buildOpenRouterMessages(c.system, messagesWithImages),
-    tools: toOpenRouterTools(c.tools),
-    max_tokens: MAX_OUTPUT_TOKENS,
-    // 01-CONTRACTS §2c: BAT BUOC — khong cho nha cung cap dung du lieu cu
-    // dan de huan luyen (Luat 91/2025).
-    provider: { data_collection: 'deny' },
-  };
-  const raw = await callOpenRouterWithRetry(model, body, c.route);
-  const choice = raw.choices?.[0];
-  const content = openRouterMessageToContent(choice?.message);
-  const stopReason = determineOpenRouterStopReason(choice);
-  const usage: Usage = {
-    input_tokens: raw.usage?.prompt_tokens ?? 0,
-    output_tokens: raw.usage?.completion_tokens ?? 0,
-    cache_creation_input_tokens: 0,
-    cache_read_input_tokens: raw.usage?.prompt_tokens_details?.cached_tokens ?? 0,
-    cache_creation: null,
-    server_tool_use: null,
-    service_tier: null,
-  } as unknown as Usage;
-  const message = {
-    id: `msg_or_${Date.now()}`,
-    type: 'message',
-    role: 'assistant',
-    content,
+    c
+  );
+}
+
+// --- vyce (§2d, Đ25): cau hinh + wrapper, dung chung ham dich o tren ---
+
+function getVyceApiKey(): string {
+  const key = process.env.VYCE_API_KEY?.trim();
+  if (!key) {
+    throw new Error('VYCE_API_KEY chua duoc cau hinh trong .env.');
+  }
+  return key;
+}
+
+function vyceBaseUrl(): string {
+  const raw = process.env.VYCE_BASE_URL?.trim();
+  return raw && raw.length > 0 ? raw : VYCE_DEFAULT_BASE_URL;
+}
+
+async function callVyceOnce(model: string, c: ModelCall): Promise<{ message: Message; usage: Usage }> {
+  // 01-CONTRACTS §2d "Du lieu": Vyce la proxy ben thu ba, KHONG co cam ket
+  // khong luu du lieu ⇒ TU CHOI khi DATA_MODE != 'sim' — nem loi cau hinh
+  // NGAY, KHONG goi mang (0 lan fetch).
+  if (process.env.DATA_MODE !== 'sim') {
+    throw new Error(
+      'MODEL_PROVIDER=vyce chi chay khi DATA_MODE=sim (01-CONTRACTS §2d) — proxy ben thu ba khong cam ket khong luu du lieu cu dan.'
+    );
+  }
+  return callOpenAICompatOnce(
+    {
+      label: 'Vyce',
+      url: `${vyceBaseUrl()}/chat/completions`,
+      apiKey: getVyceApiKey(),
+      includeDataCollectionDeny: false,
+      testFetch: testFetchVyce,
+    },
     model,
-    stop_reason: stopReason,
-    stop_sequence: null,
-    usage,
-  } as unknown as Message;
-  return { message, usage };
+    c
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -896,7 +987,9 @@ export async function callModel(c: ModelCall): Promise<CallModelResult> {
           ? await callAnthropicOnce(model, c)
           : provider === 'openrouter'
             ? await callOpenRouterOnce(model, c)
-            : await callGeminiOnce(model, c);
+            : provider === 'vyce'
+              ? await callVyceOnce(model, c)
+              : await callGeminiOnce(model, c);
       await recordAgentRun({
         conversationId: c.conversationId ?? null,
         route: c.route,
@@ -910,10 +1003,10 @@ export async function callModel(c: ModelCall): Promise<CallModelResult> {
       return { message, usage, model };
     } catch (err) {
       lastErr = err;
-      // 01-CONTRACTS §2c: 402 (het credit) la ModelUnavailableError nhung
-      // KHONG duoc thu MODEL_FALLBACKS — chi nhanh gemini/anthropic (hoac
-      // openrouter loi khac 402) moi lien tuc qua candidate tiep theo.
-      const isRetryableAcrossModels = err instanceof ModelUnavailableError && !(err instanceof OpenRouterCreditExhaustedError);
+      // 01-CONTRACTS §2c/§2d: 402 (het credit) la ModelUnavailableError
+      // nhung KHONG duoc thu MODEL_FALLBACKS — chi cac loi khac (hoac
+      // gemini/anthropic) moi lien tuc qua candidate tiep theo.
+      const isRetryableAcrossModels = err instanceof ModelUnavailableError && !(err instanceof OpenAICompatCreditExhaustedError);
       const isLastCandidate = i === candidates.length - 1;
       if (isRetryableAcrossModels && !isLastCandidate) {
         continue; // 01-CONTRACTS §2b: thu model du phong tiep theo trong CUNG loi goi.
@@ -956,7 +1049,9 @@ export async function callTriageModel(c: TriageModelCall): Promise<CallModelResu
         ? await callAnthropicOnce(model, call)
         : provider === 'openrouter'
           ? await callOpenRouterOnce(model, call)
-          : await callGeminiOnce(model, call);
+          : provider === 'vyce'
+            ? await callVyceOnce(model, call)
+            : await callGeminiOnce(model, call);
     await recordAgentRun({
       conversationId: c.conversationId ?? null,
       route: 'triage',

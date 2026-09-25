@@ -33,6 +33,9 @@ const GEMINI_HOST = 'generativelanguage.googleapis.com';
 // 01-CONTRACTS §2c: chuoi endpoint OpenRouter CHI duoc xuat hien trong
 // adapters/model.ts (goi H10, goi c).
 const OPENROUTER_HOST = 'openrouter.ai';
+// 01-CONTRACTS §2d: chuoi endpoint Vyce CHI duoc xuat hien trong
+// adapters/model.ts (goi H11, goi c).
+const VYCE_HOST = 'vyceai.com';
 
 async function walk(dir, insideSrc) {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -189,6 +192,12 @@ async function main() {
       while ((idxOr = content.indexOf(OPENROUTER_HOST, searchFromOr)) !== -1) {
         violations.push(`${rel}:${lineAt(content, idxOr)}: chuoi "${OPENROUTER_HOST}" ngoai adapters/model.ts`);
         searchFromOr = idxOr + OPENROUTER_HOST.length;
+      }
+      let searchFromVyce = 0;
+      let idxVyce;
+      while ((idxVyce = content.indexOf(VYCE_HOST, searchFromVyce)) !== -1) {
+        violations.push(`${rel}:${lineAt(content, idxVyce)}: chuoi "${VYCE_HOST}" ngoai adapters/model.ts`);
+        searchFromVyce = idxVyce + VYCE_HOST.length;
       }
     }
   }
