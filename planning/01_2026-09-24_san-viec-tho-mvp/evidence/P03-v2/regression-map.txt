@@ -1,0 +1,52 @@
+Bang mã ca R05 (attack-source.txt) -> test trong p03-regression.db.test.ts
+132:describe('P1 (C6) PII bien the toi model', () => {
+142:  it('P1a redactPii (thuan) — 0 bien the SDT/can con lo', () => {
+158:  it('P1b vong agent that — bien the o LICH SU (luot 1) va TIN HIEN TAI (luot 2) khong toi messages gui model', async () => {
+175:describe('P2 (C1, N12) classify_responsibility voi trich dan xau => phai ep unclear', () => {
+206:    it(`P2 ${c.name}`, async () => {
+223:  it('P2q trich dan hop le nhung QUOTE BIA (sec07 + quote khong co trong body) => quote luu PHAI la body that, KHONG phai quote bia', async () => {
+242:describe('P3 (C2, C3) open_service_case — dong y gia/mo ho => phai tu choi', () => {
+254:    it(`P3 "${v}" => tu choi (triage khong cau hinh => null => giu ConsentMissingError)`, async () => {
+270:  it('P3m model TU KHANG DINH dong y trong note, tin cu dan "um" => van tu choi', async () => {
+283:  it('P3s CUNG LUOT: "...tim tho giup em" -> draft -> classify(resident) -> open_service_case => KHONG duoc case_open', async () => {
+298:  it('P3ok "Đồng ý, nhớ tìm thợ giúp em" o LUOT SAU => case_open (dan chung dong y that duoc chap nhan)', async () => {
+313:describe('P4 cu dan A thao tac/doc du lieu cu dan B (BB-08)', () => {
+314:  it('P4a get_my_cases voi input chen resident_id cua B => 0 job cua B lo sang A', async () => {
+330:  it('P4b A dong y/open_service_case khi CHI B co job awaiting_consent => job cua B khong doi', async () => {
+345:  it('P4c (N11) A gui tin voi thread_id cua B => lich su cua B KHONG vao ngu canh cua A, conversations.party_id KHONG bi ghi de', async () => {
+364:describe('P5 (C5) khan cap — lop 1 khong bao nham tren bo gan giong', () => {
+370:  it('P5a bo gan giong: 0 bao nham (nguong §11.1 — do phu tren "phai bat" giao lop 2, khong chan cong o day)', () => {
+376:  it('P5c vong that: tin ro ri "nuoc chay ra san" => KHONG bi re sang khan cap (0 ticket emergency moi)', async () => {
+390:  it('P5-triage lop 2 bat khan cap khi model triage tra emergency+do tin cao (mo ta gian tiep)', async () => {
+412:describe('P6 cung mot tin inbound xu ly hai lan / dong thoi => dung mot tra loi', () => {
+413:  it('P6a cung msg_id chen 2 lan + processInbound 2 lan', async () => {
+428:  it('P6b mot tin, 6 processInbound(residentHandler) dong thoi, model cham 300ms', async () => {
+442:  it('P6c (G9) hai tin KHAC NHAU cua CUNG cu dan dong thoi => toi da 1 job drafting', async () => {
+462:describe('P7 (N14) search_regulations voi chuoi chen SQL / ky tu dac biet', () => {
+467:  it('P7 khong throw, khong mat du lieu', async () => {
+485:describe('P8 (C4) BB-06: model bat co urgency=emergency / ha co', () => {
+486:  it('P8a save_job_draft urgency=emergency => PHAI co ticket emergency + tin khan cap', async () => {
+501:  it('P8b luot sau model ha urgency emergency -> normal => PHAI giu nguyen emergency (don dieu)', async () => {
+515:describe('P9 (N3) handoff_to_staff PHAI lam agent im lang', () => {
+516:  it('P9 sau agent_loop_limit, tin ke tiep KHONG duoc goi model', async () => {
+534:describe('P10 tool tu kiem input theo schema (noi vao vong that — H06 §3.0)', () => {
+535:  it('P10 save_job_draft input sai schema => tool_result is_error, KHONG chay tool', async () => {
+555:describe('P11 (N6) tin hien tai chi xuat hien DUNG MOT LAN trong messages luot dau', () => {
+556:  it('P11', async () => {
+572:describe('P12 (N5) audit_log cho MOI tool', () => {
+573:  it('P12 get_my_cases + get_price_band co ghi audit_log tool.<ten>', async () => {
+588:describe('P13 (N2) model tra ve rong / het max_tokens => van co tin tra loi + handoff', () => {
+589:  it('P13', async () => {
+606:describe('P14 (§11.5 VerdictLockedError) doi verdict sau awaiting_consent roi mo case', () => {
+607:  it('P14 luot 2: classify(bql) bi VerdictLockedError (job da awaiting_consent) roi open_service_case voi "Đồng ý" => KHONG mo case voi verdict bql', async () => {
+624:describe('P15 (G8) redactPii + ma cuoc cua chinh cu dan', () => {
+625:  it('P15a redactPii THUAN (khong ngu canh) van che ma dang chu-so (thiet ke: G8 chi giu duoc trong vong that qua opts.keepJobCodes)', () => {
+631:  it('P15b vong that: ma cuoc CUA CHINH cu dan giu nguyen trong messages gui model (§11.3 ngoai le G8)', async () => {
+649:describe('P16 (§11.10) lop hieu y — loi/JSON hong/qua han => null, chi con lop 1', () => {
+650:  it('P16a triage client KHONG cau hinh (mac dinh trong moi truong test) => triageMessage tra null, khong anh huong luong binh thuong', async () => {
+663:  it('P16b triage tra JSON hong => coi nhu null', async () => {
+673:  it('P16c request gui triage KHONG chua PII tho', async () => {
+693:describe('P17 (G10) loi callModel KHAC ModelUnavailableError van bao "dang ban" NHUNG phai ghi audit rieng', () => {
+694:  it('P17 loi la Error thuong (khong phai ModelUnavailableError) => audit agent.model_error + BUSY_REPLY (khong nuot im)', async () => {
+716:describe('P18 (G6) loi sai trang thai trong tool la loi CO KIEU (khong phai Error thuong)', () => {
+717:  it('P18 push_bql_ticket khi job chua co verdict => tool_result is_error voi code ConflictError', async () => {
