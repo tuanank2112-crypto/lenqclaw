@@ -35,11 +35,11 @@ describe('callModel (adapters/model.ts)', () => {
   it('dung dung model theo route va gan cache_control tren system', async () => {
     process.env.MODEL_PROVIDER = 'anthropic';
     process.env.MODEL_DIAGNOSE = 'claude-test-diagnose';
-    const captured: { body?: { model: string; system: unknown } } = {};
+    const captured: { body?: { model: string; system: unknown; max_tokens: number } } = {};
     const fake: ModelClientLike = {
       messages: {
         create: async (body) => {
-          captured.body = body as { model: string; system: unknown };
+          captured.body = body as { model: string; system: unknown; max_tokens: number };
           return fakeMessage(body.model);
         },
       },
@@ -49,6 +49,8 @@ describe('callModel (adapters/model.ts)', () => {
     const result = await callModel({ route: 'diagnose', system: 'ban la tro ly BQL', messages: [{ role: 'user', content: 'xin chao' }] });
 
     expect(result.model).toBe('claude-test-diagnose');
+    // Đ19-2: max_tokens = 16000 ca hai nhanh.
+    expect(captured.body?.max_tokens).toBe(16000);
     expect(Array.isArray(captured.body?.system)).toBe(true);
     const systemBlocks = captured.body!.system as Array<{ cache_control?: { type: string } }>;
     expect(systemBlocks[systemBlocks.length - 1]!.cache_control).toEqual({ type: 'ephemeral' });
