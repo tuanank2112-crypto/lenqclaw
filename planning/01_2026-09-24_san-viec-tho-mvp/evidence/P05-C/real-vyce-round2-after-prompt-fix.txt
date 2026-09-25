@@ -1,0 +1,7 @@
+provider=vyce cases=67 VENDOR_INTENT_MIN=0.6
+claim_recall=0.852 (23/27) false_claim=0 price_exact=1.000 (11/11) code_exact=1.000 model_errors=0/67 (0.0%)
+  - V15: bo sot claim ("nhan cqfmu di")
+  - V16: bo sot claim ("nhận giúp em cuốc C-MSNC")
+  - V17: bo sot claim ("cho em xin cuốc C-KW78")
+  - V22: bo sot claim ("nhan cuoc cBBV8")
+EVAL_VENDOR_INTENT: FAIL

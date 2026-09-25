@@ -1,0 +1,5 @@
+provider=vyce cases=67 VENDOR_INTENT_MIN=0.6
+claim_recall=0.926 (25/27) false_claim=0 price_exact=1.000 (11/11) code_exact=1.000 model_errors=0/67 (0.0%)
+  - V19: bo sot claim ("a nhận C-FMZ9")
+  - V24: bo sot claim ("ok em nhận C-72P7 luôn")
+EVAL_VENDOR_INTENT: FAIL

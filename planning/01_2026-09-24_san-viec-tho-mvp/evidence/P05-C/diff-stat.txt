@@ -1,0 +1,28 @@
+ docs/core.md                              |  7 +++++--
+ packages/core/src/agent/pii.ts            | 10 +++++++--
+ packages/core/src/agent/resident-agent.ts | 12 +++++++----
+ packages/core/src/agent/tools/index.ts    | 34 +++++++++++++++++++++++++++++++
+ packages/core/src/services/pii-gate.ts    | 16 +++++++--------
+ 5 files changed, 62 insertions(+), 17 deletions(-)
+ M docs/core.md
+ M packages/core/src/agent/pii.ts
+ M packages/core/src/agent/resident-agent.ts
+ M packages/core/src/agent/tools/index.ts
+ M packages/core/src/services/pii-gate.ts
+?? evals/golden/vendor_intent.jsonl
+?? packages/core/src/agent/prompts/vendor-triage.ts
+?? packages/core/src/agent/prompts/vendor.ts
+?? packages/core/src/agent/tools/claim_job.ts
+?? packages/core/src/agent/tools/confirm_assignment.ts
+?? packages/core/src/agent/tools/decline_hold.ts
+?? packages/core/src/agent/tools/dispatch_to_vendor.ts
+?? packages/core/src/agent/tools/get_my_assignments.ts
+?? packages/core/src/agent/tools/get_my_slot.ts
+?? packages/core/src/agent/tools/request_access.ts
+?? packages/core/src/agent/tools/request_slot.ts
+?? packages/core/src/agent/tools/vendor_handoff_to_staff.ts
+?? packages/core/src/agent/vendor-agent.ts
+?? packages/core/src/agent/vendor-triage.test.ts
+?? packages/core/src/agent/vendor-triage.ts
+?? packages/core/src/dbtests/p05-vendor-agent.db.test.ts
+?? scripts/eval/vendor-intent.mjs

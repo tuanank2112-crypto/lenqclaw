@@ -1,0 +1,4 @@
+[RED] model tra rac (JSON hong) => triageVendorMessage() luon null.
+[RED] claim_recall=0.259 (7/27) — nguong that >= 0.95 => KHONG DAT (dung — may cham biet do)
+[RED] false_claim=0
+EXIT:1
