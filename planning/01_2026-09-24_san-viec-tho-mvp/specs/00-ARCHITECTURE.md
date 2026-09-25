@@ -53,7 +53,7 @@ Agent là tác nhân thực hiện **mọi** bước bằng tool. Luật cứng 
 | 2a | ↳ **có** (BQL / chưa rõ) | `push_bql_ticket` ⇒ ticket lên dashboard, báo cư dân kèm trích dẫn | — | **BQL xử lý** ticket |
 | 3 | ↳ **không**: Ticket case | báo cư dân kết luận + xin đồng ý tìm thợ ⇒ `open_service_case` | cần cư dân đồng ý | — |
 | 4 | Job ẩn danh → nhóm thợ giữ slot (Đ14) | `publish_job_to_group` (mẫu cuốc, khung giá nếu có) | kiểu `JobCard` không có trường PII (BB-02) | — |
-| 5 | Chốt thợ | nhận lệnh "nhận C-xxxx" (parse tất định) ⇒ `confirm_assignment` khi thợ trả "OK" | một cuốc một người thắng (BB-05); chỉ thợ `active` (BB-10) | — |
+| 5 | Chốt thợ | agent thợ hiểu ý bằng model (`triageVendorMessage`) ⇒ `claim_job` / `confirm_assignment`; code chỉ là lưới tất định trích mã `C-XXXX` + đọc giá, bằng chứng ý định kiểm TRONG tool (Đ27, SPEC-P05 §10.4) | một cuốc một người thắng (BB-05); chỉ thợ `active` (BB-10) | — |
 | 6 | Ticket cấp quyền | `request_access` ⇒ ticket `access_request` lên dashboard (tên thợ, khung giờ, căn) | — | **BQL duyệt/từ chối** |
 | 7 | Giao việc | `dispatch_to_vendor` (số căn, SĐT, mã vào tòa) + báo cư dân tên thợ, giờ đến | từ chối nếu ticket cấp quyền chưa `approved` (BB-11) | — |
 | 8 | Theo dõi → đóng case | nhắc giờ, nhận "đến/xong" + ảnh, hỏi cư dân nghiệm thu, `close_case` (điểm thợ, giá thật, hẹn bảo hành +7 ngày) | tranh chấp ⇒ ticket `dispute` cho BQL | BQL xử lý tranh chấp |
@@ -90,7 +90,7 @@ Postgres 16 + pgvector + pg-boss (một instance, Docker, VPS Việt Nam)
 - **Tự gửi lời mời kết bạn / nhắn chủ động người lạ** — rủi ro khoá tài khoản; thợ tự vào nhóm, cư dân tự nhắn.
 - **Một mega-tool nhiều action cho agent** — bài học ZaloClaw (tốn ~4k token/lượt, không phân quyền được); mỗi tool một việc.
 - **Regex "injection guard" làm lớp bảo mật chính** — dễ vượt; bảo mật nằm ở BB-01/BB-02/BB-08.
-- **Để agent đọc tin nhắn nhóm thợ làm ngữ cảnh** — nhóm là kênh phát, chỉ parse lệnh "nhận <mã>".
+- **Để agent đọc tin nhắn nhóm thợ làm ngữ cảnh** — nhóm là kênh phát, không lưu lịch sử nhóm; chỉ bắt tin theo luật 3 điều kiện của SPEC-P05 §10.4.3 (có mã cuốc / người gửi đang giữ cuốc / nhóm có cuốc đang đăng) (Đ27 thay "chỉ parse lệnh nhận <mã>").
 - **Lưu toàn bộ lịch sử nhóm (passive collector)** — rủi ro Luật BVDLCN; chỉ lưu tin liên quan cuốc.
 
 ## 8. Tái sử dụng từ build phase (`D:\build phase`)

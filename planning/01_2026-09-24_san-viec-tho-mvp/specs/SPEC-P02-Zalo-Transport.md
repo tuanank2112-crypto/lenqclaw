@@ -22,7 +22,7 @@
 2. **Tin do chính tài khoản gửi (`is_self`)** vẫn được ghi: nếu tài khoản `bql` và tin không đến từ outbox (không khớp `outbox.zalo_msg_id`) ⇒ đặt `conversations.human_takeover_until = now() + 30 phút` (nhân viên đang trả lời tay ⇒ bot im).
 3. Ảnh: tải bằng cookie phiên, giới hạn 10 MB, kiểm magic bytes (jpeg/png/webp), lưu `storage/` theo sha256, CẤM theo redirect sang host khác.
 4. `pg-boss` job `inbound.process` theo **làn = thread_id**: một thread xử lý tuần tự; tối đa 4 thread song song. Tin đến trong 2,5 giây được gom thành một lượt.
-5. Nhóm Zalo của tài khoản `market`: chỉ đưa vào pipeline các tin khớp mẫu `^\s*(nhận|nhan)\s+C-[A-Z0-9]{4}\s*$` hoặc `^\s*ok\s*$` trả lời trong hạn giữ; tin khác trong nhóm **không lưu**.
+5. Nhóm Zalo của tài khoản `market`: **thay bởi Đ27 — [SPEC-P05 §10.4.3](SPEC-P05-Dispatch.md)** (luật bắt tin nhóm 3 điều kiện; hiểu ý bằng model, regex chỉ là lưới trích mã cuốc). Bản cũ: ~~chỉ tin khớp `^\s*(nhận|nhan)\s+C-[A-Z0-9]{4}\s*$` hoặc `^\s*ok\s*$`~~. Tin nhóm không khớp luật 3 điều kiện vẫn **không lưu**.
 6. Chỉ nghe sự kiện `message`, `undo` (đánh dấu tin bị thu hồi), `closed`, `error`. Không gửi "đã xem" trước khi tin qua bước nhận diện (khác zalouser).
 
 ## §4. Nhận diện người gửi

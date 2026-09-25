@@ -145,7 +145,7 @@ Lý do: Gemini hết quota, OpenRouter 0 USD. Vyce là proxy dạng OpenAI ⇒ n
 Lý do: vòng 3 H08 bằng `vyce/deepseek-v4-flash` — khẩn cấp bỏ sót 1 + báo nhầm 8%, đồng ý nhận nhầm 2, chẩn đoán 2/40 (hỏi dồn 3 câu, không lưu nháp sớm, triage độ tin mâu thuẫn), triage quá hạn 11% dù 8 s. Là chất lượng model, không phải adapter (tool có được gọi). Không sửa prompt cho model không dùng thật (dễ làm lệch hành vi trên Gemini). Nhánh `vyce` giữ trong mã (R11 ✅) nhưng KHÔNG dùng cho agent cư dân. Lượt chấm kế: Gemini 3.6 flash (trực tiếp khi có quota/billing, hoặc OpenRouter khi có tín dụng), đủ 4 bộ, prompt đang treo.
 **Lật được:** có — model khác phải chấm đủ 4 bộ đạt ngưỡng mới dùng.
 
-### Đ27 — 2026-09-25 23:17 · Chốt thi công P05 (bước 4–7) trên kênh giả lập + P04 tối thiểu (Super Orchestrator giao, architect soạn — CHỜ DUYỆT)
+### Đ27 — 2026-09-25 23:17 · Chốt thi công P05 (bước 4–7) trên kênh giả lập + P04 tối thiểu (Super Orchestrator giao, architect soạn — ĐÃ DUYỆT 2026-09-26: người dùng "toàn bộ quá trình tôi đều duyệt"; Q1–Q10 giữ giá trị tạm SPEC-P05 §10.16)
 Hợp đồng ở [SPEC-P05 §10](specs/SPEC-P05-Dispatch.md) và [SPEC-P04 §8](specs/SPEC-P04-Vendor-Console.md); bổ sung [01-CONTRACTS](specs/01-CONTRACTS.md) §1/§4/§5/§6/§7/§8/§9, [TESTING](specs/TESTING-ACCEPTANCE.md) §2–§4, §6, [OPERATIONS](specs/OPERATIONS.md) §2–§3. Các quyết định chính:
 - **Hiểu ý thợ bằng model (Đ21 áp cho thợ):** `triageVendorMessage` (route `triage`) + agent thợ (route `vendor_parse`) gọi tool; code chỉ là lưới tất định (trích mã cuốc `C-XXXX`, đọc giá, danh sách cụm khớp BẰNG NHAU) và bằng chứng ý định nằm TRONG tool (`IntentNotConfirmedError`). Thay SPEC-P05 §2.1, 01-CONTRACTS §7, SPEC-P02 §3.5 (luật bắt tin nhóm 3 điều kiện thay regex).
 - **Tác nhân:** agent cư dân đăng nhóm (`publish_job_to_group`, cùng lượt sau `open_service_case`) và trả lời báo giá vượt khung (`respond_to_quote`); agent thợ chốt (`claim_job` UPDATE có điều kiện BB-05 + 7 điều kiện BB-10), xác nhận, xin cấp quyền, giao việc (`dispatch_to_vendor` do **sự kiện hệ thống** `access_approved` — dòng `inbound_events` `sender_uid='system'` — kích hoạt sau khi BQL duyệt); timer và BQL là tác nhân đúng các dòng 01-CONTRACTS §5; ba lưới an toàn (đăng/xin quyền/phát lại) có audit riêng để đo tần suất agent quên.
@@ -243,7 +243,7 @@ Thứ tự bắt buộc (Đ13, Đ15): `P01 (nền tảng + SimTransport) → P03
 - [x] H11 — nhánh `vyce` (01-CONTRACTS §2d) dùng chung phần dịch OpenAI của §2c — `ffbd609`, R11 ✅ 2026-09-25; `npm test` 251, `test:db` 122
 - [x] H08 vòng 3 — chấm bằng `vyce/deepseek-v4-flash` ⇒ trượt 3 bộ, dừng (Đ26) — `c367fea`
 - [ ] 🖐 Quota/billing Gemini ⇒ H08 vòng 4 chấm đủ 4 bộ bằng Gemini 3.6 flash, phán R08
-- [ ] 🖐 SO duyệt Đ27 (SPEC-P05 §10 + SPEC-P04 §8) và chốt/giữ giá trị tạm Q1–Q10 (SPEC-P05 §10.16)
+- [x] 🖐 SO duyệt Đ27 (SPEC-P05 §10 + SPEC-P04 §8) và chốt/giữ giá trị tạm Q1–Q10 (SPEC-P05 §10.16) — 2026-09-26 00:40, người dùng duyệt toàn bộ quá trình; Q1–Q10 giữ giá trị tạm
 - [ ] P04 tối thiểu cho P05 — WP P05-E (SPEC-P04 §8, 🟠; `/jobs` 🟢): `/tickets` duyệt/từ chối, `/gate`, `/vendors` + "Đã thu phí", policy, SimBoard, `/api/dev/sim/tick` — G07
 - [ ] P05-B — nền: migration 006, dịch vụ dispatch/access/slots/timers, PiiGate, seed thợ, `sim_claims.mjs`, máy đo mở rộng (SPEC-P05 §10.12, 🟠) — G11, G12, G12b, G15
 - [ ] P05-C — agent thợ: triage thợ, `vendor-agent`, 9 tool, golden `vendor_intent.jsonl` + `scripts/eval/vendor-intent.mjs` (🟠 thi công, 🔴 review prompt/golden)
