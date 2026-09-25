@@ -27,6 +27,7 @@ Tất cả các quyết định kiến trúc và lịch sử nâng cấp phiên 
 - Đ22 (2026-09-25, người dùng "ok làm đi") Đưa P02 Zalo thật lên chạy song song, giai đoạn 1 chỉ `bql` trên máy dev, chỉ text, không pg-boss (runner `core:run` + cột `login_requested_at`); gắn Zalo thật vào cư dân mô phỏng bằng `dev:link-zalo`. Takeover: pacer chỉ huỷ tin bot khi nhân viên gửi tay (SPEC-P02 §9.7).
 - Đ23 (2026-09-25) Cột `jobs.category_code` là nguồn chân lý của danh mục; `save_job_draft` ghi cột cùng câu lệnh với `draft` (SPEC-P03 §11.11). Lộ ra khi lượt chấm model thật đầu tiên cho chẩn đoán 0/40.
 - Đ24 (2026-09-25, người dùng đưa key OpenRouter) Nhánh `MODEL_PROVIDER=openrouter` (fetch, `data_collection: deny`, fallback phía client) để chấm bằng CÙNG model Gemini khi quota Gemini trực tiếp hết; mặc định sản phẩm vẫn `gemini`.
+- Đ25 (2026-09-25, người dùng đưa key Vyce: "chọn deepseek cũng được") Nhánh `MODEL_PROVIDER=vyce` (proxy dạng OpenAI `https://vyceai.com/v1`, `deepseek-v4-flash`) dùng chung phần dịch với `openrouter`; chỉ chạy khi `DATA_MODE=sim`; G08–G10 chỉ có giá trị cho cặp provider/model đã chấm.
 ### Superseded
 - Đ13 (thứ tự Zalo sau cùng) và SPEC-P02 §2.1/§3.4 (pg-boss) — thay bởi Đ22.
 - SPEC-P03 §1/§10.2/§10.3 (danh sách `EMERGENCY_TERMS` so chuỗi con, regex PII hẹp, `CONSENT` regex chứa) — thay bởi Đ20/Đ21.

@@ -89,3 +89,4 @@ Phân tích OpenClaw + ZaloClaw (monas-team) với tài khoản Zalo cá nhân �
 - 🖐 Tín dụng model (nạp OpenRouter ~1 USD/lượt hoặc chờ quota Gemini) ⇒ H08 vòng 3 chấm lại, phán R08, commit/bỏ prompt `resident.ts` đang treo.
 - 🖐 Thử `/zalo` đăng nhập → đăng xuất → đăng nhập lại; thử agent qua Zalo thật. Push (chưa push từ `d1070cc`).
 - SO: `.env.example` pacer (`PACER_MAX_PER_MINUTE` 10, bỏ `PACER_MIN_INTERVAL_MS`, `ZALO_ACCOUNTS`).
+- Người dùng bỏ phương án nạp OpenRouter, đưa key **Vyce AI** ("chọn deepseek cũng được") ⇒ lưu `.env` `VYCE_API_KEY`; dò ra base `https://vyceai.com/v1` (`api.vyceai.com` không phân giải); `deepseek-v4-flash` + tool + `max_tokens` 16000 ⇒ 200, 2,2 s. Liệt kê toàn bộ model bị bộ phân loại auto mode chặn (Data Exfiltration) — không cần, bỏ qua. **Đ25** 01-CONTRACTS §2d + H11 (worker làm R10 nhận tiếp). Commit não `4f3ff0e`, hồ sơ `fd1144a`.
