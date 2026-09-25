@@ -73,7 +73,7 @@
     },
     "eval_next": "gemini --set diagnosis,responsibility (D29) after quota reset ~14:00 ICT"
   },
-  "next": "H12 P05-B -> (P05-C || P05-E) -> P05-D -> P05-F; Gemini --set diagnosis,responsibility after ~14:00 ICT",
+  "next": "R13/R14 -> P05-D (resident side, needs resident.ts released) -> P05-F adversarial; Gemini --set diagnosis,responsibility after ~14:00 ICT",
   "approved": [
     "P01",
     "P03-code",
@@ -82,10 +82,16 @@
     "P02-ui",
     "H10-openrouter",
     "H11-vyce",
-    "D27"
+    "D27",
+    "P05-B"
   ],
   "llm_provider": "vyce (deepseek-v4-flash, temporary D28; gate provider gemini D26)",
   "decisions_latest": "D29",
-  "in_progress": "H12 P05-B (dispatch foundation)",
-  "pushed": "origin/main = a0f832a (2026-09-26)"
+  "in_progress": "H13 P05-C (vendor agent) || H14 P05-E (console)",
+  "pushed": "origin/main = a0f832a (2026-09-26)",
+  "tests_now": {
+    "unit": 296,
+    "db": 165,
+    "skip": 0
+  }
 }

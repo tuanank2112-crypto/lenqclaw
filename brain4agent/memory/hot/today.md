@@ -102,6 +102,7 @@ Phân tích OpenClaw + ZaloClaw (monas-team) với tài khoản Zalo cá nhân �
 - **Đ28 (người dùng):** "dùng tạm deepseek trong vyce" ⇒ `.env` `MODEL_PROVIDER=vyce` (key dán lại trùng key cũ; probe 200, 1,4 s). Gate vẫn theo Đ26 — không chấm lại bằng DeepSeek.
 - Người dùng hỏi "chỉ cần thay deepseek vào phần gemini chưa làm?" ⇒ không ghép số hai model, nhưng **Đ29** chấm bù theo route (triage không đổi ⇒ giữ số khẩn cấp/đồng ý real-run-1). H08 vòng 5: cờ `--set` (`0347210`, R08 ✅ sau SO đo lại DB rỗng riêng + gate 0).
 - Người dùng: "toàn bộ quá trình tôi đều duyệt cho bạn làm" ⇒ Đ27 ĐÃ DUYỆT (Q1–Q10 giữ giá trị tạm), đồng bộ 00-ARCH §4/§7 + SPEC-P02 §3.5, H12 (P05-B) `a0f832a`, push `origin/main` = `a0f832a`, phóng worker 🟠.
+- R12 (P05-B) ✅: SO đo lại DB rỗng riêng — gate 0, `npm test` 296, `test:db` 165, 0 skip, `sim_claims` 0/`--break` 1. Chấp nhận 2 file ngoài danh sách tên (`job-state.ts` = máy trạng thái, `job-code.ts` export ALPHABET). Phóng H13 (P05-C) ∥ H14 (P05-E). Push `daf5239`.
 
 ### ⏭ Treo
-- R12 (P05-B) ⇒ SO đo lại; lượt Gemini `--set diagnosis,responsibility` sau ~14h (quota ngày); duyệt Đ27 + Q1–Q10; quyết 3 file presentation; câu hỏi đường lùi khẩn cấp khi model sập.
+- R13/R14 ⇒ SO đo lại; review 🔴 prompt + golden thợ; lượt Gemini `--set diagnosis,responsibility` sau ~14h (quota ngày); duyệt Đ27 + Q1–Q10; quyết 3 file presentation; câu hỏi đường lùi khẩn cấp khi model sập.
