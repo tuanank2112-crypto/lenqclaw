@@ -125,3 +125,42 @@ Dòng cuối: ⏳ Chờ người duyệt.
 - `defer` có trong golden (2 ca) nhưng không có trong enum `intent` của prompt triage ⇒ làm rõ ở vòng 2.
 
 🔁 SỬA: prompt thợ không được chứa câu golden — H13 mục 7.
+
+## Vòng 2 (H13 §7 — sửa lỗi golden lọt vào prompt)
+
+Vai: worker (vai-thi-cong) · loại: THI CÔNG · họ/model: Claude Sonnet 5 · hiểu việc: viết lại VÍ DỤ trong `agent/prompts/{vendor-triage,vendor}.ts` bằng câu chữ khác (không đổi luật/nhãn), KHÔNG sửa `evals/golden/vendor_intent.jsonl` (`expect_*` giữ nguyên cho cả 67 ca); thêm máy đo chống tái phạm `packages/core/src/agent/prompts/vendor-golden-leak.test.ts` với bằng chứng đỏ trước khi sửa; làm rõ câu hỏi `defer`; KHÔNG chạy model thật vòng này; không đụng `packages/core/src/services/{vendors,access,timers,job-state}.ts`/`domain/errors.ts` (P05-E đang sửa cùng cây) và không stage `prompts/resident.ts`.
+
+Base: `533948e` (SO đã thêm phán quyết vòng 1 + H13 §7) · Head: `6290c9b` (1 commit: `fix(core): rewrite vendor prompt examples to avoid golden leakage`)
+
+### Lệnh + exit code
+
+| Lệnh | Exit | Evidence |
+| :-- | :-- | :-- |
+| `npx vitest run src/agent/prompts/vendor-golden-leak.test.ts` — TRƯỚC khi sửa prompt (bằng chứng đỏ THẬT, không phải chèn giả) | 1 (11 ca trùng, đúng khớp danh sách SO đã liệt kê ở "SO phán vòng 1") | `evidence/P05-C/red-golden-leak.txt` |
+| Cùng lệnh — SAU khi viết lại ví dụ trong prompt | 0 (2/2 test xanh) | trong `test-round2.txt` |
+| `npm run typecheck` | 0 | `evidence/P05-C/typecheck-round2.txt` |
+| `npm test` | 0 (317 tổng: web 36 + zalo 37 + core 244) | `evidence/P05-C/test-round2.txt` |
+| `node scripts/gate.mjs` (không DB) | 0 | `evidence/P05-C/gate-round2.txt` |
+
+Không chạy `test:db`/model thật vòng này theo đúng yêu cầu H13 §7 ("KHÔNG chạy model thật ở vòng này").
+
+### Số test trước/sau
+
+| Bộ | Trước (`bf926e1`, R13 vòng 1) | Sau (`6290c9b`) | Fail | Skip |
+| :-- | :-- | :-- | :-- | :-- |
+| `npm test` — core | 242 | 244 (+2, `vendor-golden-leak.test.ts`) | 0 | 0 |
+| `npm test` tổng | 315 | 317 | 0 | 0 |
+
+### Việc đã sửa
+
+1. **`agent/prompts/vendor-triage.ts`** — viết lại TOÀN BỘ khối "NHÁN intent" và "VÍ DỤ GẦN-GIỐNG": mọi ví dụ cụ thể trước đây trùng nguyên văn một ca golden (11 ca: V04, V28, V32, V39, V41, V43, V51, V52, V62, V63, V64) được thay bằng mô tả NGUYÊN TẮC nhận biết + ví dụ diễn đạt khác hẳn câu chữ (ví dụ: thay literal "350k"/"1tr2" bằng mô tả "một con số tiền duy nhất, không kèm dấu hỏi"; thay "thôi em bận" bằng mô tả "câu thể hiện thợ không thể/không muốn tiếp tục"). Đầu khối ví dụ ghi rõ chú thích "CHỈ là minh hoạ... KHÔNG phải danh sách đầy đủ" để tránh việc model/người đọc sau này lại chép nguyên văn một câu cụ thể vào đây. Luật/nhãn/schema JSON giữ NGUYÊN 100%.
+2. **`agent/prompts/vendor.ts`**: đối chiếu bằng máy đo mới — 0 chuỗi trong ngoặc kép trùng golden ngay từ vòng 1 (SO không liệt nó trong danh sách 11 ca), KHÔNG cần sửa nội dung; chỉ được rà lại bằng test mới để xác nhận.
+3. **Máy đo mới `packages/core/src/agent/prompts/vendor-golden-leak.test.ts`**: chuẩn hoá (NFD bỏ dấu, `đ`→`d`, chữ thường, chỉ giữ `[a-z0-9 -]`, gộp khoảng trắng) MỌI chuỗi trong ngoặc kép của cả hai file prompt thợ, so BẰNG NHAU với `text` của mọi ca `vendor_intent.jsonl` ⇒ khẳng định mảng trùng phải rỗng. Bằng chứng đỏ (`red-golden-leak.txt`) là trạng thái THẬT của code trước khi tôi sửa (không phải chèn tạm rồi hoàn nguyên — chính là lỗi SO đã tìm ra), nên tự nó vừa là bằng chứng "biết đỏ" vừa là bằng chứng lỗi đã tồn tại thật; sau khi sửa, chạy lại test này trong `test-round2.txt` cho kết quả xanh 2/2.
+4. **Câu hỏi `defer` (V54, V55 — "để em hỏi vợ đã", "để em suy nghĩ thêm")**: SPEC-P05 §10.4.1 liệt `VendorIntent = 'claim'|'confirm'|'quote'|'decline'|'slot_request'|'my_slot'|'my_jobs'|'question'|'other'` — KHÔNG có `defer`. Chọn theo đúng gợi ý "cách an toàn" của H13 §7: KHÔNG thêm nhãn `defer` vào enum (SPEC không nói tới, tự thêm là tự quyết định kiến trúc ngoài quyền worker), và KHÔNG đổi `expect_intent` của 2 ca golden (giữ nguyên `"defer"` — đúng luật "CẤM xoá/đổi expect_* của ca golden"). Về mặt máy chấm (`scripts/eval/vendor-intent.mjs`), việc này AN TOÀN vì logic chấm chỉ phân biệt `expect_intent === 'claim'` (cho `claim_recall`) và mọi giá trị khác (kể cả `'defer'`, `'question'`, `'other'`...) đều được coi là "KHÔNG PHẢI claim" cho mục đích tính `false_claim` — `'defer'` tự động rơi vào nhóm "không phải claim" mà không cần sửa code chấm điểm. Model thật khi gặp 2 câu này nhiều khả năng sẽ tự gán `intent: "other"` (đúng nhãn gần nhất trong enum hiện có) — không ảnh hưởng tới 4 chỉ số đo (`claim_recall`/`false_claim`/`price_exact`/`code_exact`).
+
+### Câu hỏi cần người (bổ sung vòng 2)
+
+- Xác nhận cách xử lý `defer` ở mục 4 trên là đúng ý định SPEC, hay cần một handoff riêng thêm nhãn `defer` chính thức vào `VendorIntent`/`agent/vendor-tool-context.ts` (đổi kiểu — ảnh hưởng `agent/vendor-triage.ts`, `agent/tools/*` — nên cần 🔴 quyết định kiến trúc, không phải việc tự quyết của worker vòng vá lỗi này).
+- Golden model-quality (`claim_recall≥0.95`) vẫn CHƯA được đo lại với prompt mới (H13 §7 cấm chạy model thật vòng này) — cần lượt chấm Gemini thật (cùng lượt H08, theo phán quyết Q1 của SO) để biết prompt mới có cải thiện `claim_recall` hay không; số 0.852–0.926 ở mục 5 (vòng 1) đo trên PROMPT CŨ (đã sửa), không còn phản ánh trạng thái hiện tại.
+
+Dòng cuối: ⏳ Chờ người duyệt.
