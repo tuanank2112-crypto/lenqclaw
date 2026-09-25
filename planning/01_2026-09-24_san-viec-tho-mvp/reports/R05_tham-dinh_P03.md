@@ -187,3 +187,5 @@ Model giả có kịch bản (`setModelClientForTest`) đóng vai model bị d�
 - ⏸ Chưa làm: đo lại sau H04 (N1, N4), vì ngoài phạm vi `e3d2079`.
 
 ⏳ Chờ người duyệt.
+
+✅ DUYỆT · SO · 2026-09-25 09:51:29 · thẩm định đạt: cổng chạy lại khớp, SO đo lại C1/C2/C3/C5/C6/C7 trên mã thật đều đúng

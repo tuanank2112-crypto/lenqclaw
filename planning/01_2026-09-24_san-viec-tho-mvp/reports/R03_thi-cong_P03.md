@@ -72,3 +72,5 @@ Không gói nào phải leo lên 🔴 (không gặp quyết định thiếu tron
 🖐 Cần tay người: trả lời 4 câu hỏi mở ở mục 6 (đặc biệt câu 1 — xung đột Đ18/§2b) · 🤖 Agent làm được ngay: chờ lệnh, có thể triển khai Gemini adapter (§2b) hoặc revert nếu được xác nhận phạm vi · ⭐ Nên làm trước: xử lý câu hỏi 1 (Đ18/§2b) vì nó là thay đổi hợp đồng lớn đang treo, ảnh hưởng mọi route gọi model kể cả P03 · ⏸ Chưa làm: tick checklist P03 trong `plan.md` (để người duyệt làm sau khi đo lại — mục 5), đồng bộ `docs/`/`brain4agent/` (ngoài phạm vi handoff), nhánh "có credential" của golden diagnosis/responsibility.
 
 ⏳ Chờ người duyệt.
+
+🔁 SỬA: C1–C7, N2–N3, N5–N14, G1/G6–G10 theo SPEC-P03 §11 (Đ20) — vòng 2 giao ở handoffs/H06_thi-cong_P03-v2.md · SO · 2026-09-25 09:51:29

@@ -111,3 +111,60 @@ Các mục dưới đây là hợp đồng thi công P03; §1–§9 vẫn giữ 
 - Tool: `strict: true` ở cấp định nghĩa tool (cạnh `name`/`description`/`input_schema`); `input_schema` có `additionalProperties:false` + `required` đủ trường. `tool_choice` để `auto`.
 - Từ chối: kiểm `stop_reason === 'refusal'` TRƯỚC khi đọc `content` ⇒ `handoff_to_staff('model_refusal')` + `BUSY_REPLY`. Bật fallback phía server mặc định trong `adapters/model.ts`: gọi `client.beta.messages.create` với `betas: ['server-side-fallback-2026-07-01']` và `fallbacks: 'default'` (dạng chuỗi — CẤM ghép với header `-2026-06-01`). Kiểu SDK không có trường ⇒ tra `.d.ts` của gói đã cài; vẫn không có ⇒ ghi Câu hỏi mở, KHÔNG tự đổi sang dạng mảng.
 - Kiểu dữ liệu: dùng kiểu SDK (`MessageParam`, `Tool`, `ToolUseBlock`, `ToolResultBlockParam`), CẤM tự định nghĩa lại.
+
+## §11. Vòng 2 — vá sau thẩm định R05 (Đ20 — Super Orchestrator 🔴, 2026-09-25)
+
+Mục này THAY các câu tương ứng ở §1, §10.2, §10.3, §10.5; chỗ nào §11 không nói thì §1–§10 giữ nguyên. Mã lệch = mã trong [R05](../reports/R05_tham-dinh_P03.md) §7. Bộ phá thử của thẩm định (`evidence/P03-audit/attack-source.txt`) là **hồi quy bắt buộc**: mọi ca ĐỎ ở R05 phải thành test, trừ ca ghi rõ ở vùng cấm §11.9.
+
+### §11.1 Khẩn cấp tất định (C5, G1) — thay danh sách §1
+- `detectEmergency(text)` so khớp **theo ranh giới từ** (dãy token nguyên, không so chuỗi con) trên HAI bản của tin:
+  - (A) bản thường hoá GIỮ dấu (NFC, chữ thường): `cháy`, `bốc cháy`, `hỏa hoạn`, `hoả hoạn`, `khói`, `bốc khói`, `kẹt thang`, `kẹt trong thang`, `mắc kẹt`, `ngập`, `rò gas`, `rò rỉ gas`, `xì gas`, `mùi gas`, `điện giật`, `giật điện`, `chập điện`, `tia lửa điện`, `cháy nổ`, `phát nổ`, `nước tràn hành lang`.
+  - (B) bản BỎ dấu — CHỈ các cụm không nhập nhằng khi mất dấu: `boc chay`, `dam chay`, `chay no`, `chay lon`, `nha chay`, `nha bi chay`, `hoa hoan`, `boc khoi`, `co khoi`, `khoi den`, `ket thang`, `ket trong thang`, `mac ket`, `ro gas`, `ro ri gas`, `xi gas`, `mui gas`, `dien giat`, `giat dien`, `chap dien`, `phat no`, `nuoc tran hanh lang`. CẤM từ đơn `chay`, `khoi`, `ngap` ở bản (B) — lý do: `chay` = cháy/chảy/chạy/chay, `khoi` = khói/khỏi.
+- Tiền xử lý chung: gộp dãy chữ cái đơn cách nhau bởi `.`, `-`, `_`, khoảng trắng thành một từ (`c.h.á.y`, `c h a y` ⇒ `cháy`/`chay`).
+- Tin khớp ⇒ ticket `kind='emergency'` + `EMERGENCY_REPLY`, **0 lần gọi model trong lượt đó** (G1 chốt: §10.6(a) thắng; câu "agent vẫn chạy sau đó" ở §1 nghĩa là lượt KẾ TIẾP chạy agent bình thường). `EMERGENCY_REPLY` thêm câu cuối: "Nếu không phải khẩn cấp, anh/chị nhắn lại mô tả để em hỗ trợ sửa chữa."
+- Chống lặp: cư dân đã có ticket `emergency` còn mở tạo < 30 phút ⇒ KHÔNG tạo ticket mới, KHÔNG gửi lại `EMERGENCY_REPLY`, chạy agent bình thường.
+- Golden `emergency.jsonl` mở rộng: thêm mọi câu khẩn cấp/gần giống ở bộ phá R05 (ca 5a–5c) + ≥5 câu rò rỉ/chảy nước thường ngày. Ngưỡng giữ: 0 bỏ sót, ≤1 báo nhầm; 0 ca `diagnosis`/`responsibility` golden bị bắt nhầm. Không đạt bằng danh sách trên ⇒ Câu hỏi mở, CẤM tự thêm/bớt từ.
+
+### §11.2 Khẩn cấp phía model (C4)
+- `save_job_draft` với `urgency='emergency'` ⇒ trong tool chạy đúng đường §11.1 (ticket + `EMERGENCY_REPLY` qua outbox, cùng luật chống lặp). Cờ đơn điệu: job đã `emergency` thì input `normal` bị bỏ qua, output tool báo `urgency_locked: true`. Đây là lưới thứ hai cho biến thể §11.1 không bắt được.
+
+### §11.3 Che PII trước model (C6, G8) — thay regex §10.2
+- Áp cho: tin hiện tại, 20 tin lịch sử, `JobDraft` nạp vào ngữ cảnh, output mọi tool trả về model.
+- SĐT: `(?<!\d)(?:\+?84|0)(?:[\s.\-()]*\d){8,10}(?!\d)` ⇒ `[SĐT]`.
+- Căn: (1) mọi `apartments.code` của tòa (so không phân biệt hoa thường, bỏ qua `.`/`-`/khoảng trắng) ⇒ `[CĂN]`; (2) sau từ khoá `căn|can|căn hộ|can ho|phòng|phong|p.` là mã `[A-Za-z]{0,2}[\s.\-]?\d{1,2}[\s.\-]?\d{2}` ⇒ `[CĂN]`; (3) `\b[A-Za-z]{1,2}[\s.\-]?\d{3,4}\b` (không phân biệt hoa thường) ⇒ `[CĂN]`.
+- Ngoại lệ G8: mã cuốc (`jobs.code`) CỦA CHÍNH cư dân này giữ nguyên (thay bằng khoá tạm trước khi che, trả lại sau).
+- Xong khi: bộ 20 biến thể của R05 ca 1 ⇒ 0 chuỗi thô trong `messages` gửi model (bắt bằng model giả ghi lại request).
+
+### §11.4 Trách nhiệm có trích dẫn (C1, N12)
+- `classify_responsibility`: `party ∈ {resident, bql}` chỉ giữ khi MỌI citation hợp lệ có nhãn (`[BQL]`/`[CƯ DÂN]`) và nhãn = `party`; citation thiếu nhãn hoặc ngược nhãn ⇒ `unclear`.
+- `quote` lưu = đoạn cắt từ `kb_sections.body` (≤300 ký tự đầu của mục); `quote` do model gửi bị BỎ QUA.
+- Migration `003_*.sql` (chỉ thêm): `kb_documents.building_id uuid references buildings`, điền tòa của dữ liệu hiện có, rồi `set not null`. `search_regulations` và kiểm citation lọc `building_id = ctx.buildingId`; citation tòa khác ⇒ không hợp lệ. Sửa 01-CONTRACTS §4 cùng đợt (SO làm).
+
+### §11.5 Đồng ý của cư dân (C2, C3) — thay luật `CONSENT` §10.3
+- `classify_responsibility` chỉ chạy khi job `drafting`; trạng thái khác ⇒ lỗi có kiểu `VerdictLockedError` (thêm vào `domain/errors.ts` + bảng §9: caller báo cư dân "đã kết luận, cần BQL xem lại").
+- `open_service_case` cần ĐỦ: job `awaiting_consent`; `jobs.responsibility.party = 'resident'`; tin đồng ý là tin `in` có `created_at` SAU `job_events.created_at` của chuyển `drafting→awaiting_consent` (tức ở lượt sau lượt hỏi).
+- Tin đồng ý (bỏ dấu, chữ thường, bỏ dấu câu cuối, bỏ tiểu từ `a|nhe|nha|luon|di|em|anh|chi|minh`): hoặc BẰNG một trong `dong y`, `toi dong y`, `em dong y`, `ok`, `oke`, `okay`, `duoc`, `chot`, `tim tho`, `tim tho giup`, `dat lich`, `co`; hoặc BẮT ĐẦU bằng một cụm đó rồi `,`/`.` và phần sau không chứa token `khong|ko|k|hong|hok|chua|dung|thoi|huy|suy nghi|hoi` — và cả tin không có `?`. Còn lại ⇒ `ConsentMissingError`. Prompt dặn agent: "trả lời ĐỒNG Ý để em tìm thợ".
+
+### §11.6 Hội thoại, im lặng khi người tiếp quản, trả lời luôn có (N2, N3, N6, N7, N8, N11, G9)
+- N11: `conversations.party_id` đã có và ≠ `Party` giải từ người gửi (BB-08) ⇒ không nạp lịch sử, `audit_log action='conversation.party_mismatch'`, `BUSY_REPLY`, không gọi model.
+- N3: `handoff_to_staff` đặt `human_takeover_until = now() + HUMAN_TAKEOVER_MIN` (env, mặc định 60) + ticket `kind='unclear'` cho nhân viên. Khi còn hạn: lưu tin vào, 0 lần gọi model, không trả lời — trừ đường khẩn cấp §11.1 (BB-06).
+- N2: vòng kết thúc mà không có text (rỗng, `max_tokens`) ⇒ `BUSY_REPLY` + `handoff_to_staff('agent_empty')`. Mỗi tin vào nhận đúng một tin ra, trừ khi người đang tiếp quản.
+- N6: tin hiện tại xuất hiện ĐÚNG một lần trong `messages` gửi model. N7: `JobDraft` đang mở (đã che) nạp vào phần biến đổi sau breakpoint cache. N8: danh sách `job_categories` (`code` — `name`) vào phần cố định của system prompt.
+- G9: một cư dân chỉ có tối đa một job `drafting` (tạo trong transaction có khoá theo `resident_id`; đua ⇒ dùng lại job đã có).
+
+### §11.7 Còn lại (C7, N5, N9, N10, N14, G6, G7, G10)
+- C7: script npm `db:seed:sim` KHÔNG được tự gán `DATA_MODE`; `runSeedSim` từ chối (exit 1) khi `process.env.DATA_MODE !== 'sim'`. `test:db` tự đặt `DATA_MODE=sim` cho bước seed của chính nó, chạy được trên Windows và Linux.
+- N5: mọi tool (kể cả chỉ đọc) ghi `audit_log action='tool.<tên>'`.
+- N9: mỗi file `*.db.test.ts` tự dựng dữ liệu của mình, chạy đúng khi đảo thứ tự file. Xong khi: 3 lượt đảo thứ tự đều xanh.
+- N10: test canh 3 luật vòng tool §10.8 (nối nguyên `content` kể cả khối lạ; mọi `tool_result` một lượt trong một message `user`; `refusal` kiểm trước `content`); đột biến m5–m7 của R05 phải chết.
+- N14: token truy hồi dựng phía TS (NFD, bỏ dấu, `đ→d`, chữ thường, tách theo `[^a-z0-9]`, tối đa 12 token), truyền làm tham số; tsquery chỉ chứa `[a-z0-9]` và `|`.
+- G6: lỗi sai trạng thái trong tool dùng lỗi có kiểu sẵn (`ConflictError`/`VerdictLockedError`), không `Error` thường. G7: hiệu lực quy chế so theo ngày `Asia/Ho_Chi_Minh`. G10: `callModel` ném lỗi khác `ModelUnavailableError` ⇒ vẫn `BUSY_REPLY` nhưng `audit_log action='agent.model_error'` kèm tên lỗi (không nuốt im).
+
+### §11.8 Nghiệm thu vòng 2
+Cổng TESTING §1 xanh; `npm test` và `test:db` không giảm số test, 0 skip; bộ phá R05 chạy lại ⇒ mọi ca ĐỎ thành XANH (trừ §11.9); golden emergency mới đạt ngưỡng §11.1.
+
+### §11.9 Vùng cấm vòng 2
+- CẤM phát hiện khẩn cấp bằng LLM hoặc so khớp mờ (BB-06 tất định; lưới thứ hai là §11.2).
+- CẤM che số viết bằng chữ ("không chín không…") — hiếm, chi phí cao, dễ che nhầm; ghi nhận là giới hạn.
+- CẤM viết lại máy chấm golden ở vòng này (Đ19-4 là gói riêng).
+- CẤM đổi định dạng mã cuốc `C-XXXX` (01-CONTRACTS §4).

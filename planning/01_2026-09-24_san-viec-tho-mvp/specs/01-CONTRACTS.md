@@ -154,6 +154,7 @@ create table tickets (id uuid primary key default gen_random_uuid(), building_id
 
 create table kb_documents (id text primary key, title text not null, version text not null, status text not null check (status in ('approved','draft','deprecated')),
   effective_from date not null, effective_to date);
+-- Đ20 (migration 003): kb_documents.building_id uuid not null references buildings — quy chế thuộc đúng một tòa (SPEC-P03 §11.4).
 create table kb_sections (document_id text references kb_documents, section_id text, heading text, body text not null,
   tsv tsvector, embedding vector(1024), primary key(document_id, section_id));
 
