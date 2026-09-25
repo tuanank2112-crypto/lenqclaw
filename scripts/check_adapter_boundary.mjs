@@ -30,6 +30,9 @@ const SELF = path.join('scripts', 'check_adapter_boundary.mjs').split(path.sep).
 // 01-CONTRACTS §2b: chuoi endpoint Gemini CHI duoc xuat hien trong
 // adapters/model.ts (goi H04, goi c).
 const GEMINI_HOST = 'generativelanguage.googleapis.com';
+// 01-CONTRACTS §2c: chuoi endpoint OpenRouter CHI duoc xuat hien trong
+// adapters/model.ts (goi H10, goi c).
+const OPENROUTER_HOST = 'openrouter.ai';
 
 async function walk(dir, insideSrc) {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -180,6 +183,12 @@ async function main() {
       while ((idx = content.indexOf(GEMINI_HOST, searchFrom)) !== -1) {
         violations.push(`${rel}:${lineAt(content, idx)}: chuoi "${GEMINI_HOST}" ngoai adapters/model.ts`);
         searchFrom = idx + GEMINI_HOST.length;
+      }
+      let searchFromOr = 0;
+      let idxOr;
+      while ((idxOr = content.indexOf(OPENROUTER_HOST, searchFromOr)) !== -1) {
+        violations.push(`${rel}:${lineAt(content, idxOr)}: chuoi "${OPENROUTER_HOST}" ngoai adapters/model.ts`);
+        searchFromOr = idxOr + OPENROUTER_HOST.length;
       }
     }
   }
