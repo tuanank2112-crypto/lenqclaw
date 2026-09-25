@@ -30,3 +30,10 @@ Không `git add -A`/`.` — stage tường minh, `git commit -m … -- <đườn
 Mẫu `../brain4agent.release/docs/HANDOFF_PROTOCOL.md` §7: dòng 1 khai vai; dòng 2–4 `Handoff: handoffs/H14_thi-cong_P05-E.md` / `Base:` / `Head:`; lệnh + exit code nguyên văn; test tổng/pass/fail/skip trước/sau; `git diff --stat` + SHA; bảng phân công thực tế; việc KHÔNG làm + lý do; Câu hỏi mở. Dòng không rỗng cuối = `⏳ Chờ người duyệt.`. Commit report + evidence riêng `docs(plan-01): report R14` SAU commit mã cuối.
 
 Report: `planning/01_2026-09-24_san-viec-tho-mvp/reports/R14_thi-cong_P05-E.md` · Evidence: `planning/01_2026-09-24_san-viec-tho-mvp/evidence/P05-E/`
+
+## 7. PHỤ LỤC VÒNG 2 (SO, 2026-09-26) — thắng mục 1–6 khi khác
+R14 🔁 ở đúng một điểm: route `POST /api/vendors/{id}/status` nhánh `suspended`. Hợp đồng sửa: `specs/SPEC-P05-Dispatch.md` §10.17 (Đ30) — đọc toàn bộ.
+- MỞ PHẠM VI: `packages/core/src/services/vendors.ts` (mới), `services/access.ts` (CHỈ `withdrawGranted` mới + chốt chặn trong `dispatchToVendor`), `services/timers.ts` (CHỈ nhánh `reemitStuckGranted` §10.17), `services/job-state.ts` (cặp `access_granted → published`) + test của nó, `domain/errors.ts` (`VendorNotFoundError`), export mới ở entry package core nếu cần, test DB core mới `packages/core/src/dbtests/p05-suspend.db.test.ts`, `docs/core.md` (CHỈ mục đình chỉ — worker P05-C cũng sửa file này, giữ thay đổi nhỏ, thử lại nếu xung đột). Mọi CẤM khác giữ nguyên. Worker P05-C vẫn đang sửa `packages/core/src/agent/**` + `services/pii-gate.ts` — KHÔNG đụng.
+- Route web chỉ gọi `suspendVendor`; xoá SQL `vendors`/`vendor_slots` khỏi route; test web cho 404/409 cập nhật theo.
+- Xong khi: 4 ca (a)–(d) §10.17 xanh trên DB rỗng `lq_h14`; 2 bằng chứng ĐỎ §10.17 (`evidence/P05-E/red-suspend-order.txt`, `red-dispatch-guard.txt`, hoàn nguyên sau khi chụp); `npm run typecheck`, `npm run build`, `npm test`, `test:db`, `npm run gate` exit 0, số test không giảm (nền vòng 1: 308 / 184), 0 skip.
+- Commit `fix(core,web): suspendVendor service with ordered steps and dispatch guard (D30)`; ghi "## Vòng 2" trong R14, dòng cuối `⏳ Chờ người duyệt.`, commit `docs(plan-01): report R14 round 2`.

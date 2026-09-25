@@ -196,6 +196,7 @@ Quy ước `jobs.window_start/window_end` (chốt Đ19-3): khung giờ thợ đ�
 | `held` | `confirmed` | `confirm_assignment` / `respond_to_quote(accept)` (Đ27) | thợ OK trong hạn giữ; `mode='quote'` cần giá khớp tin thợ; giá > `price_high × 1,3` ⇒ VẪN `held` chờ cư dân (`job_offers.over_band`) |
 | `held` | `published` | timer / `decline_hold` / `respond_to_quote(decline)` / BQL đình chỉ | `data.reason ∈ {hold_expired, quote_consent_timeout, vendor_declined, quote_declined, vendor_suspended}`; gỡ `assigned_vendor_id`; `hold_expired` ⇒ `no_show_count+1`, đăng lại ≤ `MAX_HOLD_REPUBLISH` (2), quá ⇒ để đồng hồ đăng xử lý |
 | `confirmed` | `published` | `decline_hold` (thợ rút) / BQL đình chỉ — cặp MỚI (Đ27) | gỡ gán, đăng lại (không tăng `republish_count`) |
+| `access_granted` | `published` | BQL đình chỉ thợ (`withdrawGranted`, Đ30) | thu hồi mã vào (`revoked_at`), ticket `cancelled`, gỡ gán, đăng lại |
 | `confirmed` | `access_pending` | `request_access` (agent thợ, cùng lượt sau `confirm_assignment`) / lưới timer 2 phút | ticket `access_request` lên dashboard; `jobs.access_ticket_id` |
 | `access_pending` | `access_granted` | BQL bấm Duyệt (`decideAccessRequest`, actor `staff`) | ticket `approved` ⇒ tạo `access_passes` ⇒ sự kiện hệ thống `access_approved` ⇒ agent thợ `dispatch_to_vendor` (Đ27) |
 | `access_pending` | `published` | BQL bấm Từ chối (lý do bắt buộc) / thợ rút / đình chỉ | ticket `rejected` + `decision_note`; gỡ gán; đăng lại; thợ bị từ chối KHÔNG nhận lại cuốc này (`job_offers.note='access_rejected'`) |

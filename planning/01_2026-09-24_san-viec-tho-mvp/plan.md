@@ -167,6 +167,10 @@ Người dùng hỏi "chỉ cần thay phần chưa làm là được?". Không 
 - Số real-run-1 chỉ còn giá trị khi `packages/core/src/agent/prompts/triage.ts`, `packages/core/src/agent/triage.ts` và `MODEL_TRIAGE` không đổi so với commit của real-run-1; đổi một trong số đó ⇒ chấm lại `emergency`+`consent`.
 **Lật được:** có — chấm đủ 4 bộ một lượt khi có billing.
 
+### Đ30 — 2026-09-26 · Đình chỉ thợ là dịch vụ core có thứ tự; chặn giao việc cho thợ không `active` (Super Orchestrator, 🔴)
+Khi duyệt R14 phát hiện hai lỗ: route web tự ghép việc đình chỉ (nhả cuốc trước, đặt `suspended` sau ⇒ thợ bị đình chỉ nhận lại được cuốc vừa nhả) và cuốc `access_granted` của thợ bị đình chỉ vẫn được giao (lộ số căn/SĐT cư dân — BB-02). Hợp đồng: [SPEC-P05 §10.17](specs/SPEC-P05-Dispatch.md) + cặp `access_granted → published` ở 01-CONTRACTS §5. Giao H14 vòng 2 (mở phạm vi `services/{vendors,access,timers,job-state}.ts`, `domain/errors.ts`).
+**Lật được:** có — nhưng bỏ chốt chặn `dispatchToVendor` là mở lại lỗ PII.
+
 ### Quyết định bị thay thế
 | Mốc cũ | Phát biểu cũ | Thay bằng | Lý do |
 | :-- | :-- | :-- | :-- |

@@ -89,3 +89,10 @@ Không có gói nào leo lên 🔴 — hai điểm cần quyết định ngoài 
 - Không có câu hỏi chặn khác để đóng gói P05-E.
 
 ⏳ Chờ người duyệt.
+
+## SO phán vòng 1 (2026-09-26)
+- Phạm vi sạch (chỉ `apps/web/**`, `docs/web.md`, report/evidence P05-E). Phần policy/API/trang/SimBoard đạt.
+- Câu hỏi mở #1 (`suspendVendor`) KHÔNG giữ được cách ghép trong route: nhả cuốc trước khi đặt `suspended` ⇒ thợ bị đình chỉ nhận lại được cuốc vừa nhả; cuốc `access_granted` bị bỏ sót + `dispatchToVendor` không kiểm trạng thái thợ ⇒ lộ PII (BB-02). Gốc: R12 thiếu dịch vụ SPEC đã gọi + lỗ SPEC ⇒ Đ30, SPEC-P05 §10.17, H14 mục 7.
+- Câu hỏi mở #2 (đọc trước để tách 404/409): chấp nhận.
+
+🔁 SỬA: route đình chỉ thợ — làm `suspendVendor` trong core theo SPEC-P05 §10.17 (H14 mục 7).
