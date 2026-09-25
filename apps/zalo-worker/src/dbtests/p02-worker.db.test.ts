@@ -187,14 +187,14 @@ describe('luong vao (§3, §8, §9.1)', () => {
     await s.stop();
   });
 
-  it('takeover do agent (handoff, khong co tin nhan vien gui tay) ⇒ tin bot KHONG bi huy', async () => {
+  it('takeover do handoff_to_staff (khong co tin nhan vien gui tay) ⇒ tin cho (BUSY_REPLY) VAN gui (§9.7 Q2)', async () => {
     const { s } = await connectedSession();
     const thread = uid('u');
     await sql(
       `insert into conversations (zalo_account_id, thread_id, human_takeover_until) values ('bql',$1, now() + interval '30 minutes')`,
       [thread]
     );
-    const id = await enqueueId({ zaloAccountId: 'bql', threadId: thread, threadType: 'user', kind: 'text', body: { text: 'Em đã chuyển BQL.' } });
+    const id = await enqueueId({ zaloAccountId: 'bql', threadId: thread, threadType: 'user', kind: 'text', body: { text: 'Xin lỗi, hệ thống đang bận, vui lòng thử lại sau ít phút.' } });
     const pacer = new AccountPacer('bql', { ...FAST, typingMinMs: 0, typingMaxMs: 0 }, () => s.getSession(), { rng: () => 0 });
     await pacer.tick();
     const st = await sql<{ status: string }>(`select status from outbox where id=$1`, [id]);

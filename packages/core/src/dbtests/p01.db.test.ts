@@ -5,7 +5,7 @@
 // `it` TRONG CUNG mot file.
 
 import { randomUUID, createHash } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -53,9 +53,11 @@ describe('1) runMigrations — DB rong -> schema day du (SPEC-P01 §9)', () => {
     await sql('create schema public');
   });
 
-  it('lan dau: applied=3 (001_init.sql + 002_search.sql + 003_kb_building.sql), moi bang ton tai', async () => {
+  it('lan dau: applied = so file db/migrations/*.sql, moi bang ton tai', async () => {
     const result = await runMigrations();
-    expect(result.applied).toBe(3);
+    const files = (await readdir(MIGRATIONS_DIR)).filter((f) => f.endsWith('.sql'));
+    expect(files.length).toBeGreaterThan(0);
+    expect(result.applied).toBe(files.length);
 
     const rows = await sql<{ table_name: string }>(
       `select table_name from information_schema.tables where table_schema = 'public'`
