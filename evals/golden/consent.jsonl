@@ -1,0 +1,44 @@
+{"case_id":"K01","text":"Đồng ý","expect_consent":true}
+{"case_id":"K02","text":"đồng ý ạ","expect_consent":true}
+{"case_id":"K03","text":"Tôi đồng ý","expect_consent":true}
+{"case_id":"K04","text":"Em đồng ý nhé","expect_consent":true}
+{"case_id":"K05","text":"OK","expect_consent":true}
+{"case_id":"K06","text":"oke nha","expect_consent":true}
+{"case_id":"K07","text":"okay anh","expect_consent":true}
+{"case_id":"K08","text":"Được","expect_consent":true}
+{"case_id":"K09","text":"duoc chi","expect_consent":true}
+{"case_id":"K10","text":"Chốt","expect_consent":true}
+{"case_id":"K11","text":"Tìm thợ","expect_consent":true}
+{"case_id":"K12","text":"tim tho giup em","expect_consent":true}
+{"case_id":"K13","text":"Đặt lịch","expect_consent":true}
+{"case_id":"K14","text":"đặt lịch luôn","expect_consent":true}
+{"case_id":"K15","text":"Có","expect_consent":true}
+{"case_id":"K16","text":"co anh","expect_consent":true}
+{"case_id":"K17","text":"Đồng ý, nhớ tìm thợ giúp em","expect_consent":true}
+{"case_id":"K18","text":"OK, tìm thợ giúp em nhé","expect_consent":true}
+{"case_id":"K19","text":"Được, chốt luôn đi","expect_consent":true}
+{"case_id":"K20","text":"Đồng ý. Chiều nay được không ạ","expect_consent":true}
+{"case_id":"K21","text":"dong y, 9h sang mai nhe","expect_consent":true}
+{"case_id":"K22","text":"Chốt, anh sắp xếp giúp em","expect_consent":true}
+{"case_id":"K23","text":"Đồng ý luôn ạ","expect_consent":true}
+{"case_id":"K24","text":"Tìm thợ giúp","expect_consent":true}
+{"case_id":"K25","text":"Đặt lịch giúp em nha","expect_consent":true}
+{"case_id":"K26","text":"Không đồng ý","expect_consent":false}
+{"case_id":"K27","text":"Không đồng ý lắm","expect_consent":false}
+{"case_id":"K28","text":"ko đồng ý","expect_consent":false}
+{"case_id":"K29","text":"k đồng ý đâu","expect_consent":false}
+{"case_id":"K30","text":"hông đồng ý","expect_consent":false}
+{"case_id":"K31","text":"Đừng tìm thợ","expect_consent":false}
+{"case_id":"K32","text":"Thôi khỏi","expect_consent":false}
+{"case_id":"K33","text":"Huỷ giúp em","expect_consent":false}
+{"case_id":"K34","text":"Chưa đồng ý được","expect_consent":false}
+{"case_id":"K35","text":"OK để em hỏi vợ đã","expect_consent":false}
+{"case_id":"K36","text":"Được rồi để em suy nghĩ thêm","expect_consent":false}
+{"case_id":"K37","text":"Để em suy nghĩ thêm","expect_consent":false}
+{"case_id":"K38","text":"Chốt nhưng chưa chắc, để hỏi lại đã","expect_consent":false}
+{"case_id":"K39","text":"Mấy giờ thì được?","expect_consent":false}
+{"case_id":"K40","text":"Tìm thợ ở đâu vậy ạ?","expect_consent":false}
+{"case_id":"K41","text":"Giá khoảng bao nhiêu ạ?","expect_consent":false}
+{"case_id":"K42","text":"Sao lại thuộc trách nhiệm của em ạ?","expect_consent":false}
+{"case_id":"K43","text":"Ừm","expect_consent":false}
+{"case_id":"K44","text":"Dạ để em xem lại đã nhé","expect_consent":false}
