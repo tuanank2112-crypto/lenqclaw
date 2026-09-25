@@ -261,6 +261,23 @@ export class AccountSession {
     return true;
   }
 
+  /** Quet yeu cau dang xuat tu web (moi 2 s, cung nhip voi login — §9.8). */
+  async pollLogoutRequest(): Promise<boolean> {
+    if (!(await store.claimLogoutRequest(this.account))) return false;
+    await this.logout();
+    return true;
+  }
+
+  /** Dang xuat (§9.8): dung listener + pacer (getSession() tra null khi
+   * khong 'connected' ⇒ pacer tu ngung), xoa session_enc + qr_*, logged_out.
+   * zca-js khong co API dang xuat that su (G18) — day chi la xoa phien phia minh. */
+  async logout(): Promise<void> {
+    this.detach();
+    this.state = 'logged_out';
+    await store.clearSessionOnLogout(this.account);
+    logEvent('zalo.state', { account: this.account, state: 'logged_out' });
+  }
+
   /** Dang nhap QR: chi luu credentials SAU khi goi thu mot API doc thanh cong (§2.3). */
   async loginQr(): Promise<void> {
     this.detach();
@@ -270,10 +287,11 @@ export class AccountSession {
     try {
       s = await this.client.loginQR(async (e) => {
         if (e.type === 'qr') await store.setQr(this.account, e.imageDataUrl);
+        else await store.setQrState(this.account, e.type);
         logEvent('zalo.qr_event', { account: this.account, type: e.type });
       });
     } catch (err) {
-      await store.clearQr(this.account);
+      await store.clearQrImage(this.account);
       await this.setState('logged_out');
       await store.alert(this.account, 'qr_failed', { error: errSummary(err) });
       return;
@@ -281,7 +299,7 @@ export class AccountSession {
     try {
       await s.probeRead();
     } catch (err) {
-      await store.clearQr(this.account);
+      await store.clearQrImage(this.account);
       await this.setState('logged_out');
       await store.alert(this.account, 'qr_probe_failed', { error: errSummary(err) });
       return;

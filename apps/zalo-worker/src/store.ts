@@ -41,7 +41,8 @@ export async function saveSessionCas(id: AccountId, enc: Buffer, expectedUpdated
 /** Nhan yeu cau dang nhap QR tu web (cot `login_requested_at`, §9.2). */
 export async function claimLoginRequest(id: AccountId): Promise<boolean> {
   const rows = await sql<{ id: string }>(
-    `update zalo_accounts set login_requested_at = null, session_state = 'qr_pending', qr_data_url = null, qr_expires_at = null
+    `update zalo_accounts set login_requested_at = null, session_state = 'qr_pending',
+       qr_data_url = null, qr_expires_at = null, qr_state = null
      where id = $1 and login_requested_at is not null returning id`,
     [id]
   );
@@ -50,14 +51,52 @@ export async function claimLoginRequest(id: AccountId): Promise<boolean> {
 
 export async function setQr(id: AccountId, dataUrl: string): Promise<void> {
   await sql(
-    `update zalo_accounts set qr_data_url = $2, qr_expires_at = now() + interval '3 minutes', session_state = 'qr_pending'
+    `update zalo_accounts set qr_data_url = $2, qr_expires_at = now() + interval '3 minutes',
+       session_state = 'qr_pending', qr_state = 'waiting_scan'
      where id = $1`,
     [id, dataUrl]
   );
 }
 
-export async function clearQr(id: AccountId): Promise<void> {
+export type QrState = 'waiting_scan' | 'scanned' | 'expired' | 'declined';
+
+/** Su kien QR khac 'qr' (zca-js) ⇒ cot `qr_state` (§9.8): scanned/expired/declined. */
+export async function setQrState(id: AccountId, state: QrState): Promise<void> {
+  await sql(`update zalo_accounts set qr_state = $2 where id = $1`, [id, state]);
+}
+
+/** Xoa anh QR (khong dung qr_state) — dung khi luong QR that bai TRUOC khi co
+ * ket qua cuoi cung: giu lai qr_state='expired'/'declined' de trang /zalo van
+ * hien dung nut "Lay ma QR moi" (§9.8) thay vi roi ve idle. */
+export async function clearQrImage(id: AccountId): Promise<void> {
   await sql(`update zalo_accounts set qr_data_url = null, qr_expires_at = null where id = $1`, [id]);
+}
+
+/** Dang nhap xong ⇒ xoa anh QR + qr_state (§9.8: "dang nhap xong ⇒ null"). */
+export async function clearQr(id: AccountId): Promise<void> {
+  await sql(`update zalo_accounts set qr_data_url = null, qr_expires_at = null, qr_state = null where id = $1`, [id]);
+}
+
+/** Nhan yeu cau dang xuat tu web (cot `logout_requested_at`, §9.8). session_enc/qr_*
+ * da duoc route web xoa ngay (tranh phien mo coi khi worker khong chay); worker
+ * chi can bao da xu ly xong yeu cau (dut ket noi in-memory o AccountSession.logout). */
+export async function claimLogoutRequest(id: AccountId): Promise<boolean> {
+  const rows = await sql<{ id: string }>(
+    `update zalo_accounts set logout_requested_at = null where id = $1 and logout_requested_at is not null returning id`,
+    [id]
+  );
+  return rows.length > 0;
+}
+
+/** Xoa phien + trang thai QR, dat logged_out (§9.8). Idempotent — worker goi lai
+ * de dam bao du worker co chay hay khong, phien khong bao gio mo coi. */
+export async function clearSessionOnLogout(id: AccountId): Promise<void> {
+  await sql(
+    `update zalo_accounts set session_enc = null, qr_data_url = null, qr_expires_at = null,
+       qr_state = null, session_state = 'logged_out', logout_requested_at = null
+     where id = $1`,
+    [id]
+  );
 }
 
 export async function touchEvent(id: AccountId): Promise<void> {

@@ -1,9 +1,18 @@
 'use client';
 
-// SPEC-P02 §9.1/§9.2: trang thai phien, banner do khi kicked/dead/logged_out,
-// anh QR con han, tu lam moi 3 s.
+// SPEC-P02 §9.1/§9.2/§9.8: trang thai phien, banner do khi kicked/dead/logged_out,
+// anh QR con han, tu lam moi 3 s; dang xuat + 4 trang thai QR (§9.8, G18/G19).
 
 import { useCallback, useEffect, useState } from 'react';
+import {
+  LOGIN_LABEL,
+  LOGOUT_CONFIRM_TEXT,
+  LOGOUT_LABEL,
+  NEW_QR_LABEL,
+  SCANNED_TEXT,
+  needsNewQrButton,
+  selectZaloDisplay,
+} from './display';
 
 interface AccountStatus {
   id: string;
@@ -13,6 +22,7 @@ interface AccountStatus {
   login_requested_at: string | null;
   qr_data_url: string | null;
   qr_expires_at: string | null;
+  qr_state: string | null;
 }
 
 interface AlertItem {
@@ -33,8 +43,34 @@ const STATE_LABEL: Record<string, string> = {
 const ALERT_STATES = new Set(['kicked', 'dead', 'logged_out']);
 const REFRESH_MS = 3000;
 
-function AccountCard({ a, onLogin, busy }: { a: AccountStatus; onLogin: (id: string) => void; busy: boolean }) {
+/** Dem nguoc s con lai toi `expiresAt` (§9.8: dong ho dem nguoc toi qr_expires_at). */
+function useCountdown(expiresAt: string | null): number | null {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!expiresAt) return;
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [expiresAt]);
+  if (!expiresAt) return null;
+  return Math.max(0, Math.round((new Date(expiresAt).getTime() - now) / 1000));
+}
+
+function AccountCard({
+  a,
+  onLogin,
+  onLogout,
+  busy,
+}: {
+  a: AccountStatus;
+  onLogin: (id: string) => void;
+  onLogout: (id: string) => void;
+  busy: boolean;
+}) {
+  const [confirming, setConfirming] = useState(false);
   const alert = ALERT_STATES.has(a.session_state);
+  const kind = selectZaloDisplay(a);
+  const secondsLeft = useCountdown(kind === 'waiting_scan' ? a.qr_expires_at : null);
+
   return (
     <section style={{ border: '1px solid #ccc', borderRadius: 8, padding: 16, marginBottom: 16 }}>
       {alert ? (
@@ -53,17 +89,38 @@ function AccountCard({ a, onLogin, busy }: { a: AccountStatus; onLogin: (id: str
         Trạng thái: <b>{STATE_LABEL[a.session_state] ?? a.session_state}</b>
         {a.last_event_at ? <> · sự kiện cuối: {new Date(a.last_event_at).toLocaleString('vi-VN')}</> : null}
       </p>
-      {a.qr_data_url ? (
+
+      {kind === 'waiting_scan' && a.qr_data_url ? (
         <div>
-          <p>Quét mã này bằng Zalo trên điện thoại (hết hạn {a.qr_expires_at ? new Date(a.qr_expires_at).toLocaleTimeString('vi-VN') : ''}):</p>
+          <p>Quét mã này bằng Zalo trên điện thoại (còn {secondsLeft ?? 0} giây):</p>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={a.qr_data_url} alt={`Mã QR đăng nhập Zalo ${a.id}`} width={240} height={240} />
         </div>
       ) : null}
+      {kind === 'scanned' ? <p>{SCANNED_TEXT}</p> : null}
       {a.login_requested_at ? <p>Đã gửi yêu cầu, chờ worker tạo mã QR…</p> : null}
-      <button type="button" disabled={busy} onClick={() => onLogin(a.id)}>
-        Đăng nhập bằng QR
-      </button>
+
+      {kind === 'connected' ? (
+        confirming ? (
+          <div style={{ border: '1px solid #c62828', borderRadius: 6, padding: 12, marginTop: 8 }}>
+            <p>{LOGOUT_CONFIRM_TEXT}</p>
+            <button type="button" disabled={busy} onClick={() => onLogout(a.id)}>
+              Xác nhận đăng xuất
+            </button>{' '}
+            <button type="button" disabled={busy} onClick={() => setConfirming(false)}>
+              Huỷ
+            </button>
+          </div>
+        ) : (
+          <button type="button" disabled={busy} onClick={() => setConfirming(true)}>
+            {LOGOUT_LABEL}
+          </button>
+        )
+      ) : (
+        <button type="button" disabled={busy} onClick={() => onLogin(a.id)}>
+          {needsNewQrButton(kind) ? NEW_QR_LABEL : LOGIN_LABEL}
+        </button>
+      )}
     </section>
   );
 }
@@ -110,12 +167,26 @@ export default function ZaloBoard() {
     [refresh]
   );
 
+  const onLogout = useCallback(
+    async (id: string) => {
+      setBusy(true);
+      try {
+        const res = await fetch(`/api/zalo/${encodeURIComponent(id)}/logout`, { method: 'POST' });
+        if (!res.ok) setError(`Không gửi được yêu cầu đăng xuất (HTTP ${res.status}).`);
+        await refresh();
+      } finally {
+        setBusy(false);
+      }
+    },
+    [refresh]
+  );
+
   return (
     <div>
       {error ? <p style={{ color: '#c62828' }}>{error}</p> : null}
       {accounts.length === 0 && !error ? <p>Đang tải…</p> : null}
       {accounts.map((a) => (
-        <AccountCard key={a.id} a={a} onLogin={onLogin} busy={busy} />
+        <AccountCard key={a.id} a={a} onLogin={onLogin} onLogout={onLogout} busy={busy} />
       ))}
       {alerts.length > 0 ? (
         <section>

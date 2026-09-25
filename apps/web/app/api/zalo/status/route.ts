@@ -16,6 +16,7 @@ interface AccountStatusRow {
   login_requested_at: string | null;
   qr_data_url: string | null;
   qr_expires_at: string | null;
+  qr_state: string | null;
 }
 
 interface AlertRow {
@@ -34,7 +35,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     `select id, display_name, session_state, last_event_at::text as last_event_at,
             login_requested_at::text as login_requested_at,
             case when qr_expires_at > now() then qr_data_url else null end as qr_data_url,
-            case when qr_expires_at > now() then qr_expires_at::text else null end as qr_expires_at
+            case when qr_expires_at > now() then qr_expires_at::text else null end as qr_expires_at,
+            qr_state
      from zalo_accounts where id = any($1) order by id`,
     [ids]
   );

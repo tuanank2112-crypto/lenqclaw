@@ -472,3 +472,99 @@ describe('pacer tren DB (§5, §8)', () => {
     await s.stop();
   });
 });
+
+describe('dang xuat + trang thai QR (§9.8, G18/G19)', () => {
+  it('logout_requested_at ⇒ dung listener, khong con gui/nhan, session_enc null, logged_out', async () => {
+    const { s, fake } = await connectedSession();
+    const thread = uid('u');
+    await sql(`update zalo_accounts set logout_requested_at = now() where id='bql'`);
+    expect(await s.pollLogoutRequest()).toBe(true);
+    expect(fake.listening).toBe(false);
+    const row = await loadAccount('bql');
+    expect(row!.session_enc).toBeNull();
+    // Tin vao sau khi da dang xuat: listener da ngat nen phat tin (goi thang handler)
+    // khong con lam thay doi DB — mo phong "khong con nhan" bang cach kiem listening=false.
+    fake.emitMessage(fakeMessage({ threadId: thread }));
+    await s.idle();
+    const ie = await sql(`select 1 from inbound_events where zalo_account_id='bql' and thread_id=$1`, [thread]);
+    expect(ie.length).toBe(0);
+    // Pacer khong con phien (getSession() tra null khi khong connected) ⇒ khong gui.
+    const id = await enqueueId({ zaloAccountId: 'bql', threadId: thread, threadType: 'user', kind: 'text', body: { text: 'A' } });
+    const pacer = new AccountPacer('bql', FAST, () => s.getSession());
+    const r = await pacer.tick();
+    expect(r.note).toBe('no_session');
+    expect((await sql<{ status: string }>(`select status from outbox where id=$1`, [id]))[0]!.status).toBe('queued');
+    await s.stop();
+  });
+
+  it('khong co logout_requested_at ⇒ pollLogoutRequest tra false, khong doi gi', async () => {
+    const { s } = await connectedSession();
+    expect(await s.pollLogoutRequest()).toBe(false);
+    expect((await loadAccount('bql'))!.session_state).toBe('connected');
+    await s.stop();
+  });
+
+  it('chuoi su kien QR qr→scanned→expired ⇒ qr_state dung tung buoc, KHONG tu xin QR moi (§9.8 vung cam)', async () => {
+    const client = new FakeZaloClient();
+    client.qrScript = {
+      events: [
+        { type: 'qr', imageDataUrl: 'data:image/png;base64,UVI=' },
+        { type: 'scanned' },
+        { type: 'expired' },
+      ],
+      result: new ZaloAuthError('het han, khong xac nhan'),
+    };
+    await sql(`update zalo_accounts set login_requested_at = now() where id='bql'`);
+    const seen: Array<string | null> = [];
+    const origLoginQR = client.loginQR.bind(client);
+    client.loginQR = async (onEvent) => {
+      return origLoginQR(async (e) => {
+        await onEvent(e);
+        seen.push((await sql<{ qr_state: string | null }>(`select qr_state from zalo_accounts where id='bql'`))[0]!.qr_state);
+      });
+    };
+    const s = new AccountSession('bql', client, KEY, FAST);
+    expect(await s.pollLoginRequest()).toBe(true);
+    expect(seen).toEqual(['waiting_scan', 'scanned', 'expired']);
+    // Loi (het han) ⇒ luong QR ket thuc, khong tu goi loginQR lan nua (chi 1 lan qrLogins).
+    expect(client.qrLogins).toBe(1);
+    const row = await loadAccount('bql');
+    expect(row!.session_state).toBe('logged_out');
+    await s.stop();
+  });
+
+  it('su kien declined ⇒ qr_state="declined"', async () => {
+    const client = new FakeZaloClient();
+    client.qrScript = {
+      events: [{ type: 'qr', imageDataUrl: 'data:image/png;base64,UVI=' }, { type: 'declined' }],
+      result: new ZaloAuthError('tu choi tren dien thoai'),
+    };
+    await sql(`update zalo_accounts set login_requested_at = now() where id='bql'`);
+    const s = new AccountSession('bql', client, KEY, FAST);
+    await s.pollLoginRequest();
+    const row = await sql<{ qr_state: string | null; session_state: string }>(
+      `select qr_state, session_state from zalo_accounts where id='bql'`
+    );
+    expect(row[0]!.qr_state).toBe('declined');
+    expect(row[0]!.session_state).toBe('logged_out');
+    await s.stop();
+  });
+
+  it('dang nhap QR xong ⇒ qr_state null (session_enc test kia da phu waiting_scan/scanned)', async () => {
+    const client = new FakeZaloClient();
+    client.qrScript = {
+      events: [{ type: 'qr', imageDataUrl: 'data:image/png;base64,UVI=' }, { type: 'scanned' }],
+      result: 'ok',
+      secret: SECRET,
+    };
+    await sql(`update zalo_accounts set login_requested_at = now() where id='bql'`);
+    const s = new AccountSession('bql', client, KEY, FAST);
+    await s.pollLoginRequest();
+    const row = await sql<{ qr_state: string | null; session_state: string }>(
+      `select qr_state, session_state from zalo_accounts where id='bql'`
+    );
+    expect(row[0]!.qr_state).toBeNull();
+    expect(row[0]!.session_state).toBe('connected');
+    await s.stop();
+  });
+});

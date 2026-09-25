@@ -12,6 +12,7 @@ import { AccountPacer } from './pacer.js';
 import { errSummary, logEvent } from './log.js';
 
 const LOGIN_POLL_MS = 2_000;
+const LOGOUT_POLL_MS = 2_000;
 const WATCHDOG_MS = 60_000;
 const COOKIE_SYNC_MS = 10 * 60_000;
 
@@ -64,6 +65,7 @@ async function main(): Promise<void> {
 
   sessions.forEach((s, i) => {
     every(`login:${s.account}`, LOGIN_POLL_MS, () => s.pollLoginRequest());
+    every(`logout:${s.account}`, LOGOUT_POLL_MS, () => s.pollLogoutRequest());
     every(`watchdog:${s.account}`, WATCHDOG_MS, () => s.watchdogTick());
     every(`cookies:${s.account}`, COOKIE_SYNC_MS, () => s.syncCookies());
     every(`pacer:${s.account}`, cfg.tickMs, () => pacers[i]!.tick());
