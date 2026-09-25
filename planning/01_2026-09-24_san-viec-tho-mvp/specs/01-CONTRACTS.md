@@ -308,3 +308,19 @@ Lý do: key Gemini trực tiếp hết hạn mức (429 `RESOURCE_EXHAUSTED`, 20
 
 CẤM: gọi `openrouter.ai` ngoài `adapters/model.ts` (máy đo biên `check_adapter_boundary.mjs` canh thêm chuỗi `openrouter.ai`); SDK `openai` (chỉ `fetch`); log key; đổi `MODEL_PROVIDER` mặc định khỏi `gemini` (OpenRouter là đường tạm/dự phòng — đổi mặc định cần người chốt).
 
+## §2d. Nhà cung cấp thứ tư — Vyce AI, proxy dạng OpenAI (Đ25, 2026-09-25)
+
+Lý do: Gemini trực tiếp hết quota, tài khoản OpenRouter 0 USD; người dùng đưa key Vyce và chấp nhận DeepSeek. Vyce nói đúng giao thức `/chat/completions` như §2c ⇒ DÙNG CHUNG phần dịch vào/ra, xử lý `tool_calls`, lỗi, fallback của nhánh `openrouter`; chỉ khác bảng dưới.
+
+| Hạng mục | Chốt |
+| :-- | :-- |
+| Chọn | `MODEL_PROVIDER=vyce`; mặc định vẫn `gemini` |
+| Gọi | POST `${VYCE_BASE_URL ?? 'https://vyceai.com/v1'}/chat/completions`, `authorization: Bearer <VYCE_API_KEY>` (đọc chỉ trong `adapters/model.ts`). KHÔNG gửi trường `provider` (riêng OpenRouter). `max_tokens: 16000` |
+| Model | `MODEL_DEFAULT` mặc định `deepseek-v4-flash`; triage mặc định `deepseek-v4-flash`; `MODEL_FALLBACKS` mặc định rỗng. Probe SO 2026-09-25: `https://vyceai.com/v1/models` 200; `deepseek-v4-flash` + tool + `max_tokens:16000` ⇒ 200, `finish_reason=tool_calls`, ~2,2 s. (`https://api.vyceai.com` không phân giải) |
+| Dữ liệu | Proxy bên thứ ba không có cam kết không lưu dữ liệu ⇒ adapter TỪ CHỐI nhánh `vyce` khi `DATA_MODE !== 'sim'` (ném lỗi cấu hình, không gọi mạng). Cư dân thật ⇒ phải có quyết định mới của người |
+| Thử nghiệm | `setVyceFetchForTest(fake)` hoặc dùng chung fetch giả của nhánh OpenAI-compat; test: body không có `provider`, URL/khoá đúng biến, `DATA_MODE=real` ⇒ từ chối 0 lần fetch, dịch tool vòng 2 lượt (dùng lại ca của §2c) |
+| Máy chấm | `credentialEnvName()` ⇒ `VYCE_API_KEY` khi provider `vyce` |
+| Cổng | G08–G10 ✅ gắn với cặp provider/model ĐÃ chấm (ghi trong report). Model chạy thật khác cặp đó ⇒ chấm lại 1 lượt trước khi bật cho cư dân |
+
+CẤM: chuỗi `vyceai.com` ngoài `adapters/model.ts` (máy đo biên canh thêm); nhân bản code dịch của §2c (tách hàm dùng chung); SDK `openai`.
+

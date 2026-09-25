@@ -137,6 +137,10 @@ Lý do: lượt chấm model thật đầu tiên (H08) ra chẩn đoán 0/40 vì
 Lý do: key Gemini trực tiếp hết hạn mức giữa lượt chấm H08 (429 cả 3 model). OpenRouter có `google/gemini-3.6-flash` ⇒ SO chọn chấm lại bằng CÙNG model (số so được với lượt 1 và với mặc định sản phẩm) thay vì `gpt-4o-mini` (rẻ hơn nhưng số đo không nói gì về model đang dùng; đổi sang được bằng `MODEL_DEFAULT`). Chi phí ước ~1 USD/lượt đủ 4 bộ. Hợp đồng: [01-CONTRACTS §2c](specs/01-CONTRACTS.md); giao H10. Mặc định sản phẩm vẫn `gemini`.
 **Lật được:** có — bỏ `MODEL_PROVIDER=openrouter`.
 
+### Đ25 — 2026-09-25 · Chấm bằng DeepSeek qua Vyce AI (người dùng: "thêm api key của vyce đi… chọn deepseek cũng được k sao")
+Lý do: Gemini hết quota, OpenRouter 0 USD. Vyce là proxy dạng OpenAI ⇒ nhánh `vyce` dùng chung phần dịch của §2c; model `deepseek-v4-flash`. Hệ quả: lượt chấm vòng 3 của H08 chạy LẠI ĐỦ 4 bộ bằng cùng một model (không ghép số Gemini lượt 1 với DeepSeek), và G08–G10 ✅ chỉ có giá trị cho cặp `vyce/deepseek-v4-flash`. Nhánh `vyce` chỉ chạy với `DATA_MODE=sim` (proxy bên thứ ba). Hợp đồng: [01-CONTRACTS §2d](specs/01-CONTRACTS.md); giao H11.
+**Lật được:** có — bỏ `MODEL_PROVIDER=vyce`.
+
 ### Quyết định bị thay thế
 | Mốc cũ | Phát biểu cũ | Thay bằng | Lý do |
 | :-- | :-- | :-- | :-- |
@@ -198,7 +202,9 @@ Thứ tự bắt buộc (Đ13, Đ15): `P01 (nền tảng + SimTransport) → P03
 - [ ] H08 — Máy chấm model thật (Đ19-4 + Đ21): G09/G10 qua vòng agent thật, golden emergency hai lớp (≥100) + consent (≥40); vá `eval_golden` gọi `searchRegulations` thiếu `buildingId` (R06 Q3); lệch sót sau R06: `handoff_to_staff` ghi cứng 30 phút thay vì env `HUMAN_TAKEOVER_MIN` mặc định 60 (§11.6) + `.env.example` thiếu `MODEL_TRIAGE`/`TRIAGE_*`/`HUMAN_TAKEOVER_MIN` — mở khoá G08–G10 · vòng 1 bị ngắt 12:31 (khẩn cấp 100/100, đồng ý 42/44, chẩn đoán 0/40 do lỗi cột — Đ23) ⇒ vòng 2
 - [x] Chốt câu hỏi mở R03 (Đ19, 2026-09-25): (1) SPEC-P03 §10.8 còn ghi `claude-opus-5` ⇒ đồng bộ theo Đ18; (2) SDK `@anthropic-ai/sdk@0.68.0` không có `fallbacks` ⇒ nhánh anthropic dùng `MODEL_FALLBACKS` phía client; (3) quy ước `jobs.window_start/end` từ khung giờ gợi ý — trước P05; (4) `eval_golden` chấm một lượt đơn, chưa chạy vòng tool của agent thật — xét lại khi thẩm định
 - [x] H10 — nhánh OpenRouter trong adapter model (01-CONTRACTS §2c, Đ24) — `da8faac`, R10 ✅ 2026-09-25; `npm test` 245, `test:db` 122
-- [ ] 🖐 Tín dụng model cho lượt chấm vòng 3 H08: nạp OpenRouter (tài khoản 0 USD, 1 lượt ≈ 1 USD) HOẶC chờ hạn mức Gemini làm mới; kèm khói đường thành công OpenRouter
+- [x] 🖐 Tín dụng model cho lượt chấm vòng 3 H08 — người dùng đưa key Vyce (Đ25), 2026-09-25
+- [ ] H11 — nhánh `vyce` (01-CONTRACTS §2d) dùng chung phần dịch OpenAI của §2c
+- [ ] H08 vòng 3 — chấm lại đủ 4 bộ bằng `vyce/deepseek-v4-flash`, phán R08
 - [ ] P04 — Dashboard tối thiểu (G07)
 - [ ] P05 — Agent bước 4–7 (G11, G12, G12b)
 - [ ] P06 — Bước 8 (G13, G16 trọn bước 0→8 trên kênh giả lập)
