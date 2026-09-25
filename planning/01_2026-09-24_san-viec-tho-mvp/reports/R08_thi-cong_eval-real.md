@@ -109,3 +109,53 @@ Không có thay đổi mới ở vòng 3 — `resident.ts` giữ nguyên diff đ
 4. `lq_h08` đã drop sau khi đo xong `audit_log`/`agent_runs` (mục trên).
 
 ⏳ Chờ người duyệt.
+
+## Vòng 4 (2026-09-25/26, provider `gemini`/`gemini-3.6-flash` — Đ26, sau probe SO 22:50 xác nhận quota hồi)
+
+Lệnh: Docker Desktop (dừng sẵn ở đầu phiên) khởi động lại tự phục hồi (Tầng 1) → `lq_h08` tạo lại rỗng (`docker exec lenqclaw-db-1 psql … DROP/CREATE DATABASE`) → `npm run build -w @lenqclaw/core` → migrate + seed + `DATA_MODE=sim` seed:sim → `MODEL_PROVIDER=gemini DATA_MODE=sim DATABASE_URL=postgres://lenqclaw:***@127.0.0.1:55432/lq_h08 npx tsx --env-file=.env scripts/eval_golden.mjs > evidence/eval-real/real-run-4.txt` (chặn tiền cảnh; lệnh vượt 10 phút nên chuyển nền tự động theo luật, không sửa lại thành `&`). Dòng đầu evidence xác nhận đúng provider: `provider=gemini building=fbf5cae4-830a-45b2-9182-57596d1dd682 apartments=20`. Prompt `resident.ts` đang treo (mục 5) GIỮ NGUYÊN, KHÔNG sửa trước lượt này. Evidence: [real-run-4](../evidence/eval-real/real-run-4.txt), exit code nguyên văn (nối tay từ log nền, script không tự ghi vào file redirect): `EXIT:3`.
+
+### Bảng bộ → ngưỡng → số (gemini/gemini-3.6-flash, vòng 4) — so với real-run-1 (vòng 1, cùng model, prompt CHƯA sửa)
+
+| Bộ | Ngưỡng | Vòng 4 (số đo) | Đạt/trượt | Vòng 1 (đối chiếu) |
+| :-- | :-- | :-- | :-- | :-- |
+| emergency | 0 bỏ sót, báo nhầm ≤5% | 97/100 pass, layer1=44, layer2=3/56, **bỏ sót=3** (E08, E09, E42), báo nhầm=0 (0.0%) | ❌ (bỏ sót>0) | 100/100 pass, 0 bỏ sót, 0 báo nhầm — ✅ |
+| consent | 0 nhận nhầm, recall ≥90% | 42/44 pass, nhận nhầm=0, recall=92.0% (bỏ sót K20, K25) | ✅ | 42/44 pass, 0 nhận nhầm, recall=92.0% — ✅ (giống hệt, cùng 2 ca bỏ sót) |
+| diagnosis | ≥85% đúng category_code | **`blocked` (>10% ca lỗi hạ tầng: 40/40 ca)** | `blocked` | 37/40 scored, 36 pass, rate=97.3%, blocked=3 — ✅ |
+| responsibility | ≥90% đúng party, citation 100% | **`blocked` (>10% ca lỗi hạ tầng: 30/30 ca)** | `blocked` | 30/30 scored, 26 pass, rate=86.7%, citation 25/25 — ❌ (R25–R29) |
+
+Kết quả tổng (`decideExit`, `scripts/eval/score.mjs:379-384`): có bộ `blocked` ⇒ toàn cục **exit 3**, bất kể 2 bộ còn lại đã có số thật. Theo đúng chỉ đạo mục 9 (Đ26, gạch đầu dòng 4): "429 RESOURCE_EXHAUSTED dồn dập (máy chấm báo bộ `blocked`) ⇒ dừng, nộp `blocked`, KHÔNG chuyển provider" — hai bộ `diagnosis`/`responsibility` rơi đúng định nghĩa `blocked` của máy chấm (header `scripts/eval_golden.mjs` dòng 13-16: lỗi 429/5xx/mạng trên từng ca ⇒ `agent_runs.outcome='error'` riêng ca đó, >10% một bộ ⇒ cả bộ `blocked`) — `diagnose` route lỗi 267/277 ca (96.4%), `triage` route lỗi 342/346 ca (98.8%), toàn DB. `agent_runs.avg_latency_ms` route `diagnose`=14433ms (so với 10889ms vòng 1, cùng cỡ nhưng số cuộc gọi thành công cực ít) khớp mẫu hình quota bị ép: request đi qua đủ retry/fallback rồi mới lỗi, không phải lỗi tức thời. Máy chấm KHÔNG lưu message lỗi thô (chỉ `outcome` + đếm), nên không trích được chuỗi "429/RESOURCE_EXHAUSTED" nguyên văn từ DB — kết luận dựa trên đúng định nghĩa `blocked` mà máy chấm tự áp dụng (không phải suy diễn của worker) + đối chiếu độ trễ.
+
+**Dừng tại đây theo đúng chỉ đạo**: KHÔNG chuyển provider, KHÔNG chạy vòng sửa prompt (mục 3d chỉ áp dụng khi "trượt ngưỡng", không áp dụng khi `blocked` do hạ tầng), KHÔNG commit `resident.ts` (diff vẫn treo, chưa có lượt "đạt cả 4" để đo tác dụng).
+
+### Số ca triage quá hạn/lỗi (`audit_log action='triage.unavailable'`, đo trên `lq_h08` trước khi drop)
+
+**269** ca (trên tổng 346 lượt gọi route `triage` — 77.7%), cao hơn nhiều so với vòng 3 (`vyce`: 33/297 ≈ 11%) — xác nhận đây là sự cố hạ tầng/quota của lượt Gemini này, không phải chất lượng model (model đã chứng minh tốt hơn hẳn `vyce` ở vòng 3 trên đúng 2 bộ chạy được, xem bảng trên).
+
+### Token/latency theo route (toàn bộ `agent_runs` của lượt gemini vòng 4, đọc thẳng từ `real-run-4.txt`)
+
+| route | calls | input_tokens | output_tokens | avg_latency_ms |
+| :-- | :-- | :-- | :-- | :-- |
+| diagnose | 277 | 29665 | 1066 | 14433 |
+| triage | 346 | 3043 | 138 | 257 |
+
+So với vòng 1 (diagnose calls=297 input=829771 output=24997 avg=10889ms; triage calls=178 input=89323 output=3671 avg=1086ms): input/output tokens vòng 4 thấp hơn nhiều dù số `calls` gần bằng — phần lớn "calls" vòng 4 là các lượt gọi lỗi sớm (retry/backoff bị chặn trước khi model sinh nội dung), không phải do đổi cấu hình prompt/route.
+
+### Diff prompt
+
+Không đổi so mục 3/5/Vòng 3 — `resident.ts` vẫn GIỮ NGUYÊN diff cũ, CHƯA COMMIT (theo đúng chỉ đạo: không sửa prompt cho lượt bị `blocked` do hạ tầng).
+
+### Đã làm theo mục 9 (vòng 4)
+
+1. Docker Desktop dừng sẵn khi bắt đầu phiên (Tầng 1 hạ tầng) — tự khởi động lại, xác minh `docker ps` trước khi đụng DB.
+2. Tạo lại `lq_h08` rỗng, migrate+seed+seed:sim, build lại core để `dist/**` khớp prompt đang treo.
+3. Chạy đúng MỘT lượt `MODEL_PROVIDER=gemini` đủ 4 bộ, chặn tiền cảnh (tự động chuyển nền khi vượt 10 phút, không đổi cờ `&`), redirect thẳng `real-run-4.txt`.
+4. Kết quả `blocked` (2/4 bộ) ⇒ dừng đúng chỉ đạo, KHÔNG chuyển provider, KHÔNG sửa prompt, KHÔNG commit `resident.ts`.
+5. `lq_h08` đã drop sau khi đo xong `audit_log`/`agent_runs` (mục trên).
+6. Mục "## Vòng 4" này + evidence commit riêng `docs(plan-01): report R08 round 4`.
+
+### Câu hỏi mở (vòng 4)
+
+1. **Quota Gemini vẫn bị ép giữa lượt chạy thật** dù probe 22:50 báo HTTP 200 — có thể quota hồi phục tạm thời rồi cạn lại khi tải nhiều request liên tiếp (đủ 4 bộ gọi ~600+ lượt model). Cần người xác nhận hạn mức thật sự (RPD/RPM) của key `GEMINI_API_KEY` trước khi cho phép vòng chạy kế, hoặc cân nhắc giãn `PACER_MIN_INTERVAL_MS`/`PACER_MAX_PER_MINUTE` (ngoài phạm vi H08 — thuộc cấu hình hệ thống, không phải prompt).
+2. **`emergency` trượt mới xuất hiện** (3 bỏ sót E08/E09/E42, vòng 1 là 0/100) — đúng lúc `triage` route lỗi hạ tầng 342/346 lượt; nhiều khả năng 3 ca bỏ sót này rơi vào các request bị lỗi hạ tầng (không tính vào `blocked` vì bộ `emergency` chưa vượt ngưỡng 10% lỗi, nhưng từng ca lỗi lẻ tẻ vẫn có thể kéo kết quả sai theo hướng "bỏ sót" nếu máy chấm coi lỗi = không phát hiện khẩn cấp). Cần người xác nhận: số này có phản ánh đúng chất lượng model, hay là nhiễu do cùng đợt lỗi hạ tầng — quyết định có cần chạy lại (vòng 5, vẫn tính là "1 lần" theo mục 9) khi hạ tầng ổn định hơn.
+
+⏳ Chờ người duyệt.

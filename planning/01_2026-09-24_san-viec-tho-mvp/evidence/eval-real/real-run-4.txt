@@ -1,0 +1,14 @@
+provider=gemini building=fbf5cae4-830a-45b2-9182-57596d1dd682 apartments=20
+emergency: total=100 pass=97 layer1_hits=44 layer2_calls=56 layer2_hits=3 false_positive=0 (0.0%) false_negative=3 ok=false
+  - E08: bo sot
+  - E09: bo sot
+  - E42: bo sot
+consent: total=44 pass=42 false_accept=0 recall=92.0% ok=true
+  - K20: bo sot dong y that
+  - K25: bo sot dong y that
+diagnosis: blocked (>10% ca blocked (40/40))
+responsibility: blocked (>10% ca blocked (30/30))
+agent_runs (toan bo DB nay, theo route):
+  diagnose: calls=277 input_tokens=29665 output_tokens=1066 avg_latency_ms=14433
+  triage: calls=346 input_tokens=3043 output_tokens=138 avg_latency_ms=257
+EVAL_GOLDEN: BLOCKED (>10% ca cua mot bo loi ha tang) — khong tinh truot.
