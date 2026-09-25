@@ -79,7 +79,7 @@ Trả lời "nhận C-24A7" để giữ cuốc 10 phút
 - Từ chối cấp quyền ⇒ cuốc về `published` và được đăng lại (test đồng hồ giả).
 - G15: 50 yêu cầu slot đồng thời khi còn 1 chỗ ⇒ đúng 1 slot mới, 49 vào danh sách chờ; thợ xin dùng thử lần 2 ⇒ bị từ chối; hết dùng thử không trả phí ⇒ `expired` và "nhận" bị từ chối (đồng hồ giả).
 
-## §10. Chốt thi công (Đ27 — Super Orchestrator giao, architect soạn 2026-09-25 23:17 — CHỜ DUYỆT)
+## §10. Chốt thi công (Đ27 — Super Orchestrator giao, architect soạn 2026-09-25 23:17 — ĐÃ DUYỆT 2026-09-26)
 
 > Mục này THẮNG §1–§9 ở chỗ mâu thuẫn; chỗ §10 không nói thì §1–§9 giữ nguyên. Thi công TRÊN KÊNH GIẢ LẬP (`SimTransport`, `DATA_MODE=sim`, `TRANSPORT=sim`); tài khoản Zalo `market` thật = P02 giai đoạn 2, ngoài gói này. Mọi số đo trong §10 do architect tự chạy 2026-09-25 (lệnh ghi kèm; DB thử `lq_spec_check` tách riêng, đã xoá). Worker không có lịch sử chat: đọc `01-CONTRACTS.md` §4–§9 (bản đã bổ sung Đ27), `SPEC-P03 §10–§11` (mẫu tool), rồi §10 này, rồi `SPEC-P04 §8`, `TESTING-ACCEPTANCE §4`.
 

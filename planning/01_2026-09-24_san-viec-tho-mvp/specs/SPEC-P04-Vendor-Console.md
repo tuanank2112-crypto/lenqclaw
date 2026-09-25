@@ -53,7 +53,7 @@ Chỉ những trang agent cần để chạy pipeline v0.2: 2 điểm duyệt (`
 - `guard` truy cập `/vendors` ⇒ 403.
 - Tải quy chế mẫu 10 mục ⇒ 10 dòng `kb_sections`, `search_regulations` trả đúng mục trong 5 truy vấn thử.
 
-## §8. Chốt thi công tối thiểu cho P05 (Đ27 — architect soạn 2026-09-25 23:17 — CHỜ DUYỆT)
+## §8. Chốt thi công tối thiểu cho P05 (Đ27 — architect soạn 2026-09-25 23:17 — ĐÃ DUYỆT 2026-09-26)
 
 > Phần P04 mà P05 (SPEC-P05 §10) BẮT BUỘC có để agent chạy trọn bước 4–7 trên kênh giả lập. §8 THẮNG §4 ở chỗ mâu thuẫn; phần còn lại của §4 (quy chế, `/pricing`, `/residents`, `/ledger` đầy đủ, đăng ký thợ) là P04 đầy đủ — gói sau. WP: P05-E (🟠; trang `/jobs` 🟢), phụ thuộc P05-B (dịch vụ trong core).
 

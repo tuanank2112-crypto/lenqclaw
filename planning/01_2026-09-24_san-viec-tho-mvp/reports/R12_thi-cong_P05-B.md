@@ -94,3 +94,10 @@ Không thu thập được trên "≥20 cuốc trọn bước 0→7 với model 
 - Xác nhận hướng xử lý 6 điểm "Câu hỏi mở" ở mục 6 (đặc biệt điểm 1, 2, 5, 6) trước khi P05-C bắt đầu, để tránh P05-C định nghĩa lại kiểu/đường ống theo cách khác.
 
 ⏳ Chờ người duyệt.
+
+## SO phán (2026-09-26)
+- SO đo lại trên DB rỗng riêng `lq_so12` (đã drop): migrate/seed/seed:sim 0 · `npm run gate` (không DB) 0, `npm test` 296 (24+37+235) · `test:db` 0, 165 (127+11+27), 0 skip · `sim_claims` 0 ⇒ `jobs_with_two_winners=0` · `--break` 1 ⇒ 50 cuốc hai người thắng ✅.
+- Phạm vi: 2 file ngoài danh sách tên handoff — `services/job-state.ts` (chính là máy trạng thái `TRANSITIONS`, được phép theo mục 2) và `agent/job-code.ts` (chỉ `export ALPHABET` để `generatePassCode` dùng lại theo §10.3.2) — chấp nhận, không 🔁. `resident.ts` không bị stage ✅.
+- Câu hỏi mở: Q1 P05-C import `VendorTriageResult` từ `vendor-tool-context.ts`, KHÔNG định nghĩa lại · Q2 P05-C được sửa `agent/pii.ts` để export regex và bỏ bản lặp ở `pii-gate.ts` · Q3 mã vào 6 ký tự / 31 ký tự ≈ 8,9·10⁸ tổ hợp, trùng giữa các mã còn hiệu lực gần như không xảy ra ở pilot 1–2 tòa ⇒ chấp nhận, đưa vào Idea Vault (unique index một phần trên mã còn hiệu lực) · Q4 chấp nhận (đúng đắn không phụ thuộc cỡ pool) · Q5, Q6 đúng (ném lỗi trong `tx()` sẽ ROLLBACK phần nhả cuốc) ✅.
+
+✅ DUYỆT
