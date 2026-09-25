@@ -83,6 +83,17 @@ export class ConsentMissingError extends Error {
   }
 }
 
+/** 01-CONTRACTS §2b "Kiem input tool": Gemini khong co `strict` nen tool tu
+ * kiem `input` theo `input_schema` (required, kieu, enum, khoa la) truoc
+ * khi `run`; sai => `tool_result is_error` ma nay, khong chay tool. */
+export class InvalidToolInputError extends Error {
+  readonly code = 'InvalidToolInput';
+  constructor(message = 'Input cua tool khong hop le theo input_schema.') {
+    super(message);
+    this.name = 'InvalidToolInput';
+  }
+}
+
 /** Loi lap trinh: cap (from -> to) khong nam trong bang §5 01-CONTRACTS.
  * CAM caller bat loi nay de "xu ly tiep" (SPEC-P01 §5) — no bao mot bug o
  * noi goi transitionJob, khong phai mot tinh huong nghiep vu binh thuong. */
