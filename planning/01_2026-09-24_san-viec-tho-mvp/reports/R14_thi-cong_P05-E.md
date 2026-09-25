@@ -96,3 +96,72 @@ Không có gói nào leo lên 🔴 — hai điểm cần quyết định ngoài 
 - Câu hỏi mở #2 (đọc trước để tách 404/409): chấp nhận.
 
 🔁 SỬA: route đình chỉ thợ — làm `suspendVendor` trong core theo SPEC-P05 §10.17 (H14 mục 7).
+
+## Vòng 2 — `suspendVendor` (SPEC-P05 §10.17, Đ30)
+
+Vai: worker (vai-thi-cong) · loại: THI CÔNG · họ/model: Claude Sonnet 5 · Bước 0: (đã qua ở vòng 1, không lặp lại) · hiểu việc: sửa ĐÚNG MỘT điểm — route `POST /api/vendors/{id}/status` nhánh `suspended` — bằng cách làm `services/vendors.ts::suspendVendor` theo thứ tự bắt buộc 4 bước của §10.17; phạm vi mở rộng: `services/{vendors(mới),access,timers,job-state}.ts`, `domain/errors.ts`, `dbtests/p05-suspend.db.test.ts`, `docs/core.md` (chỉ mục đình chỉ); xong khi 4 ca (a)-(d) xanh + 2 bằng chứng đỏ + `typecheck`/`build`/`test`/`test:db`/`gate` exit 0, số test không giảm so nền vòng 1 (308/184); cấm đụng `packages/core/src/agent/**`, `services/pii-gate.ts`, `resident.ts`, `db/migrations/**`.
+
+### Lệnh + exit code nguyên văn
+
+| Lệnh | Exit | Evidence |
+| :-- | :-- | :-- |
+| `npm run typecheck` | 0 | `evidence/P05-E/typecheck-round2.txt` |
+| `npm run build` | 0 | `evidence/P05-E/build-round2.txt` |
+| `npm test` | 0 | `evidence/P05-E/test-round2.txt` |
+| `DATABASE_URL=…/lq_h14 npm run test:db` (DB rỗng, migrate+seed+seed-sim-for-test.mjs) | 0 | `evidence/P05-E/test-db-round2.txt` |
+| `node scripts/gate.mjs` | 0 | `evidence/P05-E/gate-round2.txt` |
+| `red-dispatch-guard.txt`: tạm vô hiệu hoá chốt chặn `dispatchToVendor`, chạy `p05-suspend.db.test.ts` | 1 (ca (b2) đỏ, 5/6 xanh) | `evidence/P05-E/red-dispatch-guard.txt` (đã hoàn nguyên; `git diff` rỗng) |
+| `red-suspend-order.txt`: đảo bước 1 xuống CUỐI trong `suspendVendor`, chạy test race tạm thời (script scratch không commit) — 30 lần thử claim đồng thời của CHÍNH thợ vừa "đình chỉ" | 1 (`raceWon=true`, đúng thợ bị đình chỉ nhận lại được cuốc vừa nhả) | `evidence/P05-E/red-suspend-order.txt` (đã hoàn nguyên `services/vendors.ts` — `diff` với bản đúng = rỗng; xoá file scratch, không commit) |
+
+Ghi chú vận hành: vòng 2 gặp lại tình huống P03-regression đỏ do WIP của P05-C giữa chừng (`packages/core/src/agent/**`); đợi P05-C commit (`bf926e1`, `436b6e9`, `533948e`) rồi chạy lại `test:db` gốc ⇒ exit 0. Không sửa gì trong `agent/**`.
+
+### Test tổng/pass/fail/skip trước/sau
+
+| Bộ | Nền (vòng 1, HEAD `de67616`) | Sau (HEAD `855ba4e`) | Fail | Skip |
+| :-- | :-- | :-- | :-- | :-- |
+| `npm test` — web | 36 | 36 | 0 | 0 |
+| `npm test` — zalo-worker | 37 | 37 | 0 | 0 |
+| `npm test` — core | 235 (đo lúc R14v1; P05-C thêm test song song không tính vào phần tôi) | 244 (+2 `job-state.test.ts`, phần còn lại của P05-C) | 0 | 0 |
+| `npm test` tổng | 308 | 317 | 0 | 0 |
+| `npm run test:db` — core | 135 | 141 (+6 `p05-suspend.db.test.ts`) | 0 | 0 |
+| `npm run test:db` — web | 22 | 24 (+2: 404/409 mới cho `/api/vendors/{id}/status`) | 0 | 0 |
+| `npm run test:db` — zalo-worker | 27 | 27 | 0 | 0 |
+| `npm run test:db` tổng | 184 | 192 | 0 | 0 |
+
+Web `test:db` (24 ca) và `p05-suspend.db.test.ts` (6 ca) chạy 3 lần liên tiếp đều xanh (G24) — quan sát trực tiếp trong phiên (không lưu file riêng, nội dung trùng `test-db-round2.txt`).
+
+### `git diff --stat` + SHA từng commit (vòng 2)
+
+| Commit | SHA | Nội dung |
+| :-- | :-- | :-- |
+| 1 | `dafaccf` | `fix(core,web): suspendVendor service with ordered steps and dispatch guard (D30)` — `services/vendors.ts` mới, `access.ts::withdrawGranted` + chốt chặn `dispatchToVendor`, `job-state.ts` cặp `access_granted→published`, `timers.ts::reemitStuckGranted` gọi `withdrawGranted`, `domain/errors.ts::VendorNotFoundError`, route web chỉ gọi `suspendVendor`, `docs/core.md` mục đình chỉ, `dbtests/p05-suspend.db.test.ts` (6 ca), `vendors-status.db.test.ts` +2 ca |
+| 2 | `855ba4e` | `docs(plan-01): evidence R14 round 2 (D30 suspendVendor)` |
+
+`git diff --stat de67616..855ba4e -- apps/web packages/core docs/core.md`: 10 files changed, 474 insertions(+), 53 deletions(-) (commit `dafaccf`) — không đụng `packages/core/src/agent/**`, `services/pii-gate.ts`, `db/migrations/**`. `resident.ts` KHÔNG bị stage (đã kiểm `git status --short` trước mỗi commit).
+
+### Bảng phân công thực tế (vòng 2)
+
+| Gói | Tầng yêu cầu | Họ/model đã dùng |
+| :-- | :-- | :-- |
+| `services/vendors.ts::suspendVendor` (4 bước bắt buộc) | 🔴 (Đ30, Super Orchestrator ra quyết định kiến trúc; thi công theo đúng chữ ký/thứ tự đã chốt) | Claude Sonnet 5 |
+| `access.ts::withdrawGranted` + chốt chặn `dispatchToVendor` | 🟠 (có SPEC + test tự biết đúng/sai) | Claude Sonnet 5 |
+| `job-state.ts` cặp mới + `timers.ts::reemitStuckGranted` | 🟠 | Claude Sonnet 5 |
+| `dbtests/p05-suspend.db.test.ts` (4+2 ca) | 🟠 | Claude Sonnet 5 |
+| Route web + test 404/409 | 🟠 | Claude Sonnet 5 |
+
+### Câu hỏi mở vòng 2 (không tự bịa, chọn cách an toàn nhất)
+
+1. **`tickets.status` không có giá trị `'cancelled'`**: SPEC §10.17 ghi ticket `access_request` bị rút ⇒ `cancelled`, nhưng CHECK constraint `tickets.status` (001_init.sql) chỉ nhận `'open'|'in_progress'|'approved'|'rejected'|'done'|'closed'` và thêm migration mới ngoài phạm vi được mở của vòng này (`db/migrations/**` không có trong "MỞ PHẠM VI" của H14 mục 7). Đã dùng `'closed'` (giá trị hợp lệ gần nghĩa nhất — ticket không còn hành động được nữa) + `decision_note` ghi rõ `"Đóng do vendor_suspended"`. Test `p05-suspend.db.test.ts` (b) kiểm đúng `'closed'`, có comment giải thích. Cần người chốt: thêm migration đổi CHECK constraint để có `'cancelled'` đúng nghĩa, hay giữ `'closed'`?
+2. **Test guard `dispatchToVendor` bản đầu không thực sự chạm code guard**: phát hiện khi tự chạy bằng chứng đỏ — vì `suspendVendor` đã gỡ `assigned_vendor_id` ở bước 3 (`withdrawGranted`), `dispatchToVendor` ném `IneligibleVendorError('not_assigned')` TRƯỚC khi chạm chốt chặn vendor status, khiến test-đầu "xanh giả" (pass vì lý do sai). Đã sửa: thêm ca (b2) cô lập — set `vendors.status='suspended'` trực tiếp (không qua `suspendVendor`) trong khi job vẫn `access_granted` + vẫn gán đúng thợ, để chốt chặn thực sự được test riêng; đã tự tay tắt/bật chốt chặn để xác nhận (b2) đỏ/xanh đúng.
+
+### Việc KHÔNG làm + lý do
+
+- Không thêm migration đổi `tickets.status` CHECK constraint — ngoài "MỞ PHẠM VI" của H14 mục 7 (chỉ liệt kê `services/**`, `domain/errors.ts`, test, `docs/core.md`).
+- Không sửa `packages/core/src/agent/**`/`services/pii-gate.ts`/`resident.ts` dù `test:db` từng đỏ giữa chừng do WIP của P05-C — đợi họ commit rồi đo lại.
+- Không đo lại toàn bộ `npm test`/`test:db` trên HEAD trước round 2 bằng `git stash` — lý do như vòng 1 (rủi ro cuốn theo WIP của P05-C); dùng số nền vòng 1 đã ghi trong report này để so sánh.
+
+### Câu hỏi cần người
+
+- Câu hỏi mở #1 (vòng 2): giữ `'closed'` hay thêm migration cho `tickets.status='cancelled'`?
+
+⏳ Chờ người duyệt.
