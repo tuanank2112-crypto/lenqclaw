@@ -203,7 +203,7 @@ Thứ tự bắt buộc (Đ13, Đ15): `P01 (nền tảng + SimTransport) → P03
 - [x] Chốt câu hỏi mở R03 (Đ19, 2026-09-25): (1) SPEC-P03 §10.8 còn ghi `claude-opus-5` ⇒ đồng bộ theo Đ18; (2) SDK `@anthropic-ai/sdk@0.68.0` không có `fallbacks` ⇒ nhánh anthropic dùng `MODEL_FALLBACKS` phía client; (3) quy ước `jobs.window_start/end` từ khung giờ gợi ý — trước P05; (4) `eval_golden` chấm một lượt đơn, chưa chạy vòng tool của agent thật — xét lại khi thẩm định
 - [x] H10 — nhánh OpenRouter trong adapter model (01-CONTRACTS §2c, Đ24) — `da8faac`, R10 ✅ 2026-09-25; `npm test` 245, `test:db` 122
 - [x] 🖐 Tín dụng model cho lượt chấm vòng 3 H08 — người dùng đưa key Vyce (Đ25), 2026-09-25
-- [ ] H11 — nhánh `vyce` (01-CONTRACTS §2d) dùng chung phần dịch OpenAI của §2c
+- [x] H11 — nhánh `vyce` (01-CONTRACTS §2d) dùng chung phần dịch OpenAI của §2c — `ffbd609`, R11 ✅ 2026-09-25; `npm test` 251, `test:db` 122
 - [ ] H08 vòng 3 — chấm lại đủ 4 bộ bằng `vyce/deepseek-v4-flash`, phán R08
 - [ ] P04 — Dashboard tối thiểu (G07)
 - [ ] P05 — Agent bước 4–7 (G11, G12, G12b)

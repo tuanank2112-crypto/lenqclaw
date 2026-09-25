@@ -48,3 +48,9 @@ Căn nguyên chẩn đoán 0/40 (SO đã xác minh): `save_job_draft` không ghi
 - Worker H09 (UI Zalo) chạy song song: phạm vi `apps/**`, `db/migrations/005_*` — KHÔNG đụng. Nếu `test:db` của bạn đỏ vì migration 005 xuất hiện giữa chừng ⇒ ghi Câu hỏi mở, không sửa file của họ.
 - Lượt chạy thật tốn thời gian/token: chạy MỘT lần mỗi vòng, chặn tiền cảnh, redirect thẳng evidence; CẤM chạy lại chỉ để "đẹp số".
 - Report R08 ghi rõ "vòng 1 bị ngắt, vòng 2 tiếp tục" + số vòng 1 ở trên.
+
+## 8. PHỤ LỤC VÒNG 3 (SO, 2026-09-25) — thắng mục 1–7 khi khác
+Gemini hết quota, OpenRouter 0 USD ⇒ Đ25: chấm bằng `MODEL_PROVIDER=vyce` (`deepseek-v4-flash`, nhánh adapter R11 ✅, 01-CONTRACTS §2d). `.env` đã có `VYCE_API_KEY`.
+- Lệnh: tạo lại `lq_h08` (DB rỗng) → migrate + seed + `DATA_MODE=sim` seed:sim → `MODEL_PROVIDER=vyce DATA_MODE=sim TRIAGE_TIMEOUT_MS=8000 npx tsx --env-file=.env scripts/eval_golden.mjs > evidence/eval-real/real-run-3.txt` (env đặt TRƯỚC nên thắng `.env`; kiểm dòng đầu evidence in đúng provider). Chạy ĐỦ 4 bộ, MỘT lần, với prompt `resident.ts` đang treo — không ghép số với lượt Gemini.
+- Đạt cả 4 ⇒ commit `resident.ts` (`fix(core): …`). Trượt ⇒ còn đúng 1 vòng sửa prompt theo mục 3d ⇒ `real-run-4.txt`; vẫn trượt ⇒ nộp số + Câu hỏi mở. Lỗi 402/429 dồn dập ⇒ dừng, nộp `blocked`.
+- Ghi vào R08 mục "## Vòng 3": bảng bộ → ngưỡng → số (ghi rõ cặp `vyce/deepseek-v4-flash`), token/latency theo route, số ca triage quá hạn (audit `triage.unavailable`), diff prompt. Dòng cuối `⏳ Chờ người duyệt.`. Drop `lq_h08` khi xong.

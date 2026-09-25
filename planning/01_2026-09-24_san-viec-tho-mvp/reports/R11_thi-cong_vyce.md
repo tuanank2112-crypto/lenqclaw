@@ -86,3 +86,11 @@ scripts/eval/score.mjs              |   8 +-
 🖐 Cần tay người: quyết định `TRIAGE_TIMEOUT_MS` cho lượt chấm `vyce` (câu hỏi mở 1) trước khi chạy H08 vòng 3 đủ 4 bộ; xác nhận có cần dọn chuỗi fake-key cũ trong `model.openrouter.test.ts` (câu hỏi mở 2, không bắt buộc — không phải lộ key thật) · 🤖 Agent làm được ngay: chạy H08 vòng 3 (chấm golden bằng `vyce/deepseek-v4-flash`) khi được giao, khói thật đã xác nhận cả `callModel` lẫn `callTriageModel` hoạt động đúng · ⭐ Nên làm trước: quyết định `TRIAGE_TIMEOUT_MS` vì ảnh hưởng trực tiếp tỉ lệ `triage.unavailable` của CẢ BỘ golden khẩn cấp/đồng ý (Đ21) khi chấm bằng vyce · ⏸ Chưa làm: H08 vòng 3 (giao việc khác, ngoài phạm vi H11); dọn fake-key cũ trong `model.openrouter.test.ts` (ngoài phạm vi H11, CẤM ĐỤNG).
 
 ⏳ Chờ người duyệt.
+
+## Duyệt — SO đo lại (2026-09-25)
+- Phạm vi `ffbd609`: 5 file, đều trong mục 2 H11; 3 file test model cũ không đổi ✅. Key thật không có trong git (`git grep` chuỗi đầy đủ ⇒ exit 1).
+- DB rỗng `lq_so11`, cây `01c7990`: `typecheck` 0 · `build` 0 · `npm test` 0 (190 + 37 + 24 = 251, 0 skip) · `test:db` 0 (84 + 11 + 27 = 122) · `gate` 0.
+- Bộ đo mới biết đỏ: bỏ chặn `DATA_MODE` ⇒ 2/6 đỏ; ép gửi trường `provider` cho mọi nhánh ⇒ 1/6 đỏ (đã khôi phục).
+- Q1 triage 3,5 s sát 4 s: lượt chấm `vyce` đặt `TRIAGE_TIMEOUT_MS=8000` qua env (núm có sẵn, không sửa mã) — máy chấm đo chất lượng hiểu ý của model, không đo độ trễ proxy; trần độ trễ thật chốt theo nhà cung cấp chạy pilot. Q2 key giả `sk-or-secret-123` trong test: vô hại, giữ.
+
+✅ DUYỆT
