@@ -70,3 +70,36 @@ Báo động = banner đỏ trên console + email/Telegram cho `bql_admin` (OPER
 - Giả lập 50 tin ra cho 20 người ⇒ không vi phạm bảng §5 (log thời điểm gửi, script kiểm).
 - Giả lập đóng 3003 ⇒ `kicked`, không có vòng đăng nhập lại, có báo động.
 - Nhân viên gửi tay 1 tin ⇒ tin bot kế tiếp của thread đó bị `cancelled`.
+
+## §9. Giai đoạn 1 — chốt thi công (Đ22 — Super Orchestrator 🔴, 2026-09-25)
+
+Người dùng duyệt đưa P02 lên chạy song song (lật một phần thứ tự Đ13). Mục này THẮNG §1–§8 chỗ mâu thuẫn; chỗ không nói thì §1–§8 giữ nguyên.
+
+### §9.1 Phạm vi giai đoạn 1
+- CHỈ tài khoản `bql` (agent cư dân, thread `user`). Mã cho `market` được phép tồn tại nhưng KHÔNG bật: env `ZALO_ACCOUNTS=bql` (danh sách phẩy). Nhóm thợ = P05.
+- Chạy trên máy dev (IP nhà), `DATA_MODE=sim` (quy chế `QC-DEMO`), `TRANSPORT=zalo`. VPS = P07.
+- Chỉ text. Tin ảnh/sticker/file ⇒ ghi `inbound_events` đủ payload, core nhận nội dung `"[cư dân gửi <loại> — chưa hỗ trợ]"` (tải ảnh §3.3 dời sang giai đoạn 2).
+- Báo động = `zalo_accounts.session_state` + banner đỏ trên trang `/zalo` + `audit_log action='zalo.alert'`; email/Telegram dời P07.
+
+### §9.2 Không pg-boss — thay §2.1 và §3.4
+- Đăng nhập QR: `POST /api/zalo/{account}/login` (chỉ `bql_admin`) ⇒ `update zalo_accounts set login_requested_at=now()`; worker quét cột này mỗi 2 s ⇒ `loginQR` ⇒ ghi `qr_data_url` + `qr_expires_at` (now()+3 phút) ⇒ trang `/zalo` tự làm mới 3 s và hiển thị. Quét xong ⇒ gọi thử một API đọc ⇒ thành công mới lưu `session_enc`, xoá `qr_*`, `session_state='connected'`.
+- Xử lý tin vào: tiến trình MỚI `packages/core/src/runner/inbound-runner.ts` (npm `core:run`): vòng lặp gọi `processInbound(routeInboundEvent)` (có sẵn, nhận-trước-xử-lý-sau) mỗi 1 s, đúng MỘT bản sao ⇒ tuần tự toàn cục, tự nhiên đúng thứ tự theo thread. Gom tin 2,5 s: KHÔNG làm ở giai đoạn 1.
+- Migration `004_zalo_login.sql` (chỉ thêm): `zalo_accounts` thêm `login_requested_at timestamptz`, `qr_data_url text`, `qr_expires_at timestamptz`, `updated_at timestamptz not null default now()` (compare-and-set §2.4).
+
+### §9.3 Ranh giới mã
+- `apps/zalo-worker` bọc zca-js sau interface `ZaloClientLike` (login bằng cookie, `loginQR`, listener `message/undo/closed/error`, `sendMessage`, `sendTypingEvent`, `sendSeenEvent`, một API đọc nhẹ) — test dùng bản giả, 0 mạng.
+- `zca-js`: tra `npm view zca-js version` lúc thi công, pin ĐÚNG bản đó (không `^`), đối chiếu `.d.ts` thật của bản đã cài, ghi phiên bản vào report. `zca-js` chỉ được import trong `apps/zalo-worker` (máy đo biên đã canh).
+- Mã hoá phiên: AES-256-GCM, khoá 32 byte từ env `ZALO_SESSION_KEY` (base64 hoặc hex); thiếu/sai độ dài ⇒ worker từ chối khởi động (exit 1). Bản rõ = JSON `{cookie, imei, userAgent}`; CẤM log.
+- Pacer §5 chạy trong worker; mọi số lấy từ env `PACER_*` có mặc định bằng bảng §5.
+
+### §9.4 Gắn Zalo thật vào cư dân mô phỏng (chỉ `DATA_MODE=sim`)
+- Người lạ nhắn `bql` ⇒ `REGISTER_REPLY` (đúng SPEC-P03). Để thử agent, lệnh `npm run dev:link-zalo -- --account bql --resident sim-res-1 [--uid <uid>]`: bỏ `--uid` ⇒ lấy `sender_uid` của tin `inbound_events` mới nhất chưa có danh tính trên tài khoản đó; ghi `zalo_identities` (party `resident`). `DATA_MODE≠sim` ⇒ exit 1. Đăng ký cư dân thật = SPEC-P04 §2, không làm ở đây.
+
+### §9.5 Nghiệm thu giai đoạn 1
+- Máy (fake zca-js, `npm test`/`test:db`): 4 ca §8 + mã hoá/giải mã phiên (sai khoá ⇒ lỗi, không rò bản rõ) + CAS `session_enc` + `is_self` không khớp outbox ⇒ takeover 30 phút + tin ảnh ⇒ nội dung thay thế + `dev:link-zalo` + runner xử lý tin vào ⇒ outbox.
+- Người (SO + người dùng, sau khi worker nộp): quét QR bằng Zalo phụ ⇒ `connected`; nhắn từ Zalo cá nhân ⇒ `REGISTER_REPLY`; `dev:link-zalo` ⇒ nhắn "vòi bồn rửa nhà em bị rỉ nước" ⇒ agent trả lời trong ≤ 30 s; nhắn "nhà em bốc khói" ⇒ `EMERGENCY_REPLY`. Ghi `evidence/P02/live.txt`.
+
+### §9.6 Vùng cấm giai đoạn 1
+- CẤM bật `market`, CẤM gửi vào nhóm. CẤM tự đăng nhập lại sau 3000/3003 (§6). CẤM pg-boss (lý do: chưa có runner jobs; một runner tuần tự đủ cho 1 tòa).
+- CẤM chạy hai bản worker hay hai bản `core:run` cùng lúc (G01 + thứ tự tin).
+- CẤM dùng Zalo chính của người dùng làm tài khoản `bql` (rủi ro khoá — OPERATIONS).

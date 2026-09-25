@@ -125,6 +125,10 @@ Thêm lớp hiểu ý `triageMessage` (model rẻ, JSON, quá hạn 4 s) cho m�
 **C1 giữ nguyên** (người dùng hỏi): BQL không ăn tiền cuốc, nhưng thu phí slot thợ ⇒ càng nhiều việc bị đẩy sang "cư dân trả" thì slot càng có giá ⇒ cư dân sẽ nghi. Trích dẫn buộc chặt kết luận là thứ giữ lòng tin đó.
 **Lật được:** có — tắt lớp 2 bằng env, quay về chỉ lưới từ khoá; chi phí thấp.
 
+### Đ22 — 2026-09-25 · Đưa P02 (Zalo thật) lên chạy song song, giai đoạn 1 chỉ `bql` (người dùng: "ok làm đi")
+Lý do: P03 đã duyệt, P02 không phụ thuộc P05/P06; rủi ro Zalo là ẩn số lớn nhất ⇒ gặp sớm. Giai đoạn 1 ([SPEC-P02 §9](specs/SPEC-P02-Zalo-Transport.md)): tài khoản `bql`, máy dev IP nhà, chỉ text, không pg-boss (runner `core:run` tuần tự + cột `login_requested_at`), gắn Zalo thật vào cư dân mô phỏng bằng `dev:link-zalo`; thử bằng Zalo phụ của người dùng, chưa mời cư dân thật (Luật 91/2025, OPERATIONS §9). Chạy song song với gói máy chấm model thật.
+**Lật được:** có — `TRANSPORT=sim`; chi phí thấp.
+
 ### Quyết định bị thay thế
 | Mốc cũ | Phát biểu cũ | Thay bằng | Lý do |
 | :-- | :-- | :-- | :-- |
@@ -137,6 +141,8 @@ Thêm lớp hiểu ý `triageMessage` (model rẻ, JSON, quá hạn 4 s) cho m�
 | Đ13 (phần phí) | Phí, slot, sổ phí ra khỏi phạm vi build | Đ14 | Người dùng: vẫn phải thu phí thợ vào nhóm, có miễn phí thời gian đầu; chỉ FOMO/marketing và P00/G0 là ngoài phạm vi |
 | SPEC-P01 §6 "Xử lý" | `processInbound` gọi handler trong transaction khoá dòng | Đ17 (a) | Trả lời trùng khi handler lỗi; giữ khoá suốt lượt LLM |
 | 00-ARCH §1 | "P01 không có SPEC riêng" | Đ16 | Quyết định P01 cần chỗ ghi có hợp đồng |
+| Đ13 (thứ tự) | Zalo thật chỉ cắm sau khi agent chạy trọn bước 0→8 trên kênh giả lập | Đ22 | Người dùng muốn thấy Zalo sớm; rủi ro Zalo cần gặp sớm |
+| SPEC-P02 §2.1, §3.4 | pg-boss cho đăng nhập QR và làn xử lý tin | Đ22 (§9.2) | P03 cấm pg-boss tới P07; một runner tuần tự đủ cho giai đoạn 1 |
 | SPEC-P03 §11.1 bản Đ20 | Khẩn cấp chỉ bằng hai danh sách từ khoá; CẤM LLM phát hiện khẩn cấp | Đ21 | Người dùng: từ khoá không bắt được ý định thật; model hiểu ý, từ khoá thành lưới an toàn |
 | SPEC-P03 §1, §10.2, §10.3 | `EMERGENCY_TERMS` so chuỗi con sau bỏ dấu; regex PII hẹp; `CONSENT` là regex chứa | Đ20 (§11) | Thẩm định R05: bỏ sót 11/12, báo nhầm 8/8; lọt 16/20 PII; 6/8 câu phủ định mở được case |
 | SPEC-P03 §10.8 | Fallback phía server `fallbacks: 'default'` | Đ19 (2) | SDK đã cài không có trường; dùng `MODEL_FALLBACKS` phía client |
@@ -181,13 +187,14 @@ Thứ tự bắt buộc (Đ13, Đ15): `P01 (nền tảng + SimTransport) → P03
 - [x] H04 — adapter Gemini theo 01-CONTRACTS §2b (Đ18, Đ19) + `MODEL_FALLBACKS` + khói golden bằng model thật (key đã ở `.env`) — thi công `390dc54..0fe11a5`, R04 🔁 (test:db đỏ 9/21 + chưa nối kiểm input, do phạm vi SO) ⇒ vá ở H06 mục 0; R04 ✅ 2026-09-25
 - [x] H05 — thẩm định P03: R05 ✅ (7 chặn, 14 nên sửa) ⇒ R03 🔁 — 2026-09-25
 - [x] P03 vòng 2 theo SPEC-P03 §11 (Đ20, Đ21 lớp hiểu ý) — H06 `f396bb5..65fe108` (2 vòng), R06 ✅, R03 ✅ — 2026-09-25; `npm test` 173, `test:db` 76, 0 skip
-- [ ] Máy chấm model thật (Đ19-4 + Đ21): G09/G10 qua vòng agent thật, golden emergency hai lớp (≥100) + consent (≥40); vá `eval_golden` gọi `searchRegulations` thiếu `buildingId` (R06 Q3); lệch sót sau R06: `handoff_to_staff` ghi cứng 30 phút thay vì env `HUMAN_TAKEOVER_MIN` mặc định 60 (§11.6) + `.env.example` thiếu `MODEL_TRIAGE`/`TRIAGE_*`/`HUMAN_TAKEOVER_MIN` — mở khoá G08–G10
+- [ ] H08 — Máy chấm model thật (Đ19-4 + Đ21): G09/G10 qua vòng agent thật, golden emergency hai lớp (≥100) + consent (≥40); vá `eval_golden` gọi `searchRegulations` thiếu `buildingId` (R06 Q3); lệch sót sau R06: `handoff_to_staff` ghi cứng 30 phút thay vì env `HUMAN_TAKEOVER_MIN` mặc định 60 (§11.6) + `.env.example` thiếu `MODEL_TRIAGE`/`TRIAGE_*`/`HUMAN_TAKEOVER_MIN` — mở khoá G08–G10
 - [x] Chốt câu hỏi mở R03 (Đ19, 2026-09-25): (1) SPEC-P03 §10.8 còn ghi `claude-opus-5` ⇒ đồng bộ theo Đ18; (2) SDK `@anthropic-ai/sdk@0.68.0` không có `fallbacks` ⇒ nhánh anthropic dùng `MODEL_FALLBACKS` phía client; (3) quy ước `jobs.window_start/end` từ khung giờ gợi ý — trước P05; (4) `eval_golden` chấm một lượt đơn, chưa chạy vòng tool của agent thật — xét lại khi thẩm định
 - [ ] P04 — Dashboard tối thiểu (G07)
 - [ ] P05 — Agent bước 4–7 (G11, G12, G12b)
 - [ ] P06 — Bước 8 (G13, G16 trọn bước 0→8 trên kênh giả lập)
 - [ ] P08 — Sổ lợi ích ba bên (G17)
-- [ ] P02 — Zalo thật cắm vào Transport (G04–G06)
+- [ ] P02 giai đoạn 1 — Zalo `bql` trên máy dev (SPEC-P02 §9, Đ22) — handoff H07; nghiệm thu người quét QR
+- [ ] P02 giai đoạn 2 — `market` + nhóm thợ + ảnh (cùng P05) (G04–G06 đủ)
 - [ ] P07 — deploy VPS, mọi gate cột `vps` ✅ (G14)
 - [ ] Đồng bộ não (Ma Trận 6 Điểm) + changelog `0.1.0`
 
