@@ -94,6 +94,19 @@ export class InvalidToolInputError extends Error {
   }
 }
 
+/** SPEC-P03 §11.5: `classify_responsibility` chi chay khi job dang 'drafting';
+ * goi lai sau khi verdict da chot (job da sang awaiting_consent/routed_bql/...)
+ * => loi nay. Caller: bao cu dan "da ket luan, can BQL xem lai". (Ghi chu:
+ * SPEC-P03 §11.5 doi them dong vao bang loi 01-CONTRACTS §9 — file do nam
+ * trong CAM DUNG cua handoff nay, xem Cau hoi mo trong report.) */
+export class VerdictLockedError extends Error {
+  readonly code = 'VerdictLockedError';
+  constructor(message = 'Ket luan trach nhiem da duoc chot, can Ban quan ly xem lai.') {
+    super(message);
+    this.name = 'VerdictLockedError';
+  }
+}
+
 /** Loi lap trinh: cap (from -> to) khong nam trong bang §5 01-CONTRACTS.
  * CAM caller bat loi nay de "xu ly tiep" (SPEC-P01 §5) — no bao mot bug o
  * noi goi transitionJob, khong phai mot tinh huong nghiep vu binh thuong. */

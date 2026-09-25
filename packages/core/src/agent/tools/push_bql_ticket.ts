@@ -4,6 +4,7 @@
 import { sql, tx } from '../../adapters/db.js';
 import { audit } from '../../services/audit.js';
 import { transitionJob } from '../../services/job-state.js';
+import { ConflictError } from '../../domain/errors.js';
 import type { ResponsibilityVerdict } from '../../domain/types.js';
 import type { AgentTool, ToolDefinition } from './tool-kit.js';
 
@@ -44,11 +45,11 @@ export const pushBqlTicketTool: AgentTool<PushBqlTicketInput, PushBqlTicketOutpu
     );
     const job = jobs[0];
     if (!job || job.status !== 'drafting' || !job.responsibility) {
-      throw new Error('push_bql_ticket: job khong o trang thai drafting hoac chua co verdict.');
+      throw new ConflictError('push_bql_ticket: job khong o trang thai drafting hoac chua co verdict.');
     }
     const party = job.responsibility.party;
     if (party !== 'bql' && party !== 'unclear') {
-      throw new Error(`push_bql_ticket: verdict hien tai la "${party}", khong phai bql/unclear.`);
+      throw new ConflictError(`push_bql_ticket: verdict hien tai la "${party}", khong phai bql/unclear.`);
     }
     const kind: PushBqlTicketOutput['kind'] = party === 'bql' ? 'bql_responsibility' : 'unclear';
 

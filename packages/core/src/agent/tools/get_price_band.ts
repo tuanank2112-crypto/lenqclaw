@@ -2,6 +2,7 @@
 // price_book, co the rong (01-CONTRACTS §7).
 
 import { sql } from '../../adapters/db.js';
+import { audit } from '../../services/audit.js';
 import type { AgentTool, ToolDefinition } from './tool-kit.js';
 
 export interface GetPriceBandInput {
@@ -34,6 +35,13 @@ export const getPriceBandTool: AgentTool<GetPriceBandInput, GetPriceBandOutput> 
       `select p25, p75 from price_book where category_code = $1 and building_id = $2`,
       [input.category_code, ctx.buildingId]
     );
+    await audit(sql, {
+      actorType: 'agent',
+      actorId: ctx.residentId,
+      action: 'tool.get_price_band',
+      target: null,
+      data: { category_code: input.category_code },
+    });
     if (rows.length === 0) return { price_low: null, price_high: null };
     return { price_low: rows[0]!.p25, price_high: rows[0]!.p75 };
   },

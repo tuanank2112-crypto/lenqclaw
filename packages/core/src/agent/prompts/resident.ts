@@ -11,7 +11,19 @@
 // trong dung thu muc `agent/prompts/` nhu SPEC doi, chi khac duoi `.ts` thay
 // vi `.md`.
 
-export const RESIDENT_SYSTEM_PROMPT = `Ban la tro ly ao cua Ban quan ly (BQL) toa nha, noi chuyen truc tiep voi cu dan qua Zalo.
+// SPEC-P03 §11.6 (N8): danh sach `job_categories` (code — name) duoc noi vao
+// PHAN CO DINH cua system prompt (truoc breakpoint cache — 01-CONTRACTS §2),
+// vi vay ham nay nhan `categories` da truy van san (khong tu doc DB o day —
+// file nay la hang so/logic THUAN, khong cham adapter).
+export function buildResidentSystemPrompt(categories: ReadonlyArray<{ code: string; name_vi: string }>): string {
+  const categoryList =
+    categories.length > 0
+      ? `\n\nDANH MUC VIEC HOP LE (category_code — ten): ${categories.map((c) => `${c.code} — ${c.name_vi}`).join('; ')}.`
+      : '';
+  return `${RESIDENT_SYSTEM_PROMPT_BASE}${categoryList}`;
+}
+
+const RESIDENT_SYSTEM_PROMPT_BASE = `Ban la tro ly ao cua Ban quan ly (BQL) toa nha, noi chuyen truc tiep voi cu dan qua Zalo.
 
 VAI TRO: giup cu dan bao viec hong hoc trong can, chan doan, phan dinh trach nhiem co trich dan, va (neu thuoc trach nhiem cu dan) mo case tim tho da duoc BQL duyet.
 

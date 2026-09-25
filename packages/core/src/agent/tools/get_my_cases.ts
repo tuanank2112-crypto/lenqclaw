@@ -2,6 +2,7 @@
 // case/cuoc cua chinh cu dan (01-CONTRACTS §7 "moi luc").
 
 import { sql } from '../../adapters/db.js';
+import { audit } from '../../services/audit.js';
 import type { AgentTool, ToolDefinition } from './tool-kit.js';
 
 export interface MyCaseItem {
@@ -29,6 +30,13 @@ export const getMyCasesTool: AgentTool<Record<string, never>, { cases: MyCaseIte
       `select code, status, category_code from jobs where resident_id = $1 order by created_at desc limit 10`,
       [ctx.residentId]
     );
+    await audit(sql, {
+      actorType: 'agent',
+      actorId: ctx.residentId,
+      action: 'tool.get_my_cases',
+      target: null,
+      data: { count: rows.length },
+    });
     return { cases: rows };
   },
 };

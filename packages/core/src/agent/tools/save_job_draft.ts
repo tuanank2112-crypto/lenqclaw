@@ -2,12 +2,14 @@
 // §10.3 buoc 1. Lan dau tao `jobs` status='drafting' voi `code` sinh ngau
 // nhien (trung => sinh lai, toi da 5 lan); cac lan sau ghi de `draft`.
 
-import { sql } from '../../adapters/db.js';
+import { createHash } from 'node:crypto';
+import { sql, tx } from '../../adapters/db.js';
 import { audit } from '../../services/audit.js';
 import { InvalidCategoryError } from '../../domain/errors.js';
 import type { JobDraft } from '../../domain/types.js';
 import type { ToolContext } from '../tool-context.js';
 import { generateJobCode } from '../job-code.js';
+import { triggerEmergencyFlow } from '../emergency.js';
 import type { AgentTool, ToolDefinition } from './tool-kit.js';
 
 export interface SaveJobDraftInput {
@@ -23,6 +25,9 @@ export interface SaveJobDraftInput {
 export interface SaveJobDraftOutput {
   job_code: string;
   status: string;
+  /** SPEC-P03 §11.2: co khi job dang/da bi khoa 'emergency' (co doi 't hay
+   * khong dat cung urgency='emergency' o lan goi nay). */
+  urgency_locked?: true;
 }
 
 const definition: ToolDefinition = {
@@ -52,22 +57,46 @@ async function categoryExists(code: string): Promise<boolean> {
   return rows.length > 0;
 }
 
+/** Khoa 64-bit tat dinh tu `residentId` (uuid) cho `pg_advisory_xact_lock`
+ * — SPEC-P03 §11.6 (G9): "mot cu dan chi co toi da mot job 'drafting'". */
+function residentLockKey(residentId: string): string {
+  const hash = createHash('sha256').update(residentId).digest();
+  return hash.readBigInt64BE(0).toString();
+}
+
 async function insertJob(ctx: ToolContext, draft: JobDraft): Promise<{ id: string; code: string }> {
-  let lastErr: unknown;
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const code = generateJobCode();
-    try {
-      const rows = await sql<{ id: string }>(
-        `insert into jobs (code, building_id, apartment_id, resident_id, draft, status)
-         values ($1,$2,$3,$4,$5,'drafting') returning id`,
-        [code, ctx.buildingId, ctx.apartmentId, ctx.residentId, JSON.stringify(draft)]
-      );
-      return { id: rows[0]!.id, code };
-    } catch (err) {
-      lastErr = err;
+  return tx(async (q) => {
+    // G9: khoa theo resident_id TRONG transaction — hai luot dong thoi cho
+    // CUNG cu dan se cho nhau o day; luot sau, sau khi co khoa, se thay job
+    // 'drafting' da co va DUNG LAI job do thay vi tao them.
+    await q(`select pg_advisory_xact_lock($1)`, [residentLockKey(ctx.residentId)]);
+    const existing = await q<{ id: string; code: string }>(
+      `select id, code from jobs where resident_id = $1 and status = 'drafting' order by created_at desc limit 1`,
+      [ctx.residentId]
+    );
+    if (existing.length > 0) {
+      await q(`update jobs set draft = $1, updated_at = now() where id = $2`, [
+        JSON.stringify(draft),
+        existing[0]!.id,
+      ]);
+      return { id: existing[0]!.id, code: existing[0]!.code };
     }
-  }
-  throw lastErr instanceof Error ? lastErr : new Error('Khong sinh duoc ma cuoc sau 5 lan thu.');
+    let lastErr: unknown;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const code = generateJobCode();
+      try {
+        const rows = await q<{ id: string }>(
+          `insert into jobs (code, building_id, apartment_id, resident_id, draft, status)
+           values ($1,$2,$3,$4,$5,'drafting') returning id`,
+          [code, ctx.buildingId, ctx.apartmentId, ctx.residentId, JSON.stringify(draft)]
+        );
+        return { id: rows[0]!.id, code };
+      } catch (err) {
+        lastErr = err;
+      }
+    }
+    throw lastErr instanceof Error ? lastErr : new Error('Khong sinh duoc ma cuoc sau 5 lan thu.');
+  });
 }
 
 export const saveJobDraftTool: AgentTool<SaveJobDraftInput, SaveJobDraftOutput> = {
@@ -76,11 +105,23 @@ export const saveJobDraftTool: AgentTool<SaveJobDraftInput, SaveJobDraftOutput> 
     if (input.category_code !== null && !(await categoryExists(input.category_code))) {
       throw new InvalidCategoryError(`Danh muc "${input.category_code}" khong ton tai.`);
     }
+
+    // SPEC-P03 §11.2: co dơn dieu — job da 'emergency' thi input 'normal'/
+    // 'soon' bi bo qua (giu nguyen 'emergency'); dat 'emergency' lan dau =>
+    // chay dung duong §11.1 (ticket + EMERGENCY_REPLY, cung luat chong lap).
+    let previousUrgency: JobDraft['urgency'] | null = null;
+    if (ctx.jobId !== null) {
+      const prevRows = await sql<{ draft: JobDraft }>(`select draft from jobs where id = $1`, [ctx.jobId]);
+      previousUrgency = prevRows[0]?.draft?.urgency ?? null;
+    }
+    const wasEmergency = previousUrgency === 'emergency';
+    const effectiveUrgency: JobDraft['urgency'] = wasEmergency ? 'emergency' : input.urgency;
+
     const draft: JobDraft = {
       category_code: input.category_code,
       symptoms: input.symptoms,
       location_in_unit: input.location_in_unit,
-      urgency: input.urgency,
+      urgency: effectiveUrgency,
       photo_ids: input.photo_ids,
       questions_asked: input.questions_asked,
       confidence_note: input.confidence_note,
@@ -104,9 +145,25 @@ export const saveJobDraftTool: AgentTool<SaveJobDraftInput, SaveJobDraftOutput> 
       actorId: ctx.residentId,
       action: 'tool.save_job_draft',
       target: ctx.jobId,
-      data: { category_code: draft.category_code },
+      data: { category_code: draft.category_code, urgency: effectiveUrgency },
     });
 
-    return { job_code: code, status: 'drafting' };
+    // §11.2: dat 'emergency' LAN DAU (khong phai da khoa tu truoc) => chay
+    // duong khan cap ngay trong tool (day la luoi thu hai cho bien the §11.1
+    // khong bat duoc).
+    if (effectiveUrgency === 'emergency' && !wasEmergency) {
+      await triggerEmergencyFlow({
+        conversationId: ctx.conversationId,
+        buildingId: ctx.buildingId,
+        apartmentId: ctx.apartmentId,
+        residentId: ctx.residentId,
+        summary: ctx.latestText,
+        source: 'model_flag',
+      });
+    }
+
+    const out: SaveJobDraftOutput = { job_code: code, status: 'drafting' };
+    if (effectiveUrgency === 'emergency') out.urgency_locked = true;
+    return out;
   },
 };

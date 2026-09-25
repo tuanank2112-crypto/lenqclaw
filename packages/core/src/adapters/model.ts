@@ -33,7 +33,7 @@ import { ModelUnavailableError } from '../domain/errors.js';
 // truc tiep — giu dung MOT diem import SDK trong toan repo (BB-07).
 export { APIError, APIConnectionError };
 
-export type ModelRoute = 'diagnose' | 'responsibility' | 'acceptance' | 'vendor_parse' | 'compose';
+export type ModelRoute = 'diagnose' | 'responsibility' | 'acceptance' | 'vendor_parse' | 'compose' | 'triage';
 export type ModelProvider = 'gemini' | 'anthropic';
 
 export interface ImageRef {
@@ -66,17 +66,42 @@ export interface ModelClientLike {
 
 let realClient: Anthropic | null = null;
 let testClient: ModelClientLike | null = null;
+// SPEC-P03 §11.10: route 'triage' PHAI co client/fetch RIENG trong test —
+// dung chung `testClient`/`testFetch` cua route 'diagnose' se "an" mot
+// phan hoi trong kich ban da soan cho vong tool chinh (lech thu tu, vo test
+// co san). Khong cau hinh rieng cho triage => coi nhu KHONG kha dung (nem
+// loi ngay, khong cham `testClient`) — `triageMessage` bat loi nay va tra
+// `null` (dung ngu nghia "loi/qua han => null" cua §11.10), tuong duong voi
+// moi truong test/dev chua co credential that.
+let triageTestClient: ModelClientLike | null = null;
+let triageTestFetch: typeof fetch | null = null;
 
-function getAnthropicClient(): ModelClientLike {
+function getAnthropicClient(route: ModelRoute = 'diagnose'): ModelClientLike {
+  if (route === 'triage') {
+    if (triageTestClient) return triageTestClient;
+    if (testClient) {
+      throw new ModelUnavailableError('triage: chua cau hinh setTriageClientForTest trong moi truong test.');
+    }
+    if (!realClient) realClient = new Anthropic();
+    return realClient;
+  }
   if (testClient) return testClient;
   if (!realClient) realClient = new Anthropic();
   return realClient;
 }
 
 /** Chi dung trong test: thay client that (nhanh anthropic) bang mot fake
- * khong goi mang. Truyen `null` de go fake, quay lai client that. */
+ * khong goi mang. Truyen `null` de go fake, quay lai client that. Ap dung
+ * cho MOI route TRU 'triage' (xem `setTriageClientForTest`). */
 export function setModelClientForTest(fake: ModelClientLike | null): void {
   testClient = fake;
+}
+
+/** Chi dung trong test: fake client RIENG cho route 'triage' (SPEC-P03
+ * §11.10) — khong dung chung voi `setModelClientForTest` de tranh vo kich
+ * ban da soan cho vong tool chinh. */
+export function setTriageClientForTest(fake: ModelClientLike | null): void {
+  triageTestClient = fake;
 }
 
 /** Chi dung trong test: thay `fetch` that (nhanh gemini) bang mot fake
@@ -86,20 +111,29 @@ export function setGeminiFetchForTest(fake: typeof fetch | null): void {
   testFetch = fake;
 }
 
+/** Nhu tren, rieng cho route 'triage' — xem ghi chu `setTriageClientForTest`. */
+export function setTriageFetchForTest(fake: typeof fetch | null): void {
+  triageTestFetch = fake;
+}
+
 const ROUTE_ENV: Record<ModelRoute, string> = {
   diagnose: 'MODEL_DIAGNOSE',
   responsibility: 'MODEL_RESPONSIBILITY',
   acceptance: 'MODEL_ACCEPTANCE',
   vendor_parse: 'MODEL_VENDOR_PARSE',
   compose: 'MODEL_COMPOSE',
+  triage: 'MODEL_TRIAGE',
 };
 
 const DEFAULT_MODEL_ANTHROPIC = 'claude-opus-5';
 const DEFAULT_MODEL_GEMINI = 'gemini-3.6-flash';
+const DEFAULT_MODEL_TRIAGE_ANTHROPIC = 'claude-haiku-4-5';
+const DEFAULT_MODEL_TRIAGE_GEMINI = 'gemini-3.5-flash-lite';
 const DEFAULT_FALLBACKS_GEMINI = ['gemini-3-flash-preview', 'gemini-3.5-flash-lite'];
 const MAX_OUTPUT_TOKENS = 16000;
 const GEMINI_RETRY_DELAYS_MS = [1000, 3000];
 const GEMINI_ENDPOINT_HOST = 'https://generativelanguage.googleapis.com/v1beta/models/';
+const DEFAULT_TRIAGE_TIMEOUT_MS = 4000;
 
 /** 01-CONTRACTS §2b: env MODEL_PROVIDER = 'gemini' (mac dinh) | 'anthropic'. */
 export function resolveProvider(): ModelProvider {
@@ -115,6 +149,14 @@ export function resolveModel(route: ModelRoute, provider: ModelProvider = resolv
   const def = process.env.MODEL_DEFAULT?.trim();
   if (def) return def;
   return provider === 'anthropic' ? DEFAULT_MODEL_ANTHROPIC : DEFAULT_MODEL_GEMINI;
+}
+
+/** SPEC-P03 §11.10: model cho route 'triage' = env MODEL_TRIAGE, mac dinh
+ * theo provider — KHONG rơi ve MODEL_DEFAULT (khac `resolveModel` thuong). */
+export function resolveTriageModel(provider: ModelProvider = resolveProvider()): string {
+  const perRoute = process.env.MODEL_TRIAGE?.trim();
+  if (perRoute) return perRoute;
+  return provider === 'anthropic' ? DEFAULT_MODEL_TRIAGE_ANTHROPIC : DEFAULT_MODEL_TRIAGE_GEMINI;
 }
 
 /** MODEL_FALLBACKS (danh sach phay): dat env ap dung cho ca hai nhanh; khong
@@ -217,7 +259,7 @@ async function callAnthropicOnce(
   model: string,
   c: ModelCall
 ): Promise<{ message: Message; usage: Usage }> {
-  const client = getAnthropicClient();
+  const client = getAnthropicClient(c.route);
   try {
     const message = await client.messages.create({
       model,
@@ -419,10 +461,18 @@ function getGeminiApiKey(): string {
   return key;
 }
 
-async function fetchGeminiOnce(model: string, body: unknown): Promise<GeminiResponseBody> {
+async function fetchGeminiOnce(model: string, body: unknown, route: ModelRoute = 'diagnose'): Promise<GeminiResponseBody> {
   const apiKey = getGeminiApiKey();
   const url = `${GEMINI_ENDPOINT_HOST}${encodeURIComponent(model)}:generateContent`;
-  const fetchImpl = testFetch ?? fetch;
+  let fetchImpl: typeof fetch;
+  if (route === 'triage') {
+    if (!triageTestFetch && testFetch) {
+      throw new GeminiRetryableError('triage: chua cau hinh setTriageFetchForTest trong moi truong test.');
+    }
+    fetchImpl = triageTestFetch ?? fetch;
+  } else {
+    fetchImpl = testFetch ?? fetch;
+  }
   let res: Response;
   try {
     res = await fetchImpl(url, {
@@ -448,11 +498,17 @@ async function fetchGeminiOnce(model: string, body: unknown): Promise<GeminiResp
 /** 01-CONTRACTS §2b "Loi": 429/500/503/504/mang/timeout ⇒ retry toi da 2
  * lan, lui 1s roi 3s, roi ModelUnavailableError; 400/401/403/404 ⇒ nem loi
  * goc ngay (khong retry). */
-async function callGeminiWithRetry(model: string, body: unknown): Promise<GeminiResponseBody> {
+async function callGeminiWithRetry(model: string, body: unknown, route: ModelRoute = 'diagnose'): Promise<GeminiResponseBody> {
+  // SPEC-P03 §11.10: route 'triage' KHONG retry, khong MODEL_FALLBACKS — do
+  // trung tam o `triageMessage` (mot lan goi, timeout rieng); o day ta van
+  // giu duong retry cho cac route khac nguyen ven.
+  if (route === 'triage') {
+    return fetchGeminiOnce(model, body, route);
+  }
   let lastErr: unknown;
   for (let attempt = 0; attempt <= GEMINI_RETRY_DELAYS_MS.length; attempt++) {
     try {
-      return await fetchGeminiOnce(model, body);
+      return await fetchGeminiOnce(model, body, route);
     } catch (err) {
       if (!(err instanceof GeminiRetryableError)) throw err;
       lastErr = err;
@@ -471,7 +527,7 @@ async function callGeminiOnce(model: string, c: ModelCall): Promise<{ message: M
     tools: toGeminiTools(c.tools),
     generationConfig: { maxOutputTokens: MAX_OUTPUT_TOKENS },
   };
-  const raw = await callGeminiWithRetry(model, body);
+  const raw = await callGeminiWithRetry(model, body, c.route);
   const candidate = raw.candidates?.[0];
   const content = geminiPartsToContent(candidate?.content?.parts);
   const stopReason = determineStopReason(candidate, raw.promptFeedback);
@@ -549,3 +605,48 @@ export async function callModel(c: ModelCall): Promise<CallModelResult> {
   // Khong the toi day (candidates luon >= 1 phan tu) — giu de TypeScript yen tam.
   throw lastErr instanceof Error ? lastErr : new Error('callModel: khong co model nao de goi.');
 }
+
+export interface TriageModelCall {
+  system: string;
+  messages: MessageParam[];
+  conversationId?: string | null;
+}
+
+/** SPEC-P03 §11.10: goi model cho route 'triage' — MOT lan goi DUY NHAT,
+ * KHONG retry, KHONG MODEL_FALLBACKS (khac `callModel`, do gia tren toc do
+ * quan trong hon do tin cay o day; timeout do `triageMessage` tu quan ly
+ * bang Promise.race). Model KHONG roi ve MODEL_DEFAULT (`resolveTriageModel`). */
+export async function callTriageModel(c: TriageModelCall): Promise<CallModelResult> {
+  const provider = resolveProvider();
+  const model = resolveTriageModel(provider);
+  const startedAt = Date.now();
+  const call: ModelCall = { route: 'triage', system: c.system, messages: c.messages };
+  try {
+    const { message, usage } = provider === 'anthropic' ? await callAnthropicOnce(model, call) : await callGeminiOnce(model, call);
+    await recordAgentRun({
+      conversationId: c.conversationId ?? null,
+      route: 'triage',
+      model,
+      inputTokens: usage.input_tokens,
+      outputTokens: usage.output_tokens,
+      cacheReadTokens: usage.cache_read_input_tokens,
+      latencyMs: Date.now() - startedAt,
+      outcome: 'ok',
+    });
+    return { message, usage, model };
+  } catch (err) {
+    await recordAgentRun({
+      conversationId: c.conversationId ?? null,
+      route: 'triage',
+      model,
+      inputTokens: null,
+      outputTokens: null,
+      cacheReadTokens: null,
+      latencyMs: Date.now() - startedAt,
+      outcome: 'error',
+    });
+    throw err;
+  }
+}
+
+export { DEFAULT_TRIAGE_TIMEOUT_MS };
