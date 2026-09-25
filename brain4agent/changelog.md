@@ -25,6 +25,8 @@ Tất cả các quyết định kiến trúc và lịch sử nâng cấp phiên 
 - Đ20 (2026-09-25) Vòng 2 P03 sau thẩm định R05 (SPEC-P03 §11): citation cùng nhãn + cùng tòa (`kb_documents.building_id`), quote từ DB; verdict khoá sau `drafting`; đồng ý chỉ ở lượt sau; che PII theo mã căn trong DB + regex có dấu phân cách; khẩn cấp theo ranh giới từ.
 - Đ21 (2026-09-25, người dùng: "bắt key rất khó và dễ sai") Lớp hiểu ý `triageMessage` (model rẻ, JSON, 4 s) cho khẩn cấp và đồng ý; từ khoá lùi về lưới an toàn ưu tiên chính xác, không chờ model (Đ09 giữ). C1 giữ: BQL thu phí slot ⇒ trích dẫn buộc chặt kết luận là thứ giữ lòng tin cư dân.
 - Đ22 (2026-09-25, người dùng "ok làm đi") Đưa P02 Zalo thật lên chạy song song, giai đoạn 1 chỉ `bql` trên máy dev, chỉ text, không pg-boss (runner `core:run` + cột `login_requested_at`); gắn Zalo thật vào cư dân mô phỏng bằng `dev:link-zalo`. Takeover: pacer chỉ huỷ tin bot khi nhân viên gửi tay (SPEC-P02 §9.7).
+- Đ23 (2026-09-25) Cột `jobs.category_code` là nguồn chân lý của danh mục; `save_job_draft` ghi cột cùng câu lệnh với `draft` (SPEC-P03 §11.11). Lộ ra khi lượt chấm model thật đầu tiên cho chẩn đoán 0/40.
+- Đ24 (2026-09-25, người dùng đưa key OpenRouter) Nhánh `MODEL_PROVIDER=openrouter` (fetch, `data_collection: deny`, fallback phía client) để chấm bằng CÙNG model Gemini khi quota Gemini trực tiếp hết; mặc định sản phẩm vẫn `gemini`.
 ### Superseded
 - Đ13 (thứ tự Zalo sau cùng) và SPEC-P02 §2.1/§3.4 (pg-boss) — thay bởi Đ22.
 - SPEC-P03 §1/§10.2/§10.3 (danh sách `EMERGENCY_TERMS` so chuỗi con, regex PII hẹp, `CONSENT` regex chứa) — thay bởi Đ20/Đ21.
@@ -35,6 +37,7 @@ Tất cả các quyết định kiến trúc và lịch sử nâng cấp phiên 
 - Pipeline 10 bước bản đầu (7 bước "dịch vụ tất định", tự cấp thẻ vào tòa, nhắn riêng top 3 thợ) — thay bởi Đ10.
 - `docs/DESIGN.md` v0.1 (trợ lý BQL tổng quát) bị thu hẹp bởi Đ01.
 ### Added
+- **Máy chấm + UI Zalo + OpenRouter (2026-09-25, R09/R10 ✅, R08 mã ✅ chờ lượt 3):** `scripts/eval/{score,red-fake-model}.mjs` (vòng agent thật, 4 bộ, exit 0/1/3); fix `save_job_draft` ghi cột danh mục; `handoff_to_staff` đọc `HUMAN_TAKEOVER_MIN` (mặc định 60); migration `005_zalo_ui.sql` + `POST /api/zalo/{account}/logout` + `qr_state`; `adapters/model.ts` nhánh `openrouter`. `npm test` 245, `test:db` 122.
 - **P02 giai đoạn 1 (2026-09-25, R07 ✅):** `apps/zalo-worker` thật (zca-js 2.2.0), `packages/core/src/{runner,dev}`, `apps/web` `/zalo` + `/api/zalo/*`, migration `004_zalo_login.sql`. Chạy thử Zalo phụ đạt phần QR/nhận tin/trả lời.
 - **P03 vòng 2 + adapter Gemini (2026-09-25, R03/R04/R06 ✅):** `adapters/model.ts` nhánh Gemini + `callTriageModel`; `agent/{emergency,triage}.ts`, `prompts/triage.ts`; migration `003_kb_building.sql`; `scripts/seed-sim-for-test.mjs`; golden `emergency.jsonl` 100 ca, `consent.jsonl` 44 ca; bộ hồi quy `p03-regression.db.test.ts` từ bộ phá thẩm định. `npm test` 173, `test:db` 76.
 - **P03 agent cư dân (thi công xong, chờ thẩm định):** migration `002_search.sql` (`immutable_unaccent`, `kb_sections.tsv` sinh tự động), `retrieval/search-regulations.ts`, 8 tool `agent/tools/*`, `resident-agent.ts` (khẩn cấp tất định, vòng tool ≤6, che PII trước model), `db:seed:sim` (QC-DEMO + cư dân mô phỏng), golden `emergency`/`diagnosis`/`responsibility` + `scripts/eval_golden.mjs` (thiếu credential ⇒ exit 3).

@@ -2,7 +2,7 @@
 
 Tiến trình dài hạn giữ phiên Zalo cá nhân qua `zca-js` (pin đúng `2.2.0`), chạy **đúng một bản sao**. Không chứa logic nghiệp vụ; nói với core chỉ qua bảng `inbound_events`, `outbox`, `zalo_accounts`. Hợp đồng: [SPEC-P02](../planning/01_2026-09-24_san-viec-tho-mvp/specs/SPEC-P02-Zalo-Transport.md) (§9 = giai đoạn 1).
 
-Trạng thái 2026-09-25: **giai đoạn 1 xong phần mã** (R07 ✅, Đ22): chỉ tài khoản `bql` (`ZALO_ACCOUNTS=bql`; có `market` ⇒ exit 1), chỉ text, chạy trên máy dev. Chạy thử người: quét QR ✅, nhận tin + trả `REGISTER_REPLY` ✅, bỏ tin nhóm ✅; chưa thử agent chẩn đoán/khẩn cấp qua Zalo thật. Chưa có nút đăng xuất (zca-js không có API đăng xuất — G18).
+Trạng thái 2026-09-25: **giai đoạn 1 xong phần mã** (R07 ✅, Đ22): chỉ tài khoản `bql` (`ZALO_ACCOUNTS=bql`; có `market` ⇒ exit 1), chỉ text, chạy trên máy dev. Chạy thử người: quét QR ✅, nhận tin + trả `REGISTER_REPLY` ✅, bỏ tin nhóm ✅; chưa thử agent chẩn đoán/khẩn cấp qua Zalo thật. Đăng xuất + trạng thái QR xong (H09, R09 ✅): web đặt `logout_requested_at` ⇒ worker ở nhịp quét 2 s dừng listener/pacer tài khoản đó; zca-js vẫn không có API đăng xuất phía máy chủ (G18). Worker ghi `qr_state` theo sự kiện QR (`waiting_scan`/`scanned`/`expired`/`declined`, đăng nhập xong ⇒ null).
 
 ## Cấu trúc
 

@@ -76,3 +76,16 @@ Phân tích OpenClaw + ZaloClaw (monas-team) với tài khoản Zalo cá nhân �
 - Gói UI Zalo (đăng xuất, "đã quét chờ xác nhận", đồng hồ QR). Thử agent chẩn đoán/khẩn cấp qua Zalo thật (cần quét QR lại).
 - Phán R08; `.env.example` thêm `PACER_*`/`ZALO_ACCOUNTS`, sửa `PACER_MAX_PER_MINUTE` 20→10, bỏ `PACER_MIN_INTERVAL_MS` (sau khi H08 nhả file).
 
+
+## 🏁 Phiên 2026-09-25 (tối) — Máy chấm model thật, lỗi cột danh mục, UI Zalo, OpenRouter
+- Bước 0 exit 0; Docker tắt ⇒ bật lại. Worker H08 vòng 1 bị ngắt 12:31, chưa commit; chẩn đoán 0/40 `thực tế=null` ⇒ SO lần ra `save_job_draft` không ghi cột `jobs.category_code` (lỗi sản phẩm) ⇒ **Đ23** SPEC-P03 §11.11 + phụ lục vòng 2 H08.
+- H08 vòng 2 ∥ H09 (UI Zalo). R09 vòng 1 🔁: SO đo lại test DB web đỏ 2/5 (thiếu `fileParallelism: false`, G24) — report worker ghi xanh do may; vòng 2 ⇒ R09 ✅.
+- H08 lượt 1 thật: khẩn cấp 100/100, đồng ý 42/44 (0 nhận nhầm), chẩn đoán 36/37, trách nhiệm 26/30 (R25/R29 kết luận `resident` khi thiếu căn cứ; R26/R27 không kết luận). Worker sửa prompt ⇒ lượt 2 chết giữa chừng vì Gemini 429 quota ngày (G22). SO phán R24–R29 trong phạm vi, giữ kỳ vọng.
+- Cảnh báo bảo mật "mass delete" trên worker H08 = báo nhầm: chỉ `DROP DATABASE lq_h08` (DB thử của chính gói); DB `lenqclaw` chạy thử còn nguyên.
+- Người dùng đưa key OpenRouter (dán trong chat — nên thu hồi sau) ⇒ **Đ24** 01-CONTRACTS §2c, H10 nhánh `openrouter` ⇒ R10 ✅ (đột biến `data_collection`, 402 đều bị bắt). Nhưng tài khoản 0 USD (G23: `limit` của key ≠ số dư; probe SO dùng `max_tokens` 200 nên lọt).
+- Số cuối: `npm test` 245, `test:db` 122, gate 0, 0 skip (SO đo lại DB rỗng).
+
+### ⏭ Treo
+- 🖐 Tín dụng model (nạp OpenRouter ~1 USD/lượt hoặc chờ quota Gemini) ⇒ H08 vòng 3 chấm lại, phán R08, commit/bỏ prompt `resident.ts` đang treo.
+- 🖐 Thử `/zalo` đăng nhập → đăng xuất → đăng nhập lại; thử agent qua Zalo thật. Push (chưa push từ `d1070cc`).
+- SO: `.env.example` pacer (`PACER_MAX_PER_MINUTE` 10, bỏ `PACER_MIN_INTERVAL_MS`, `ZALO_ACCOUNTS`).

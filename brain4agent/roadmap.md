@@ -20,12 +20,13 @@ Thứ tự (Đ13, Đ15): `P01 → P03 → P05 → P06 → P08`; P04 tối thiể
 - [x] P01 — Nền tảng + SimTransport (chat giả lập `/dev/sim`, kịch bản `evals/scenarios`) — G01–G03 ✅ local, 2026-09-24
 - [ ] P04 — Dashboard BQL tối thiểu + thợ & slot + sổ phí + dữ liệu mô phỏng (🟠) — song song từ P03
 - [ ] P03 — Agent cư dân bước 0–3 (🔴/🟠) — **mã đã duyệt 2026-09-25** (thẩm định R05 + vòng vá H06); còn gate G08–G10 chờ máy chấm model thật
-- [ ] **Kế tiếp:** máy chấm bằng model thật (Đ19-4 + Đ21): G09/G10 qua vòng agent thật, golden khẩn cấp hai lớp (100 ca) + đồng ý (44 ca); vá `eval_golden` thiếu `buildingId`, `HUMAN_TAKEOVER_MIN`, `.env.example`
+- [ ] **Kế tiếp — H08 vòng 3:** máy chấm model thật đã có (R08, mã ✅ SO đo lại); lượt 1: khẩn cấp 100/100, đồng ý 92% (0 nhận nhầm), chẩn đoán 97,3%, **trách nhiệm 86,7% < 90%** (R25/R29 kết luận `resident` khi thiếu căn cứ). Sửa prompt `resident.ts` đang treo chưa commit ⇒ chạy lại 1 lượt khi có tín dụng model (🖐 Gemini hết quota, OpenRouter 0 USD)
 - [ ] P05 — Agent bước 4–7: job ẩn danh → nhóm thợ giữ slot → chốt → ticket cấp quyền → giao việc + luật slot/dùng thử (🔴)
 - [ ] P06 — Agent bước 8: theo dõi, nghiệm thu, đóng case, điểm thợ, giá thật (🟠)
 - [ ] P08 — Sổ lợi ích ba bên: phiếu hoàn thành, bảng thu nhập thợ, thẻ Hiệu quả tháng, luật cân bằng slot (🟠)
 - [x] P02 giai đoạn 1 — Zalo `bql` trên máy dev (Đ22): mã R07 ✅; chạy thử người: QR ✅, `REGISTER_REPLY` ✅ — 2026-09-25
-- [ ] P02 giai đoạn 1 — việc kế: nút đăng xuất + trạng thái "đã quét, chờ xác nhận" + đồng hồ QR; thử agent chẩn đoán/khẩn cấp qua Zalo thật
+- [x] P02 UI Zalo (H09, SPEC-P02 §9.8): đăng xuất + trạng thái QR + migration 005 — R09 ✅ 2026-09-25
+- [ ] 🖐 Thử người `/zalo` (đăng nhập → đăng xuất → đăng nhập lại) + thử agent chẩn đoán/khẩn cấp qua Zalo thật
 - [ ] P02 giai đoạn 2 — `market` + nhóm thợ + ảnh + cột `outbox.sent_at` (cùng P05) (🔴)
 - [ ] P07 — Golden + deploy VPS + backup (🟠)
 
@@ -36,6 +37,8 @@ Thứ tự (Đ13, Đ15): `P01 → P03 → P05 → P06 → P08`; P04 tối thiể
 - **Tinh gọn UI dashboard BQL** — người dùng: "ổn nhưng chưa tối ưu, rối mắt, fix sau" (Đ11).
 
 ## 💡 Kho Ý Tưởng & Backlog (Idea Vault)
+
+- Máy chấm: cờ chọn bộ (`--set responsibility`) để chạy lại riêng bộ trượt, tiết kiệm token (một lượt đủ 4 bộ ≈ 1 triệu token vào). Chưa làm vì ngoài phạm vi H08.
 
 - **Khoá chống chạy hai bản worker/runner** (advisory lock Postgres) — giai đoạn 1 chỉ là luật vận hành (R07 Q5).
 
@@ -59,6 +62,8 @@ Thứ tự (Đ13, Đ15): `P01 → P03 → P05 → P06 → P08`; P04 tối thiể
 - **Nhận tin nhắn thoại của thợ** (speech-to-text) — thợ quen gửi voice.
 
 ## Đã hoàn thành (Done)
+
+- [x] **2026-09-25 — Máy chấm model thật + sửa cột danh mục + UI Zalo + nhánh OpenRouter:** lượt chấm đầu ra chẩn đoán 0/40 ⇒ SO tìm lỗi sản phẩm `save_job_draft` không ghi cột `jobs.category_code` (Đ23, SPEC-P03 §11.11) ⇒ sửa xong chẩn đoán 97,3%. Máy chấm mới `scripts/eval/{score,red-fake-model}.mjs` chạy vòng agent thật, biết đỏ với model giả. H09 đăng xuất/QR (R09 ✅ sau vòng test DB web chập chờn). H10 nhánh `openrouter` (Đ24, 01-CONTRACTS §2c, R10 ✅). `npm test` 245, `test:db` 122, 0 skip.
 
 - [x] **2026-09-25 — P02 giai đoạn 1 (Zalo thật, Đ22):** worker zca-js 2.2.0 cho `bql` (phiên AES-256-GCM, QR qua DB, luồng vào chống trùng, pacer, watchdog), runner `core:run`, `/zalo`, `dev:link-zalo`, migration 004. R07 ✅ sau 2 vòng (test đếm migration ghi cứng). `npm test` 229, `test:db` 110. Chạy thử với Zalo phụ: QR, nhận tin, trả lời mời đăng ký, bỏ tin nhóm — đạt.
 

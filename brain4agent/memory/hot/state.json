@@ -31,31 +31,43 @@
     "license": ""
   },
   "last_milestone": {
-    "id": "P02-g1",
-    "verdict": "approved_code",
+    "id": "H10-openrouter",
+    "verdict": "approved",
     "approved_at": "2026-09-25",
-    "head": "bf58e37",
+    "head": "see git log",
     "tests": {
-      "unit": 229,
-      "db": 110,
+      "unit": 245,
+      "db": 122,
       "fail": 0,
       "skip": 0
     },
     "so_remeasured": true,
+    "eval_real_run1": {
+      "emergency": "100/100",
+      "consent_recall": 0.92,
+      "consent_false_accept": 0,
+      "diagnosis": 0.973,
+      "responsibility": 0.867,
+      "gate_G08_G10": "pending"
+    },
+    "blocked_by": "model credit (gemini quota 429, openrouter 0 USD)",
     "live": {
       "qr": "ok",
       "inbound": "ok",
       "register_reply": "ok",
+      "logout_ui": "pending_human",
       "agent_turn": "pending"
     }
   },
-  "next": "judge R08 (G08-G10), Zalo UI package (logout, QR state), live agent test via Zalo, SPEC-P05",
+  "next": "H08 round 3 real eval (needs model credit), judge R08; human test /zalo logout; .env.example pacer; SPEC-P05",
   "approved": [
     "P01",
     "P03-code",
     "H04-gemini",
-    "P02-g1-code"
+    "P02-g1-code",
+    "P02-ui",
+    "H10-openrouter"
   ],
   "llm_provider": "gemini",
-  "decisions_latest": "D22"
+  "decisions_latest": "D24"
 }

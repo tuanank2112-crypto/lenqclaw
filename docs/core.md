@@ -7,7 +7,7 @@ Lõi nghiệp vụ: adapter, kiểu miền, lỗi có kiểu, máy trạng thái
 | Đường dẫn | Vai trò |
 | :-- | :-- |
 | `src/adapters/db.ts` | Nơi DUY NHẤT mở kết nối Postgres (`pg`). `sql<T>(text, params)`, `tx(fn)`, `closeDb()`. Pool tạo lười ⇒ build không cần `DATABASE_URL` (BB-07) |
-| `src/adapters/model.ts` | Nơi DUY NHẤT gọi LLM. `MODEL_PROVIDER` = `gemini` (mặc định, `fetch` tới `generateContent`, key ở header) \| `anthropic` (SDK). `callModel(c)` giữ dạng Anthropic, adapter dịch vào/ra + giữ `thoughtSignature`; `MODEL_FALLBACKS` khi 429/503/mạng; `max_tokens` 16000; `callTriageModel` (route `triage`, `MODEL_TRIAGE`, quá hạn `TRIAGE_TIMEOUT_MS`, không retry). Test: `setModelClientForTest`, `setGeminiFetchForTest`, `setTriage*ForTest`. Ghi `agent_runs` mỗi lần gọi |
+| `src/adapters/model.ts` | Nơi DUY NHẤT gọi LLM. `MODEL_PROVIDER` = `gemini` (mặc định, `fetch` tới `generateContent`, key ở header) \| `anthropic` (SDK) \| `openrouter` (Đ24, 01-CONTRACTS §2c: `fetch` tới `/chat/completions` dạng OpenAI, `OPENROUTER_API_KEY`, luôn `provider.data_collection='deny'`, mặc định `google/gemini-3.6-flash`, 402 hết tín dụng ⇒ không retry/fallback). `callModel(c)` giữ dạng Anthropic, adapter dịch vào/ra + giữ `thoughtSignature`; `MODEL_FALLBACKS` khi 429/503/mạng; `max_tokens` 16000; `callTriageModel` (route `triage`, `MODEL_TRIAGE`, quá hạn `TRIAGE_TIMEOUT_MS`, không retry). Test: `setModelClientForTest`, `setGeminiFetchForTest`, `setOpenRouterFetchForTest`, `setTriage*ForTest`. Ghi `agent_runs` mỗi lần gọi |
 | `src/adapters/transport.ts` | Interface `Transport`; `enqueue()` là hàm DUY NHẤT ghi `outbox` (BB-04); `createTransport()` theo `TRANSPORT` (`sim` mặc định, `zalo` ⇒ lỗi "P02 chưa làm") |
 | `src/domain/types.ts` | Kiểu 01-CONTRACTS §6 + `JobStatus`. `JobCard` không có khoá PII (BB-02) |
 | `src/domain/errors.ts` | Lỗi có kiểu 01-CONTRACTS §9 (gồm `ConsentMissingError`, `VerdictLockedError`, `InvalidCategoryError`) + `IllegalTransitionError`; mỗi lớp có `code` = tên lớp |
@@ -34,7 +34,7 @@ Lõi nghiệp vụ: adapter, kiểu miền, lỗi có kiểu, máy trạng thái
 | `npm run db:migrate` · `npm run db:seed` | Áp migration (`applied: N`) · seed nền |
 | `npm run create-admin -- --email <e> --role bql_admin` | Tạo admin, gõ mật khẩu qua stdin |
 | `npm run db:seed:sim` | dữ liệu mô phỏng — từ chối (exit 1) nếu env `DATA_MODE≠sim`, script KHÔNG tự đặt; `test:db` seed qua `scripts/seed-sim-for-test.mjs`. Quy chế `QC-DEMO`, cư dân `sim-res-1..3` (active), `sim-res-9` (pending), `price_book` |
-| `npm run eval:golden` | chấm golden (một lượt — CHỈ là khói, Đ19-4); thiếu credential của provider/429/5xx ⇒ `blocked`, exit 3. Chạy với model thật: `npx tsx --env-file=.env scripts/eval_golden.mjs` |
+| `npm run eval:golden` | máy chấm 4 bộ golden qua VÒNG AGENT THẬT (`scripts/eval/score.mjs`, H08): chẩn đoán/trách nhiệm đọc `jobs` từ DB sim (mỗi ca một cư dân mới, tối đa 4 lượt), khẩn cấp hai lớp, đồng ý theo §11.5. Exit 0 đạt · 1 trượt · 3 `blocked` (thiếu credential, hoặc >10% ca lỗi 429/5xx). Cần DB đã migrate + seed + seed:sim. Chạy thật: `npx tsx --env-file=.env scripts/eval_golden.mjs` (~1 triệu token vào/lượt). Chứng minh biết đỏ: `scripts/eval/red-fake-model.mjs` |
 | `npm test` · `npm run test:db` | Test không DB · test cần `DATABASE_URL` (thiếu ⇒ exit 1, không skip) |
 | `npm run gate` | typecheck → build → test → `check_adapter_boundary` → `check_agent_tools` |
 
@@ -45,3 +45,5 @@ Lõi nghiệp vụ: adapter, kiểu miền, lỗi có kiểu, máy trạng thái
 - Import `pg`/`@anthropic-ai/sdk`/`zca-js`/`@google/genai` hoặc chuỗi `generativelanguage.googleapis.com` ngoài adapter ⇒ `gate` đỏ.
 - Regex trên tiếng Việt: CẤM `\b` (chỉ hiểu ASCII) — dùng `(?<![\p{L}\p{N}])…(?![\p{L}\p{N}])` với cờ `u` (gotcha G14).
 - Test gọi model phải tự đặt `MODEL_PROVIDER`, không dựa vào mặc định (G16).
+- Danh mục việc đọc từ CỘT `jobs.category_code` (SPEC-P03 §11.11, G21); `save_job_draft` ghi cột cùng câu lệnh với `draft`.
+- `handoff_to_staff` tiếp quản `HUMAN_TAKEOVER_MIN` phút (env, mặc định 60).

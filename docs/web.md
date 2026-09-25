@@ -17,7 +17,7 @@ Chỉ tồn tại khi `DATA_MODE=sim` (khác ⇒ 404), chỉ `bql_admin`, render
 
 ## Kết nối Zalo `/zalo` (P02 giai đoạn 1)
 
-Chỉ `bql_admin`. Hiện trạng thái từng tài khoản (banner đỏ khi `kicked`/`dead`/`logged_out`), ảnh QR còn hạn, tự làm mới 3 s. `POST /api/zalo/{account}/login` đặt `zalo_accounts.login_requested_at` để worker mở QR; `GET /api/zalo/status`. Chưa có: nút đăng xuất, trạng thái "đã quét, chờ xác nhận", đồng hồ đếm ngược (việc kế).
+Chỉ `bql_admin`. Hiện trạng thái từng tài khoản (banner đỏ khi `kicked`/`dead`/`logged_out`), ảnh QR còn hạn, tự làm mới 3 s. `POST /api/zalo/{account}/login` đặt `zalo_accounts.login_requested_at` để worker mở QR; `GET /api/zalo/status`. Trạng thái QR (SPEC-P02 §9.8, cột `qr_state`): chờ quét → "đã quét, chờ xác nhận trên điện thoại" → hết hạn/bị từ chối (không tự xin QR mới), kèm đồng hồ còn hạn; logic hiển thị thuần ở `app/zalo/display.ts`. Nút "Đăng xuất" có hộp xác nhận nói rõ G18; `POST /api/zalo/{account}/logout` (chỉ `bql_admin`) xoá `session_enc` + `qr_*`, đặt `logged_out` và `logout_requested_at` trong CÙNG câu lệnh (worker không chạy vẫn không để phiên mồ côi), audit `zalo.logout` ghi ở web. Test DB web chạy tuần tự (`fileParallelism: false`, G24).
 
 ## Chạy
 
