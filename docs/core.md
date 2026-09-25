@@ -21,6 +21,8 @@ Lõi nghiệp vụ: adapter, kiểu miền, lỗi có kiểu, máy trạng thái
 | `src/agent/tools/*` | 8 tool SPEC-P03 §10.3/§11, mỗi file `{definition, run(ctx, input)}`; luật nằm trong tool: citation phải cùng nhãn `party` + cùng tòa, quote lấy từ DB; verdict khoá sau `drafting`; đồng ý = lượt sau + (câu khớp danh sách hoặc triage `consent` ≥0.8); `urgency='emergency'` đơn điệu. `tool-kit.ts`: `validateToolInput` |
 | `src/agent/pii.ts` | `detectEmergency` lớp 1 (hai danh sách có dấu/không dấu, ranh giới Unicode); `redactPii` che SĐT có dấu phân cách ⇒ `[SĐT]`, mã căn (DB + mẫu) ⇒ `[CĂN]`, giữ mã cuốc của chính cư dân |
 | `src/retrieval/search-regulations.ts` | truy hồi từ khoá theo tòa (`buildingId` bắt buộc; token dựng phía TS chỉ `[a-z0-9]`, OR-tsquery, top 8); lỗi DB ⇒ `RegulationUnavailable` |
+| `src/runner/inbound-runner.ts` | Runner `core:run` (Đ22): vòng `processInbound(routeInboundEvent)` mỗi 1 s, đúng MỘT bản, dừng êm khi SIGINT — xử lý tin Zalo thật thay pg-boss ở giai đoạn 1 |
+| `src/dev/link-zalo.ts` | `dev:link-zalo --account bql --resident sim-res-1 [--uid]`: gắn uid Zalo thật (mặc định: người gửi mới nhất chưa có danh tính, không tính tin `is_self`) vào cư dân mô phỏng; `DATA_MODE≠sim` ⇒ exit 1 |
 | `src/db/migrate.ts` · `seed.ts` | Runner migration (`schema_migrations` + checksum sha256; file đã áp bị sửa ⇒ exit 1) · seed nền idempotent (1 tổ chức, tòa `TOA-A`, 20 căn, 12 danh mục, 2 tài khoản Zalo) |
 | `src/scripts/create-admin.ts` | Tạo tài khoản nhân viên; mật khẩu đọc từ stdin |
 

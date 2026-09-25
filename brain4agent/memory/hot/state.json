@@ -31,29 +31,31 @@
     "license": ""
   },
   "last_milestone": {
-    "id": "P03",
+    "id": "P02-g1",
     "verdict": "approved_code",
     "approved_at": "2026-09-25",
-    "head": "65fe108",
+    "head": "bf58e37",
     "tests": {
-      "unit": 173,
-      "db": 76,
+      "unit": 229,
+      "db": 110,
       "fail": 0,
       "skip": 0
     },
     "so_remeasured": true,
-    "gates_pending": [
-      "G08",
-      "G09",
-      "G10"
-    ]
+    "live": {
+      "qr": "ok",
+      "inbound": "ok",
+      "register_reply": "ok",
+      "agent_turn": "pending"
+    }
   },
-  "next": "real-model scorer for G08-G10 (agent loop, emergency 100 + consent 44), then SPEC-P05",
+  "next": "judge R08 (G08-G10), Zalo UI package (logout, QR state), live agent test via Zalo, SPEC-P05",
   "approved": [
     "P01",
     "P03-code",
-    "H04-gemini"
+    "H04-gemini",
+    "P02-g1-code"
   ],
   "llm_provider": "gemini",
-  "decisions_latest": "D21"
+  "decisions_latest": "D22"
 }

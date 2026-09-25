@@ -24,7 +24,9 @@ Thứ tự (Đ13, Đ15): `P01 → P03 → P05 → P06 → P08`; P04 tối thiể
 - [ ] P05 — Agent bước 4–7: job ẩn danh → nhóm thợ giữ slot → chốt → ticket cấp quyền → giao việc + luật slot/dùng thử (🔴)
 - [ ] P06 — Agent bước 8: theo dõi, nghiệm thu, đóng case, điểm thợ, giá thật (🟠)
 - [ ] P08 — Sổ lợi ích ba bên: phiếu hoàn thành, bảng thu nhập thợ, thẻ Hiệu quả tháng, luật cân bằng slot (🟠)
-- [ ] P02 — Zalo thật cắm vào `Transport` (🔴)
+- [x] P02 giai đoạn 1 — Zalo `bql` trên máy dev (Đ22): mã R07 ✅; chạy thử người: QR ✅, `REGISTER_REPLY` ✅ — 2026-09-25
+- [ ] P02 giai đoạn 1 — việc kế: nút đăng xuất + trạng thái "đã quét, chờ xác nhận" + đồng hồ QR; thử agent chẩn đoán/khẩn cấp qua Zalo thật
+- [ ] P02 giai đoạn 2 — `market` + nhóm thợ + ảnh + cột `outbox.sent_at` (cùng P05) (🔴)
 - [ ] P07 — Golden + deploy VPS + backup (🟠)
 
 ## Tương lai (Upcoming)
@@ -34,6 +36,8 @@ Thứ tự (Đ13, Đ15): `P01 → P03 → P05 → P06 → P08`; P04 tối thiể
 - **Tinh gọn UI dashboard BQL** — người dùng: "ổn nhưng chưa tối ưu, rối mắt, fix sau" (Đ11).
 
 ## 💡 Kho Ý Tưởng & Backlog (Idea Vault)
+
+- **Khoá chống chạy hai bản worker/runner** (advisory lock Postgres) — giai đoạn 1 chỉ là luật vận hành (R07 Q5).
 
 - **Lớp hiểu ý cho thợ và BQL (Đ21 mở rộng):** cùng mẫu triage cho tin "nhận"/báo giá của thợ ở P05 và phản hồi BQL — thay regex bằng ý định + luật trong code.
 - **Hiển thị `triage` trong dòng thời gian agent (P04):** BQL thấy vì sao một tin bị coi là khẩn cấp/đồng ý.
@@ -55,6 +59,8 @@ Thứ tự (Đ13, Đ15): `P01 → P03 → P05 → P06 → P08`; P04 tối thiể
 - **Nhận tin nhắn thoại của thợ** (speech-to-text) — thợ quen gửi voice.
 
 ## Đã hoàn thành (Done)
+
+- [x] **2026-09-25 — P02 giai đoạn 1 (Zalo thật, Đ22):** worker zca-js 2.2.0 cho `bql` (phiên AES-256-GCM, QR qua DB, luồng vào chống trùng, pacer, watchdog), runner `core:run`, `/zalo`, `dev:link-zalo`, migration 004. R07 ✅ sau 2 vòng (test đếm migration ghi cứng). `npm test` 229, `test:db` 110. Chạy thử với Zalo phụ: QR, nhận tin, trả lời mời đăng ký, bỏ tin nhóm — đạt.
 
 - [x] **2026-09-25 — P03 mã được duyệt + adapter Gemini:** thẩm định đối kháng R05 tìm 7 lỗi chặn (trích dẫn ngược nhãn, mở case cùng lượt, đồng ý bằng regex, khẩn cấp `chay`=cháy/chảy, 16/20 PII lọt, chốt `DATA_MODE` vô hiệu) ⇒ Đ20 SPEC-P03 §11 + Đ21 lớp hiểu ý (triage) ⇒ H06 hai vòng (vòng 2 vá `\b` ASCII làm tê liệt lưới có dấu). Adapter Gemini H04 (fetch, `thoughtSignature`, fallback, kiểm input tool). `npm test` 173, `test:db` 76, 0 skip.
 

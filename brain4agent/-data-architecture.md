@@ -24,7 +24,7 @@ Nhóm bảng:
 - **Hiểu ý (Đ21):** kết quả `triageMessage` lưu trong `messages.content.triage` của tin vào; `agent_runs.route='triage'` tách chi phí. Tool `open_service_case` đọc từ đó — agent chính không truyền được.
 
 Luồng:
-1. Kênh (`SimTransport` khi phát triển, Zalo worker khi chạy thật — Đ13) → `inbound_events` (chống trùng) → `processInbound`: nhận-trước bằng `UPDATE … SET processed_at … RETURNING`, handler chạy NGOÀI transaction, mỗi tin tối đa một lần (Đ17 a) → pipeline core. pg-boss dời sang P07.
+1. Kênh (`SimTransport` khi phát triển; Zalo worker `bql` từ Đ22 — worker ghi `inbound_events`, runner `core:run` gọi `processInbound`; đăng nhập QR qua cột `zalo_accounts.login_requested_at`/`qr_data_url`/`qr_expires_at`, phiên `session_enc` AES-256-GCM, CAS theo `updated_at` — migration 004) → `inbound_events` (chống trùng) → `processInbound`: nhận-trước bằng `UPDATE … SET processed_at … RETURNING`, handler chạy NGOÀI transaction, mỗi tin tối đa một lần (Đ17 a) → pipeline core. pg-boss dời sang P07.
 2. Core → `outbox` → pacer trong worker → Zalo. Không đường tắt (BB-04).
 3. Ticket là trục (Đ10): `bql_responsibility`/`unclear` (BQL xử lý) · `service_case` (theo dõi việc trong căn) · `access_request` (BQL duyệt/từ chối). Cuốc đi `drafting → awaiting_consent → case_open → published → held → confirmed → access_pending → access_granted → dispatched → in_progress → awaiting_acceptance → accepted → closed` bằng `UPDATE … WHERE status=<from>` + `job_events` trong một transaction (BB-05, BB-09, BB-11).
 4. Cuốc `closed` (tool `close_case`) → cập nhật `price_book` và `vendor_scores` → dùng lại khi đăng cuốc (khung giá, bước 4) và khi lọc thợ đủ điều kiện (bước 5).

@@ -27,3 +27,7 @@ Tổng hợp các lỗi khó, các lưu ý dị biệt hoặc cách workaround �
 - **G15 — Đột biến ký tự CUỐI của base64url không chắc đổi giá trị.** Chữ ký 32 byte = 43 ký tự; ký tự cuối chỉ mang 4 bit thật + 2 bit đệm ⇒ test "sửa 1 byte chữ ký" chập chờn. Đột biến ký tự đầu.
 - **G16 — Đổi giá trị mặc định (vd `MODEL_PROVIDER` sang gemini) làm đỏ test ngầm dựa vào mặc định cũ.** `p03.db.test.ts` dùng fake Anthropic mà không đặt provider ⇒ 9/21 đỏ sau H04. Test gọi model phải tự đặt provider; handoff đổi mặc định phải cho sửa cả test phụ thuộc.
 - **G17 — So khớp chuỗi con sau khi bỏ dấu phá nghĩa tiếng Việt.** `chay` = cháy/chảy/chạy/chay, `khoi` = khói/khỏi ⇒ "nước chảy ra sàn" thành báo cháy. Ý định giao model (Đ21); từ khoá chỉ giữ cụm không nhập nhằng.
+- **G18 — zca-js 2.2.0 không có API đăng xuất.** Xoá `session_enc` + dừng worker chỉ bỏ phiên phía mình; phiên web phía máy chủ Zalo vẫn sống tới khi gỡ trên điện thoại (quản lý thiết bị đăng nhập). Nút "Đăng xuất" phải nói rõ điều này.
+- **G19 — Quét QR chưa đủ, phải bấm xác nhận trên điện thoại.** Chạy thử 2026-09-25: sự kiện `scanned` rồi 1,5 phút sau `expired` vì chưa xác nhận. Trang `/zalo` cần hiện trạng thái "đã quét, chờ xác nhận" + đồng hồ.
+- **G20 — Script npm không tự nạp `.env`.** `npm run core:run`/`zalo:worker`/`eval:golden` đọc `process.env` trần ⇒ dùng `node --env-file=.env --import tsx <file>` hoặc `npx tsx --env-file=.env <file>`; `next dev` cũng không đọc `.env` ở root (chỉ thư mục app) ⇒ nạp vào shell trước (`set -a; . ./.env`).
+

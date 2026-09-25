@@ -27,9 +27,10 @@ P01 XONG 2026-09-24 (R01 ✅, G01–G03 local): monorepo + DB + adapter + auth 3
 Đ16 SPEC-P01 · Đ17 chốt thi công P03 (SPEC-P03 §10: nhận-trước-xử-lý-sau, truy hồi từ khoá, QC-DEMO). Git: github.com/tuanank2112-crypto/lenqclaw (private).
 P03 MÃ ĐÃ DUYỆT 2026-09-25 (thẩm định R05 tìm 7 lỗi chặn ⇒ Đ20 SPEC-P03 §11 ⇒ H06 hai vòng, head 65fe108; npm test 173, test:db 76).
 Adapter Gemini xong (H04). Đ21 (người dùng): HIỂU Ý BẰNG MODEL (triageMessage: khẩn cấp + đồng ý), từ khoá chỉ là lưới an toàn chính xác.
+Đ22: P02 Zalo `bql` giai đoạn 1 XONG MÃ (R07 ✅, zca-js 2.2.0, runner core:run, /zalo QR); thử thật: QR + nhận tin + REGISTER_REPLY đạt.
 Đ18: LLM mặc định Gemini gemini-3.6-flash (key ở .env, gitignore); 01-CONTRACTS §2b. Đời 2 của Gemini 404 với key này (G13).
 Còn chờ người: giữ/bỏ bước cư dân "Đồng ý"; FREE_TRIAL_DAYS, SLOT_FEE_MONTHLY, SLOT_MIN_JOBS_PER_VENDOR, BQL_SHARE_PCT, MIN_EARNINGS_TO_FEE; push.
-Bước kế: máy chấm bằng model thật (G08–G10: vòng agent thật, golden khẩn cấp 100 + đồng ý 44) rồi SPEC-P05.
+Bước kế: phán máy chấm H08 (G08–G10) · gói UI Zalo (đăng xuất, trạng thái QR) · thử agent qua Zalo thật · SPEC-P05 chốt thi công.
 Đọc theo thứ tự: plan.md §2 (Đ01–Đ09) → specs/00-ARCHITECTURE.md → 01-CONTRACTS.md → SPEC gói đang làm.
 Sơ đồ: docs/images/08-pipeline-chuan.png. Bối cảnh chiến lược: docs/SYSTEM-MAP.md. docs/DESIGN.md = v0.1 đã bị thu hẹp (Đ01).
 </repo_nature>

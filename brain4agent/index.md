@@ -57,11 +57,11 @@ project-root/
 ├── planning/                         # [QUẢN LÝ KẾ HOẠCH NÂNG CẤP] Chứa các bản kế hoạch RFCs
 ├── .agents/skills/                   # [WORKSPACE SKILLS] Kỹ năng chuyên dụng cục bộ dự án
 ├── docs/                             # core.md · web.md · zalo-worker.md (module 1-1), SYSTEM-MAP.md, DESIGN.md (v0.1 cũ), images/01…10
-├── apps/web/                         # Next.js 15: auth 3 vai (cookie HMAC), /dev/sim, trang tạm /tickets /gate — P01
-├── apps/zalo-worker/                 # khung rỗng, chờ P02
+├── apps/web/                         # Next.js 15: auth 3 vai (cookie HMAC), /dev/sim, /zalo (QR), trang tạm /tickets /gate
+├── apps/zalo-worker/                 # P02 gđ1: zca-js 2.2.0, phiên bql mã hoá AES-GCM, QR, luồng vào, pacer, watchdog
 ├── packages/core/src/                # adapters/{db,model,transport} · domain/{types,errors,password} · services/{job-state,audit} · sim/ · db/{migrate,seed,seed-sim}
-│                                     # agent/{resident-agent,emergency,triage,pii,job-code,tool-context,prompts/{resident,triage}.ts,tools/*} · retrieval/search-regulations.ts (P03)
-├── db/migrations/                    # 001_init.sql (DDL 01-CONTRACTS §4) · 002_search.sql (unaccent + tsv) · 003_kb_building.sql (quy chế theo tòa, Đ20)
+│                                     # agent/{resident-agent,emergency,triage,pii,job-code,tool-context,prompts/{resident,triage}.ts,tools/*} · retrieval/search-regulations.ts (P03) · runner/inbound-runner.ts · dev/link-zalo.ts (P02)
+├── db/migrations/                    # 001_init.sql (DDL 01-CONTRACTS §4) · 002_search.sql (unaccent + tsv) · 003_kb_building.sql (quy chế theo tòa, Đ20) · 004_zalo_login.sql (QR qua DB, Đ22)
 ├── scripts/                          # check_adapter_boundary.mjs · check_agent_tools.mjs · gate.mjs · eval_golden.mjs (exit 3 = blocked) · seed-sim-for-test.mjs
 ├── evals/                            # scenarios/echo.jsonl · golden/{emergency(100),consent(44),diagnosis,responsibility}.jsonl
 ├── compose.yaml · compose.dev.yaml   # Postgres pgvector:pg16; dev publish 127.0.0.1:55432

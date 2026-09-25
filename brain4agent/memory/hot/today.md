@@ -65,3 +65,14 @@ Phân tích OpenClaw + ZaloClaw (monas-team) với tài khoản Zalo cá nhân �
 - Push các commit hôm nay (chưa push). Giữ/bỏ bước "Đồng ý"; tham số phí.
 - Gói kế: máy chấm model thật (G08–G10) — cần key Gemini trong `.env` (đã có).
 
+## 🏁 Phiên 2026-09-25 (chiều muộn) — Zalo thật giai đoạn 1
+- Push `origin/main` = `d1070cc` (người dùng duyệt). Người dùng hỏi "sao chưa thấy Zalo" ⇒ giải thích Đ13, đề xuất đưa P02 lên song song ⇒ duyệt ⇒ **Đ22** + SPEC-P02 §9.
+- H07 (worker Opus) Zalo `bql` ∥ H08 (Sonnet) máy chấm model thật. R07 🔁 vì test P01 ghi cứng số migration (lại lỗi phạm vi SO) ⇒ vòng 2 ⇒ ✅ (229/110 test).
+- Chạy thử: SO bổ sung `.env` (DATABASE_URL, DATA_MODE, SESSION_SECRET, ZALO_SESSION_KEY sinh ngẫu nhiên), migrate/seed DB dev, bật web + runner + worker nền; người dùng cho phép SO tạo admin `admin@lenqclaw.local` (mật khẩu đã đưa trong chat — tạo lại trước VPS). Quét QR lần 1 hết hạn vì chưa bấm xác nhận (G19); lần 2 `connected`; tin cá nhân ⇒ `REGISTER_REPLY`; tin nhóm bị bỏ; `dev:link-zalo` gắn đúng uid người dùng vào `sim-res-1`.
+- Người dùng hỏi nút refresh QR (có — bấm lại nút) và nút đăng xuất (không có — zca-js không có API, G18) ⇒ SO dừng worker, xoá `session_enc`, audit `zalo.logout_manual`.
+- H08 giữa chừng: khẩn cấp hai lớp 100/100 (0 bỏ sót, 0 báo nhầm), đồng ý 42/44 (0 nhận nhầm); đang chấm chẩn đoán/trách nhiệm.
+
+### ⏭ Treo
+- Gói UI Zalo (đăng xuất, "đã quét chờ xác nhận", đồng hồ QR). Thử agent chẩn đoán/khẩn cấp qua Zalo thật (cần quét QR lại).
+- Phán R08; `.env.example` thêm `PACER_*`/`ZALO_ACCOUNTS`, sửa `PACER_MAX_PER_MINUTE` 20→10, bỏ `PACER_MIN_INTERVAL_MS` (sau khi H08 nhả file).
+
