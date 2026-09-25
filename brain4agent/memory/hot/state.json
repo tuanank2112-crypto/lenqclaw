@@ -31,12 +31,12 @@
     "license": ""
   },
   "last_milestone": {
-    "id": "H10-openrouter",
+    "id": "H11-vyce",
     "verdict": "approved",
     "approved_at": "2026-09-25",
     "head": "see git log",
     "tests": {
-      "unit": 245,
+      "unit": 251,
       "db": 122,
       "fail": 0,
       "skip": 0
@@ -50,24 +50,31 @@
       "responsibility": 0.867,
       "gate_G08_G10": "pending"
     },
-    "blocked_by": "model credit (gemini quota 429, openrouter 0 USD)",
+    "blocked_by": "gemini quota/billing",
     "live": {
       "qr": "ok",
       "inbound": "ok",
       "register_reply": "ok",
       "logout_ui": "pending_human",
       "agent_turn": "pending"
+    },
+    "eval_run3_deepseek": {
+      "emergency": "91/100 (FN 1, FP 8%)",
+      "consent_false_accept": 2,
+      "diagnosis": 0.05,
+      "verdict": "model rejected (D26)"
     }
   },
-  "next": "H08 round 3 real eval (needs model credit), judge R08; human test /zalo logout; .env.example pacer; SPEC-P05",
+  "next": "H08 round 4 on Gemini 3.6 flash (needs quota/billing), judge R08; human test /zalo; .env.example pacer; SPEC-P05",
   "approved": [
     "P01",
     "P03-code",
     "H04-gemini",
     "P02-g1-code",
     "P02-ui",
-    "H10-openrouter"
+    "H10-openrouter",
+    "H11-vyce"
   ],
   "llm_provider": "gemini",
-  "decisions_latest": "D24"
+  "decisions_latest": "D26"
 }

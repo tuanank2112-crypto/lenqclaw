@@ -141,6 +141,10 @@ Lý do: key Gemini trực tiếp hết hạn mức giữa lượt chấm H08 (42
 Lý do: Gemini hết quota, OpenRouter 0 USD. Vyce là proxy dạng OpenAI ⇒ nhánh `vyce` dùng chung phần dịch của §2c; model `deepseek-v4-flash`. Hệ quả: lượt chấm vòng 3 của H08 chạy LẠI ĐỦ 4 bộ bằng cùng một model (không ghép số Gemini lượt 1 với DeepSeek), và G08–G10 ✅ chỉ có giá trị cho cặp `vyce/deepseek-v4-flash`. Nhánh `vyce` chỉ chạy với `DATA_MODE=sim` (proxy bên thứ ba). Hợp đồng: [01-CONTRACTS §2d](specs/01-CONTRACTS.md); giao H11.
 **Lật được:** có — bỏ `MODEL_PROVIDER=vyce`.
 
+### Đ26 — 2026-09-25 · Cổng G08–G10 chấm bằng Gemini 3.6 flash; DeepSeek qua Vyce bị loại (Super Orchestrator, 🔴)
+Lý do: vòng 3 H08 bằng `vyce/deepseek-v4-flash` — khẩn cấp bỏ sót 1 + báo nhầm 8%, đồng ý nhận nhầm 2, chẩn đoán 2/40 (hỏi dồn 3 câu, không lưu nháp sớm, triage độ tin mâu thuẫn), triage quá hạn 11% dù 8 s. Là chất lượng model, không phải adapter (tool có được gọi). Không sửa prompt cho model không dùng thật (dễ làm lệch hành vi trên Gemini). Nhánh `vyce` giữ trong mã (R11 ✅) nhưng KHÔNG dùng cho agent cư dân. Lượt chấm kế: Gemini 3.6 flash (trực tiếp khi có quota/billing, hoặc OpenRouter khi có tín dụng), đủ 4 bộ, prompt đang treo.
+**Lật được:** có — model khác phải chấm đủ 4 bộ đạt ngưỡng mới dùng.
+
 ### Quyết định bị thay thế
 | Mốc cũ | Phát biểu cũ | Thay bằng | Lý do |
 | :-- | :-- | :-- | :-- |
@@ -204,7 +208,8 @@ Thứ tự bắt buộc (Đ13, Đ15): `P01 (nền tảng + SimTransport) → P03
 - [x] H10 — nhánh OpenRouter trong adapter model (01-CONTRACTS §2c, Đ24) — `da8faac`, R10 ✅ 2026-09-25; `npm test` 245, `test:db` 122
 - [x] 🖐 Tín dụng model cho lượt chấm vòng 3 H08 — người dùng đưa key Vyce (Đ25), 2026-09-25
 - [x] H11 — nhánh `vyce` (01-CONTRACTS §2d) dùng chung phần dịch OpenAI của §2c — `ffbd609`, R11 ✅ 2026-09-25; `npm test` 251, `test:db` 122
-- [ ] H08 vòng 3 — chấm lại đủ 4 bộ bằng `vyce/deepseek-v4-flash`, phán R08
+- [x] H08 vòng 3 — chấm bằng `vyce/deepseek-v4-flash` ⇒ trượt 3 bộ, dừng (Đ26) — `c367fea`
+- [ ] 🖐 Quota/billing Gemini ⇒ H08 vòng 4 chấm đủ 4 bộ bằng Gemini 3.6 flash, phán R08
 - [ ] P04 — Dashboard tối thiểu (G07)
 - [ ] P05 — Agent bước 4–7 (G11, G12, G12b)
 - [ ] P06 — Bước 8 (G13, G16 trọn bước 0→8 trên kênh giả lập)

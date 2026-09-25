@@ -20,7 +20,7 @@ Thứ tự (Đ13, Đ15): `P01 → P03 → P05 → P06 → P08`; P04 tối thiể
 - [x] P01 — Nền tảng + SimTransport (chat giả lập `/dev/sim`, kịch bản `evals/scenarios`) — G01–G03 ✅ local, 2026-09-24
 - [ ] P04 — Dashboard BQL tối thiểu + thợ & slot + sổ phí + dữ liệu mô phỏng (🟠) — song song từ P03
 - [ ] P03 — Agent cư dân bước 0–3 (🔴/🟠) — **mã đã duyệt 2026-09-25** (thẩm định R05 + vòng vá H06); còn gate G08–G10 chờ máy chấm model thật
-- [ ] **Kế tiếp — H08 vòng 3:** máy chấm model thật đã có (R08, mã ✅ SO đo lại); lượt 1: khẩn cấp 100/100, đồng ý 92% (0 nhận nhầm), chẩn đoán 97,3%, **trách nhiệm 86,7% < 90%** (R25/R29 kết luận `resident` khi thiếu căn cứ). Sửa prompt `resident.ts` đang treo chưa commit ⇒ chạy lại đủ 4 bộ bằng `vyce/deepseek-v4-flash` (Đ25) sau khi H11 (nhánh `vyce`) được duyệt
+- [ ] **Kế tiếp — H08 vòng 3:** máy chấm model thật đã có (R08, mã ✅ SO đo lại); lượt 1: khẩn cấp 100/100, đồng ý 92% (0 nhận nhầm), chẩn đoán 97,3%, **trách nhiệm 86,7% < 90%** (R25/R29 kết luận `resident` khi thiếu căn cứ). Sửa prompt `resident.ts` đang treo chưa commit ⇒ chạy lại đủ 4 bộ bằng Gemini 3.6 flash (Đ26: DeepSeek qua Vyce trượt khẩn cấp/đồng ý/chẩn đoán) — 🖐 cần quota/billing Gemini
 - [ ] P05 — Agent bước 4–7: job ẩn danh → nhóm thợ giữ slot → chốt → ticket cấp quyền → giao việc + luật slot/dùng thử (🔴)
 - [ ] P06 — Agent bước 8: theo dõi, nghiệm thu, đóng case, điểm thợ, giá thật (🟠)
 - [ ] P08 — Sổ lợi ích ba bên: phiếu hoàn thành, bảng thu nhập thợ, thẻ Hiệu quả tháng, luật cân bằng slot (🟠)
