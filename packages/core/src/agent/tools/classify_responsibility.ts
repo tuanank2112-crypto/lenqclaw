@@ -76,7 +76,10 @@ async function loadCitationMeta(citations: Citation[], buildingId: string): Prom
 }
 
 /** So sanh theo NGAY o mui gio Asia/Ho_Chi_Minh (G7 — truoc do so UTC). */
-function todayInVietnam(): string {
+/** G7 (R06 vong 2): xuat rieng de test THUAN (`npm test`, vi.useFakeTimers)
+ * canh dung bien UTC vs Asia/Ho_Chi_Minh (UTC+7) — khong phu thuoc gio chay
+ * that cua may CI. */
+export function todayInVietnam(): string {
   return new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Ho_Chi_Minh' }); // 'sv-SE' => "YYYY-MM-DD"
 }
 

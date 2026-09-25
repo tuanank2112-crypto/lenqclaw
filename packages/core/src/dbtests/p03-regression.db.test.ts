@@ -31,7 +31,7 @@ const REPO_ROOT = path.join(__dirname, '..', '..', '..', '..');
 
 const log = (...a: unknown[]) => console.log('REGR|', ...a);
 
-interface Captured { messages: MessageParam[] }
+interface Captured { messages: MessageParam[]; system: unknown }
 function scripted(responses: Message[], delayMs = 0): { client: ModelClientLike; calls: Captured[] } {
   const calls: Captured[] = [];
   let i = 0;
@@ -40,7 +40,7 @@ function scripted(responses: Message[], delayMs = 0): { client: ModelClientLike;
     client: {
       messages: {
         async create(body) {
-          calls.push({ messages: JSON.parse(JSON.stringify(body.messages)) });
+          calls.push({ messages: JSON.parse(JSON.stringify(body.messages)), system: JSON.parse(JSON.stringify(body.system ?? null)) });
           if (delayMs) await new Promise((r) => setTimeout(r, delayMs));
           if (i >= responses.length) throw new Error(`het kich ban o lan ${i + 1}`);
           return responses[i++]!;
@@ -728,5 +728,146 @@ describe('P18 (G6) loi sai trang thai trong tool la loi CO KIEU (khong phai Erro
     log(`P18 tool_result=${tr}`);
     expect(tr.includes('"is_error":true')).toBe(true);
     expect(tr.includes('ConflictError')).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------- (19) N10 — 3 luat vong tool §10.8 (side-effect quan sat duoc)
+describe('P19 (N10) noi NGUYEN content luot truoc (ke ca khoi la) lam luot assistant', () => {
+  it('P19 khoi "la" (type khong phai text/tool_use) o luot 1 phai xuat hien nguyen ven trong request luot 2', async () => {
+    const uid = 'sim-res-1';
+    await resetOpen(uid);
+    const weirdBlock = { type: 'thinking_stub', marker: 'REGR-P19-KHOI-LA', text: 'noi dung nghi (khoi la, khong phai text/tool_use)' } as unknown as Message['content'][number];
+    const s = scripted([
+      msg([weirdBlock, tu('q1', 'get_my_cases', {})]),
+      msg([txt('x')], 'end_turn'),
+    ]);
+    setModelClientForTest(s.client);
+    await send(uid, th('p19'), 'Em hoi vai thu');
+    expect(s.calls.length).toBe(2);
+    const assistantMsg = s.calls[1]!.messages.find((m) => m.role === 'assistant');
+    const ser = JSON.stringify(assistantMsg);
+    log(`P19 assistant message luot 2 gui len co khoi la: ${ser.includes('REGR-P19-KHOI-LA')}`);
+    expect(ser.includes('REGR-P19-KHOI-LA')).toBe(true);
+  });
+});
+
+describe('P20 (N10) MOI tool_result cua mot luot nam trong MOT message user (khong tach nhieu message)', () => {
+  it('P20 hai tool_use trong CUNG mot phan hoi => CHI mot message role=user chua ca hai tool_result o luot ke tiep', async () => {
+    const uid = 'sim-res-2';
+    const s = scripted([
+      msg([tu('r1', 'get_my_cases', {}), tu('r2', 'get_price_band', { category_code: 'khoa_cua' })]),
+      msg([txt('x')], 'end_turn'),
+    ]);
+    setModelClientForTest(s.client);
+    await send(uid, th('p20'), 'Gia sua khoa bao nhieu');
+    const secondCallMessages = s.calls[1]!.messages;
+    const userMessagesWithToolResult = secondCallMessages.filter(
+      (m) => m.role === 'user' && Array.isArray(m.content) && m.content.some((b) => (b as { type?: string }).type === 'tool_result')
+    );
+    const toolResultBlocksTotal = userMessagesWithToolResult.reduce(
+      (sum, m) => sum + (m.content as Array<{ type?: string }>).filter((b) => b.type === 'tool_result').length,
+      0
+    );
+    log(`P20 so message user chua tool_result=${userMessagesWithToolResult.length}, tong so tool_result=${toolResultBlocksTotal}`);
+    expect(userMessagesWithToolResult.length).toBe(1);
+    expect(toolResultBlocksTotal).toBe(2);
+  });
+});
+
+describe('P21 (N10) refusal => KHONG doc content (khong chay tool), handoff + BUSY_REPLY', () => {
+  it('P21 stop_reason=refusal kem mot tool_use trong content => tool KHONG duoc chay, 0 lan goi model tiep', async () => {
+    const uid = 'sim-res-3';
+    await resetOpen(uid);
+    const t = th('p21');
+    const s = scripted([
+      msg([tu('s1', 'get_my_cases', {})], 'refusal'),
+    ]);
+    setModelClientForTest(s.client);
+    const auditBefore = (await sql<{ c: number }>(`select count(*)::int c from audit_log where action='tool.get_my_cases'`))[0]!.c;
+    await send(uid, t, 'Em hoi vai thu ve can ho');
+    const auditAfter = (await sql<{ c: number }>(`select count(*)::int c from audit_log where action='tool.get_my_cases'`))[0]!.c;
+    const out = await outboxTexts(t);
+    log(`P21 model_calls=${s.calls.length} tool_chay_them=${auditAfter - auditBefore} outbox=${JSON.stringify(out)}`);
+    expect(s.calls.length).toBe(1); // 0 lan goi TIEP THEO sau refusal (khong tiep tuc vong)
+    expect(auditAfter - auditBefore).toBe(0); // tool trong content cua phan hoi refusal KHONG duoc chay
+    expect(out).toContain('Xin lỗi, hệ thống đang bận, vui lòng thử lại sau ít phút.');
+    const handoffRows = await sql<{ c: number }>(
+      `select count(*)::int c from audit_log where action='tool.handoff_to_staff' and data->>'reason'='model_refusal'`
+    );
+    expect(handoffRows[0]!.c).toBeGreaterThan(0);
+  });
+});
+
+// ---------------------------------------------------------------- (22) N7/N8 — noi dung ngu canh
+describe('P22 (N7) JobDraft dang mo duoc nap vao ngu canh goi model (da che PII)', () => {
+  it('P22 luot 2 (job da co tu luot 1) => request gui model chua ma cuoc/JobDraft cua job hien tai', async () => {
+    const uid = 'sim-res-1';
+    await resetOpen(uid);
+    const t = th('p22');
+    const s1 = scripted([
+      msg([tu('u1', 'save_job_draft', draft({ category_code: 'khoa_cua', symptoms: ['khoa cua REGR-P22-TRIEUCHUNG'] }))]),
+      msg([txt('Da ghi nhan, hoi them chut.')], 'end_turn'),
+    ]);
+    setModelClientForTest(s1.client);
+    await send(uid, t, 'Khoa cua phong ngu bi hong');
+    const job = await latestJob(uid);
+
+    const s2 = scripted([msg([txt('Da hieu them.')], 'end_turn')]);
+    setModelClientForTest(s2.client);
+    await send(uid, t, 'Da hoi them chut nua ne');
+    const ser = JSON.stringify(s2.calls[0]!.messages);
+    log(`P22 request luot 2 co chua ma cuoc ${job!.code}: ${ser.includes(job!.code)}; co chua trieu chung: ${ser.includes('REGR-P22-TRIEUCHUNG')}`);
+    expect(ser.includes(job!.code)).toBe(true);
+    expect(ser.includes('REGR-P22-TRIEUCHUNG')).toBe(true);
+  });
+});
+
+describe('P23 (N8) danh sach category_code co trong system prompt gui model', () => {
+  it('P23 system prompt (khoi cache/co dinh) chua it nhat vai category_code that tu job_categories', async () => {
+    const uid = 'sim-res-2';
+    await resetOpen(uid);
+    const cats = await sql<{ code: string }>(`select code from job_categories order by code limit 3`);
+    const s = scripted([msg([txt('x')], 'end_turn')]);
+    setModelClientForTest(s.client);
+    await send(uid, th('p23'), 'Em hoi vai thu');
+    const system = JSON.stringify(s.calls[0]!.system ?? '');
+    const missing = cats.filter((c) => !system.includes(c.code));
+    log(`P23 category thieu trong system: ${JSON.stringify(missing.map((c) => c.code))}`);
+    expect(missing).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------- (24) G7 — bien mui gio UTC vs Asia/Ho_Chi_Minh
+// Ham thuan `todayInVietnam()` da co test rieng, tat dinh bang
+// `vi.useFakeTimers()` — xem `agent/tools/classify_responsibility.test.ts`.
+// O day chi kiem TRUC TIEP vong agent that (qua DB that, khong fake duoc
+// dong ho JS trong tien trinh khac) van hoat dong binh thuong khi
+// effective_from = HOM NAY (khong bi ep unclear boi sai so mui gio).
+describe('P24 (G7) hieu luc quy che dung ngay HOM NAY (regression o muc vong agent that)', () => {
+  it('P24 kb_documents.effective_from = hom nay (theo todayInVietnam that) => KHONG bi ep unclear', async () => {
+    const uid = 'sim-res-3';
+    await resetOpen(uid);
+    const { todayInVietnam } = await import('../agent/tools/classify_responsibility.js');
+    const todayVn = todayInVietnam();
+    await sql(
+      `insert into kb_documents (id,title,version,status,effective_from,building_id)
+       values ('QC-P24-VNTZ','Test bien gio VN','1','approved',$1,$2)
+       on conflict (id) do update set effective_from = excluded.effective_from, building_id = excluded.building_id`,
+      [todayVn, TOA_A_ID]
+    );
+    await sql(
+      `insert into kb_sections (document_id,section_id,heading,body)
+       values ('QC-P24-VNTZ','sec01','x','[TRÁCH NHIỆM: CƯ DÂN] Test bien gio VN.')
+       on conflict (document_id, section_id) do update set body = excluded.body`
+    );
+    setModelClientForTest(scripted([
+      msg([tu('v1', 'save_job_draft', draft())]),
+      msg([tu('v2', 'classify_responsibility', { party: 'resident', citations: [{ document_id: 'QC-P24-VNTZ', section_id: 'sec01', quote: 'x' }], reason_vi: 'test bien gio' })]),
+      msg([txt('xong')], 'end_turn'),
+    ]).client);
+    await send(uid, th('p24'), 'Khoa cua hong');
+    const j = await latestJob(uid);
+    log(`P24 today_vn=${todayVn} -> party=${j?.responsibility?.party}`);
+    expect(j?.responsibility?.party).toBe('resident');
   });
 });

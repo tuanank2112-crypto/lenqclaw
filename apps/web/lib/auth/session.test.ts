@@ -30,13 +30,24 @@ describe('session cookie (HMAC-SHA256, SPEC-P01-Foundation.md §7)', () => {
   });
 
   it('sua 1 byte trong chu ky => khong hop le', async () => {
+    // R06 vong 2 (SO do tren HEAD): chu ky HMAC-SHA256 (32 byte) ma hoa
+    // base64url KHONG dem (43 ky tu) — ky tu CUOI CUNG chi mang 4 bit thuc
+    // (256 = 42*6 + 4), 2 bit thap nhat la BIT DEM (luon 0 luc encode, thua
+    // khi decode). Doi ky tu CUOI giua 'A'(000000)/'B'(000001) co xac suat
+    // chi doi bit dem do (khong anh huong 32 byte chu ky that), khien
+    // `base64urlDecode` tra VE Y NGUYEN byte va `crypto.subtle.verify` van
+    // dung — day chinh la nguon flaky SO do duoc. Sua: doi KY TU DAU cua
+    // chu ky thay vi ky tu cuoi — ky tu dau luon ma hoa 6 bit THAT (byte[0]
+    // bits 7..2), moi doi deu chac chan lam sai gia tri byte giai ma =>
+    // tat dinh 100% ĐỎ o day. Chon ky tu thay the KHAC ky tu goc mot cach
+    // tat dinh (khong dua vao so sanh voi 1 hang so co the trung).
     const cookie = await createSessionCookie('staff-1', 'bql_admin');
     const dot = cookie.lastIndexOf('.');
     const body = cookie.slice(0, dot);
     const signature = cookie.slice(dot + 1);
-    const lastChar = signature.at(-1);
-    const replacement = lastChar === 'A' ? 'B' : 'A';
-    const tampered = `${body}.${signature.slice(0, -1)}${replacement}`;
+    const firstChar = signature.at(0)!;
+    const replacement = firstChar === 'A' ? 'B' : 'A';
+    const tampered = `${body}.${replacement}${signature.slice(1)}`;
 
     expect(await verifySessionCookie(tampered)).toBeNull();
   });

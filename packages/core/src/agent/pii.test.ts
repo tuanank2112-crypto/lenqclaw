@@ -14,7 +14,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { detectEmergency, normalizeVi, redactPii } from './pii.js';
+import { EMERGENCY_TERMS_ACCENTED, EMERGENCY_TERMS_UNACCENTED, detectEmergency, normalizeVi, redactPii } from './pii.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.join(__dirname, '..', '..', '..', '..');
@@ -79,6 +79,31 @@ describe('detectEmergency — lop 1 tat dinh (SPEC-P03 §11.1)', () => {
     // eslint-disable-next-line no-console
     console.log(`lop 1 phu ${emergencyCases.length - missed.length}/${emergencyCases.length} ca khan cap (con lai giao lop 2).`);
     expect(missed.length).toBeLessThanOrEqual(emergencyCases.length);
+  });
+});
+
+// R06 vong 2 (SO do tren HEAD `e63c69c`): `\b` trong JS chi hieu ASCII =>
+// mot ky tu ASCII don dung canh ky tu co dau (khong qua khoang trang) bi
+// `\b` coi la "ranh gioi tu", khien `collapseSpacedLetters` gop nham manh
+// vo cua tu co dau ke ben ("bốc" trong "bếp bốc khói" bi xe thanh "p"+"b")
+// va lam TE LIET luoi co dau (A). Vong lap nay sinh test THANG TU CHINH HAI
+// MANG EXPORT (khong chep tay danh sach) — dat MOI cum giua cau co tu CO
+// DAU o CA HAI phia, dung 2 mau cua SO: "bếp {cụm} nghi ngút" va "nhà em
+// {cụm} rồi" — phai bat duoc bang lop 1 (khong can lop 2/model).
+describe('detectEmergency — MOI cum (A)/(B) giua cau co dau hai phia (R06 vong 2, chan tai phat ASCII-\\b)', () => {
+  const allTerms = [...EMERGENCY_TERMS_ACCENTED, ...EMERGENCY_TERMS_UNACCENTED];
+  const templates = [
+    (term: string) => `bếp ${term} nghi ngút`,
+    (term: string) => `nhà em ${term} rồi`,
+  ];
+  const cases = allTerms.flatMap((term) => templates.map((tpl) => ({ term, text: tpl(term) })));
+
+  it(`sinh duoc ${cases.length} ca (${allTerms.length} cum x ${templates.length} mau)`, () => {
+    expect(cases.length).toBe(allTerms.length * templates.length);
+  });
+
+  it.each(cases)('cum "$term" giua cau co dau hai phia: "$text" => phai bat duoc', ({ text }) => {
+    expect(detectEmergency(text)).not.toBeNull();
   });
 });
 

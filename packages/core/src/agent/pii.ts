@@ -17,11 +17,25 @@ export function normalizeVi(text: string): string {
 }
 
 /** Gop day chu cai DON le cach nhau boi `.`/`-`/`_`/khoang trang thanh MOT
- * tu (vd "c.h.á.y" -> "cháy", "c h a y" -> "chay") — SPEC-P03 §11.1 "tien xu
- * ly gop day chu cai don cach boi '.', '-', '_', khoang trang". Toi thieu 2
- * ky tu don lien tiep moi gop (tranh nuot nham tu binh thuong). */
+ * tu (vd "c.h.á.y" -> "cháy") — SPEC-P03 §11.1 "tien xu ly gop day chu cai
+ * don cach boi '.', '-', '_', khoang trang; toi thieu 3 chu cai lien tiep".
+ *
+ * R06 vong 2 (SO do tren HEAD): `\b` trong JS CHI hieu ASCII (`\w` =
+ * [A-Za-z0-9_]) — voi chu co dau, `\b` coi ky tu co dau la "non-word" nen no
+ * TU Y tach mot ky tu ASCII don le dung canh ky tu co dau thanh "tu rieng":
+ * vd "bốc" (b + ố + c) bi `\b` nhin thanh ranh gioi NGAY SAU "b" (vi "ố" la
+ * non-word voi \b), khien "bếp bốc khói" bi hieu la "p"+"b" la hai chu cai
+ * don ke nhau (qua khoang trang) va GOP THANH "pb" => "bếpbốc khói" — luoi
+ * co dau te liet tren chinh cac cum quan trong nhat (§11.1 A). Sua: dung
+ * ranh gioi UNICODE that (`(?<![\p{L}\p{N}])`/`(?![\p{L}\p{N}])`, CAM `\b`)
+ * + doi toi thieu 2 REP (tuc >=3 chu cai) de tranh gop nham cap 2 chu ASCII
+ * that su dung canh nhau (khong con loi ASCII-boundary de xay ra voi 2).
+ */
 function collapseSpacedLetters(text: string): string {
-  return text.replace(/\b\p{L}(?:[.\-_ ]\p{L}){1,}\b/gu, (m) => m.replace(/[.\-_ ]/g, ''));
+  return text.replace(
+    /(?<![\p{L}\p{N}])\p{L}(?:[.\-_ ]\p{L}){2,}(?![\p{L}\p{N}])/gu,
+    (m) => m.replace(/[.\-_ ]/g, '')
+  );
 }
 
 /** Chuan hoa GIU DAU (NFC, chu thuong) — dung cho danh sach (A) §11.1. */
@@ -118,9 +132,13 @@ const PHONE_RE = /(?<!\d)(?:\+?84|0)(?:[\s.\-()]*\d){8,10}(?!\d)/g;
 // SPEC-P03 §11.3(2): (1) apartments.code that cua toa (xu ly rieng, can DB —
 // xem redactPiiForBuilding); (2) sau tu khoa can|can ho|phong|p. la ma;
 // (3) chu(1-2)+so(3-4) khong phan biet hoa thuong.
+// R06 vong 2: doi `\b` sang ranh gioi Unicode that (xem ghi chu o
+// `collapseSpacedLetters`) — `\b` dung canh chu co dau (vd "...ở căn 0105")
+// co the khong bao gio la van de thuc te (tien to ASCII nhieu ky tu it khi
+// la manh vo giua tu co dau), nhung do lai cho chac thay vi suy luan.
 const APT_AFTER_KEYWORD_RE =
-  /\b(c[ăa]n\s*h[ộo]|c[ăa]n|ph[òo]ng|p\.)(\s*)([A-Za-z]{0,2}[\s.\-]?\d{1,2}[\s.\-]?\d{2})/giu;
-const APT_GENERIC_RE = /\b[A-Za-z]{1,2}[\s.\-]?\d{3,4}\b/g;
+  /(?<![\p{L}\p{N}])(c[ăa]n\s*h[ộo]|c[ăa]n|ph[òo]ng|p\.)(\s*)([A-Za-z]{0,2}[\s.\-]?\d{1,2}[\s.\-]?\d{2})/giu;
+const APT_GENERIC_RE = /(?<![\p{L}\p{N}])[A-Za-z]{1,2}[\s.\-]?\d{3,4}(?![\p{L}\p{N}])/gu;
 
 /** Che SDT va ma can TRUOC khi dua vao ngu canh goi model (§11.3). Phien ban
  * THUAN (khong DB) — dung mau chung (2)+(3); ngoai le ma cuoc cua chinh cu
