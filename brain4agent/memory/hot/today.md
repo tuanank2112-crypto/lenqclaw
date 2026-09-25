@@ -95,5 +95,9 @@ Phân tích OpenClaw + ZaloClaw (monas-team) với tài khoản Zalo cá nhân �
 ## 🏁 Phiên 2026-09-25 (khuya) — H08 vòng 4 bằng Gemini
 - Bước 0 exit 0. SO probe Gemini `gemini-3.6-flash` 22:50 ⇒ HTTP 200 (quota đã hồi) ⇒ phụ lục H08 §9 (`c1f51c0`): chấm lại đủ 4 bộ một lần với prompt `resident.ts` đang treo; đạt ⇒ commit prompt; trượt ⇒ đúng 1 vòng sửa; 429 dồn dập ⇒ nộp `blocked`, không đổi provider. Phóng worker 🟠 chạy nền.
 
+- Architect soạn Đ27 (SPEC-P05 §10 + SPEC-P04 §8, 01-CONTRACTS/TESTING/OPERATIONS): hiểu ý thợ bằng model, 9 tool thợ, `runTimers(now)` không pg-boss, migration 006, P04 tối thiểu; tự chạy thử SQL trên DB tách riêng (200 claim/50 cuốc ⇒ 0 hai người thắng; bản hỏng 20). Commit `7dd16e4` CHỜ DUYỆT, Q1–Q10 có giá trị tạm.
+- R08 vòng 4 (`3be813e`): Docker tắt ⇒ worker tự bật lại; quota Gemini cạn giữa lượt ⇒ diagnosis/responsibility blocked, emergency 97/100 (nhiễu hạ tầng) ⇒ SO phán ⛔ DỪNG (G26). Phát hiện: model sập toàn phần ⇒ khẩn cấp gián tiếp chỉ còn lưới từ khoá.
+- 3 file presentation lạ xuất hiện 23:50 (1 ở root) — không phải của agent, chờ người.
+
 ### ⏭ Treo
-- Chờ R08 vòng 4 ⇒ SO đo lại, phán, cập nhật G08–G10.
+- 🖐 quota/billing Gemini; duyệt Đ27 + Q1–Q10; quyết 3 file presentation; câu hỏi đường lùi khẩn cấp khi model sập.

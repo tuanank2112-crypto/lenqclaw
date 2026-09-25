@@ -50,7 +50,7 @@
       "responsibility": 0.867,
       "gate_G08_G10": "pending"
     },
-    "blocked_by": null,
+    "blocked_by": "gemini quota (G26)",
     "live": {
       "qr": "ok",
       "inbound": "ok",
@@ -64,9 +64,15 @@
       "diagnosis": 0.05,
       "verdict": "model rejected (D26)"
     },
-    "eval_run4_gemini": "running (H08 §9, started 2026-09-25 22:55)"
+    "eval_run4_gemini": {
+      "verdict": "blocked (exit 3)",
+      "emergency": "97/100 (noise, infra)",
+      "consent": "42/44, 0 false accept",
+      "diagnosis": "blocked 40/40",
+      "responsibility": "blocked 30/30"
+    }
   },
-  "next": "H08 round 4 on Gemini 3.6 flash running; SO remeasure + judge R08; human test /zalo; .env.example pacer; SPEC-P05",
+  "next": "Human: Gemini quota/billing for ~600 calls; approve D27 -> H12 P05-B; eval re-run; .env.example pacer",
   "approved": [
     "P01",
     "P03-code",
@@ -77,5 +83,6 @@
     "H11-vyce"
   ],
   "llm_provider": "gemini",
-  "decisions_latest": "D26"
+  "decisions_latest": "D27 (pending)",
+  "pending_approval": "D27 (SPEC-P05 §10, SPEC-P04 §8) + Q1-Q10"
 }
