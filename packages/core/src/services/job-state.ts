@@ -36,6 +36,9 @@ export const TRANSITIONS: ReadonlyArray<Transition> = [
   { from: 'held', to: 'confirmed' },
   { from: 'held', to: 'published' },
   { from: 'confirmed', to: 'access_pending' },
+  // SPEC-P05-Dispatch.md §10.0 (L7, Đ27): tho rut (`decline_hold`) hoac BQL
+  // dinh chi sau `confirmed` — chua co duong thoat truoc do.
+  { from: 'confirmed', to: 'published' },
   { from: 'access_pending', to: 'access_granted' },
   { from: 'access_pending', to: 'published' },
   { from: 'access_granted', to: 'dispatched' },

@@ -14,9 +14,13 @@ import { InvalidToolInputError } from '../../domain/errors.js';
 
 export type ToolDefinition = Tool & { strict: true };
 
-export interface AgentTool<TInput = Record<string, unknown>, TOutput = unknown> {
+// SPEC-P05-Dispatch.md §10.1.2 (L6, Đ27): them tham so kieu `TCtx` (mac
+// dinh `ToolContext` — P03 khong doi) de tool phia tho dung
+// `VendorToolContext` (agent/vendor-tool-context.ts) ma khong phai dinh
+// nghia lai `AgentTool`.
+export interface AgentTool<TInput = Record<string, unknown>, TOutput = unknown, TCtx = ToolContext> {
   readonly definition: ToolDefinition;
-  run(ctx: ToolContext, input: TInput): Promise<TOutput>;
+  run(ctx: TCtx, input: TInput): Promise<TOutput>;
 }
 
 // ---------------------------------------------------------------------------

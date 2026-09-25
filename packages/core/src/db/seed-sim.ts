@@ -219,10 +219,137 @@ async function seedPriceBook(buildingId: string): Promise<void> {
   }
 }
 
+// --- SPEC-P05-Dispatch.md §10.11: nhom tho + tran slot + tho mo phong -----
+
+const TRADE_GROUPS = ['dien_nuoc', 'khoa', 'dien_lanh', 'xay_sua'] as const;
+type SeedTradeGroup = (typeof TRADE_GROUPS)[number];
+
+// Danh muc dai dien cho tung nhom nghe (seed nen db/seed.ts) — dung de gan
+// vendor_skills cho tho mo phong.
+const SKILL_CATEGORY_BY_TRADE_GROUP: Record<SeedTradeGroup, string> = {
+  dien_nuoc: 'ong_nuoc_ro',
+  khoa: 'khoa_cua',
+  dien_lanh: 'dieu_hoa_khong_mat',
+  xay_sua: 'cua_ban_le',
+};
+
+async function seedVendorGroups(buildingId: string): Promise<number> {
+  let count = 0;
+  for (const tg of TRADE_GROUPS) {
+    await sql(
+      `insert into vendor_groups (building_id, trade_group, zalo_account_id, thread_id)
+       values ($1,$2,'market',$3)
+       on conflict (building_id, trade_group) do update set thread_id = excluded.thread_id`,
+      [buildingId, tg, `sim-market-${tg}`]
+    );
+    count++;
+  }
+  return count;
+}
+
+async function seedSlotCapacity(buildingId: string): Promise<void> {
+  for (const tg of TRADE_GROUPS) {
+    await sql(
+      `insert into slot_capacity (building_id, trade_group, capacity) values ($1,$2,2)
+       on conflict (building_id, trade_group) do update set capacity = excluded.capacity`,
+      [buildingId, tg]
+    );
+  }
+}
+
+interface VendorSeed {
+  uid: string;
+  fullName: string;
+  phone: string;
+  status: 'active' | 'pending' | 'suspended';
+  tradeGroup: SeedTradeGroup;
+  /** undefined => khong tao vendor_slots (vd 'pending' chua co slot). */
+  slot?: { isTrial: boolean; status: 'active' | 'expired'; daysFromToday: number };
+}
+
+// SPEC-P05-Dispatch.md §10.11 — dung DUNG 7 tho nay (trần dien_nuoc=2 da
+// day boi ven-1+ven-2 => ven-3 xin them se `waitlisted`/`no_slot`).
+const VENDORS: VendorSeed[] = [
+  { uid: 'sim-ven-1', fullName: 'Phạm Văn Thợ Một', phone: '0911000001', status: 'active', tradeGroup: 'dien_nuoc', slot: { isTrial: true, status: 'active', daysFromToday: 20 } },
+  { uid: 'sim-ven-2', fullName: 'Ngô Thị Thợ Hai', phone: '0911000002', status: 'active', tradeGroup: 'dien_nuoc', slot: { isTrial: false, status: 'active', daysFromToday: 25 } },
+  { uid: 'sim-ven-3', fullName: 'Đỗ Văn Thợ Ba', phone: '0911000003', status: 'active', tradeGroup: 'dien_nuoc', slot: { isTrial: true, status: 'expired', daysFromToday: -1 } },
+  { uid: 'sim-ven-4', fullName: 'Bùi Thị Thợ Bốn', phone: '0911000004', status: 'active', tradeGroup: 'khoa', slot: { isTrial: true, status: 'active', daysFromToday: 20 } },
+  { uid: 'sim-ven-5', fullName: 'Vũ Văn Thợ Năm', phone: '0911000005', status: 'pending', tradeGroup: 'dien_nuoc' },
+  { uid: 'sim-ven-6', fullName: 'Đặng Thị Thợ Sáu', phone: '0911000006', status: 'active', tradeGroup: 'dien_lanh', slot: { isTrial: false, status: 'active', daysFromToday: 25 } },
+  { uid: 'sim-ven-7', fullName: 'Lý Văn Thợ Bảy', phone: '0911000007', status: 'active', tradeGroup: 'xay_sua', slot: { isTrial: true, status: 'active', daysFromToday: 20 } },
+];
+
+async function upsertVendorSlot(vendorId: string, buildingId: string, seed: VendorSeed): Promise<void> {
+  if (!seed.slot) return;
+  // Idempotent: xoa slot cu cua CHINH (vendor, building, trade_group) roi
+  // chen lai theo `current_date` — giu so dong khong doi qua nhieu lan chay
+  // (khong dung khi vendor_slots da co job_offers/ledger_entries tham
+  // chieu — seed nay chi chay tren DB moi/DEV, chua co giao dich that).
+  await sql(`delete from vendor_slots where vendor_id = $1 and building_id = $2 and trade_group = $3`, [
+    vendorId,
+    buildingId,
+    seed.tradeGroup,
+  ]);
+  const fee = seed.slot.isTrial ? 0 : 300000;
+  await sql(
+    `insert into vendor_slots (vendor_id, building_id, trade_group, is_trial, period_start, period_end, fee, status)
+     values ($1,$2,$3,$4, current_date, current_date + $5::int, $6, $7)`,
+    [vendorId, buildingId, seed.tradeGroup, seed.slot.isTrial, seed.slot.daysFromToday, fee, seed.slot.status]
+  );
+}
+
+async function seedVendors(buildingId: string): Promise<number> {
+  let count = 0;
+  for (const v of VENDORS) {
+    const existing = await sql<{ party_id: string }>(
+      `select party_id from zalo_identities where zalo_account_id = 'market' and zalo_uid = $1`,
+      [v.uid]
+    );
+    let vendorId: string;
+    if (existing.length > 0) {
+      vendorId = existing[0]!.party_id;
+      await sql(`update vendors set status = $1, full_name = $2, phone = $3 where id = $4`, [
+        v.status,
+        v.fullName,
+        v.phone,
+        vendorId,
+      ]);
+    } else {
+      vendorId = await tx(async (q) => {
+        const rows = await q<{ id: string }>(
+          `insert into vendors (full_name, phone, status) values ($1,$2,$3) returning id`,
+          [v.fullName, v.phone, v.status]
+        );
+        const id = rows[0]!.id;
+        await q(`insert into vendor_buildings (vendor_id, building_id) values ($1,$2) on conflict do nothing`, [
+          id,
+          buildingId,
+        ]);
+        await q(
+          `insert into vendor_skills (vendor_id, category_code) values ($1,$2) on conflict do nothing`,
+          [id, SKILL_CATEGORY_BY_TRADE_GROUP[v.tradeGroup]]
+        );
+        await q(`insert into vendor_scores (vendor_id) values ($1) on conflict do nothing`, [id]);
+        await q(
+          `insert into zalo_identities (zalo_account_id, zalo_uid, party_type, party_id) values ('market',$1,'vendor',$2)
+           on conflict (zalo_account_id, zalo_uid) do nothing`,
+          [v.uid, id]
+        );
+        return id;
+      });
+    }
+    await upsertVendorSlot(vendorId, buildingId, v);
+    count++;
+  }
+  return count;
+}
+
 export interface RunSeedSimResult {
   kbSections: number;
   residents: number;
   priceBookRows: number;
+  vendorGroups: number;
+  vendors: number;
 }
 
 export async function runSeedSim(): Promise<RunSeedSimResult> {
@@ -239,6 +366,9 @@ export async function runSeedSim(): Promise<RunSeedSimResult> {
   await seedKbDocuments(buildingId);
   const residentsCount = await seedResidents(buildingId);
   await seedPriceBook(buildingId);
+  const vendorGroupsCount = await seedVendorGroups(buildingId);
+  await seedSlotCapacity(buildingId);
+  const vendorsCount = await seedVendors(buildingId);
 
   const [{ count: kbSectionsCount }] = await sql<{ count: number }>(
     `select count(*)::int as count from kb_sections`
@@ -248,14 +378,21 @@ export async function runSeedSim(): Promise<RunSeedSimResult> {
     [buildingId]
   );
 
-  return { kbSections: kbSectionsCount, residents: residentsCount, priceBookRows: priceBookCount };
+  return {
+    kbSections: kbSectionsCount,
+    residents: residentsCount,
+    priceBookRows: priceBookCount,
+    vendorGroups: vendorGroupsCount,
+    vendors: vendorsCount,
+  };
 }
 
 async function main(): Promise<void> {
   try {
     const result = await runSeedSim();
     console.log(
-      `seed-sim: kb_sections=${result.kbSections} residents=${result.residents} price_book=${result.priceBookRows}`
+      `seed-sim: kb_sections=${result.kbSections} residents=${result.residents} price_book=${result.priceBookRows} ` +
+        `vendor_groups=${result.vendorGroups} vendors=${result.vendors}`
     );
     await closeDb();
     process.exit(0);

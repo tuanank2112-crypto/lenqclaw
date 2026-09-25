@@ -76,3 +76,7 @@ export type Party = {
 
 /** Vai nhan vien web (SPEC-P01-Foundation.md §7). */
 export type StaffRole = 'bql_admin' | 'bql_staff' | 'guard';
+
+/** SPEC-P05-Dispatch.md §10.1.2 (Đ27): nhom nghe — don vi tinh slot (Đ14),
+ * khop `job_categories.trade_group` / `vendor_groups.trade_group`. */
+export type TradeGroup = 'dien_nuoc' | 'khoa' | 'dien_lanh' | 'xay_sua';

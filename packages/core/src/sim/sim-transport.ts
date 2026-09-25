@@ -26,8 +26,14 @@ export interface SimInboundResult {
 }
 
 /** `INSERT inbound_events ... ON CONFLICT (zalo_account_id, zalo_msg_id) DO NOTHING`.
- * `msgId` mac dinh `sim-<uuid>`; `is_self=false`. */
+ * `msgId` mac dinh `sim-<uuid>`; `is_self=false`.
+ * SPEC-P05-Dispatch.md §10.8.2/01-CONTRACTS §8 (Đ27): `sender_uid='system'`
+ * la gia tri DANH RIENG cho su kien he thong (`services/system-events.ts`)
+ * — kenh gia lap PHAI tu choi, giong nguoi that (uid Zalo la so). */
 export async function simInbound(args: SimInboundArgs): Promise<SimInboundResult> {
+  if (args.senderUid === 'system') {
+    throw new Error('simInbound: senderUid="system" la gia tri danh rieng cho su kien he thong.');
+  }
   const msgId = args.msgId ?? `sim-${randomUUID()}`;
   const rows = await sql<{ id: number }>(
     `insert into inbound_events (zalo_account_id, zalo_msg_id, thread_id, thread_type, sender_uid, is_self, payload)
@@ -156,10 +162,17 @@ export interface RunScenarioResult {
   outbound: number;
 }
 
-/** `evals/scenarios/*.jsonl`: voi moi dong: `simInbound` -> `processInbound(echoHandler)`
+/** `evals/scenarios/*.jsonl`: voi moi dong: `simInbound` -> `processInbound(handler)`
  * -> `simDeliver`. `inbound`/`outbound` chi tinh cac dong KHONG trung
- * `msg_id` (dong trung bi loai o `simInbound`, khong sinh outbox). */
-export async function runScenario(filePath: string): Promise<RunScenarioResult> {
+ * `msg_id` (dong trung bi loai o `simInbound`, khong sinh outbox).
+ * SPEC-P05-Dispatch.md §10.0 (L8, Đ27): `handler` mac dinh `echoHandler`
+ * (test P01 `echo.jsonl` giu nguyen hanh vi) — route phat lai
+ * `/api/dev/sim/replay` (apps/web, ngoai pham vi P05-B) truyen
+ * `routeInboundEvent` de kich ban chay QUA agent that. */
+export async function runScenario(
+  filePath: string,
+  handler: InboundHandler = echoHandler
+): Promise<RunScenarioResult> {
   const content = await readFile(filePath, 'utf8');
   const lines = content
     .split('\n')
@@ -185,7 +198,7 @@ export async function runScenario(filePath: string): Promise<RunScenarioResult> 
       continue;
     }
     inbound++;
-    await processInbound(echoHandler);
+    await processInbound(handler);
     const { delivered } = await simDeliver();
     outbound += delivered;
   }

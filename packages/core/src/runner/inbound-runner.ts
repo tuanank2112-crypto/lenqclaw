@@ -8,6 +8,8 @@ import { pathToFileURL } from 'node:url';
 import { closeDb } from '../adapters/db.js';
 import { processInbound, type InboundHandler } from '../sim/sim-transport.js';
 import { routeInboundEvent } from '../agent/resident-agent.js';
+import { runTimers, type TimerReport } from '../services/timers.js';
+import { readDispatchConfig } from '../services/dispatch-config.js';
 
 export const RUNNER_INTERVAL_MS = 1000;
 
@@ -18,6 +20,11 @@ export interface RunnerOptions {
   /** Goi sau moi tin da xu ly (test/log). */
   onProcessed?: () => void;
   onError?: (err: unknown) => void;
+  /** SPEC-P05-Dispatch.md §10.8.3: goi sau moi lan `runTimers` chay
+   * (test/log). Khong truyen => dung `TIMER_INTERVAL_MS` mac dinh cua
+   * `readDispatchConfig()`. */
+  onTimers?: (report: TimerReport) => void;
+  timerIntervalMs?: number;
 }
 
 /** Xu ly het tin dang cho (tung tin mot). Tra so tin da xu ly. */
@@ -44,16 +51,31 @@ function sleep(ms: number, signal?: AbortSignal): Promise<void> {
   });
 }
 
-/** Vong lap chinh: moi `intervalMs` rut het hang doi. Loi DB tam thoi ⇒ log, thu lai vong sau. */
+/** Vong lap chinh: moi `intervalMs` rut het hang doi, roi (SPEC-P05-Dispatch.md
+ * §10.8.3) neu da qua `timerIntervalMs` tu lan chay dong ho truoc thi goi
+ * `runTimers(new Date())` mot lan. Loi DB tam thoi ⇒ log, thu lai vong sau;
+ * loi dong ho khong lam dung vong tin nhan (rieng `onError`). */
 export async function runInboundLoop(opts: RunnerOptions = {}): Promise<void> {
   const handler = opts.handler ?? routeInboundEvent;
   const interval = opts.intervalMs ?? RUNNER_INTERVAL_MS;
+  const timerIntervalMs = opts.timerIntervalMs ?? readDispatchConfig().timerIntervalMs;
+  let lastTimerAt = 0;
   while (!opts.signal?.aborted) {
     try {
       const n = await drainInbound(handler, opts.signal);
       for (let i = 0; i < n; i++) opts.onProcessed?.();
     } catch (err) {
       opts.onError?.(err);
+    }
+    const now = Date.now();
+    if (now - lastTimerAt >= timerIntervalMs) {
+      lastTimerAt = now;
+      try {
+        const report = await runTimers(new Date(now));
+        opts.onTimers?.(report);
+      } catch (err) {
+        opts.onError?.(err);
+      }
     }
     await sleep(interval, opts.signal);
   }
@@ -83,6 +105,9 @@ async function main(): Promise<void> {
     onError: (err) => {
       const msg = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
       console.error(JSON.stringify({ t: new Date().toISOString(), event: 'runner.error', error: msg.slice(0, 300) }));
+    },
+    onTimers: (report) => {
+      console.log(JSON.stringify({ t: new Date().toISOString(), event: 'runner.timers', ...report }));
     },
   });
   await closeDb();

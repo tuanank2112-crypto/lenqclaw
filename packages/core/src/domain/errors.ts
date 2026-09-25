@@ -107,6 +107,59 @@ export class VerdictLockedError extends Error {
   }
 }
 
+/** SPEC-P05-Dispatch.md §10.1.2/§10.3.1: ma cuoc khong ton tai hoac khong
+ * thuoc nguoi dang noi. Caller: "Khong tim thay ma cuoc <code>", khong lo
+ * cuoc khac. */
+export class JobNotFoundError extends Error {
+  readonly code = 'JobNotFoundError';
+  constructor(message = 'Khong tim thay ma cuoc nay.') {
+    super(message);
+    this.name = 'JobNotFoundError';
+  }
+}
+
+/** SPEC-P05-Dispatch.md §10.3.1 (confirmAssignment): OK/gia den sau
+ * `hold_expires_at` — tool da nha cuoc (releaseHold) truoc khi nem loi nay. */
+export class HoldExpiredError extends Error {
+  readonly code = 'HoldExpiredError';
+  constructor(message = 'Het han giu, cuoc da duoc dang lai.') {
+    super(message);
+    this.name = 'HoldExpiredError';
+  }
+}
+
+/** SPEC-P05-Dispatch.md §10.3.1 (confirmAssignment): cuoc mode='quote'
+ * thieu gia hoac gia khong khop tin nhan cua tho (§10.4.2). */
+export class QuoteRequiredError extends Error {
+  readonly code = 'QuoteRequiredError';
+  constructor(message = 'Can bao gia truoc khi xac nhan cuoc nay.') {
+    super(message);
+    this.name = 'QuoteRequiredError';
+  }
+}
+
+/** SPEC-P05-Dispatch.md §10.9.2: chua dat tran slot / chua cau hinh nhom
+ * thi / toa mo ho khi tho co nhieu hon 1 toa. */
+export class SlotUnavailableError extends Error {
+  readonly code = 'SlotUnavailableError';
+  constructor(message = 'Chua the cap slot luc nay.') {
+    super(message);
+    this.name = 'SlotUnavailableError';
+  }
+}
+
+/** SPEC-P05-Dispatch.md §10.4.4: tool phia tho (`claim_job`,
+ * `confirm_assignment`, `decline_hold`) khong co bang chung y dinh (triage
+ * du nguong HOAC cum lươi tat dinh khop BANG NHAU) — Đ21/Đ27: model hieu y,
+ * code la lươi an toan; CAM regex "chua" lam co che chinh. */
+export class IntentNotConfirmedError extends Error {
+  readonly code = 'IntentNotConfirmedError';
+  constructor(message = 'Chua xac nhan duoc y dinh cua tho tu tin nhan.') {
+    super(message);
+    this.name = 'IntentNotConfirmedError';
+  }
+}
+
 /** Loi lap trinh: cap (from -> to) khong nam trong bang §5 01-CONTRACTS.
  * CAM caller bat loi nay de "xu ly tiep" (SPEC-P01 §5) — no bao mot bug o
  * noi goi transitionJob, khong phai mot tinh huong nghiep vu binh thuong. */

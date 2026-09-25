@@ -3,7 +3,9 @@
 
 import { randomBytes } from 'node:crypto';
 
-const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+// SPEC-P05-Dispatch.md §10.3.2: `generatePassCode()` (services/access.ts)
+// dung LAI cung bang chu nay — export de khong dinh nghia hai lan.
+export const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 
 export function generateJobCode(): string {
   const bytes = randomBytes(4);
