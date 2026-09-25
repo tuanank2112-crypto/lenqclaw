@@ -54,3 +54,10 @@ Ghi chú: lần chạy `test:db` đầu tiên (baseline) và lần thứ hai (ch
 🖐 Cần tay người: chạy thử thật (quét QR bằng Zalo phụ) để xác nhận UI 4 trạng thái + nút đăng xuất hoạt động đúng trên trình duyệt thật (test hiện tại chỉ cover logic thuần + route DB, chưa render DOM/browser). · 🤖 Agent làm được ngay: cập nhật `docs/zalo-worker.md`/`docs/web.md` phản ánh tính năng mới (đang bị CẤM trong phạm vi gói này). · ⭐ Nên làm trước: chạy thử người trên `/zalo` (đăng nhập → đăng xuất → đăng nhập lại) vì đây là tính năng chạm trực tiếp vào phiên Zalo thật, rủi ro cao nhất nếu có lỗi logic ẩn ngoài phạm vi test giả lập. · ⏸ Chưa làm: cập nhật tài liệu `docs/**` và `brain4agent/**` theo Ma Trận 6 Điểm (bị cấm chạm trong phạm vi handoff này, cần một gói/worker riêng).
 
 ⏳ Chờ người duyệt.
+
+## Duyệt vòng 1 — SO đo lại (2026-09-25)
+- Phạm vi `d6b8cb5`: 11 file, đều trong mục 2 H09 ✅. `typecheck` (web + zalo-worker) exit 0; `npm test` exit 0 (177 + 37 + 24).
+- `test:db` trên DB rỗng `lq_so09`: **exit 1** — `apps/web/tests/zalo-login.db.test.ts:80` nhận `qr_data_url = null`. Chạy lại riêng web 4 lần: đỏ 1/4 (tổng cộng đỏ 2/5). Căn nguyên: `apps/web/vitest.db.config.ts` thiếu `fileParallelism: false` (core và zalo-worker đều có), nên `zalo-logout.db.test.ts` (mới) và `zalo-login.db.test.ts` sửa cùng dòng `zalo_accounts.bql` song song. Report ghi 122/122 xanh là kết quả một lần chạy may mắn.
+- Bộ đo mới biết đỏ: bỏ kiểm vai trong route logout ⇒ 2/4 test đỏ ✅ (đã khôi phục file).
+
+🔁 SỬA: mục 3 "Xong khi" — `test:db` phải xanh ỔN ĐỊNH: thêm `fileParallelism: false` vào `apps/web/vitest.db.config.ts` (mở phạm vi cho đúng file này), rồi `npm run test:db -w @lenqclaw/web` xanh 5 lần liên tiếp + `npm run test:db` toàn bộ trên DB rỗng exit 0; evidence `evidence/P02-ui/{test-db-v2,web-db-5x}.txt`.
