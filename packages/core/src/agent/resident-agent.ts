@@ -12,7 +12,7 @@ import { audit } from '../services/audit.js';
 import type { InboundHandler } from '../sim/sim-transport.js';
 import { echoHandler } from '../sim/sim-transport.js';
 import { vendorHandler } from './vendor-agent.js';
-import { detectEmergency, redactPii, REGISTER_REPLY } from './pii.js';
+import { detectEmergency, redactPii, REGISTER_REPLY, bqlHotline, MODEL_DOWN_REPLY } from './pii.js';
 import { triageMessage, type TriageResult } from './triage.js';
 import { triggerEmergencyFlow } from './emergency.js';
 import { RESIDENT_TOOLS, handoffToStaffTool } from './tools/index.js';
@@ -184,7 +184,7 @@ export async function runResidentTurn(
       });
     } catch (err) {
       if (!(err instanceof ModelUnavailableError)) {
-        // G10: loi khac ModelUnavailableError van bao "dang ban" cho cu dan
+        // G10: loi khac ModelUnavailableError van theo duong lui §11.12
         // NHUNG phai ghi audit rieng (khong nuot im).
         await audit(sql, {
           actorType: 'agent',
@@ -194,7 +194,13 @@ export async function runResidentTurn(
           data: { error: err instanceof Error ? err.name : String(err) },
         });
       }
-      await sendToThread(account, threadId, ctx.conversationId, 'Em đang bận, sẽ trả lời trong vài phút.');
+      // SPEC-P03 §11.12 (Đ31): model sap (ModelUnavailableError HOAC loi
+      // khac) => tra loi kem hotline BQL (CODE, khong phai prompt) + handoff
+      // cho nguoi that ('model_unavailable'). Chong lap: `handoff_to_staff`
+      // dat lai `human_takeover_until`, luot ke tiep bi N3 (§11.6) chan
+      // TRUOC khi vao lai `runResidentTurn` — khong can kiem rieng o day.
+      await sendToThread(account, threadId, ctx.conversationId, MODEL_DOWN_REPLY(bqlHotline()));
+      await handoffToStaffTool.run(ctx, { reason: 'model_unavailable' });
       return;
     }
 

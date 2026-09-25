@@ -202,6 +202,25 @@ export function buildEmergencyReply(hotline: string): string {
   );
 }
 
+/** SPEC-P03 §11.12 (Đ31): hotline BQL DUNG MOT CACH DOC — truoc day
+ * `emergency.ts` doc `BQL_HOTLINE` truc tiep (co fallback '1900-0000');
+ * gom vao ham nay de CA duong khan cap (§11.1/§11.2) LAN duong lui khi model
+ * sap (§11.12) doc CUNG MOT noi, khong doc env o hai cho khac nhau. */
+export function bqlHotline(): string {
+  return process.env.BQL_HOTLINE?.trim() || '1900-0000';
+}
+
+/** SPEC-P03 §11.12 (Đ31): cau tra loi khi `callModel` nem loi (agent chinh
+ * khong con tra loi duoc) — CODE, khong phai prompt. Dan nguyen van tu SPEC:
+ * khong bao dong gia (chi nhac cac dau hieu khan cap da co trong luoi §11.1),
+ * kem hotline BQL de cu dan tu goi neu that su khan cap. */
+export function MODEL_DOWN_REPLY(hotline: string): string {
+  return (
+    `Xin lỗi, hệ thống đang gián đoạn. Ban quản lý đã nhận tin của anh/chị và sẽ liên hệ lại. ` +
+    `Nếu đang có cháy, khói, mùi gas, điện giật, kẹt thang máy hay nước tràn, anh/chị gọi ngay hotline BQL ${hotline}.`
+  );
+}
+
 export const REGISTER_REPLY =
   'Xin chào, hệ thống chưa nhận diện anh/chị là cư dân đã đăng ký của toà nhà. ' +
   'Vui lòng liên hệ Ban quản lý để được hỗ trợ đăng ký căn hộ.';

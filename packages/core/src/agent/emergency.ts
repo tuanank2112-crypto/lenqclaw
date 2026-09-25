@@ -9,7 +9,7 @@
 import { sql } from '../adapters/db.js';
 import { enqueue } from '../adapters/transport.js';
 import { audit } from '../services/audit.js';
-import { buildEmergencyReply } from './pii.js';
+import { buildEmergencyReply, bqlHotline } from './pii.js';
 
 const DEDUPE_WINDOW_MINUTES = 30;
 
@@ -66,8 +66,7 @@ export async function triggerEmergencyFlow(args: TriggerEmergencyArgs): Promise<
     data: { source: args.source },
   });
 
-  const hotline = process.env.BQL_HOTLINE?.trim() || '1900-0000';
-  const reply = buildEmergencyReply(hotline);
+  const reply = buildEmergencyReply(bqlHotline());
   await enqueue({
     zaloAccountId: conv[0]!.zalo_account_id,
     threadId: conv[0]!.thread_id,
