@@ -2,41 +2,52 @@
 
 File này chứa danh sách các tính năng, mục tiêu sắp tới và tình trạng công việc hiện tại.
 
-> Nguồn chi tiết: [`planning/01_2026-09-24_san-viec-tho-mvp/plan.md`](../planning/01_2026-09-24_san-viec-tho-mvp/plan.md) §3–§4. File này chỉ tóm tắt.
+> Nguồn chi tiết: [`planning/02_2026-10-09_zalo-community-agent/plan.md`](../planning/02_2026-10-09_zalo-community-agent/plan.md) §3–§4. File này chỉ tóm tắt.
 
-## Mục tiêu hiện tại (Active) — hồ sơ `01_2026-09-24_san-viec-tho-mvp`, SemVer đích `0.1.0`
+## Mục tiêu hiện tại (Active) — hồ sơ `02_2026-10-09_zalo-community-agent`, SemVer đích `0.1.0`
 
-Thứ tự (Đ13, Đ15): `P01 → P03 → P05 → P06 → P08`; P04 tối thiểu song song từ P03; P02 (Zalo thật) sau; P07 chạy dọc. P00 ngoài phạm vi build.
+Pivot 2026-10-09 (D01): agent chăm sóc cộng đồng Zalo. Bộ SPEC ĐÃ DUYỆT (architect `7a58d6d`, SO `f6a4465`). Thứ tự bắt buộc: `P01 → P02 → P03 → (P04 ∥ P05 ∥ P06 ∥ P07) → P08 → P09`; P08 dựng khung được ngay sau P01.
 
-- [x] 🖐 Người dùng duyệt pipeline v0.2 (Đ10) — 2026-09-24
-- [x] 🖐 Duyệt Đ11 (dashboard + mô phỏng) — 2026-09-24
-- [x] 🖐 Đ13: trọng tâm = xây agent; kinh doanh ra khỏi phạm vi — 2026-09-24
-- [ ] 🖐 Giữ/bỏ bước cư dân "Đồng ý"
-- [x] 🖐 Đ14: phí vào nhóm (slot đồng giá) + miễn phí thời gian đầu TRONG phạm vi — 2026-09-24
-- [x] 🖐 Đ15: sổ lợi ích ba bên hiện trong hệ thống — 2026-09-24 ("gần đúng ý", tinh chỉnh khi viết SPEC-P08)
-- [ ] 🖐 Chốt `FREE_TRIAL_DAYS`, `SLOT_FEE_MONTHLY`, `SLOT_MIN_JOBS_PER_VENDOR`, `BQL_SHARE_PCT`, `MIN_EARNINGS_TO_FEE`, `MINUTES_PER_CASE_BASELINE`
-- [ ] Viết SPEC-P08 "Sổ lợi ích ba bên" + gate G17
-- [x] `git init` + remote private `github.com/tuanank2112-crypto/lenqclaw` — 2026-09-24
-- [x] P01 — Nền tảng + SimTransport (chat giả lập `/dev/sim`, kịch bản `evals/scenarios`) — G01–G03 ✅ local, 2026-09-24
-- [ ] P04 — Dashboard BQL tối thiểu + thợ & slot + sổ phí + dữ liệu mô phỏng (🟠) — song song từ P03
-- [ ] P03 — Agent cư dân bước 0–3 (🔴/🟠) — **mã đã duyệt 2026-09-25** (thẩm định R05 + vòng vá H06); còn gate G08–G10 chờ máy chấm model thật
-- [ ] **Kế tiếp — H08 vòng 3:** máy chấm model thật đã có (R08, mã ✅ SO đo lại); lượt 1: khẩn cấp 100/100, đồng ý 92% (0 nhận nhầm), chẩn đoán 97,3%, **trách nhiệm 86,7% < 90%** (R25/R29 kết luận `resident` khi thiếu căn cứ). Sửa prompt `resident.ts` đang treo chưa commit ⇒ chạy lại đủ 4 bộ bằng Gemini 3.6 flash (Đ26: DeepSeek qua Vyce trượt khẩn cấp/đồng ý/chẩn đoán) — 🖐 cần quota/billing Gemini
-- [ ] P05 — Agent bước 4–7: job ẩn danh → nhóm thợ giữ slot → chốt → ticket cấp quyền → giao việc + luật slot/dùng thử (🔴)
-- [ ] P06 — Agent bước 8: theo dõi, nghiệm thu, đóng case, điểm thợ, giá thật (🟠)
-- [ ] P08 — Sổ lợi ích ba bên: phiếu hoàn thành, bảng thu nhập thợ, thẻ Hiệu quả tháng, luật cân bằng slot (🟠)
-- [x] P02 giai đoạn 1 — Zalo `bql` trên máy dev (Đ22): mã R07 ✅; chạy thử người: QR ✅, `REGISTER_REPLY` ✅ — 2026-09-25
-- [x] P02 UI Zalo (H09, SPEC-P02 §9.8): đăng xuất + trạng thái QR + migration 005 — R09 ✅ 2026-09-25
-- [ ] 🖐 Thử người `/zalo` (đăng nhập → đăng xuất → đăng nhập lại) + thử agent chẩn đoán/khẩn cấp qua Zalo thật
-- [ ] P02 giai đoạn 2 — `market` + nhóm thợ + ảnh + cột `outbox.sent_at` (cùng P05) (🔴)
-- [ ] P07 — Golden + deploy VPS + backup (🟠)
+- [x] Nghiên cứu OpenClaw + zaloclaw (clone chỉ đọc) — 2026-10-09
+- [x] Dựng bộ SPEC (00, 01, P01–P08, OPERATIONS, TESTING) + chạy thử 5 bộ kiểm (`evidence/ARCH/`) — 2026-10-09
+- [x] SO duyệt SPEC, giữ Q1–Q12 giá trị tạm — 2026-10-09
+- [ ] 🖐 Người xác nhận GỠ 94 file sàn thợ (AGENTS §5.L.3) — mở khoá P01
+- [ ] P01 — gỡ sàn thợ, migration 007/008, tài khoản `community`, vai admin/operator, seed, `check_pivot_cleanup` (🟠, G01–G03)
+- [ ] P02 — transport nhóm: worker + action outbox + pacer nhóm + sim nhóm (🟠 thi công · 🔴 thẩm định, G04–G06)
+- [ ] P03 — runtime agent: cổng nhận tin, đệm, ambient, persona, policy tool, host ép trả lời (🔴/🟠, G07, G08, G14, G15)
+- [ ] P04 — tri thức: kho, embedding, truy hồi lai RRF, câu hỏi bỏ trống (🟠, G12)
+- [ ] P05 — kiểm duyệt: lưới + model, thang cảnh cáo, thẻ duyệt, duyệt vào nhóm, chào (🟠 · 🔴 thẩm định, G13, G16)
+- [ ] P06 — lead & trí nhớ: mời riêng, hồ sơ thành viên, thẻ lead, ghi chú ngày (🟠)
+- [ ] P07 — lịch & vận hành: `runTimers`, automations, poll/nhắc/tóm tắt tuần/báo cáo ngày (🟠, G17)
+- [ ] P08 — dashboard: nhóm, persona, thẻ duyệt, lead, kiểm duyệt, tri thức, lịch, dòng thời gian (🟠/🟢, G18)
+- [ ] P09 — 4 golden thật (Gemini) + Zalo thật 7 ngày ≥ 2 nhóm + VPS + bump `0.1.0` (G09–G12, G19, G20)
+- [ ] 🖐 Tài khoản Zalo phụ cho bot (SIM riêng) + 2–3 Zalo thành viên thử + nhóm thử
+- [ ] 🖐 Nội dung persona thật (SOUL/RULES/IDENTITY/CAPABILITIES) + tri thức ban đầu
+- [ ] 🖐 Quota/billing Gemini cho golden (~300–500 lượt gọi/lượt chấm)
+- [ ] 🖐 Thông báo xử lý dữ liệu cho nhóm thật; dọn 5 file lạ (root `lenqclaw_presentation_transcript.pdf`, `docs/*.html`, `docs/*.pdf`, `docs/images/11-*.png`)
+- [ ] 🖐 Q1–Q12 (plan 02 §6) đang dùng giá trị tạm — chốt hoặc giữ
+
+## ⛔ Đã dừng / BỎ — kế hoạch `01_2026-09-24_san-viec-tho-mvp` (Đ32, 2026-10-09)
+
+Người dùng: sàn việc thợ "bỏ đi". Kế hoạch 01 đóng ở trạng thái DỪNG (không nghiệm thu, không phát hành). Mã sàn thợ giữ tới P01 rồi gỡ sau tag `archive/plan-01-marketplace`. Nền P01/P02 cũ (monorepo, DB, adapter, worker, SimTransport, máy chấm) được kế hoạch 02 kế thừa.
+
+Việc treo của kế hoạch 01 — tất cả **BỎ do pivot**: lượt Gemini H08 (`--set diagnosis,responsibility`) và gate G08–G10 sàn thợ · nhả/commit `resident.ts` (đang sửa dở, chưa commit) · P05-D, P05-F · P06 sàn thợ, P07 cũ, P08 sổ lợi ích ba bên · bước cư dân "Đồng ý" · tham số phí (`FREE_TRIAL_DAYS`, `SLOT_FEE_MONTHLY`, `SLOT_MIN_JOBS_PER_VENDOR`, `BQL_SHARE_PCT`, `MIN_EARNINGS_TO_FEE`, `MINUTES_PER_CASE_BASELINE`) · Zalo `market` + nhóm thợ · thử người agent cư dân qua Zalo thật · SPEC-P08 sổ lợi ích · `.env.example` pacer của kế hoạch 01 · P04 dashboard BQL tối thiểu.
 
 ## Tương lai (Upcoming)
 
-- Kênh Zalo OA song song (giữ interface `Transport`), khi nhân rộng 5–10 tòa.
-- Dashboard nhiều tòa, trang minh bạch cho Ban quản trị.
-- **Tinh gọn UI dashboard BQL** — người dùng: "ổn nhưng chưa tối ưu, rối mắt, fix sau" (Đ11).
+- Kênh Zalo OA song song (giữ interface `Transport`), nhiều tài khoản (D12 nới CHECK + `AccountId`).
+- Lịch `cron` (D16, thêm `cron_expr` + `croner`); pg-boss khi > 1 runner (D08).
+- Nhận ảnh/file/voice vào agent (non-goal 0.1).
+- *(Sàn thợ: mọi mục tương lai cũ về nhiều tòa/BQL đã BỎ do pivot.)*
 
 ## 💡 Kho Ý Tưởng & Backlog (Idea Vault)
+
+> Mục của kế hoạch 01 (sàn thợ) bên dưới là LỊCH SỬ — đã BỎ do pivot (Đ32), chỉ giữ ý tưởng dùng lại được. Mục mới của kế hoạch 02 xếp ngay dưới dòng này.
+
+- **Nhận ảnh/file/voice vào agent cộng đồng** (speech-to-text, OCR ảnh chụp lỗi) — non-goal 0.1, cần giới hạn tải file + bộ nhớ.
+- **Zalo OA / nhiều tài khoản `community`** — D12; interface `Transport` đã theo tài khoản.
+- **Lịch `cron` + `croner`** — D16 chỉ làm `at|every|daily|weekly`.
+- **Khoá chống chạy hai runner (advisory lock)** vẫn dùng được cho kế hoạch 02.
 
 - **Khoá chống chạy hai bản worker/runner** (advisory lock Postgres) — giai đoạn 1 chỉ là luật vận hành (R07 Q5).
 
@@ -64,6 +75,8 @@ Thứ tự (Đ13, Đ15): `P01 → P03 → P05 → P06 → P08`; P04 tối thiể
 - **Nhận tin nhắn thoại của thợ** (speech-to-text) — thợ quen gửi voice.
 
 ## Đã hoàn thành (Done)
+
+- [x] **2026-10-09 — Pivot sang agent cộng đồng Zalo:** nghiên cứu OpenClaw + zaloclaw, Đ32 dừng kế hoạch 01, architect dựng bộ SPEC kế hoạch 02 (`7a58d6d`, bằng chứng `evidence/ARCH/`), SO duyệt (`f6a4465`). Chưa đổi mã; P01 chờ người xác nhận gỡ file. Các mục Done bên dưới là của sàn thợ (kế hoạch 01), giữ làm lịch sử và nền tái dùng.
 
 - [x] **2026-09-26 — P05-B nền + P05-C agent thợ + P05-E dashboard tối thiểu (Đ27, Đ30):** migration 006, dịch vụ chốt thợ/cấp quyền/slot/đồng hồ, PiiGate; agent thợ hiểu ý bằng model + 9 tool; `/tickets` duyệt cấp quyền, `/gate`, `/vendors`, `/jobs`, SimBoard Tick; `suspendVendor` có thứ tự + chốt chặn giao việc (vá lỗ PII phát hiện khi duyệt). `npm test` 317, `test:db` 192, 0 skip. Cổng model (G08–G10, golden thợ) chờ Gemini.
 

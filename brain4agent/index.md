@@ -12,12 +12,10 @@ Khi nhận nhiệm vụ, Agent tra cứu bảng này để đọc **chính xác*
 | :--- | :--- | :--- |
 | **Ký ức nóng phiên gần nhất** | [`memory/hot/today.md`](memory/hot/today.md) & [`state.json`](memory/hot/state.json) | Trạng thái máy (JSON), nhật ký làm việc theo phiên và kết quả benchmark gần nhất. |
 | **Khởi động / Quy tắc chung** | [`memory-distill.txt`](memory-distill.txt) | Kernel hiện trạng, Startup Protocol, Tech stack cốt lõi. |
-| **HỒ SƠ ĐANG MỞ — đọc trước khi làm gì** | [`planning/01_2026-09-24_san-viec-tho-mvp/plan.md`](../planning/01_2026-09-24_san-viec-tho-mvp/plan.md) → [`specs/00-ARCHITECTURE.md`](../planning/01_2026-09-24_san-viec-tho-mvp/specs/00-ARCHITECTURE.md) | Quyết định Đ01–Đ09, Work Packages P00–P07, router thứ tự đọc SPEC. |
-| **Pipeline chuẩn (ảnh)** | [`docs/images/08-pipeline-chuan.png`](../docs/images/08-pipeline-chuan.png) | Pipeline v0.2 (đã duyệt): agent điều phối 8 bước giữa cư dân, dashboard BQL, nhóm thợ; bản ASCII ở `docs/SYSTEM-MAP.md` §10. |
-| **Mockup dashboard BQL** | [`docs/images/09-dashboard-bql-mockup.png`](../docs/images/09-dashboard-bql-mockup.png) | Đ11 — tham chiếu P04 (UI còn rối, tinh gọn sau). |
-| **Kinh tế ba bên (ảnh)** | [`docs/images/10-kinh-te-ba-ben.png`](../docs/images/10-kinh-te-ba-ben.png) | Đ15 — dòng tiền, 3 bề mặt lợi ích, luật cân bằng slot. |
-| **Bối cảnh chiến lược + sơ đồ** | [`docs/SYSTEM-MAP.md`](../docs/SYSTEM-MAP.md) | Kiến trúc 6 tầng, nhân rộng, vòng quay dữ liệu, ngách sàn việc thợ, agent tạo giá trị ở đâu. |
-| **Thiết kế cũ (đã thu hẹp)** | [`docs/DESIGN.md`](../docs/DESIGN.md) | v0.1 trợ lý BQL tổng quát — chỉ tham khảo, bị thay bởi Đ01. |
+| **HỒ SƠ ĐANG MỞ — đọc trước khi làm gì** | [`planning/02_2026-10-09_zalo-community-agent/plan.md`](../planning/02_2026-10-09_zalo-community-agent/plan.md) → [`specs/00-ARCHITECTURE.md`](../planning/02_2026-10-09_zalo-community-agent/specs/00-ARCHITECTURE.md) → [`specs/01-CONTRACTS.md`](../planning/02_2026-10-09_zalo-community-agent/specs/01-CONTRACTS.md) | D01–D21, Work Packages P01–P09, bất biến BB-01…BB-12, DDL 007/008 (thiết kế), router thứ tự đọc SPEC. |
+| **SPEC từng gói (kế hoạch 02)** | [`SPEC-P01`](../planning/02_2026-10-09_zalo-community-agent/specs/SPEC-P01-Go-San-Tho.md) gỡ sàn thợ · [`P02`](../planning/02_2026-10-09_zalo-community-agent/specs/SPEC-P02-Transport-Nhom.md) transport nhóm · [`P03`](../planning/02_2026-10-09_zalo-community-agent/specs/SPEC-P03-Runtime-Agent.md) runtime agent · [`P04`](../planning/02_2026-10-09_zalo-community-agent/specs/SPEC-P04-Tri-Thuc.md) tri thức · [`P05`](../planning/02_2026-10-09_zalo-community-agent/specs/SPEC-P05-Kiem-Duyet.md) kiểm duyệt · [`P06`](../planning/02_2026-10-09_zalo-community-agent/specs/SPEC-P06-Lead-Tri-Nho.md) lead · [`P07`](../planning/02_2026-10-09_zalo-community-agent/specs/SPEC-P07-Lich-Van-Hanh.md) lịch · [`P08`](../planning/02_2026-10-09_zalo-community-agent/specs/SPEC-P08-Dashboard.md) dashboard · [`OPERATIONS`](../planning/02_2026-10-09_zalo-community-agent/specs/OPERATIONS.md) · [`TESTING-ACCEPTANCE`](../planning/02_2026-10-09_zalo-community-agent/specs/TESTING-ACCEPTANCE.md) | Mỗi gói một hợp đồng; xong khi theo TESTING-ACCEPTANCE. |
+| **Kế hoạch 01 — ⛔ DỪNG (Đ32), chỉ để tra lịch sử** | [`planning/01_2026-09-24_san-viec-tho-mvp/plan.md`](../planning/01_2026-09-24_san-viec-tho-mvp/plan.md) | Sàn việc thợ (pipeline v0.2, Đ01–Đ32). Không thi công thêm; khôi phục từ tag `archive/plan-01-marketplace` (sẽ đánh ở P01). |
+| **Sơ đồ/tài liệu sàn thợ (lịch sử)** | [`docs/images/08-pipeline-chuan.png`](../docs/images/08-pipeline-chuan.png) · [`09`](../docs/images/09-dashboard-bql-mockup.png) · [`10`](../docs/images/10-kinh-te-ba-ben.png) · [`docs/SYSTEM-MAP.md`](../docs/SYSTEM-MAP.md) · [`docs/DESIGN.md`](../docs/DESIGN.md) | Mô tả sàn thợ/BQL — KHÔNG phản ánh sản phẩm hiện tại (pivot 2026-10-09). |
 | **Tổng quan dự án** | [`project-intro.md`](project-intro.md) | Mục tiêu, kiến trúc tổng thể. |
 | **Kế hoạch nâng cấp & RFCs** | [`planning/`](../planning/) | Thư mục chứa các bản kế hoạch theo chuẩn `[STT]_[YYYY-MM-DD]_[Ten-Ngan]`. |
 | **Lỗi khó / Cạm bẫy / Gotchas** | [`-known-gotchas.md`](-known-gotchas.md) | Tổng hợp các bẫy kỹ thuật và lỗi dị biệt đã gặp. |
@@ -56,16 +54,17 @@ project-root/
 │   └── project-intro.md              # [INTRO] Tổng quan dự án & Tech stack
 ├── planning/                         # [QUẢN LÝ KẾ HOẠCH NÂNG CẤP] Chứa các bản kế hoạch RFCs
 ├── .agents/skills/                   # [WORKSPACE SKILLS] Kỹ năng chuyên dụng cục bộ dự án
-├── docs/                             # core.md · web.md · zalo-worker.md (module 1-1), SYSTEM-MAP.md, DESIGN.md (v0.1 cũ), images/01…10
-├── apps/web/                         # Next.js 15: auth 3 vai (cookie HMAC), /dev/sim, /zalo (QR), trang tạm /tickets /gate
-├── apps/zalo-worker/                 # P02 gđ1: zca-js 2.2.0, phiên bql mã hoá AES-GCM, QR, luồng vào, pacer, watchdog
-├── packages/core/src/                # adapters/{db,model,transport} · domain/{types,errors,password} · services/{job-state,audit} · sim/ · db/{migrate,seed,seed-sim}
-│                                     # agent/{resident-agent,emergency,triage,pii,job-code,tool-context,prompts/{resident,triage}.ts,tools/*} · retrieval/search-regulations.ts (P03) · runner/inbound-runner.ts · dev/link-zalo.ts (P02)
-├── db/migrations/                    # 001_init.sql (DDL 01-CONTRACTS §4) · 002_search.sql (unaccent + tsv) · 003_kb_building.sql (quy chế theo tòa, Đ20) · 004_zalo_login.sql (QR qua DB, Đ22) · 005_zalo_ui.sql (`logout_requested_at`, `qr_state`)
+├── docs/                             # core.md · web.md · zalo-worker.md (module 1-1), SYSTEM-MAP.md, DESIGN.md (v0.1 cũ), images/01…10 (đều mô tả sàn thợ = lịch sử)
+│                                     # ⚠ DƯỚI ĐÂY LÀ MÃ HIỆN CÓ = SÀN THỢ (kế hoạch 01, dừng). P01 (chờ người xác nhận) gỡ 94 file; danh sách: SPEC-P01 §2. Đích: 00-ARCHITECTURE §5.
+├── apps/web/                         # Next.js 15: auth 3 vai (cookie HMAC) → đích admin/operator, /dev/sim, /zalo (QR), trang tạm /tickets /gate (sàn thợ, sẽ gỡ ở P01)
+├── apps/zalo-worker/                 # P02 gđ1: zca-js 2.2.0 (giữ ở kế hoạch 02, đổi tài khoản bql→community), phiên mã hoá AES-GCM, QR, luồng vào, pacer, watchdog
+├── packages/core/src/                # adapters/{db,model,transport} (giữ) · domain/{types,errors,password} · services/{job-state,audit} · sim/ · db/{migrate,seed,seed-sim}
+│                                     # agent/{resident-agent,emergency,triage,pii,job-code,tool-context,prompts/{resident,triage}.ts,tools/*} [sàn thợ — gỡ ở P01; triage/vòng lượt được port sang agent/community/*] · retrieval/search-regulations.ts (P03) · runner/inbound-runner.ts · dev/link-zalo.ts (P02)
+├── db/migrations/                    # 001_init.sql (DDL sàn thợ) · 002_search.sql (unaccent + tsv) · 003_kb_building.sql (quy chế theo tòa, Đ20) · 004_zalo_login.sql (QR qua DB, Đ22) · 005_zalo_ui.sql (`logout_requested_at`, `qr_state`) · 006_dispatch_slots.sql (sàn thợ) · [007/008 = THIẾT KẾ ở kế hoạch 02 01-CONTRACTS §4, thêm ở P01, CHƯA có trong repo]
 ├── scripts/                          # check_adapter_boundary.mjs · check_agent_tools.mjs · gate.mjs · eval_golden.mjs + eval/{score,red-fake-model}.mjs (máy chấm vòng agent thật; exit 0 đạt / 1 trượt / 3 blocked) · seed-sim-for-test.mjs
-├── evals/                            # scenarios/echo.jsonl · golden/{emergency(100),consent(44),diagnosis,responsibility}.jsonl
+├── evals/                            # [golden sàn thợ — gỡ/thay ở P01; 4 golden cộng đồng ở P09] scenarios/echo.jsonl · golden/{emergency(100),consent(44),diagnosis,responsibility}.jsonl
 ├── compose.yaml · compose.dev.yaml   # Postgres pgvector:pg16; dev publish 127.0.0.1:55432
 └── package.json                      # npm workspaces (apps/*, packages/*), v0.0.1
 ```
 
-Layout mã nguồn dự kiến: `planning/01_2026-09-24_san-viec-tho-mvp/specs/01-CONTRACTS.md` §1.
+Layout mã nguồn ĐÍCH (sau P01): `planning/02_2026-10-09_zalo-community-agent/specs/01-CONTRACTS.md` §1 (mới: `agent/community/*`, `services/community-config.ts`, `retrieval/*`).

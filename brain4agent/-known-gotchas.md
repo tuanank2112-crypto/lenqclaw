@@ -12,6 +12,8 @@ Tổng hợp các lỗi khó, các lưu ý dị biệt hoặc cách workaround �
 - **G06 — `getGroupChatHistory` đã chết (404) từ 06/2026.** Không thiết kế gì dựa vào lấy lại lịch sử nhóm.
 - **G07 — Pin đúng phiên bản zca-js** (không `^`); ZaloClaw từng dùng `^2.1.2` và có thể trôi lên bản lỗi.
 
+> **2026-10-09:** G08–G29 sinh ra trong thời sàn việc thợ (kế hoạch 01). Gotcha về Zalo/zca-js, DB, môi trường, model, test vẫn đúng với kế hoạch 02; những mục nói riêng về cuốc/thợ/golden sàn thợ (vd G21, G25, G27, G28) là lịch sử, sẽ gỡ cùng mã ở P01.
+
 ## Môi trường & Config
 
 - **G08 — Máy đo tĩnh quét theo từng dòng thì bỏ lọt.** `check_adapter_boundary` bản đầu cho qua `import {

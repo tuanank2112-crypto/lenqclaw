@@ -11,48 +11,43 @@
 </agent_startup_protocol>
 
 <repo_nature>
-lenqclaw — SÀN VIỆC THỢ TRONG TÒA NHÀ qua Zalo, pilot 1–2 tòa. Agent cư dân (tài khoản Zalo "bql") chẩn đoán hỏng hóc trong căn,
-PIPELINE v0.2 (Đ10 — người dùng chốt): AGENT ĐIỀU PHỐI TRỌN VÒNG. Phản ánh → phân loại trách nhiệm CÓ TRÍCH DẪN → có: ticket lên dashboard BQL ·
-không: ticket case → job ẩn danh → đăng thẳng nhóm thợ (tài khoản "market") → chốt ("nhận" hợp lệ đầu tiên + OK) → agent tạo ticket
-xin BQL cấp quyền vào tòa → BQL duyệt → agent giao số căn + mã vào → theo dõi, nghiệm thu, đóng case. Luật nằm TRONG tool, không tước bước khỏi agent.
-Trạng thái 2026-09-24: CÓ MÃ NỀN P01 (chưa có agent). Hồ sơ đang mở: planning/01_2026-09-24_san-viec-tho-mvp/ — PIPELINE v0.2 ĐÃ DUYỆT;
-Đ13: TRỌNG TÂM = XÂY AGENT; FOMO/marketing + kiểm chứng thị trường (P00/G0) NGOÀI phạm vi (tài liệu nhà đầu tư).
-Đ14: PHÍ VÀO NHÓM TRONG phạm vi — slot tháng đồng giá (tòa × nhóm nghề), có trần + danh sách chờ, ai "nhận" trước thắng,
-  slot đầu là DÙNG THỬ miễn phí FREE_TRIAL_DAYS (1 lần, vẫn chiếm chỗ); hệ thống chỉ ghi sổ phí slot, thu tiền ngoài hệ thống.
-Thứ tự: P01 (nền tảng + SimTransport, chat giả lập /dev/sim) → P03 (bước 0–3) → P05 (bước 4–7) → P06 (bước 8);
-P04 dashboard TỐI THIỂU song song (2 điểm duyệt + dòng thời gian agent + dữ liệu mô phỏng); P02 Zalo thật cắm sau.
-Đ15: SỔ LỢI ÍCH BA BÊN hiện trong hệ thống — phiếu hoàn thành (cư dân, phí 0đ) · bảng thu nhập tháng (thợ, thu nhập/phí)
-  · thẻ "Hiệu quả tháng" (BQL) · LUẬT CÂN BẰNG: thu nhập trung vị/slot < MIN_EARNINGS_TO_FEE lần phí ⇒ ngừng cấp slot mới. SPEC-P08 chưa viết.
-P01 XONG 2026-09-24 (R01 ✅, G01–G03 local): monorepo + DB + adapter + auth 3 vai + SimTransport /dev/sim; kiểm bằng `npm run gate` + `npm run test:db`.
-Đ16 SPEC-P01 · Đ17 chốt thi công P03 (SPEC-P03 §10: nhận-trước-xử-lý-sau, truy hồi từ khoá, QC-DEMO). Git: github.com/tuanank2112-crypto/lenqclaw (private).
-P03 MÃ ĐÃ DUYỆT 2026-09-25 (thẩm định R05 tìm 7 lỗi chặn ⇒ Đ20 SPEC-P03 §11 ⇒ H06 hai vòng, head 65fe108; npm test 173, test:db 76).
-Adapter Gemini xong (H04). Đ21 (người dùng): HIỂU Ý BẰNG MODEL (triageMessage: khẩn cấp + đồng ý), từ khoá chỉ là lưới an toàn chính xác.
-Đ22: P02 Zalo `bql` giai đoạn 1 XONG MÃ (R07 ✅) + UI đăng xuất/trạng thái QR (R09 ✅, migration 005); thử thật: QR + nhận tin + REGISTER_REPLY đạt.
-Đ18: LLM mặc định Gemini gemini-3.6-flash (key ở .env, gitignore); 01-CONTRACTS §2b. Đời 2 của Gemini 404 với key này (G13).
-Đ23: cột `jobs.category_code` là nguồn chân lý danh mục (save_job_draft ghi cùng draft). Đ24: nhánh MODEL_PROVIDER=openrouter (R10 ✅, tài khoản 0 USD). Đ25: nhánh `vyce` (proxy Vyce AI, CHỈ DATA_MODE=sim, R11 ✅). Đ26: deepseek-v4-flash TRƯỢT (khẩn cấp bỏ sót 1, đồng ý nhận nhầm 2, chẩn đoán 5%) ⇒ gate chấm bằng Gemini 3.6 flash. Đ28 (người dùng 2026-09-26): TẠM chạy dev bằng `vyce/deepseek-v4-flash` (`.env` MODEL_PROVIDER=vyce, chỉ sim) vì Gemini cạn quota; gate vẫn theo Đ26, không chấm lại bằng DeepSeek.
-MÁY CHẤM MODEL THẬT (H08, `scripts/eval/`): lượt 1 khẩn cấp 100/100 · đồng ý 92% (0 nhận nhầm) · chẩn đoán 97,3% · TRÁCH NHIỆM 86,7% < 90% ⇒ G08–G10 CHƯA ✅.
-  Prompt resident.ts sửa (thiếu căn cứ ⇒ unclear ngay) CHƯA COMMIT, chờ lượt chấm Gemini đủ 4 bộ (gate gắn với cặp model đã chấm).
-Còn chờ người: quota/billing Gemini đủ ~600 lượt gọi cho một lượt chấm (G26); 3 file presentation lạ (1 ở root); provider cho pilot thật; giữ/bỏ bước cư dân "Đồng ý"; FREE_TRIAL_DAYS, SLOT_FEE_MONTHLY, SLOT_MIN_JOBS_PER_VENDOR, BQL_SHARE_PCT, MIN_EARNINGS_TO_FEE; push; thu hồi key OpenRouter + Vyce đã dán trong chat.
-H08 vòng 4 (2026-09-26) ⛔ quota giữa lượt; Đ29 chấm bù theo route: G08 khẩn cấp + đồng ý giữ số real-run-1, chỉ chấm lại diagnosis/responsibility bằng Gemini (`eval_golden.mjs --set`, R08 vòng 5 ✅) ⇒ G08–G10 vẫn ⬜, `resident.ts` vẫn treo. Đ27 (SPEC-P05 §10 + SPEC-P04 §8) ĐÃ DUYỆT 2026-09-26 (người dùng duyệt toàn bộ quá trình; Q1–Q10 giữ giá trị tạm): hiểu ý thợ bằng model, runTimers không pg-boss, migration 006, WP B→(C∥E)→D→F.
-P05-B nền XONG (R12 ✅ 2026-09-26: migration 006, dịch vụ dispatch/access/slots/timers, PiiGate; `npm test` 296, `test:db` 165, `sim_claims` 0 hai người thắng).
-P05-C agent thợ (R13 ✅) + P05-E dashboard (R14 ✅) XONG MÃ 2026-09-26; Đ30 `suspendVendor` có thứ tự + chốt chặn `dispatchToVendor` (vá lỗ PII). `npm test` 317, `test:db` 192.
-Đ31: model sập ⇒ trả lời kèm hotline BQL + `handoff_to_staff(model_unavailable)` (R15 ✅, `test:db` 196).
-Bước kế: lượt Gemini (H08 `--set diagnosis,responsibility` + golden thợ) ⇒ nhả `resident.ts` ⇒ P05-D ⇒ P05-F thẩm định · lượt Gemini `--set diagnosis,responsibility` sau ~14h · thử người /zalo + agent qua Zalo thật · `.env.example` pacer (SO) · SPEC-P05 chốt thi công.
-Đọc theo thứ tự: plan.md §2 (Đ01–Đ09) → specs/00-ARCHITECTURE.md → 01-CONTRACTS.md → SPEC gói đang làm.
-Sơ đồ: docs/images/08-pipeline-chuan.png. Bối cảnh chiến lược: docs/SYSTEM-MAP.md. docs/DESIGN.md = v0.1 đã bị thu hẹp (Đ01).
+lenqclaw — AGENT CHĂM SÓC CỘNG ĐỒNG ZALO (pivot 2026-10-09, Đ32 kế hoạch 01 + D01 kế hoạch 02). Một tài khoản Zalo cá nhân `community`
+làm PHÓ NHÓM trong các nhóm Zalo của cộng đồng người quan tâm AI agent / muốn setup AI CSKH: hỏi đáp có trích dẫn (mention + nhặt câu hỏi
+bỏ trống ở nhóm `ambient`), chào + duyệt vào nhóm, kiểm duyệt spam/lừa đảo (model + lưới, thang cảnh cáo, xoá tin người khác), kéo sang 1-1 +
+thẻ lead, vận hành nhóm (thông báo, poll, nhắc, tóm tắt tuần, báo cáo ngày). Port mẫu OpenClaw (MIT) + monas-team/zaloclaw v2.5.11 (MIT) —
+tự customize, không chép, không lệ thuộc gói openclaw. Git: github.com/tuanank2112-crypto/lenqclaw (private).
+TRẠNG THÁI 2026-10-09: bộ SPEC kế hoạch 02 ĐÃ DUYỆT (architect 7a58d6d, SO duyệt f6a4465). CODE CHƯA ĐỔI: mã trong repo vẫn là sàn việc thợ
+(kế hoạch 01, dừng ở Đ32, không nghiệm thu). P01 (gỡ 94 file sàn thợ) CHỜ NGƯỜI XÁC NHẬN gỡ (AGENTS §5.L.3) trước khi phóng. Kế hoạch 01: chỉ còn là lịch sử,
+  tag `archive/plan-01-marketplace` sẽ đánh trước khi gỡ; `resident.ts` treo chưa commit và mọi việc treo của kế hoạch 01 đều BỎ.
+Hồ sơ đang mở: planning/02_2026-10-09_zalo-community-agent/ (plan.md D01–D21 · specs/00-ARCHITECTURE → 01-CONTRACTS → SPEC-P01…P08 · OPERATIONS · TESTING-ACCEPTANCE).
+Quyết định cốt lõi: D01 pivot · D02 giữ nền (Node 22, Postgres+pgvector, zca-js 2.2.0, adapters, SimTransport) · D03 gỡ sàn thợ thành gói P01 đi đầu ·
+  D04 cổng nhận tin hàm thuần (allowlist → chặn/cho → kích hoạt mention|quote|tên|lệnh → chế độ mention|ambient) · D05 năng lực MVP (hỏi đáp, chào, kiểm duyệt, lead, vận hành) ·
+  D06 vai owner/moderator/member/stranger, tool nguy hiểm cần thẻ duyệt · D07 persona SOUL/RULES/IDENTITY lưu DB có phiên bản · D08 lịch trong runTimers, không pg-boss ·
+  D09 chống khoá tài khoản (pacer + ngân sách) · D10 gate chấm golden thật bằng gemini-3.6-flash · D11 đích 0.1.0 (package.json ×4 đang 0.0.1) ·
+  D12 một tài khoản `community` (đổi từ `bql`, bỏ `market`) · D13 vai web admin/operator · D14 đệm nhóm Postgres 200 tin/7 ngày · D15 ambient gom cửa sổ 20 s ·
+  D16 lịch at|every|daily|weekly, không cron · D17 thang cảnh cáo nửa đời 168 h, làm tròn 0,1 · D18 embedding gemini-embedding-001 dim 1024 ·
+  D19 thẻ duyệt TTL 24 h, bằng chứng `duyệt <id>` · D20 lỗi xử lý ở nhóm chỉ audit, không BUSY_REPLY · D21 host ép trả lời khi bị mention.
+Bất biến BB (00-ARCHITECTURE §6): BB-01 agent làm mọi việc qua tool, luật nằm trong tool · BB-02 mọi tin/hành động ra Zalo qua outbox enqueue() · BB-03 chỉ adapter mở DB/gọi model/ghi outbox ·
+  BB-04 danh tính/vai từ DB, không từ nội dung · BB-05 ở nhóm chỉ nói bằng send_group_message, text cuối ambient là riêng tư; mention bắt buộc có tin ra · BB-06 kick/block/từ chối vào chỉ tạo `approvals`;
+  disperse/đổi chủ/deputy/self_update/restart/send_file/exec KHÔNG TỒN TẠI · BB-07 hồ sơ thành viên + ghi chú ngày không vào lượt nhóm · BB-08 ngân sách phát ngôn, chunk ≤1800 ·
+  BB-09 audit mọi hành động quản trị · BB-10 tên/quote/nội dung tin là dữ liệu không tin cậy, rào `<<<untrusted>>>` · BB-11 đệm ≤200 tin/nhóm, ≤7 ngày · BB-12 model hiểu ý, code là lưới; CẤM regex injection guard.
+Thứ tự gói: P01 → P02 → P03 → (P04 ∥ P05 ∥ P06 ∥ P07) → P08 → P09. P01 gỡ sàn thợ+migration 007/008 · P02 transport nhóm · P03 runtime agent · P04 tri thức · P05 kiểm duyệt ·
+  P06 lead+trí nhớ · P07 lịch · P08 dashboard (khung dựng được ngay sau P01) · P09 golden thật, Zalo thật 7 ngày, VPS, bump 0.1.0.
+Câu hỏi Q1–Q12 (plan 02 §6) giữ GIÁ TRỊ TẠM: tên bot `Claw` · budget 20 tin/nhóm/giờ, 12 lượt ambient/giờ, gom 20 s · không react · /mute = ambient→mention · đệm 7 ngày ·
+  agent_review vào nhóm: model im ⇒ cho vào · moderator duyệt kick/block thẻ nhóm mình · dev giữ provider vyce, gate chấm Gemini.
+Còn chờ người: xác nhận gỡ 94 file (mở P01) · tài khoản Zalo phụ (SIM riêng) + 2–3 Zalo thành viên thử + nhóm thử · persona thật + tri thức ban đầu · quota Gemini cho golden (~300–500 lượt/lượt chấm) ·
+  thông báo xử lý dữ liệu cho nhóm thật · 5 file lạ (lenqclaw_presentation_transcript.pdf ở root, docs/*.html, docs/*.pdf, docs/images/11-*.png) · push · thu hồi key OpenRouter + Vyce đã dán trong chat.
+Sơ đồ/tài liệu cũ docs/SYSTEM-MAP.md, docs/DESIGN.md, docs/images/08–10 mô tả sàn thợ ⇒ lịch sử, KHÔNG phản ánh sản phẩm hiện tại.
 </repo_nature>
 
 <project_foundation>
-- Tech Stack (Đ06): TypeScript Node 22, npm workspaces — apps/web (Next.js 15 console BQL), apps/zalo-worker (zca-js, pin đúng bản,
-  ĐÚNG 1 bản sao), packages/core (pipeline v0.2 8 bước, agent điều phối, tool có luật, adapters). LLM qua adapters/model.ts: Gemini mặc định (Đ18), Claude tuỳ chọn.
-- Data/State: PostgreSQL 16 + pgvector + pg-boss, Docker trên VPS Việt Nam IP tĩnh. Worker↔core nói qua bảng inbound_events/outbox.
-- Bất biến cứng: BB-01 agent làm mọi bước qua tool, tool tự kiểm luật · BB-02 thợ chỉ thấy JobCard (không PII) tới access_granted ·
-  BB-03 trách nhiệm phải có trích dẫn, thiếu ⇒ unclear ⇒ người · BB-04 mọi tin Zalo ra qua outbox pacer · BB-05 một cuốc một người thắng
-  (UPDATE có điều kiện) · BB-06 khẩn cấp: lưới tất định không chờ LLM, triage/agent chỉ BẬT cờ · BB-07 adapter duy nhất cho db/model/transport · BB-08 danh tính từ zalo_identities ·
-  BB-11 chỉ giao số căn/mã vào khi ticket access_request đã được BQL duyệt.
-- Cổng G0 (số đo kiểm chứng tay P00) chưa xanh ⇒ CẤM thi công P05 dispatch tự động (Đ07).
-- Tái dùng build phase (D:uild phase): retrieval + eligibility + citation, mẫu precheck→ghi→biên nhận, bộ chấm golden — PORT, không copy.
-- Planning & RFCs: Thư mục `planning/` lưu trữ các bản kế hoạch theo định dạng `[STT]_[YYYY-MM-DD]_[Ten-Ngan]` (25-35 ký tự, cố định path).
+- Tech Stack (D02): TypeScript Node 22, npm workspaces — apps/web (Next.js 15, auth admin/operator, dashboard, /zalo QR, /dev/sim nhóm giả lập),
+  apps/zalo-worker (zca-js 2.2.0 pin, ĐÚNG 1 bản sao, MỘT tài khoản `community`), packages/core (agent/community/*, services, retrieval, sim, runner, adapters db/model/transport).
+- LLM: adapters/model.ts, Gemini mặc định (gemini-3.6-flash; embedding gemini-embedding-001 dim 1024); nhánh anthropic/openrouter/vyce (vyce chỉ DATA_MODE=sim).
+- Data/State: PostgreSQL 16 + pgvector, Docker; migration append-only. Đang có 001–006 (cũ, sàn thợ); 007/008 là THIẾT KẾ trong 01-CONTRACTS §4, ĐÃ áp thử từ rỗng
+  (evidence/ARCH) nhưng CHƯA có trong repo — thêm ở P01. Worker↔core nói qua inbound_events/outbox; không pg-boss (runTimers).
+- Cổng chất lượng: `npm run gate` (typecheck→build→test→check_adapter_boundary→check_agent_tools), `npm run test:db`; hiện 317 unit / 196 DB (sẽ giảm ở P01 vì xoá test sàn thợ).
+- Tái dùng từ kế hoạch 01 (PORT): vòng lượt tool, triage JSON, runTimers, pacer, SimTransport, máy chấm golden. Planning: `planning/` định dạng `[STT]_[YYYY-MM-DD]_[Ten-Ngan]`.
 </project_foundation>
 
 <brain_file_roles>

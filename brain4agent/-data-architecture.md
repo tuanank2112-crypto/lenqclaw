@@ -2,29 +2,22 @@
 
 Tài liệu thiết kế về cấu trúc dữ liệu, cơ chế lưu trữ bền vững (Persistence Layer) và luồng luân chuyển dữ liệu đa tầng.
 
-> **Trạng thái 2026-09-24: DB có thật từ P01** — `db/migrations/001_init.sql` áp đủ DDL (33 bảng), runner `schema_migrations` + checksum, seed nền; Migration `002_search.sql` (P03): hàm `immutable_unaccent()`, `kb_sections.tsv` là cột sinh tự động từ heading+body — truy hồi từ khoá OR-tsquery + `ts_rank_cd(…,32)`. pg-boss và embedding CHƯA dùng. Dữ liệu mô phỏng: `npm run db:seed:sim` (chỉ khi `DATA_MODE=sim`) — quy chế `QC-DEMO` (+1 bản deprecated, +1 hết hiệu lực), 4 cư dân `sim-res-*`, `price_book` 6 danh mục. Nguồn chân lý DDL: [`planning/01_2026-09-24_san-viec-tho-mvp/specs/01-CONTRACTS.md`](../planning/01_2026-09-24_san-viec-tho-mvp/specs/01-CONTRACTS.md) §4–§5. File này chỉ tóm tắt.
+> **Trạng thái 2026-10-09 — ĐỌC KỸ:** DB thật trong repo = migration `001`–`006` của **sàn việc thợ** (33+ bảng: buildings, residents, vendors, jobs, slots…; `004` QR qua DB, `005` UI Zalo, `006` dispatch/slots). Kế hoạch 02 (pivot cộng đồng) thiết kế thêm **migration `007` + `008`** (DDL nguyên văn ở `planning/02_2026-10-09_zalo-community-agent/specs/01-CONTRACTS.md` §4). Chúng **là THIẾT KẾ, CHƯA áp vào repo** (kiến trúc sư đã áp thử từ rỗng sau 001–006: `applied 2`, chạy lại `applied 0`, 27 bảng, 21/21 kiểm OK — `evidence/ARCH/migration-probe.txt`). Gói P01 mới đưa 007/008 vào `db/migrations/`. 001–006 append-only, không sửa.
 
 ## 1. Các Tầng Lưu Trữ (Data Persistence Stores)
 
-- **PostgreSQL 16 + pgvector** (một instance, Docker, VPS Việt Nam) — mọi thứ: danh tính, hội thoại, cuốc, sổ, quy chế + embedding.
-- **pg-boss** (trên chính Postgres) — hàng đợi `inbound.process`, timer giữ cuốc, nhắc bảo hành.
-- **`storage/`** (đĩa VPS) — ảnh theo sha256; ảnh CCCD mã hoá bằng `STORAGE_KEY`.
-- **Phiên Zalo** — `zalo_accounts.session_enc` mã hoá AES-256-GCM bằng `ZALO_SESSION_KEY`; CẤM lưu dạng rõ, CẤM log.
+- **PostgreSQL 16 + pgvector 0.8.5** (một instance, Docker, VPS Việt Nam) — danh tính, hội thoại, đệm nhóm, persona, tri thức + embedding `vector(1024)`, thẻ duyệt, lead, lịch.
+- **Không pg-boss, không hàng đợi ngoài Postgres:** một runner tuần tự + `runTimers(now)` (idempotent từng bước).
+- **Phiên Zalo** — `zalo_accounts.session_enc` mã hoá AES-256-GCM bằng `ZALO_SESSION_KEY`; CẤM lưu dạng rõ, CẤM log. Tài khoản duy nhất `community` (007 đổi tên từ `bql`, GIỮ `session_enc`, bỏ `market`).
+- **`storage/`** (đĩa VPS) chỉ còn là di sản sàn thợ; vòng 0.1 không nhận ảnh/file/voice vào agent.
 
-## 2. Schema & Data Flow
+## 2. Schema & Data Flow (đích sau P01, theo 01-CONTRACTS §4)
 
-Nhóm bảng:
-- **Tổ chức:** `organizations → buildings → apartments` (có `org_id` sẵn cho nhân rộng).
-- **Con người:** `residents`, `resident_apartments`, `vendors` (+ `vendor_skills`, `vendor_buildings`, `vendor_scores`), `staff_users`.
-- **Zalo:** `zalo_accounts` (`bql`, `market`), `zalo_identities` (khoá `(account, uid)` vì UID khác nhau theo tài khoản nhìn), `inbound_events` (unique `(account, zalo_msg_id)`), `outbox`, `conversations` (`human_takeover_until`), `messages`, `agent_runs`.
-- **Cuốc:** `job_categories` (có `trade_group`), `price_book` (p25/p50/p75 theo loại × tòa), `jobs` (máy trạng thái 01-CONTRACTS §5), `job_offers`, `job_events`, `job_photos`, `access_passes`, `ratings`.
-- **Phí vào nhóm (Đ14):** `slot_capacity` (trần theo tòa × nhóm nghề), `vendor_slots` (`is_trial`, một slot active mỗi thợ × tòa × nhóm nghề, dùng thử 1 lần), `slot_waitlist`, `ledger_entries` (chỉ `slot_fee`/`bql_share`/`waiver`/`adjustment`, không phí theo cuốc).
-- **Sổ lợi ích (Đ15, dự kiến ở SPEC-P08):** view tổng hợp theo tháng — thu nhập mỗi thợ (từ `jobs.final_price` đã `closed`), tỷ lệ thu nhập/phí theo (tòa × nhóm nghề), case agent xử lý trọn, lượt vào tòa có duyệt; không thêm bảng tiền mới ngoài `ledger_entries`.
-- **BQL:** `tickets`, `kb_documents` (`building_id` từ migration 003 — quy chế thuộc đúng một tòa, Đ20), `kb_sections` (tsv + embedding), `audit_log`.
-- **Hiểu ý (Đ21):** kết quả `triageMessage` lưu trong `messages.content.triage` của tin vào; `agent_runs.route='triage'` tách chi phí. Tool `open_service_case` đọc từ đó — agent chính không truyền được.
+Bảng mới (007/008): `account_owners`, `zalo_groups` (allowlist nhóm, chế độ `mention|ambient`, `budget_per_hour`), `group_members` (vai), `group_messages` (đệm vòng: `sender_uid` + `cli_msg_id` mọi tin kể cả tin bot), `group_sessions`, `persona_docs` (có phiên bản), `skill_docs`, `member_profiles`, `daily_notes` (+ tsv), `moderation_events`, `moderation_scores` (thang cảnh cáo), `approvals` (thẻ duyệt), `join_requests`, `leads`, `automations`, `automation_runs`. Giữ nền cũ: `zalo_accounts`, `zalo_identities`, `inbound_events`, `outbox` (mở rộng `kind` + `body.action`), `conversations`, `messages`, `agent_runs`, `audit_log`, `staff_users` (vai `admin|operator`), kho tri thức `kb_*`. Bảng sàn thợ không dùng bị DROP bằng migration mới.
 
 Luồng:
-1. Kênh (`SimTransport` khi phát triển; Zalo worker `bql` từ Đ22 — worker ghi `inbound_events`, runner `core:run` gọi `processInbound`; đăng nhập QR qua cột `zalo_accounts.login_requested_at`/`qr_data_url`/`qr_expires_at`, phiên `session_enc` AES-256-GCM, CAS theo `updated_at` — migration 004) → `inbound_events` (chống trùng) → `processInbound`: nhận-trước bằng `UPDATE … SET processed_at … RETURNING`, handler chạy NGOÀI transaction, mỗi tin tối đa một lần (Đ17 a) → pipeline core. pg-boss dời sang P07.
-2. Core → `outbox` → pacer trong worker → Zalo. Không đường tắt (BB-04).
-3. Ticket là trục (Đ10): `bql_responsibility`/`unclear` (BQL xử lý) · `service_case` (theo dõi việc trong căn) · `access_request` (BQL duyệt/từ chối). Cuốc đi `drafting → awaiting_consent → case_open → published → held → confirmed → access_pending → access_granted → dispatched → in_progress → awaiting_acceptance → accepted → closed` bằng `UPDATE … WHERE status=<from>` + `job_events` trong một transaction (BB-05, BB-09, BB-11).
-4. Cuốc `closed` (tool `close_case`) → cập nhật `price_book` và `vendor_scores` → dùng lại khi đăng cuốc (khung giá, bước 4) và khi lọc thợ đủ điều kiện (bước 5).
+1. `zca-js` listener (worker `community`) → `inbound_events` (text, group_event, undo; unique `(account, zalo_msg_id)`) → runner `core:run` → `agent/community/router.ts`.
+2. Router: ingest nhóm (`group_members`, `group_messages` ring 200 tin/nhóm, ≤ 7 ngày — BB-11) → kiểm duyệt (lưới + triage, thang cảnh cáo) → cổng `decideGroupInbound` (hàm thuần trả mã lý do) → lượt agent theo loại (`group_mention | group_ambient_flush | group_welcome | group_unanswered | group_join_review | dm | owner_dm | automation`).
+3. Agent làm mọi việc qua tool; mọi lời nói/hành động ra Zalo qua `enqueue()` → `outbox` (`text|action|typing|seen|react`) → pacer theo tài khoản + theo nhóm (≤ 1800 ký tự/chunk, jitter, ngân sách tin/nhóm/giờ) → zca-js.
+4. `runTimers(now)` ghi `inbound_events` với `sender='system'`: flush ambient (gom 20 s), welcome, câu hỏi bỏ trống, automations (`at|every|daily|weekly`, giờ VN), hết hạn thẻ duyệt (TTL 24 h), cắt đệm, báo cáo ngày.
+5. Hồ sơ thành viên và ghi chú ngày KHÔNG BAO GIỜ vào lượt nhóm (BB-07); tri thức truy hồi lai lexical + vector RRF, thiếu embedding ⇒ lexical thuần. Mọi hành động quản trị ghi `audit_log` (BB-09).

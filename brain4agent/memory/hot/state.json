@@ -1,7 +1,7 @@
 {
   "current_version": "0.0.1",
   "brain_template_version": "1.7.1",
-  "system_status": "building",
+  "system_status": "planning",
   "last_verification": {
     "timestamp": "2026-09-24T13:32:07.935Z",
     "grade": "Grade A Initialized"
@@ -73,7 +73,7 @@
     },
     "eval_next": "gemini --set diagnosis,responsibility (D29) after quota reset ~14:00 ICT"
   },
-  "next": "Gemini run (H08 --set diagnosis,responsibility + vendor_intent golden) after quota reset ~14:00 ICT -> release resident.ts -> P05-D -> P05-F",
+  "next": "Human confirms removal of the 94 marketplace files -> launch P01 (tag archive/plan-01-marketplace, remove, migrations 007/008) -> P02 -> P03 -> (P04||P05||P06||P07) -> P08 -> P09",
   "approved": [
     "P01",
     "P03-code",
@@ -89,12 +89,18 @@
     "D31-model-down"
   ],
   "llm_provider": "vyce (deepseek-v4-flash, temporary D28; gate provider gemini D26)",
-  "decisions_latest": "D31",
+  "decisions_latest": "D32 (plan 01 stop) / D21 (plan 02)",
   "in_progress": null,
   "pushed": "origin/main = a0f832a (2026-09-26)",
   "tests_now": {
     "unit": 317,
     "db": 196,
     "skip": 0
-  }
+  },
+  "active_plan": "planning/02_2026-10-09_zalo-community-agent",
+  "plan_status": "SPEC approved (7a58d6d, f6a4465); P01 waiting for human to confirm removal of 94 marketplace files",
+  "stopped_plans": [
+    "planning/01_2026-09-24_san-viec-tho-mvp (D32, 2026-10-09)"
+  ],
+  "open_questions": "Q1-Q12 plan 02 section 6 kept at temporary values"
 }

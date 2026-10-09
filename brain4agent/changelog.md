@@ -2,7 +2,15 @@
 
 Tất cả các quyết định kiến trúc và lịch sử nâng cấp phiên bản của dự án.
 
-## [Unreleased] - 2026-09-24: Hồ sơ 01 — Sàn việc thợ MVP (🟢 pipeline v0.2 đã duyệt)
+## [Unreleased] - 2026-10-09: Pivot sang agent chăm sóc cộng đồng Zalo — hồ sơ 02 (🟢 SPEC đã duyệt, mã CHƯA đổi)
+### Decided
+- **Kiến trúc (không bump version; `0.1.0` khi đóng kế hoạch 02, `package.json` ×4 vẫn `0.0.1`):** Đ32 (kế hoạch 01) DỪNG sàn việc thợ; D01 (kế hoạch 02) sản phẩm = agent chat chăm sóc cộng đồng trong Zalo, tài khoản `community` làm phó nhóm, port mẫu OpenClaw + monas-team/zaloclaw (MIT), tự customize.
+- D02 giữ nền kỹ thuật (Node 22, Postgres+pgvector, zca-js 2.2.0, adapters, SimTransport, mẫu "luật trong tool" + "model hiểu ý, code là lưới"). D03 gỡ mã sàn thợ thành gói P01 đi đầu (94 file, tag `archive/plan-01-marketplace`, migration mới 007/008 append-only). D04–D21: cổng nhận tin kiểu OpenClaw, năng lực MVP, vai & quyền, persona có phiên bản, lịch `at|every|daily|weekly`, chống khoá tài khoản, golden thật bằng Gemini, một tài khoản `community`, vai web admin/operator, đệm nhóm Postgres, ambient gom cửa sổ, thang cảnh cáo, embedding dim 1024, thẻ duyệt TTL 24 h, host ép trả lời.
+- Bất biến BB-01…BB-12 (00-ARCHITECTURE §6); Q1–Q12 giữ giá trị tạm; SO duyệt `f6a4465`, architect `7a58d6d`. Chờ người xác nhận gỡ 94 file trước khi phóng P01.
+### Superseded
+- Toàn bộ hồ sơ 01 (sàn thợ, BQL, slot, ticket, access pass, vai `bql_admin/bql_staff/guard`, tài khoản `bql`/`market`) — thay bởi hồ sơ 02; xem bảng "Quyết định bị thay thế" trong plan 02 §2. Mục `[Unreleased] - 2026-09-24` bên dưới là LỊCH SỬ của hồ sơ 01.
+
+## [Lịch sử, DỪNG 2026-10-09] - 2026-09-24: Hồ sơ 01 — Sàn việc thợ MVP (pipeline v0.2)
 ### Decided
 - Đ01 Sản phẩm = sàn việc thợ trong tòa nhà; agent cư dân là cửa vào; BQL giữ quy chế, PII, cửa ra vào.
 - Đ02 Zalo cá nhân, hai tài khoản (`bql`, `market`), sau interface `Transport`.

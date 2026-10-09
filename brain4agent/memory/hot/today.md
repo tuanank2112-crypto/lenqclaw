@@ -1,6 +1,6 @@
 # 📅 Nhật Ký Làm Việc Ngày 2026-09-24 (Session Memory Log)
 
-> Cập nhật lúc: `2026-09-24` | Phiên bản: `v0.0.1` (hồ sơ 01 chờ duyệt)
+> Cập nhật lúc: `2026-10-09` | Phiên bản: `v0.0.1` (hồ sơ 02 SPEC đã duyệt; hồ sơ 01 dừng)
 
 ---
 
@@ -111,3 +111,23 @@ Phân tích OpenClaw + ZaloClaw (monas-team) với tài khoản Zalo cá nhân �
 
 ### ⏭ Treo
 - Lượt Gemini sau ~14h: H08 `--set diagnosis,responsibility` + golden thợ `vendor-intent.mjs`; review 🔴 prompt + golden thợ; lượt Gemini `--set diagnosis,responsibility` sau ~14h (quota ngày); duyệt Đ27 + Q1–Q10; quyết 3 file presentation; câu hỏi đường lùi khẩn cấp khi model sập.
+
+---
+
+## 🏁 Phiên 2026-10-09 — Pivot sang agent cộng đồng Zalo
+
+### 🎯 Chỉ đạo
+Người dùng: "thôi. không cần nữa… xoay quanh toàn bộ về agent chat chăm sóc các cộng đồng trong zalo trước". Sàn việc thợ "bỏ đi"; cộng đồng = người quan tâm AI agent + người muốn setup AI CSKH; bot là phó nhóm; dựa OpenClaw + monas-team/zaloclaw nhưng tự customize.
+
+### ✅ Đã làm
+- Bước 0 `init_brain.js --check` exit 0 (khung 1.7.1).
+- Nghiên cứu OpenClaw + zaloclaw (clone chỉ đọc, findings có file:line) — lỗi zaloclaw không lặp lại (xoá tin sai `uidFrom`, mega-tool 153 action, send-file, regex injection guard, đệm RAM) nằm ở vùng cấm 00-ARCHITECTURE §7.
+- **Đ32** (kế hoạch 01): DỪNG, không nghiệm thu; mọi `[ ]` còn lại BỎ.
+- Architect dựng bộ SPEC kế hoạch 02 (`7a58d6d`): 00, 01, P01–P08, OPERATIONS, TESTING + `evidence/ARCH/` (migration 007/008 áp từ rỗng 21/21, gate 28/28, ladder 14/14, budget 20 tin/giờ gap ≥ 9000 ms, db-checks 5/5).
+- SO duyệt (`f6a4465`): D12–D21 giữ, Q1–Q12 giữ giá trị tạm. Đồng bộ não theo kế hoạch 02 (phiên này, skill `nao-dong-bo`): kernel, project-intro, -data-architecture, index, roadmap, changelog.
+
+### ⏭ Treo
+- 🖐 Người xác nhận GỠ 94 file sàn thợ (AGENTS §5.L.3) — mở khoá P01; code CHƯA đổi.
+- 🖐 Q1–Q12 (đang giá trị tạm); tài khoản Zalo phụ cho bot + Zalo thành viên thử + nhóm thử; persona thật + tri thức ban đầu; quota/billing Gemini cho golden; thông báo xử lý dữ liệu cho nhóm thật.
+- 🖐 5 file lạ chưa theo dõi: `lenqclaw_presentation_transcript.pdf` (root), `docs/presentation-transcript.html`, `docs/progress-dashboard.html`, `docs/lenqclaw_presentation_transcript.pdf`, `docs/images/11-tien-do-du-an.png`; `packages/core/src/agent/prompts/resident.ts` sửa dở (sàn thợ, BỎ — sẽ gỡ ở P01).
+- Push chưa làm; thu hồi key OpenRouter + Vyce đã dán trong chat.
