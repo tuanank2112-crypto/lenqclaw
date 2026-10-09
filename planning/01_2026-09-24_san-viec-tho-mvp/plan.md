@@ -10,7 +10,7 @@
 | Mã hồ sơ | `01_2026-09-24_san-viec-tho-mvp` |
 | Ngày mở | 2026-09-24 |
 | Chủ trì | Super Orchestrator (cửa sổ này) |
-| Trạng thái | 🟢 PIPELINE v0.2 · Đ13 trọng tâm agent · Đ14 phí vào nhóm · Đ15 sổ lợi ích ba bên — ĐÃ DUYỆT (2026-09-24). Chờ: SPEC-P08, tham số phí. Git: `origin` = github.com/tuanank2112-crypto/lenqclaw (private). P01 đang thi công (H01) |
+| Trạng thái | ⛔ DỪNG 2026-10-09 (Đ32) — thay bởi kế hoạch 02. Cũ: 🟢 PIPELINE v0.2 · Đ13 trọng tâm agent · Đ14 phí vào nhóm · Đ15 sổ lợi ích ba bên — ĐÃ DUYỆT (2026-09-24). Chờ: SPEC-P08, tham số phí. Git: `origin` = github.com/tuanank2112-crypto/lenqclaw (private). P01 đang thi công (H01) |
 | Phạm vi | Pilot 1–2 tòa, một công ty vận hành, kênh Zalo cá nhân |
 | SemVer dự kiến | `0.1.0` (MINOR đầu tiên — dựng mới) |
 | Đặc tả kế thừa | `docs/DESIGN.md` v0.1 (trợ lý BQL tổng quát) — bị thu hẹp bởi Đ01, xem "Quyết định bị thay thế" · Lõi trả lời có trích dẫn của repo `D:\build phase` (Resident Agent v1.0) — tham chiếu để port, không chép mù |
@@ -174,6 +174,10 @@ Khi duyệt R14 phát hiện hai lỗ: route web tự ghép việc đình chỉ 
 ### Đ31 — 2026-09-26 · Model sập ⇒ trả lời kèm hotline + đẩy cho người (Super Orchestrator, 🔴)
 Lượt chấm H08 vòng 4 (Gemini cạn quota) cho thấy khi `triage` và agent chính cùng lỗi, 3 ca khẩn cấp gián tiếp bị bỏ sót và cư dân chỉ nhận "Em đang bận…" — BQL không biết. Hợp đồng: [SPEC-P03 §11.12](specs/SPEC-P03-Resident-Agent.md): câu trả lời có hotline BQL + `handoff_to_staff(model_unavailable)`; không đổi prompt, không báo động giả. Giao H15.
 **Lật được:** có — đổi câu chữ qua hằng số; bỏ handoff là quay lại lỗ im lặng.
+
+### Đ32 — 2026-10-09 · ⛔ DỪNG kế hoạch — đổi hướng sang agent chăm sóc cộng đồng Zalo (người dùng chốt)
+Người dùng: "thôi. không cần nữa… xoay quanh toàn bộ về agent chat chăm sóc các cộng đồng trong zalo trước"; sàn việc thợ "bỏ đi". Cộng đồng mới = người quan tâm AI agent và người muốn setup AI chăm sóc khách hàng; agent có quyền quản trị nhóm; dựa theo OpenClaw + monas-team/zaloclaw nhưng là bản tự customize. Kế hoạch này đóng ở trạng thái dừng (không nghiệm thu, không phát hành `0.1.0`); mọi mục `[ ]` còn lại BỎ, không thi công. Nền P01/P02 và mẫu tool-có-luật, hiểu-ý-bằng-model chuyển sang [kế hoạch 02](../02_2026-10-09_zalo-community-agent/plan.md); mã sàn thợ gỡ ở gói đầu kế hoạch 02 sau khi gắn tag `archive/plan-01-marketplace`. Prompt `resident.ts` sửa dở bị bỏ cùng agent cư dân.
+**Lật được:** có — khôi phục từ tag lưu trữ.
 
 ### Quyết định bị thay thế
 | Mốc cũ | Phát biểu cũ | Thay bằng | Lý do |

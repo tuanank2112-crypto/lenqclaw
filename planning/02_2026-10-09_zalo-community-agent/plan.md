@@ -9,7 +9,7 @@
 | Mã hồ sơ | `02_2026-10-09_zalo-community-agent` |
 | Ngày mở | 2026-10-09 |
 | Chủ trì | Super Orchestrator; bộ SPEC do architect (Fable 5.1) soạn 2026-10-09 10:14–11:00 ICT trên HEAD `eada365` |
-| Trạng thái | 🟡 SPEC ĐÃ DỰNG, CHỜ SO DUYỆT — chưa phóng gói nào |
+| Trạng thái | 🟢 SPEC ĐÃ DUYỆT (SO, 2026-10-09; D12–D21 giữ, Q1–Q12 giữ giá trị tạm) — chờ người xác nhận gỡ 94 file (AGENTS §5.L.3) trước khi phóng P01 |
 | Phạm vi | Một tài khoản Zalo cá nhân `community` làm phó nhóm trong các nhóm Zalo của cộng đồng; kênh giả lập trước, Zalo thật sau; dashboard Next.js |
 | SemVer dự kiến | `0.1.0` (phát hành đầu tiên — D11; `package.json` ×4 đang `0.0.1`, chỉ tăng khi đóng kế hoạch) |
 | Đặc tả kế thừa | Kế hoạch 01 (dừng — Đ32 bên đó): giữ nền P01/P02 (monorepo, Postgres, adapter, worker zca-js 2.2.0, SimTransport, auth web, golden/máy chấm); mã sàn thợ gỡ ở P01 sau tag `archive/plan-01-marketplace`. Nguồn mẫu: OpenClaw (MIT) + monas-team/zaloclaw v2.5.11 (MIT) — PORT theo mô tả, không chép |
@@ -115,7 +115,7 @@ Thứ tự bắt buộc: `P01 → P02 → P03 → (P04 ∥ P05 ∥ P06 ∥ P07) 
 
 - [x] Nghiên cứu OpenClaw + zaloclaw (clone chỉ đọc, findings có file:line) — 2026-10-09
 - [x] Dựng bộ SPEC (00, 01, P01–P08, OPERATIONS, TESTING) + chạy thử 5 bộ kiểm trên dữ liệu giả (`evidence/ARCH/`) — architect 2026-10-09
-- [ ] 🖐 SO duyệt bộ SPEC + chốt/giữ giá trị tạm Q1–Q12 (Mục 6)
+- [x] 🖐 SO duyệt bộ SPEC + giữ giá trị tạm Q1–Q12 (Mục 6) — 2026-10-09; đo lại: `7a58d6d` chỉ chạm `planning/02` (20 file), vùng cấm hành động nguy hiểm có ở 00-ARCH BB-06, 01-CONTRACTS §8, SPEC-P01 §6, SPEC-P02
 - [ ] 🖐 Người dùng: tài khoản Zalo phụ cho bot (SIM riêng), 2–3 Zalo phụ làm thành viên thử, nhóm thử (OPERATIONS §2)
 - [ ] 🖐 Người dùng: nội dung persona thật (SOUL/RULES/IDENTITY/CAPABILITIES) + tài liệu tri thức ban đầu (dán qua `/knowledge`)
 - [ ] 🖐 Người dùng: quota/billing Gemini cho golden (~4 bộ × ≥ 60 ca ≈ 300–500 lượt gọi/lượt chấm) — G26 cũ
