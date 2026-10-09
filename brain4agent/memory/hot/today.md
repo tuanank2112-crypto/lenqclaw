@@ -38,7 +38,7 @@ Phân tích OpenClaw + ZaloClaw (monas-team) với tài khoản Zalo cá nhân �
 - Thẩm định chưa chạy được phần giả mạo cookie qua HTTP (vỏ agent tự dừng) ⇒ bù bằng test unit `verifySessionCookie`; đã báo người.
 
 - **Push:** người dùng duyệt ⇒ `origin/main` = `4955b5a` (P01 + SPEC/H03).
-- **Đ18 — Gemini:** người dùng "sử dụng key gemini". Auto mode CHẶN việc chép key từ `D:uild phase.env.local` (Credential Exploration) ⇒ người dùng tự dán key ⇒ ghi `.env` (gitignore). Probe: `gemini-3.6-flash`/`3-flash-preview` 200 + functionCall + `thoughtSignature`; `3.5-flash-lite` 200; `3.5-flash`/`3.1-flash-lite`/`flash-latest` 503; mọi `2.x` 404 (G13). Hợp đồng 01-CONTRACTS §2b + `MODEL_FALLBACKS`.
+- **Đ18 — Gemini:** người dùng "sử dụng key gemini". Auto mode CHẶN việc chép key từ `D:uild phase\.env.local` (Credential Exploration) ⇒ người dùng tự dán key ⇒ ghi `.env` (gitignore). Probe: `gemini-3.6-flash`/`3-flash-preview` 200 + functionCall + `thoughtSignature`; `3.5-flash-lite` 200; `3.5-flash`/`3.1-flash-lite`/`flash-latest` 503; mọi `2.x` 404 (G13). Hợp đồng 01-CONTRACTS §2b + `MODEL_FALLBACKS`.
 
 ## 🏁 Phiên 2026-09-25 (tiếp) — P03 thi công xong, tạm dừng
 - Worker 🟠 thi công H03 ⇒ R03 ⏳ (`e3d2079`, report `ee362f7`): 8 tool, resident agent, migration 002, seed sim, 3 bộ golden + `eval_golden.mjs`. Bắt được bug thật: `pg` trả cột `date` thành JS `Date` ⇒ so hiệu lực sai ⇒ ép `::text`.
