@@ -1,0 +1,3 @@
+{"sent":100,"first_hour":20,"second_hour":20,"min_gap_ms":9000,"finished_h":"4.05","reasons":{"group_gap":886,"group_budget":13612,"per_minute":0},"every_window_le_budget":true}
+BUDGET_OK
+budget exit=0

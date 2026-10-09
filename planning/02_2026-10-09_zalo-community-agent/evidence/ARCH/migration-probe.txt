@@ -1,0 +1,27 @@
+stage1 applied 6 001_init.sql,002_search.sql,003_kb_building.sql,004_zalo_login.sql,005_zalo_ui.sql,006_dispatch_slots.sql
+stage2 applied 2 007_drop_marketplace.sql,008_community.sql
+stage2 again applied 0 (ky vong 0)
+tables 27 account_owners,agent_runs,approvals,audit_log,automation_runs,automations,conversations,daily_notes,group_members,group_messages,group_sessions,inbound_events,join_requests,kb_documents,kb_sections,leads,member_profiles,messages,moderation_events,moderation_scores,outbox,persona_docs,schema_migrations,skill_docs,staff_users,zalo_accounts,zalo_groups
+OK   zalo_accounts => [{"id":"community","enc":"deadbeef","session_state":"connected"}]
+OK   conversations => [{"zalo_account_id":"community","thread_id":"111","thread_type":"user"}]
+OK   inbound => [{"zalo_account_id":"community","zalo_msg_id":"m1"}]
+OK   outbox => [{"zalo_account_id":"community","kind":"text"}]
+OK   messages => [{"n":1}]
+OK   staff roles => [{"email":"a@x","role":"admin"},{"email":"g@x","role":"operator"},{"email":"s@x","role":"operator"}]
+OK   kb kept => [{"document_id":"d1","section_id":"s1"}]
+OK   zalo_accounts check => [{"d":"CHECK ((id = 'community'::text))"}]
+OK   outbox kind check => [{"d":"CHECK ((kind = ANY (ARRAY['text'::text, 'image'::text, 'typing'::text, 'seen'::text, 'action'::text, 'react'::text])))"}]
+OK   dropped tables gone => [{"n":0}]
+OK   market insert bi tu choi: new row for relation "zalo_accounts" violates check constraint "zalo_accounts_id
+OK   action kind
+OK   two active soul bi tu choi: duplicate key value violates unique constraint "persona_docs_active_idx"
+OK   two open leads bi tu choi: duplicate key value violates unique constraint "leads_open_per_uid_idx"
+OK   daily without time bi tu choi: new row for relation "automations" violates check constraint "automations_check"
+OK   weekly ok
+OK   welcome cols
+OK   group + member
+OK   member of unknown group bi tu choi: insert or update on table "group_members" violates foreign key constraint "group
+OK   two pending join bi tu choi: duplicate key value violates unique constraint "join_requests_open_idx"
+OK   daily_notes tsv => [{"n":1}]
+FAILS 0
+migration-probe exit=0

@@ -1,0 +1,16 @@
+ok   L01 spam lan dau => warn
+ok   L02 spam lan 2 cung ngay => delete
+ok   L03 spam lan 3 => kick_requested
+ok   L04 lan 4 => block_requested
+ok   L05 scam ngay lan dau => delete (tang 2)
+ok   L06 scam lan 2 => block_requested
+ok   L07 ok khong doi diem, khong hanh dong
+ok   L08 unsure khong hanh dong
+ok   L09 suy giam: 2 diem sau 1 tuan con 1 => spam moi = 2 => delete
+ok   L10 suy giam: 2 diem sau 2 tuan con 0.5 => spam moi = 1.5 => warn
+ok   L11 moderator mien tru
+ok   L12 owner mien tru
+ok   L13 harass 1.5 => warn; lan 2 => kick
+ok   L14 dong ho lui (now < last) khong am
+ladder cases=14 fails=0
+ladder exit=0

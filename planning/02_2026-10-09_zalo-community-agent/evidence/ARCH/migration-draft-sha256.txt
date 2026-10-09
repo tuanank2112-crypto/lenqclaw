@@ -1,0 +1,2 @@
+01dc21dcce7a149de4cca6e9d1d2adee65fa36a95d4bae301c9fdaad702ccf5b *C:/Users/lenku/AppData/Local/Temp/claude/d--lenqclaw/974f0ae2-421a-4d7c-aa80-73474f289d06/scratchpad/mig/007_drop_marketplace.sql
+bb9b4cbd1457986b030f09e971adb550a237818c3b38649e3c5469b972d2f41b *C:/Users/lenku/AppData/Local/Temp/claude/d--lenqclaw/974f0ae2-421a-4d7c-aa80-73474f289d06/scratchpad/mig/008_community.sql

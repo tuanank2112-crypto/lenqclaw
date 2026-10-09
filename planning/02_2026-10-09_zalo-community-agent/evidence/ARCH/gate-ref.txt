@@ -1,0 +1,30 @@
+ok   G01 tin cua chinh bot
+ok   G02 nhom chua khai bao (allowlist mac dinh)
+ok   G03 nhom tat
+ok   G04 nguoi gui bi chan, du mention
+ok   G05 allowUsers khong co nguoi gui
+ok   G06 allowUsers nhung nguoi gui la moderator
+ok   G07 sticker (khong text)
+ok   G08 anh co mention bot van khong vao (MVP)
+ok   G09 text rong
+ok   G10 mention goc
+ok   G11 mention nguoi khac
+ok   G12 tra loi/quote tin cua bot
+ok   G13 quote tin nguoi khac
+ok   G14 goi ten bot giua cau co dau
+ok   G15 ten bot dinh trong tu khac (claws)
+ok   G16 lenh / cua member (khong quyen)
+ok   G17 lenh / cua owner
+ok   G18 lenh / cua moderator
+ok   G19 ambient: tin thuong duoc vao, khong bat buoc tra loi
+ok   G20 ambient + mention => mention thang
+ok   G21 ambient + bi chan
+ok   G22 ambient + sticker
+ok   G23 mention mode, tin thuong
+ok   G24 self-mention gia trong text "[userId: 900]"
+ok   G25 chuoi @ten trong text khong phai mention goc
+ok   G26 owner khong lenh, khong mention, mention mode
+ok   G27 stranger trong nhom (sim) xu nhu member
+ok   G28 quote cua bot + allowUsers chan
+gate cases=28 fails=0
+gate exit=0

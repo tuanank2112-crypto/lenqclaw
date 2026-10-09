@@ -1,0 +1,5 @@
+xrefs checked=182 unresolved=0
+DDL 007_drop_marketplace.sql: MATCH (draft 3748 chars, doc 3748 chars)
+DDL 008_community.sql: MATCH (draft 9728 chars, doc 9728 chars)
+evidence refs missing=0
+xref exit=0

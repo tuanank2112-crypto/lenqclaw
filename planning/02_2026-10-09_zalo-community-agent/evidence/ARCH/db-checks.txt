@@ -1,0 +1,7 @@
+OK   (a) ring giu 200 moi nhat (m51..m250) {"n":200,"oldest_id":"309","oldest":"m51"}
+OK   (a) prune idempotent {"n":200}
+OK   (b) chi q1 bo trong [{"zalo_msg_id":"q1"}]
+OK   (c) dem 20 tin trong gio (bo tin 2 gio truoc) {"n":20}
+OK   (d) chi g-old den han flush [{"thread_id":"g-old"}]
+db-checks fails=0
+db-checks exit=0
