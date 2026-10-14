@@ -19,9 +19,11 @@ Bỏ `D:\lenqclaw`, chỉ dùng bản ở workspace. Người dùng góp ý đ�
 - Push `origin/main` `eada365..0c0a5c6` (6 commit) — exit 0.
 - Sự cố xoay ký ức: `rotate_memory.js` giữ phiên ở ĐẦU file (quy ước mới nhất ở trên) nhưng `today.md` ghi nối cuối ⇒ lần xoay đầu giữ 3 phiên CŨ nhất, đẩy 10-09/10-14 vào archive. Hoàn tác (xoá 3 file archive do lần xoay sai sinh ra), đảo `today.md` thành mới nhất ở trên, xoay lại. Gotcha G30.
 
+- (tiếp) Người dùng: voice = GIỌNG ĐIỆU; xác nhận gỡ 94 file sàn thợ "di chuyển an toàn" ⇒ **D26**: SO đánh tag `archive/plan-01-marketplace` = `d7f50eb`, push tag, kiểm 94/94 file trong tag (`evidence/P01/archive-tag.txt`); WIP `resident.ts` lưu `evidence/P01/resident-ts-wip-diff.txt` rồi trả về HEAD. Commit `b356f07` (pushed).
+- Phóng song song: worker P01 (🟠, handoff `H01_thi-cong_P01.md`) và architect kế hoạch 03 Skill · Voice · Constraint (🔴, chỉ soạn `planning/03_2026-10-14_skill-voice-constraint/`, không commit). Docker Desktop bật lại; DB dev `lenqclaw-db-1` :55432.
 ### ⏭ Treo
 - DDL 009 CHƯA áp thử (Docker tắt) ⇒ P01 áp thử, ghi `evidence/P01/migration-009-probe.txt`.
-- Hồ sơ kế hoạch 03 (Skill · Voice · Constraint) chưa dựng — mới có khung trong roadmap.
+- Chờ R01 (P01) để SO đo lại + phán; chờ architect nộp bộ SPEC kế hoạch 03 để SO duyệt + commit.
 - Các mục treo của phiên 2026-10-09 vẫn còn (trừ push — đã làm).
 
 ---
