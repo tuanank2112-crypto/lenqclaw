@@ -142,7 +142,7 @@ Thứ tự bắt buộc: `P01 → P02 → P03 → (P04 ∥ P05 ∥ P06 ∥ P07) 
 - [ ] 🖐 Người dùng: quota/billing Gemini cho golden (~4 bộ × ≥ 60 ca ≈ 300–500 lượt gọi/lượt chấm) — G26 cũ
 - [ ] 🖐 Người dùng: thông báo xử lý dữ liệu cho nhóm thật (OPERATIONS §3); dọn 5 file lạ ở root/docs (`lenqclaw_presentation_transcript.pdf`, `docs/*.html`, `docs/*.pdf`, `docs/images/11-*.png`) — không thuộc kế hoạch
 - [x] 🖐 Người dùng xác nhận gỡ 94 file ("di chuyển an toàn") — 2026-10-14; SO: tag `archive/plan-01-marketplace` = `d7f50eb` đã push, 94/94 file trong tag ([evidence](evidence/P01/archive-tag.txt)) — D26
-- [ ] P01 — gỡ sàn thợ (G01–G03 local) — handoff [H01](handoffs/H01_thi-cong_P01.md) — ⏸ dừng giữa chừng 2026-10-14 theo lệnh người dùng: việc dở nằm trong cây làm việc (chưa commit, chưa có R01); tiếp tục trên cây đó, KHÔNG reset
+- [ ] P01 — gỡ sàn thợ (G01–G03 local) — handoff [H01](handoffs/H01_thi-cong_P01.md) — ⏸ dừng giữa chừng 2026-10-14 theo lệnh người dùng: việc dở đã commit WIP `601aac7` (người dùng yêu cầu đẩy hết để agent khác tiếp); chưa gate/test, chưa có R01; Base của H01 = `b356f07`
 - [ ] P02 — transport nhóm (G04–G06 local) + thẩm định 🔴
 - [ ] P03 — runtime agent (G07, G08, G14, G15 local)
 - [ ] P04 — tri thức (G12 local sau golden)

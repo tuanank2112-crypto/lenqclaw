@@ -23,13 +23,14 @@ Bỏ `D:\lenqclaw`, chỉ dùng bản ở workspace. Người dùng góp ý đ�
 - Phóng song song: worker P01 (🟠, handoff `H01_thi-cong_P01.md`) và architect kế hoạch 03 Skill · Voice · Constraint (🔴, chỉ soạn `planning/03_2026-10-14_skill-voice-constraint/`, không commit). Docker Desktop bật lại; DB dev `lenqclaw-db-1` :55432.
 
 ### ⛔ DỪNG theo lệnh người dùng (2026-10-14 ~09:00) — trạng thái để tiếp tục
-- Hai agent nền bị dừng giữa chừng, KHÔNG agent nào commit.
+- Hai agent nền bị dừng giữa chừng. Sau đó người dùng: "cứ đẩy hết đi, tôi cho agent khác làm việc" ⇒ SO commit phần dở lên `main` và push: `601aac7` P01 [WIP] (182 file), `6643f80` kế hoạch 03 [WIP], `d45aa9f` 4 file trình bày trong `docs/`. Root `lenqclaw_presentation_transcript.pdf` KHÔNG commit (trùng từng byte bản `docs/`, Root Clean).
+- ⚠ `main` hiện CHƯA xanh đã đo: gate/`npm test`/`test:db` chưa chạy lại sau phần dở.
 - **Worker P01 (dở, CHƯA đo lại, CHƯA phán):** cây làm việc có 94 file đã `git rm` (staged, khớp danh sách SPEC-P01 §2), 3 rename (gồm `search-regulations→search-knowledge`), ~65 file sửa, mới: migration `007/008/009`, `agent/community/{router,redact}.ts`, `services/community-config.ts`, `scripts/check_pivot_cleanup.mjs`, vài test. Đang làm tới test `sim-tick` của web. Evidence đã có: `migration-009-probe.txt` (FAILS 0), `red-pivot-before.txt`, `red-check-agent-tools.txt` (exit 1 — đúng là ĐỎ), `backup.txt`, `tag-check.txt`, `test-db.txt` (dở, không phải số cuối). CHƯA có: `gate.txt`, `test.txt`, `deleted-count.txt`, `diff-stat.txt`, report R01.
 - **DB dev đã migrate tới `009`** (9 migration). Bản sao lưu trước 007: `~/lenqclaw-backups/pre-007-2026-10-14.sql` (76 KB, ngoài repo). DB tạm probe đã xoá.
 - **Architect kế hoạch 03 (dở, untracked):** `planning/03_2026-10-14_skill-voice-constraint/` có `plan.md` (148 dòng), `specs/00-ARCHITECTURE.md`, `01-CONTRACTS.md`, `SPEC-P01-Skill.md`, `SPEC-P02-Voice.md`; THIẾU SPEC constraint/cổng ra, vòng đời phiên bản + golden, dashboard, `OPERATIONS.md`, `TESTING-ACCEPTANCE.md`. SO CHƯA đọc duyệt.
 
 ### ⏭ Treo
-- Tiếp P01: giao lại worker (cùng handoff H01) chạy tiếp trên cây hiện có — KHÔNG `git checkout`/reset (mất việc dở); xong ⇒ R01 ⇒ SO đo lại + phán.
+- Tiếp P01 (agent khác): đọc handoff `planning/02_…/handoffs/H01_thi-cong_P01.md`, Base = `b356f07` (trước commit WIP `601aac7`), làm nốt SPEC-P01 §3 từ test web `sim-tick`, rồi chạy đủ §10 ⇒ evidence ⇒ R01 ⇒ người duyệt đo lại + phán.
 - Tiếp kế hoạch 03: architect soạn nốt 5 phần thiếu ⇒ SO duyệt ⇒ commit.
 - Các mục treo của phiên 2026-10-09 vẫn còn (trừ push — đã làm).
 ---
