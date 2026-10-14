@@ -1,7 +1,7 @@
 // apps/zalo-worker/src/config.ts — doc env cua worker (SPEC-P02 §5, §9.1,
 // §9.3). Moi so cua pacer lay tu env `PACER_*`, mac dinh = bang §5.
 
-export type AccountId = 'bql' | 'market';
+export type AccountId = 'community';
 
 export interface PacerConfig {
   /** Giua 2 tin cung thread: >= threadGapMs + jitter [0, threadJitterMs]. */
@@ -78,16 +78,13 @@ export function readPacerConfig(env: NodeJS.ProcessEnv = process.env): PacerConf
   return out;
 }
 
-/** `ZALO_ACCOUNTS` (danh sach phay), mac dinh `bql`. Giai doan 1 (§9.1,
- * §9.6): `market` bi tu choi — CAM bat. */
+/** `ZALO_ACCOUNTS` (danh sach phay), mac dinh `community`. Chi nhan
+ * `community` (01-CONTRACTS §10, D12) — gia tri khac => `ConfigError`. */
 export function readAccounts(env: NodeJS.ProcessEnv = process.env): AccountId[] {
-  const raw = (env.ZALO_ACCOUNTS ?? 'bql').trim() || 'bql';
+  const raw = (env.ZALO_ACCOUNTS ?? 'community').trim() || 'community';
   const list = [...new Set(raw.split(',').map((s) => s.trim()).filter(Boolean))];
   for (const a of list) {
-    if (a !== 'bql' && a !== 'market') throw new ConfigError(`ZALO_ACCOUNTS chua "${a}" khong hop le (chi bql).`);
-    if (a === 'market') {
-      throw new ConfigError('ZALO_ACCOUNTS=market bi CAM o giai doan 1 (SPEC-P02 §9.6) — chi dung "bql".');
-    }
+    if (a !== 'community') throw new ConfigError(`ZALO_ACCOUNTS chua "${a}" khong hop le (chi community).`);
   }
   return list as AccountId[];
 }

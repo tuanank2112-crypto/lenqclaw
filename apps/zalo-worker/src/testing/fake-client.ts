@@ -93,7 +93,7 @@ export class FakeZaloClient implements ZaloClientLike {
   nextSessionProbeError: Error | null = null;
 
   constructor(
-    readonly ownUid = 'bql-self-uid',
+    readonly ownUid = 'community-self-uid',
     private readonly clock: () => number = Date.now
   ) {}
 
@@ -152,7 +152,7 @@ export function fakeMessage(p: Partial<ZaloInboundMessage> & { threadId: string 
       msgId,
       cliMsgId: `cli-${msgId}`,
       uidFrom: senderUid,
-      idTo: 'bql-self-uid',
+      idTo: 'community-self-uid',
       msgType,
       st: 3,
       at: 0,

@@ -1,4 +1,4 @@
-// POST /api/zalo/{account}/login — SPEC-P02 §9.2: chi bql_admin; dat
+// POST /api/zalo/{account}/login — SPEC-P02 §9.2: chi admin; dat
 // `login_requested_at = now()`; worker quet cot nay moi 2 s va bat dau QR.
 
 import { NextResponse, type NextRequest } from 'next/server';

@@ -1,7 +1,6 @@
-// packages/core/src/domain/errors.ts — Lop loi co kieu (01-CONTRACTS.md §9)
-// + IllegalTransitionError (SPEC-P01-Foundation.md §5). Moi lop co `code`
-// chuoi co dinh = ten lop, de caller switch theo `code` thay vi `instanceof`
-// khi loi di qua ranh gioi tien trinh (vd JSON qua hang doi).
+// packages/core/src/domain/errors.ts — Lop loi co kieu (01-CONTRACTS.md §9, ke hoach 02).
+// Moi lop co `code` chuoi co dinh = ten lop, de caller switch theo `code`
+// thay vi `instanceof` khi loi di qua ranh gioi tien trinh (vd JSON qua hang doi).
 
 export class ConflictError extends Error {
   readonly code = 'ConflictError';
@@ -11,43 +10,11 @@ export class ConflictError extends Error {
   }
 }
 
-export class PiiGateError extends Error {
-  readonly code = 'PiiGateError';
-  constructor(message = 'Tin nhan cho tho chua duoc phep chua thong tin ca nhan.') {
-    super(message);
-    this.name = 'PiiGateError';
-  }
-}
-
-export class AccessNotApprovedError extends Error {
-  readonly code = 'AccessNotApprovedError';
-  constructor(message = 'Ticket cap quyen vao toa chua duoc BQL duyet.') {
-    super(message);
-    this.name = 'AccessNotApprovedError';
-  }
-}
-
-export class IneligibleVendorError extends Error {
-  readonly code = 'IneligibleVendorError';
-  constructor(message = 'Tho khong du dieu kien nhan cuoc nay.') {
-    super(message);
-    this.name = 'IneligibleVendorError';
-  }
-}
-
 export class ModelUnavailableError extends Error {
   readonly code = 'ModelUnavailableError';
   constructor(message = 'Mo hinh ngon ngu tam thoi khong kha dung.') {
     super(message);
     this.name = 'ModelUnavailableError';
-  }
-}
-
-export class RegulationUnavailable extends Error {
-  readonly code = 'RegulationUnavailable';
-  constructor(message = 'Khong truy hoi duoc quy che lien quan.') {
-    super(message);
-    this.name = 'RegulationUnavailable';
   }
 }
 
@@ -67,25 +34,10 @@ export class RateLimitedError extends Error {
   }
 }
 
-export class InvalidCategoryError extends Error {
-  readonly code = 'InvalidCategoryError';
-  constructor(message = 'Danh muc viec khong hop le.') {
-    super(message);
-    this.name = 'InvalidCategoryError';
-  }
-}
-
-export class ConsentMissingError extends Error {
-  readonly code = 'ConsentMissingError';
-  constructor(message = 'Chua nhan duoc su dong y ro rang cua cu dan.') {
-    super(message);
-    this.name = 'ConsentMissingError';
-  }
-}
-
-/** 01-CONTRACTS §2b "Kiem input tool": Gemini khong co `strict` nen tool tu
- * kiem `input` theo `input_schema` (required, kieu, enum, khoa la) truoc
- * khi `run`; sai => `tool_result is_error` ma nay, khong chay tool. */
+/** Gemini khong co `strict` nen tool tu kiem `input` theo `input_schema`
+ * (required, kieu, enum, khoa la) truoc khi `run`; sai => `tool_result
+ * is_error` ma nay, khong chay tool. (`code`/`name` = 'InvalidToolInput',
+ * giu nguyen tu ban truoc — KHONG doi.) */
 export class InvalidToolInputError extends Error {
   readonly code = 'InvalidToolInput';
   constructor(message = 'Input cua tool khong hop le theo input_schema.') {
@@ -94,90 +46,130 @@ export class InvalidToolInputError extends Error {
   }
 }
 
-/** SPEC-P03 §11.5: `classify_responsibility` chi chay khi job dang 'drafting';
- * goi lai sau khi verdict da chot (job da sang awaiting_consent/routed_bql/...)
- * => loi nay. Caller: bao cu dan "da ket luan, can BQL xem lai". (Ghi chu:
- * SPEC-P03 §11.5 doi them dong vao bang loi 01-CONTRACTS §9 — file do nam
- * trong CAM DUNG cua handoff nay, xem Cau hoi mo trong report.) */
-export class VerdictLockedError extends Error {
-  readonly code = 'VerdictLockedError';
-  constructor(message = 'Ket luan trach nhiem da duoc chot, can Ban quan ly xem lai.') {
+/** Env sai (`readCommunityConfig`, `readPacerConfig`) — tien trinh exit 1 khi khoi dong. */
+export class ConfigError extends Error {
+  readonly code = 'ConfigError';
+  constructor(message = 'Cau hinh moi truong khong hop le.') {
     super(message);
-    this.name = 'VerdictLockedError';
+    this.name = 'ConfigError';
   }
 }
 
-/** SPEC-P05-Dispatch.md §10.1.2/§10.3.1: ma cuoc khong ton tai hoac khong
- * thuoc nguoi dang noi. Caller: "Khong tim thay ma cuoc <code>", khong lo
- * cuoc khac. */
-export class JobNotFoundError extends Error {
-  readonly code = 'JobNotFoundError';
-  constructor(message = 'Khong tim thay ma cuoc nay.') {
+/** `send_group_message` khi da du `budget_per_hour` (BB-08). */
+export class GroupBudgetExceededError extends Error {
+  readonly code = 'GroupBudgetExceededError';
+  constructor(message = 'Het ngan sach tin nhan cua nhom trong gio nay.') {
     super(message);
-    this.name = 'JobNotFoundError';
+    this.name = 'GroupBudgetExceededError';
   }
 }
 
-/** SPEC-P05-Dispatch.md §10.3.1 (confirmAssignment): OK/gia den sau
- * `hold_expires_at` — tool da nha cuoc (releaseHold) truoc khi nem loi nay. */
-export class HoldExpiredError extends Error {
-  readonly code = 'HoldExpiredError';
-  constructor(message = 'Het han giu, cuoc da duoc dang lai.') {
+/** Tool co trong bang §7.1 nhung vai/be mat khong cho (phong thu 2 lop). */
+export class ToolNotAllowedError extends Error {
+  readonly code = 'ToolNotAllowedError';
+  constructor(message = 'Vai/be mat hien tai khong duoc dung tool nay.') {
     super(message);
-    this.name = 'HoldExpiredError';
+    this.name = 'ToolNotAllowedError';
   }
 }
 
-/** SPEC-P05-Dispatch.md §10.3.1 (confirmAssignment): cuoc mode='quote'
- * thieu gia hoac gia khong khop tin nhan cua tho (§10.4.2). */
-export class QuoteRequiredError extends Error {
-  readonly code = 'QuoteRequiredError';
-  constructor(message = 'Can bao gia truoc khi xac nhan cuoc nay.') {
+/** Hanh dong khong duoc phep theo luat trong tool (bot khong la admin, tin cua owner...). */
+export class ActionNotPermittedError extends Error {
+  readonly code = 'ActionNotPermittedError';
+  constructor(message = 'Hanh dong nay khong duoc phep trong ngu canh hien tai.') {
     super(message);
-    this.name = 'QuoteRequiredError';
+    this.name = 'ActionNotPermittedError';
   }
 }
 
-/** SPEC-P05-Dispatch.md §10.9.2: chua dat tran slot / chua cau hinh nhom
- * thi / toa mo ho khi tho co nhieu hon 1 toa. */
-export class SlotUnavailableError extends Error {
-  readonly code = 'SlotUnavailableError';
-  constructor(message = 'Chua the cap slot luc nay.') {
+export class MessageNotInBufferError extends Error {
+  readonly code = 'MessageNotInBufferError';
+  constructor(message = 'Tin nhan khong co trong dem nhom hien tai.') {
     super(message);
-    this.name = 'SlotUnavailableError';
+    this.name = 'MessageNotInBufferError';
   }
 }
 
-/** SPEC-P05-Dispatch.md §10.4.4: tool phia tho (`claim_job`,
- * `confirm_assignment`, `decline_hold`) khong co bang chung y dinh (triage
- * du nguong HOAC cum lươi tat dinh khop BANG NHAU) — Đ21/Đ27: model hieu y,
- * code la lươi an toan; CAM regex "chua" lam co che chinh. */
+export class UnknownMemberError extends Error {
+  readonly code = 'UnknownMemberError';
+  constructor(message = 'Khong phai thanh vien con hieu luc cua nhom.') {
+    super(message);
+    this.name = 'UnknownMemberError';
+  }
+}
+
+export class AmbiguousMentionError extends Error {
+  readonly code = 'AmbiguousMentionError';
+  constructor(message = 'Ten khop nhieu hon mot thanh vien.') {
+    super(message);
+    this.name = 'AmbiguousMentionError';
+  }
+}
+
+/** Loi lap trinh: thi hanh kick/block khi `approvals.status != 'approved'`. */
+export class ApprovalRequiredError extends Error {
+  readonly code = 'ApprovalRequiredError';
+  constructor(message = 'Hanh dong can the duyet da duoc phe duyet.') {
+    super(message);
+    this.name = 'ApprovalRequiredError';
+  }
+}
+
+/** `decide_approval` thieu id trong tin cua requester (bang chung y dinh tat dinh). */
 export class IntentNotConfirmedError extends Error {
   readonly code = 'IntentNotConfirmedError';
-  constructor(message = 'Chua xac nhan duoc y dinh cua tho tu tin nhan.') {
+  constructor(message = 'Chua xac nhan duoc y dinh tu tin nhan cua nguoi quyet.') {
     super(message);
     this.name = 'IntentNotConfirmedError';
   }
 }
 
-/** SPEC-P05-Dispatch.md §10.17 (Đ30): `suspendVendor` khong tim thay
- * `vendors.id` — khac voi thieu quyen/sai trang thai (khong phai
- * `ConflictError`). Caller (web): 404. */
-export class VendorNotFoundError extends Error {
-  readonly code = 'VendorNotFoundError';
-  constructor(message = 'Khong tim thay tho nay.') {
+export class LeadIncompleteError extends Error {
+  readonly code = 'LeadIncompleteError';
+  constructor(message = 'Lead chua du thong tin de chuyen chu.') {
     super(message);
-    this.name = 'VendorNotFoundError';
+    this.name = 'LeadIncompleteError';
   }
 }
 
-/** Loi lap trinh: cap (from -> to) khong nam trong bang §5 01-CONTRACTS.
- * CAM caller bat loi nay de "xu ly tiep" (SPEC-P01 §5) — no bao mot bug o
- * noi goi transitionJob, khong phai mot tinh huong nghiep vu binh thuong. */
-export class IllegalTransitionError extends Error {
-  readonly code = 'IllegalTransitionError';
-  constructor(from: string, to: string) {
-    super(`Chuyen trang thai khong hop le: ${from} -> ${to} khong co trong TRANSITIONS.`);
-    this.name = 'IllegalTransitionError';
+export class SkillNotFoundError extends Error {
+  readonly code = 'SkillNotFoundError';
+  constructor(message = 'Khong tim thay skill (hoac skill dang tat).') {
+    super(message);
+    this.name = 'SkillNotFoundError';
+  }
+}
+
+export class AutomationInvalidError extends Error {
+  readonly code = 'AutomationInvalidError';
+  constructor(message = 'Lich khong hop le hoac khong tinh duoc lan chay ke tiep.') {
+    super(message);
+    this.name = 'AutomationInvalidError';
+  }
+}
+
+export class EmbeddingUnavailableError extends Error {
+  readonly code = 'EmbeddingUnavailableError';
+  constructor(message = 'Khong lay duoc embedding.') {
+    super(message);
+    this.name = 'EmbeddingUnavailableError';
+  }
+}
+
+/** Truy hoi tri thuc that bai (`retrieval/search-knowledge.ts`). */
+export class KnowledgeUnavailableError extends Error {
+  readonly code = 'KnowledgeUnavailableError';
+  constructor(message = 'Khong truy hoi duoc tri thuc lien quan.') {
+    super(message);
+    this.name = 'KnowledgeUnavailableError';
+  }
+}
+
+/** `ZaloApiError` khi worker thi hanh `action` (kem ma zca-js trong `result`). */
+export class ZaloActionError extends Error {
+  readonly code = 'ZaloActionError';
+  constructor(message = 'Zalo tu choi hanh dong quan tri.') {
+    super(message);
+    this.name = 'ZaloActionError';
   }
 }

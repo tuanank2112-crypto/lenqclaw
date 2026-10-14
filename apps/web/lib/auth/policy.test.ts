@@ -1,101 +1,111 @@
 import { describe, expect, it } from 'vitest';
 import { canAccess } from './policy';
 
-describe('canAccess (SPEC-P01-Foundation.md §7)', () => {
+describe('canAccess (SPEC-P01 §3.1)', () => {
   it('/login va /api/auth/* mo cho moi vai, ke ca chua dang nhap', () => {
-    for (const role of [null, 'bql_admin', 'bql_staff', 'guard'] as const) {
+    for (const role of [null, 'admin', 'operator'] as const) {
       expect(canAccess(role, '/login')).toBe(true);
       expect(canAccess(role, '/api/auth/login')).toBe(true);
     }
   });
 
   it('chua dang nhap: chi /login va /api/auth/* duoc phep', () => {
-    expect(canAccess(null, '/')).toBe(false);
-    expect(canAccess(null, '/tickets')).toBe(false);
-    expect(canAccess(null, '/gate')).toBe(false);
-    expect(canAccess(null, '/admin')).toBe(false);
-    expect(canAccess(null, '/dev/sim')).toBe(false);
+    for (const p of ['/', '/groups', '/api/groups/1', '/approvals', '/zalo', '/admin', '/dev/sim', '/agent']) {
+      expect(canAccess(null, p), p).toBe(false);
+    }
   });
 
-  it('/ mo cho ca 3 vai da dang nhap', () => {
-    expect(canAccess('bql_admin', '/')).toBe(true);
-    expect(canAccess('bql_staff', '/')).toBe(true);
-    expect(canAccess('guard', '/')).toBe(true);
+  it('/ mo cho ca 2 vai da dang nhap', () => {
+    expect(canAccess('admin', '/')).toBe(true);
+    expect(canAccess('operator', '/')).toBe(true);
   });
 
-  it('/tickets/*: admin+staff duoc, guard bi tu choi', () => {
-    expect(canAccess('bql_admin', '/tickets')).toBe(true);
-    expect(canAccess('bql_staff', '/tickets/123')).toBe(true);
-    expect(canAccess('guard', '/tickets')).toBe(false);
+  it('nhom doc: admin GET+POST ok', () => {
+    for (const p of ['/groups', '/groups/g1', '/api/groups/g1', '/persona', '/api/persona/soul', '/knowledge', '/api/knowledge/1', '/automations', '/api/automations']) {
+      expect(canAccess('admin', p, 'GET'), `admin GET ${p}`).toBe(true);
+      expect(canAccess('admin', p, 'POST'), `admin POST ${p}`).toBe(true);
+    }
   });
 
-  it('/gate/*: admin+guard duoc, staff bi tu choi', () => {
-    expect(canAccess('bql_admin', '/gate')).toBe(true);
-    expect(canAccess('guard', '/gate/entry')).toBe(true);
-    expect(canAccess('bql_staff', '/gate')).toBe(false);
+  it('nhom doc: operator GET ok, POST/PUT/DELETE bi tu choi', () => {
+    for (const p of ['/groups', '/api/groups/g1', '/persona', '/api/persona/soul', '/knowledge/1', '/api/knowledge', '/automations', '/api/automations/1']) {
+      expect(canAccess('operator', p), `operator GET (mac dinh) ${p}`).toBe(true);
+      expect(canAccess('operator', p, 'GET'), `operator GET ${p}`).toBe(true);
+      expect(canAccess('operator', p, 'POST'), `operator POST ${p}`).toBe(false);
+      expect(canAccess('operator', p, 'DELETE'), `operator DELETE ${p}`).toBe(false);
+    }
   });
 
-  it('/admin/*, /dev/*: chi bql_admin', () => {
-    expect(canAccess('bql_admin', '/admin/x')).toBe(true);
-    expect(canAccess('bql_admin', '/dev/sim')).toBe(true);
-    expect(canAccess('bql_staff', '/admin/x')).toBe(false);
-    expect(canAccess('guard', '/dev/sim')).toBe(false);
+  it('nhom ca hai vai: admin va operator deu ok, ke ca POST', () => {
+    for (const p of ['/approvals', '/api/approvals/1', '/leads', '/api/leads/2', '/moderation', '/api/moderation/x', '/agent', '/agent/timeline']) {
+      for (const role of ['admin', 'operator'] as const) {
+        expect(canAccess(role, p, 'GET'), `${role} GET ${p}`).toBe(true);
+        expect(canAccess(role, p, 'POST'), `${role} POST ${p}`).toBe(true);
+      }
+    }
   });
 
-  it('duong khac: mac dinh tu choi cho ca 3 vai', () => {
-    expect(canAccess('bql_admin', '/khong-ton-tai')).toBe(false);
-    expect(canAccess('bql_staff', '/khong-ton-tai')).toBe(false);
-    expect(canAccess('guard', '/khong-ton-tai')).toBe(false);
+  it('/zalo, /api/zalo/*, /dev/*, /api/dev/*, /admin/*: chi admin', () => {
+    for (const p of ['/zalo', '/api/zalo/status', '/api/zalo/community/login', '/dev/sim', '/api/dev/sim/send', '/admin/x']) {
+      expect(canAccess('admin', p), `admin ${p}`).toBe(true);
+      expect(canAccess('operator', p), `operator ${p}`).toBe(false);
+      expect(canAccess('operator', p, 'POST'), `operator POST ${p}`).toBe(false);
+    }
   });
 
-  // SPEC-P04-Vendor-Console.md §8.1 — moi o bang mot `it`.
-  it('/api/tickets/*: admin duoc', () => {
-    expect(canAccess('bql_admin', '/api/tickets/1/decision')).toBe(true);
+  it('duong khac: mac dinh tu choi cho ca 2 vai', () => {
+    for (const p of ['/khong-ton-tai', '/api/khong-ton-tai/1', '/groupsX/1', '/leadsX']) {
+      expect(canAccess('admin', p), `admin ${p}`).toBe(false);
+      expect(canAccess('operator', p), `operator ${p}`).toBe(false);
+    }
   });
-  it('/api/tickets/*: staff duoc', () => {
-    expect(canAccess('bql_staff', '/api/tickets/1/decision')).toBe(true);
-  });
-  it('/api/tickets/*: guard bi tu choi', () => {
-    expect(canAccess('guard', '/api/tickets/1/decision')).toBe(false);
-  });
-  it('/vendors/*: admin duoc', () => {
-    expect(canAccess('bql_admin', '/vendors')).toBe(true);
-  });
-  it('/vendors/*: staff bi tu choi', () => {
-    expect(canAccess('bql_staff', '/vendors')).toBe(false);
-  });
-  it('/vendors/*: guard bi tu choi', () => {
-    expect(canAccess('guard', '/vendors')).toBe(false);
-  });
-  it('/api/vendors/*: admin duoc', () => {
-    expect(canAccess('bql_admin', '/api/vendors/1/status')).toBe(true);
-  });
-  it('/api/vendors/*: staff bi tu choi', () => {
-    expect(canAccess('bql_staff', '/api/vendors/1/status')).toBe(false);
-  });
-  it('/api/vendors/*: guard bi tu choi', () => {
-    expect(canAccess('guard', '/api/vendors/1/status')).toBe(false);
-  });
-  it('/jobs/*: admin duoc', () => {
-    expect(canAccess('bql_admin', '/jobs/C-0001')).toBe(true);
-  });
-  it('/jobs/*: staff duoc', () => {
-    expect(canAccess('bql_staff', '/jobs/C-0001')).toBe(true);
-  });
-  it('/jobs/*: guard bi tu choi', () => {
-    expect(canAccess('guard', '/jobs')).toBe(false);
-  });
-  it('R02-tham-dinh D6: khop theo RANH GIOI DOAN, khong theo tien to', () => {
-    // /ticketsX khong phai /tickets hay /tickets/... => duong khac => tu choi
-    expect(canAccess('bql_admin', '/ticketsX')).toBe(false);
-    expect(canAccess('bql_staff', '/ticketsX')).toBe(false);
-    // /gatekeeper khong phai /gate hay /gate/... => tu choi
-    expect(canAccess('bql_admin', '/gatekeeper')).toBe(false);
-    expect(canAccess('guard', '/gatekeeper')).toBe(false);
-    // /devices khong phai /dev hay /dev/... => tu choi (ke ca admin)
-    expect(canAccess('bql_admin', '/devices')).toBe(false);
+
+  it('khop theo RANH GIOI DOAN, khong theo tien to', () => {
+    expect(canAccess('admin', '/groupsX')).toBe(false);
+    expect(canAccess('operator', '/groupsX')).toBe(false);
+    expect(canAccess('admin', '/approvalsX')).toBe(false);
+    expect(canAccess('admin', '/devices')).toBe(false);
+    expect(canAccess('admin', '/zaloX')).toBe(false);
+    expect(canAccess('admin', '/agents')).toBe(false);
     // dung doan van hoat dong binh thuong
-    expect(canAccess('bql_admin', '/tickets')).toBe(true);
-    expect(canAccess('guard', '/gate')).toBe(true);
+    expect(canAccess('admin', '/groups')).toBe(true);
+    expect(canAccess('operator', '/approvals')).toBe(true);
+  });
+
+  it('operator doc duoc tung nhom GET (groups/persona/knowledge/automations)', () => {
+    expect(canAccess('operator', '/groups', 'GET')).toBe(true);
+    expect(canAccess('operator', '/api/persona/rules', 'GET')).toBe(true);
+    expect(canAccess('operator', '/knowledge', 'GET')).toBe(true);
+    expect(canAccess('operator', '/api/automations/1', 'GET')).toBe(true);
+  });
+
+  it('operator ghi (POST/PUT/PATCH/DELETE) tung nhom doc bi tu choi', () => {
+    for (const m of ['POST', 'PUT', 'PATCH', 'DELETE']) {
+      expect(canAccess('operator', '/api/groups/1', m), `groups ${m}`).toBe(false);
+      expect(canAccess('operator', '/api/knowledge/1', m), `knowledge ${m}`).toBe(false);
+    }
+  });
+
+  it('operator duyet the / sua lead / kiem duyet duoc ghi', () => {
+    expect(canAccess('operator', '/api/approvals/1', 'POST')).toBe(true);
+    expect(canAccess('operator', '/api/leads/1', 'PATCH')).toBe(true);
+    expect(canAccess('operator', '/api/moderation/x', 'POST')).toBe(true);
+  });
+
+  it('/agent chi la trang (khong co /api/agent trong bang): /api/agent bi tu choi', () => {
+    expect(canAccess('admin', '/agent')).toBe(true);
+    expect(canAccess('operator', '/agent/timeline')).toBe(true);
+    expect(canAccess('admin', '/api/agent')).toBe(false);
+  });
+
+  it('chua dang nhap voi method POST van chi /login va /api/auth/*', () => {
+    expect(canAccess(null, '/api/approvals/1', 'POST')).toBe(false);
+    expect(canAccess(null, '/api/auth/login', 'POST')).toBe(true);
+  });
+
+  it('method khong phan biet hoa thuong; HEAD tinh la doc', () => {
+    expect(canAccess('operator', '/groups', 'get')).toBe(true);
+    expect(canAccess('operator', '/groups', 'HEAD')).toBe(true);
+    expect(canAccess('operator', '/groups', 'post')).toBe(false);
   });
 });

@@ -1,4 +1,4 @@
-// packages/core/src/services/vn-time.test.ts — SPEC-P05-Dispatch.md §10.8.1(2):
+// packages/core/src/services/vn-time.test.ts — ham gio VN thuan:
 // 5 ca da chay thu boi architect + isBusinessHours/isOfficeHours/vnDateString.
 
 import { describe, expect, it } from 'vitest';
@@ -9,7 +9,7 @@ function vn(iso: string): Date {
   return new Date(`${iso}+07:00`);
 }
 
-describe('computePublishExpiry (SPEC-P05-Dispatch.md §10.8.1(2))', () => {
+describe('computePublishExpiry (ham gio VN thuan)', () => {
   it('10:00 => 10:45 (trong gio, +45p)', () => {
     const r = computePublishExpiry(vn('2026-09-25T10:00:00'), 45);
     expect(r.toISOString()).toBe(vn('2026-09-25T10:45:00').toISOString());

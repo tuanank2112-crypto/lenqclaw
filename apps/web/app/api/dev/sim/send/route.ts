@@ -11,7 +11,7 @@ interface RawSendBody {
 }
 
 interface SendBody {
-  account: 'bql' | 'market';
+  account: 'community';
   threadId: string;
   threadType: 'user' | 'group';
   senderUid: string;
@@ -25,7 +25,7 @@ interface SendBody {
 // lam constraint DB nem loi tho).
 function parseSendBody(raw: RawSendBody | null): SendBody | null {
   if (!raw) return null;
-  if (raw.account !== 'bql' && raw.account !== 'market') return null;
+  if (raw.account !== 'community') return null;
   if (raw.threadType !== 'user' && raw.threadType !== 'group') return null;
   if (typeof raw.threadId !== 'string' || raw.threadId.length === 0) return null;
   if (typeof raw.senderUid !== 'string' || raw.senderUid.length === 0) return null;
@@ -38,13 +38,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'not_sim_mode' }, { status: 404 });
   }
   const session = await getSessionFromRequest(req);
-  if (!session || session.role !== 'bql_admin') {
+  if (!session || session.role !== 'admin') {
     return NextResponse.json({ error: 'forbidden' }, { status: 403 });
   }
 
   const raw = (await req.json().catch(() => null)) as RawSendBody | null;
-  // SPEC-P05-Dispatch.md §10.11 / SPEC-P04 §8.2: 'system' danh rieng cho
-  // su kien he thong (enqueueSystemEvent) — CAM tho/cu dan gia mao gui.
+  // 'system' danh rieng cho su kien he thong (enqueueSystemEvent) — CAM
+  // gia mao gui tu kenh gia lap.
   if (raw && raw.senderUid === 'system') {
     return NextResponse.json({ error: 'reserved_sender' }, { status: 400 });
   }
@@ -62,8 +62,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   });
 
   if (!result.duplicate) {
-    // SPEC-P03 §10.1: account bql + thread user => residentHandler; con lai
-    // van vong vong lai (echoHandler) toi khi P05 thay.
+    // P01: router khung (DM => STUB_DM_REPLY, nhom => chi audit); logic that o P03.
     await sim.processInbound(agent.routeInboundEvent);
     await sim.simDeliver();
   }

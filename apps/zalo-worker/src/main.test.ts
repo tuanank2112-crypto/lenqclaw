@@ -31,8 +31,8 @@ describe('zalo-worker main — khoa phien', { timeout: 60_000 }, () => {
     expect(r.status).toBe(1);
     expect(r.stderr + r.stdout).not.toContain(bad);
   });
-  it('khoa dung nhung ZALO_ACCOUNTS=market ⇒ exit 1 (§9.6)', () => {
-    const r = runMain({ ZALO_SESSION_KEY: 'ab'.repeat(32), ZALO_ACCOUNTS: 'market' });
+  it('khoa dung nhung ZALO_ACCOUNTS khac community ⇒ exit 1', () => {
+    const r = runMain({ ZALO_SESSION_KEY: 'ab'.repeat(32), ZALO_ACCOUNTS: 'other' });
     expect(r.status).toBe(1);
   });
 });

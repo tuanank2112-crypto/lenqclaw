@@ -13,7 +13,7 @@ describe('POST /api/auth/login (db)', () => {
     process.env.SESSION_SECRET = 'test-secret-32-bytes-minimum-xxxxxxxx';
     const hash = await hashPassword(PASSWORD);
     await sql(`delete from staff_users where email = $1`, [EMAIL]);
-    await sql(`insert into staff_users (email, password_hash, role) values ($1,$2,'bql_admin')`, [EMAIL, hash]);
+    await sql(`insert into staff_users (email, password_hash, role) values ($1,$2,'admin')`, [EMAIL, hash]);
   });
 
   afterAll(async () => {

@@ -1,5 +1,5 @@
 // packages/core/src/services/vn-time.ts — gio Viet Nam (Asia/Ho_Chi_Minh,
-// UTC+7, khong DST) thuan, khong goi DB (SPEC-P05-Dispatch.md §10.8.1).
+// UTC+7, khong DST) thuan, khong goi DB (gio VN la tham so cua cac buoc timer).
 // Moi ham nhan `Date` tham so — CAM `now()` cua Postgres / dong ho he thong
 // tien trinh trong cac dich vu dung ham nay (đồng ho la tham so).
 
@@ -19,7 +19,7 @@ export function isBusinessHours(at: Date): boolean {
 }
 
 /** true khi `at` roi vao [08:00, 18:00) gio VN, MOI ngay (khac
- * `isBusinessHours` — dung cho nhac BQL §10.8.1(3)). */
+ * `isBusinessHours` — dung cho cac buoc timer chi chay trong gio hanh chinh). */
 export function isOfficeHours(at: Date): boolean {
   const { hour } = vnHourMinute(at);
   return hour >= 8 && hour < 18;
@@ -53,10 +53,10 @@ function nextEightAmVn(at: Date): Date {
 }
 
 /**
- * `computePublishExpiry(at, timeoutMin)` (SPEC-P05-Dispatch.md §10.8.1(2)):
+ * `computePublishExpiry(at, timeoutMin)` (ke hoach 01, giu nguyen hanh vi):
  * gio VN cua `at` trong [07:00,21:00) => `at + timeoutMin` phut; ngoai gio
  * => 08:00 VN ke tiep (truoc 07:00 => cung ngay; tu 21:00 => ngay sau).
- * Da thu (SPEC-P05 §10.8.1): 10:00=>10:45 · 20:30=>21:15 · 21:30=>08:00 hom
+ * Da thu: 10:00=>10:45 · 20:30=>21:15 · 21:30=>08:00 hom
  * sau · 05:00=>08:00 cung ngay · 00:00 1/10=>08:00 1/10.
  */
 export function computePublishExpiry(at: Date, timeoutMin: number): Date {
@@ -66,8 +66,7 @@ export function computePublishExpiry(at: Date, timeoutMin: number): Date {
   return nextEightAmVn(at);
 }
 
-/** `HH:mm dd/MM` gio VN cua mot cot `timestamptz` (chuoi ISO) — SPEC-P05
- * §10.2.2 (`JobCard.window`). `null` => chuoi rong. */
+/** `HH:mm dd/MM` gio VN cua mot cot `timestamptz` (chuoi ISO) (khung gio hien thi). `null` => chuoi rong. */
 export function fmtWindowVn(iso: string | null): string {
   if (!iso) return '';
   const vnMs = new Date(iso).getTime() + VN_OFFSET_MIN * 60_000;

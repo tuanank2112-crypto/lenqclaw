@@ -21,7 +21,7 @@ describe('callModel — nhanh vyce (01-CONTRACTS §2d)', () => {
     setVyceFetchForTest(null);
     delete process.env.MODEL_PROVIDER;
     delete process.env.MODEL_DEFAULT;
-    delete process.env.MODEL_DIAGNOSE;
+    delete process.env.MODEL_COMMUNITY;
     delete process.env.MODEL_FALLBACKS;
     delete process.env.VYCE_API_KEY;
     delete process.env.VYCE_BASE_URL;
@@ -31,7 +31,7 @@ describe('callModel — nhanh vyce (01-CONTRACTS §2d)', () => {
   it('dich vao/ra vong tool 2 luot (nhieu tool_result mot luot, anh); body KHONG co provider; key/URL dung bien VYCE_*', async () => {
     process.env.DATA_MODE = 'sim';
     process.env.MODEL_PROVIDER = 'vyce';
-    process.env.MODEL_DIAGNOSE = 'vyce-test-main';
+    process.env.MODEL_COMMUNITY = 'vyce-test-main';
     process.env.VYCE_API_KEY = 'fake-vyce-test-key-789';
 
     const capturedUrls: string[] = [];
@@ -73,7 +73,7 @@ describe('callModel — nhanh vyce (01-CONTRACTS §2d)', () => {
       },
     ];
 
-    const result = await callModel({ route: 'diagnose', system: 'ban la tro ly', messages, tools });
+    const result = await callModel({ route: 'community', system: 'ban la tro ly', messages, tools });
 
     // key o header Bearer (VYCE_API_KEY), KHONG co trong URL; endpoint mac
     // dinh dung host Vyce (viet tach chuoi de may do bien khong bao dong gia
@@ -126,7 +126,7 @@ describe('callModel — nhanh vyce (01-CONTRACTS §2d)', () => {
         ],
       },
     ];
-    await callModel({ route: 'diagnose', system: 'ban la tro ly', messages: round2Messages, tools });
+    await callModel({ route: 'community', system: 'ban la tro ly', messages: round2Messages, tools });
 
     const body2 = capturedBodies[1] as { messages: Array<{ role: string; content?: unknown; tool_calls?: unknown; tool_call_id?: string }> };
     expect(body2.messages[2]).toMatchObject({ role: 'assistant', content: null });
@@ -148,7 +148,7 @@ describe('callModel — nhanh vyce (01-CONTRACTS §2d)', () => {
     setVyceFetchForTest(fake);
 
     await expect(
-      callModel({ route: 'diagnose', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] })
+      callModel({ route: 'community', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] })
     ).rejects.toThrow(/DATA_MODE=sim/);
     expect(fetchCount).toBe(0);
   });
@@ -166,7 +166,7 @@ describe('callModel — nhanh vyce (01-CONTRACTS §2d)', () => {
     setVyceFetchForTest(fake);
 
     await expect(
-      callModel({ route: 'diagnose', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] })
+      callModel({ route: 'community', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] })
     ).rejects.toThrow(/DATA_MODE=sim/);
     expect(fetchCount).toBe(0);
   });
@@ -190,7 +190,7 @@ describe('callModel — nhanh vyce (01-CONTRACTS §2d)', () => {
     };
     setVyceFetchForTest(fake);
 
-    const result = await callModel({ route: 'diagnose', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] });
+    const result = await callModel({ route: 'community', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] });
 
     expect(result.model).toBe('vyce-fallback-1');
     expect(calledModels.filter((m) => m === 'vyce-main-x').length).toBe(3);
@@ -212,7 +212,7 @@ describe('callModel — nhanh vyce (01-CONTRACTS §2d)', () => {
     setVyceFetchForTest(fake);
 
     await expect(
-      callModel({ route: 'diagnose', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] })
+      callModel({ route: 'community', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] })
     ).rejects.toBeInstanceOf(ModelUnavailableError);
     expect(fetchCount).toBe(1);
   });
@@ -235,7 +235,7 @@ describe('callModel — nhanh vyce (01-CONTRACTS §2d)', () => {
     };
     setVyceFetchForTest(fake);
 
-    const result = await callModel({ route: 'diagnose', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] });
+    const result = await callModel({ route: 'community', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] });
     expect(result.model).toBe('deepseek-v4-flash');
     expect(capturedUrl).toBe('https://custom.vyce.example.com/v1/chat/completions');
   });

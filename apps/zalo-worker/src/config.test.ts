@@ -1,4 +1,4 @@
-// SPEC-P02 §5 (PACER_* mac dinh = bang), §9.1 (ZALO_ACCOUNTS=bql).
+// SPEC-P02 §5 (PACER_* mac dinh = bang), §9.1 (ZALO_ACCOUNTS=community).
 import { describe, expect, it } from 'vitest';
 import { ConfigError, PACER_DEFAULTS, readAccounts, readPacerConfig } from './config.js';
 
@@ -31,12 +31,12 @@ describe('readPacerConfig', () => {
 });
 
 describe('readAccounts', () => {
-  it('mac dinh bql', () => {
-    expect(readAccounts({})).toEqual(['bql']);
-    expect(readAccounts({ ZALO_ACCOUNTS: ' bql , bql ' })).toEqual(['bql']);
+  it('mac dinh community', () => {
+    expect(readAccounts({})).toEqual(['community']);
+    expect(readAccounts({ ZALO_ACCOUNTS: ' community , community ' })).toEqual(['community']);
   });
-  it('market bi CAM o giai doan 1 (§9.6); ten la ⇒ loi', () => {
-    expect(() => readAccounts({ ZALO_ACCOUNTS: 'bql,market' })).toThrow(ConfigError);
+  it('ten khac community (ke ca danh sach nhieu tai khoan) ⇒ loi', () => {
+    expect(() => readAccounts({ ZALO_ACCOUNTS: 'community,other' })).toThrow(ConfigError);
     expect(() => readAccounts({ ZALO_ACCOUNTS: 'abc' })).toThrow(ConfigError);
   });
 });

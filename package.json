@@ -2,7 +2,7 @@
   "name": "lenqclaw",
   "version": "0.0.1",
   "private": true,
-  "description": "San viec tho trong toa nha (MVP pilot) - monorepo root",
+  "description": "Zalo community-care agent (lenqclaw) - monorepo root",
   "engines": {
     "node": ">=22"
   },

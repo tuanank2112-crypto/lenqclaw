@@ -65,7 +65,7 @@ export async function handleInbound(
   deps: InboundDeps = {}
 ): Promise<InboundOutcome> {
   const now = deps.now ?? Date.now;
-  // Giai doan 1 (§9.1, §9.6): bql chi thread `user`; nhom thuoc P05 ⇒ khong luu.
+  // P01: worker chi nhan thread `user`; tin nhom do P02 (SPEC-P02) lam ⇒ chua luu.
   if (m.threadType === 'group') return 'ignored_group';
 
   const payload = buildPayload(m);
@@ -85,7 +85,7 @@ export async function handleInbound(
     });
     if (id === null) return 'duplicate';
     if (fromBot) return 'self_bot_echo';
-    if (account === 'bql') await store.setStaffTakeover(account, m.threadId);
+    await store.setStaffTakeover(account, m.threadId);
     return 'self_staff_takeover';
   }
 

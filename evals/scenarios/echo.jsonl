@@ -1,6 +1,6 @@
-{"account":"bql","thread_id":"u-101","thread_type":"user","sender_uid":"resident-1","text":"Bong den phong khach bi chay","msg_id":"echo-001"}
-{"account":"bql","thread_id":"u-101","thread_type":"user","sender_uid":"resident-1","text":"Bong den phong khach bi chay","msg_id":"echo-001"}
-{"account":"market","thread_id":"g-tho-toa-a","thread_type":"group","sender_uid":"vendor-1","text":"nhan C-0001","msg_id":"echo-002"}
-{"account":"bql","thread_id":"u-102","thread_type":"user","sender_uid":"resident-2","text":"Tac bon rua o phong tam","msg_id":"echo-003"}
-{"account":"market","thread_id":"g-tho-toa-a","thread_type":"group","sender_uid":"vendor-2","text":"OK","msg_id":"echo-004"}
-{"account":"bql","thread_id":"u-103","thread_type":"user","sender_uid":"resident-3","text":"Khoa cua bi ket khong mo duoc","msg_id":"echo-005"}
+{"account":"community","thread_id":"u-101","thread_type":"user","sender_uid":"sim-mem-1","text":"Bong den phong khach bi chay","msg_id":"echo-001"}
+{"account":"community","thread_id":"u-101","thread_type":"user","sender_uid":"sim-mem-1","text":"Bong den phong khach bi chay","msg_id":"echo-001"}
+{"account":"community","thread_id":"sim-group-1","thread_type":"group","sender_uid":"sim-mem-2","text":"nhan tin thu mot","msg_id":"echo-002"}
+{"account":"community","thread_id":"u-102","thread_type":"user","sender_uid":"sim-mem-1","text":"Tac bon rua o phong tam","msg_id":"echo-003"}
+{"account":"community","thread_id":"sim-group-1","thread_type":"group","sender_uid":"sim-mem-2","text":"OK","msg_id":"echo-004"}
+{"account":"community","thread_id":"u-103","thread_type":"user","sender_uid":"sim-mem-1","text":"Khoa cua bi ket khong mo duoc","msg_id":"echo-005"}

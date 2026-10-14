@@ -19,14 +19,14 @@ describe('callModel — nhanh gemini (01-CONTRACTS §2b)', () => {
     setGeminiFetchForTest(null);
     delete process.env.MODEL_PROVIDER;
     delete process.env.MODEL_DEFAULT;
-    delete process.env.MODEL_DIAGNOSE;
+    delete process.env.MODEL_COMMUNITY;
     delete process.env.MODEL_FALLBACKS;
     delete process.env.GEMINI_API_KEY;
   });
 
   it('dich system/user/assistant/image/tool_use/tool_result; functionCall => tool_use + stop_reason; key o header khong o URL', async () => {
     process.env.MODEL_PROVIDER = 'gemini';
-    process.env.MODEL_DIAGNOSE = 'gemini-test-main';
+    process.env.MODEL_COMMUNITY = 'gemini-test-main';
     process.env.GEMINI_API_KEY = 'secret-key-123';
 
     const capturedUrls: string[] = [];
@@ -65,7 +65,7 @@ describe('callModel — nhanh gemini (01-CONTRACTS §2b)', () => {
       },
     ];
 
-    const result = await callModel({ route: 'diagnose', system: 'ban la tro ly', messages, tools });
+    const result = await callModel({ route: 'community', system: 'ban la tro ly', messages, tools });
 
     // key o header, KHONG co trong URL.
     expect(capturedUrls[0]).not.toContain('secret-key-123');
@@ -97,7 +97,7 @@ describe('callModel — nhanh gemini (01-CONTRACTS §2b)', () => {
     expect(result.usage.output_tokens).toBe(4);
     expect(result.usage.cache_read_input_tokens).toBe(2);
 
-    // luot sau: nap NGUYEN content cua luot truoc (nhu resident-agent.ts lam)
+    // luot sau: nap NGUYEN content cua luot truoc (nhu vong tool cua agent lam)
     // + tool_result cho tool_use_id do => thoughtSignature phai duoc gan lai
     // dung o functionCall, va functionResponse phai co dung "name".
     const round2Messages: MessageParam[] = [
@@ -108,7 +108,7 @@ describe('callModel — nhanh gemini (01-CONTRACTS §2b)', () => {
         content: [{ type: 'tool_result', tool_use_id: toolUse.id, content: JSON.stringify({ ok: true }) }],
       },
     ];
-    await callModel({ route: 'diagnose', system: 'ban la tro ly', messages: round2Messages, tools });
+    await callModel({ route: 'community', system: 'ban la tro ly', messages: round2Messages, tools });
 
     const body2 = capturedBodies[1] as { contents: Array<{ role: string; parts: Array<Record<string, unknown>> }> };
     const modelTurn = body2.contents[1]!;
@@ -142,7 +142,7 @@ describe('callModel — nhanh gemini (01-CONTRACTS §2b)', () => {
     };
     setGeminiFetchForTest(fake);
 
-    const result = await callModel({ route: 'diagnose', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] });
+    const result = await callModel({ route: 'community', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] });
 
     expect(result.model).toBe('gemini-fallback-1');
     // 3 lan goi model chinh (1 + 2 retry) roi 1 lan fallback thanh cong.
@@ -163,7 +163,7 @@ describe('callModel — nhanh gemini (01-CONTRACTS §2b)', () => {
     setGeminiFetchForTest(fake);
 
     await expect(
-      callModel({ route: 'diagnose', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] })
+      callModel({ route: 'community', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] })
     ).rejects.not.toBeInstanceOf(ModelUnavailableError);
     expect(fetchCount).toBe(1);
   });
@@ -180,7 +180,7 @@ describe('callModel — nhanh gemini (01-CONTRACTS §2b)', () => {
       });
     setGeminiFetchForTest(fake);
 
-    const result = await callModel({ route: 'diagnose', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] });
+    const result = await callModel({ route: 'community', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] });
     expect(result.message.stop_reason).toBe('refusal');
   });
 
@@ -196,7 +196,7 @@ describe('callModel — nhanh gemini (01-CONTRACTS §2b)', () => {
       });
     setGeminiFetchForTest(fake);
 
-    const result = await callModel({ route: 'diagnose', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] });
+    const result = await callModel({ route: 'community', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] });
     expect(result.message.stop_reason).toBe('max_tokens');
   });
 
@@ -214,7 +214,7 @@ describe('callModel — nhanh gemini (01-CONTRACTS §2b)', () => {
     };
     setGeminiFetchForTest(fake);
 
-    const result = await callModel({ route: 'diagnose', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] });
+    const result = await callModel({ route: 'community', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] });
     expect(result.model).toBe('gemini-default-check');
   });
 });

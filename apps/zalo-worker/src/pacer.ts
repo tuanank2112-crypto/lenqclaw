@@ -3,7 +3,6 @@
 // go"), cong them cac su kien "da xem"/"dang go" da den han. Khong co phien
 // (kicked/dead/logged_out) ⇒ khong gui gi, tin giu `queued` (TransportDeadError).
 
-import { buildEmergencyReply } from '@lenqclaw/core/agent/pii';
 import type { AccountId, PacerConfig } from './config.js';
 import { ZaloRateLimitError, type SeenParams, type ZaloSessionLike } from './client.js';
 import { PacerPolicy, pickNext, splitText, typingDelayMs } from './pacer-policy.js';
@@ -24,12 +23,6 @@ export interface TickResult {
   sentEvents: number;
   cancelled: number;
   note?: string;
-}
-
-function isEmergencyRow(row: store.OutboxRow): boolean {
-  if (row.body.emergency === true) return true;
-  const hotline = process.env.BQL_HOTLINE?.trim() || '1900-0000';
-  return typeof row.body.text === 'string' && row.body.text === buildEmergencyReply(hotline);
 }
 
 export class AccountPacer {
@@ -68,7 +61,7 @@ export class AccountPacer {
         result.cancelled++;
         continue;
       }
-      if (row.staff_takeover && !isEmergencyRow(row)) {
+      if (row.staff_takeover) {
         await store.cancelRow(row.id, 'staff_takeover');
         result.cancelled++;
         continue;

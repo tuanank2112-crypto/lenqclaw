@@ -165,7 +165,7 @@ export async function isBotEcho(account: AccountId, threadId: string, msgId: str
 
 export const STAFF_TAKEOVER_MINUTES = 30;
 
-/** Nhan vien tra loi tay tu tai khoan bql ⇒ bot im 30 phut (§3.2). */
+/** Nhan vien tra loi tay tu tai khoan community ⇒ bot im 30 phut (§3.2). */
 export async function setStaffTakeover(account: AccountId, threadId: string): Promise<void> {
   await sql(
     `insert into conversations (zalo_account_id, thread_id, human_takeover_until)
@@ -185,9 +185,14 @@ export async function markUndone(account: AccountId, msgId: string): Promise<num
   return rows.length;
 }
 
+/** Nguoi da nhan dien = owner (`account_owners`) HOAC thanh vien con hieu luc
+ * cua mot nhom (`group_members.left_at is null`) — chi nhung nguoi nay nhan "da xem". */
 export async function isIdentified(account: AccountId, uid: string): Promise<boolean> {
   const rows = await sql<{ one: number }>(
-    `select 1 as one from zalo_identities where zalo_account_id = $1 and zalo_uid = $2`,
+    `select 1 as one from account_owners where zalo_account_id = $1 and zalo_uid = $2
+     union all
+     select 1 as one from group_members where zalo_account_id = $1 and zalo_uid = $2 and left_at is null
+     limit 1`,
     [account, uid]
   );
   return rows.length > 0;
@@ -211,7 +216,6 @@ export interface OutboxRow {
   kind: 'text' | 'image' | 'typing' | 'seen';
   body: Record<string, unknown>;
   attempts: number;
-  job_id: string | null;
   staff_takeover: boolean;
 }
 
@@ -220,7 +224,7 @@ export interface OutboxRow {
  * tin nhan vien gui tay (is_self khong khop outbox) trong 30 phut qua. */
 export async function fetchDue(account: AccountId, limit = 200): Promise<OutboxRow[]> {
   return sql<OutboxRow>(
-    `select o.id::int as id, o.thread_id, o.thread_type, o.kind, o.body, o.attempts, o.job_id::text as job_id,
+    `select o.id::int as id, o.thread_id, o.thread_type, o.kind, o.body, o.attempts,
             exists (
               select 1 from conversations c
               where c.zalo_account_id = o.zalo_account_id and c.thread_id = o.thread_id
@@ -258,7 +262,7 @@ export async function markSending(id: number): Promise<boolean> {
 }
 
 export async function markSent(id: number, msgId: string | null): Promise<void> {
-  await sql(`update outbox set status = 'sent', zalo_msg_id = $2 where id = $1`, [id, msgId]);
+  await sql(`update outbox set status = 'sent', zalo_msg_id = $2, sent_at = now() where id = $1`, [id, msgId]);
 }
 
 /** Tra tin ve `queued` (giu nguyen, lui toi `notBefore`). */
@@ -289,7 +293,6 @@ export async function splitRow(row: OutboxRow, parts: string[], account: Account
       threadType: row.thread_type,
       kind: 'text',
       body: { ...row.body, text: parts[i], split_of: row.id, part: i },
-      jobId: row.job_id,
     });
   }
 }

@@ -1,6 +1,5 @@
 // apps/web/middleware.ts — canh moi request theo bang phan quyen
-// (SPEC-P01-Foundation.md §7) + chan `/dev/*` va `/api/dev/*` khi
-// `DATA_MODE != sim` (SPEC-P01-Foundation.md §10).
+// (SPEC-P01 §3.1) + chan `/dev/*` va `/api/dev/*` khi `DATA_MODE != sim`.
 
 import { NextResponse, type NextRequest } from 'next/server';
 import { canAccess } from './lib/auth/policy';
@@ -24,7 +23,7 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
   const payload = await verifySessionCookie(cookie);
   const role = payload?.role ?? null;
 
-  if (canAccess(role, pathname)) {
+  if (canAccess(role, pathname, req.method)) {
     return NextResponse.next();
   }
 

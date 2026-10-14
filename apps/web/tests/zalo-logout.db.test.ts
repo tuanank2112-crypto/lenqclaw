@@ -1,5 +1,5 @@
-// apps/web/tests/zalo-logout.db.test.ts — SPEC-P02 §9.8: POST /api/zalo/bql/logout
-// chi bql_admin (401 chua dang nhap, 403 vai khac, 200); sau 200 (worker KHONG
+// apps/web/tests/zalo-logout.db.test.ts — SPEC-P02 §9.8: POST /api/zalo/community/logout
+// chi admin (401 chua dang nhap, 403 vai khac, 200); sau 200 (worker KHONG
 // chay trong test nay) ⇒ session_enc null + logged_out + qr_* xoa, ngay trong
 // transaction cua route (khong de phien mo coi) + audit 'zalo.logout'.
 
@@ -23,11 +23,11 @@ async function setConnected(): Promise<void> {
     `update zalo_accounts set session_enc = '\\x00'::bytea, session_state = 'connected',
        qr_data_url = 'data:image/png;base64,QQ==', qr_expires_at = now() + interval '3 minutes',
        qr_state = 'waiting_scan', logout_requested_at = null
-     where id = 'bql'`
+     where id = 'community'`
   );
 }
 
-describe('/api/zalo/bql/logout (db, §9.8)', () => {
+describe('/api/zalo/community/logout (db, §9.8)', () => {
   beforeAll(async () => {
     process.env.SESSION_SECRET = 'test-secret-32-bytes-minimum-xxxxxxxx';
     delete process.env.ZALO_ACCOUNTS;
@@ -36,39 +36,39 @@ describe('/api/zalo/bql/logout (db, §9.8)', () => {
   afterAll(async () => {
     await sql(
       `update zalo_accounts set session_enc = null, session_state = 'logged_out', qr_data_url = null,
-         qr_expires_at = null, qr_state = null, logout_requested_at = null where id = 'bql'`
+         qr_expires_at = null, qr_state = null, logout_requested_at = null where id = 'community'`
     );
     await closeDb();
   });
 
   it('chua dang nhap ⇒ 401, khong doi gi', async () => {
     await setConnected();
-    const res = await logout(await req('http://localhost/api/zalo/bql/logout', 'POST', null), params('bql'));
+    const res = await logout(await req('http://localhost/api/zalo/community/logout', 'POST', null), params('community'));
     expect(res.status).toBe(401);
-    const r = await sql<{ session_state: string }>(`select session_state from zalo_accounts where id='bql'`);
+    const r = await sql<{ session_state: string }>(`select session_state from zalo_accounts where id='community'`);
     expect(r[0]!.session_state).toBe('connected');
   });
 
-  it('bql_staff / guard ⇒ 403, khong doi gi', async () => {
+  it('operator ⇒ 403, khong doi gi', async () => {
     await setConnected();
-    for (const role of ['bql_staff', 'guard'] as const) {
-      const res = await logout(await req('http://localhost/api/zalo/bql/logout', 'POST', role), params('bql'));
+    for (const role of ['operator'] as const) {
+      const res = await logout(await req('http://localhost/api/zalo/community/logout', 'POST', role), params('community'));
       expect(res.status).toBe(403);
     }
-    const r = await sql<{ session_state: string }>(`select session_state from zalo_accounts where id='bql'`);
+    const r = await sql<{ session_state: string }>(`select session_state from zalo_accounts where id='community'`);
     expect(r[0]!.session_state).toBe('connected');
   });
 
   it('tai khoan khong duoc bat / ten la ⇒ 404', async () => {
-    for (const acc of ['market', 'evil']) {
-      const res = await logout(await req(`http://localhost/api/zalo/${acc}/logout`, 'POST', 'bql_admin'), params(acc));
+    for (const acc of ['other', 'evil']) {
+      const res = await logout(await req(`http://localhost/api/zalo/${acc}/logout`, 'POST', 'admin'), params(acc));
       expect(res.status).toBe(404);
     }
   });
 
-  it('bql_admin, worker KHONG chay ⇒ 200; session_enc null + logged_out + qr_* xoa ngay + audit zalo.logout', async () => {
+  it('admin, worker KHONG chay ⇒ 200; session_enc null + logged_out + qr_* xoa ngay + audit zalo.logout', async () => {
     await setConnected();
-    const res = await logout(await req('http://localhost/api/zalo/bql/logout', 'POST', 'bql_admin'), params('bql'));
+    const res = await logout(await req('http://localhost/api/zalo/community/logout', 'POST', 'admin'), params('community'));
     expect(res.status).toBe(200);
     const r = await sql<{
       session_enc: Buffer | null;
@@ -76,15 +76,15 @@ describe('/api/zalo/bql/logout (db, §9.8)', () => {
       qr_data_url: string | null;
       qr_expires_at: string | null;
       qr_state: string | null;
-    }>(`select session_enc, session_state, qr_data_url, qr_expires_at, qr_state from zalo_accounts where id='bql'`);
+    }>(`select session_enc, session_state, qr_data_url, qr_expires_at, qr_state from zalo_accounts where id='community'`);
     expect(r[0]!.session_enc).toBeNull();
     expect(r[0]!.session_state).toBe('logged_out');
     expect(r[0]!.qr_data_url).toBeNull();
     expect(r[0]!.qr_expires_at).toBeNull();
     expect(r[0]!.qr_state).toBeNull();
     const a = await sql<{ c: number }>(
-      `select count(*)::int as c from audit_log where action='zalo.logout' and target='bql'
-         and actor_id='u-bql_admin' and created_at > now() - interval '1 minute'`
+      `select count(*)::int as c from audit_log where action='zalo.logout' and target='community'
+         and actor_id='u-admin' and created_at > now() - interval '1 minute'`
     );
     expect(a[0]!.c).toBeGreaterThanOrEqual(1);
   });

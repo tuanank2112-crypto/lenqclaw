@@ -28,13 +28,13 @@ describe('callModel (adapters/model.ts)', () => {
   afterEach(() => {
     setModelClientForTest(null);
     delete process.env.MODEL_DEFAULT;
-    delete process.env.MODEL_DIAGNOSE;
+    delete process.env.MODEL_COMMUNITY;
     delete process.env.MODEL_PROVIDER;
   });
 
   it('dung dung model theo route va gan cache_control tren system', async () => {
     process.env.MODEL_PROVIDER = 'anthropic';
-    process.env.MODEL_DIAGNOSE = 'claude-test-diagnose';
+    process.env.MODEL_COMMUNITY = 'claude-test-community';
     const captured: { body?: { model: string; system: unknown; max_tokens: number } } = {};
     const fake: ModelClientLike = {
       messages: {
@@ -46,9 +46,9 @@ describe('callModel (adapters/model.ts)', () => {
     };
     setModelClientForTest(fake);
 
-    const result = await callModel({ route: 'diagnose', system: 'ban la tro ly BQL', messages: [{ role: 'user', content: 'xin chao' }] });
+    const result = await callModel({ route: 'community', system: 'ban la tro ly cong dong', messages: [{ role: 'user', content: 'xin chao' }] });
 
-    expect(result.model).toBe('claude-test-diagnose');
+    expect(result.model).toBe('claude-test-community');
     // Đ19-2: max_tokens = 16000 ca hai nhanh.
     expect(captured.body?.max_tokens).toBe(16000);
     expect(Array.isArray(captured.body?.system)).toBe(true);
@@ -68,7 +68,7 @@ describe('callModel (adapters/model.ts)', () => {
     setModelClientForTest(fake);
 
     await expect(
-      callModel({ route: 'diagnose', system: 'he thong', messages: [] })
+      callModel({ route: 'community', system: 'he thong', messages: [] })
     ).rejects.toBeInstanceOf(ModelUnavailableError);
   });
 
@@ -84,7 +84,7 @@ describe('callModel (adapters/model.ts)', () => {
     setModelClientForTest(fake);
 
     await expect(
-      callModel({ route: 'diagnose', system: 'he thong', messages: [] })
+      callModel({ route: 'community', system: 'he thong', messages: [] })
     ).rejects.toBeInstanceOf(ModelUnavailableError);
   });
 
@@ -100,7 +100,7 @@ describe('callModel (adapters/model.ts)', () => {
     setModelClientForTest(fake);
 
     await expect(
-      callModel({ route: 'diagnose', system: 'he thong', messages: [] })
+      callModel({ route: 'community', system: 'he thong', messages: [] })
     ).rejects.toBeInstanceOf(ModelUnavailableError);
   });
 
@@ -118,7 +118,7 @@ describe('callModel (adapters/model.ts)', () => {
     setModelClientForTest(fake);
 
     await callModel({
-      route: 'diagnose',
+      route: 'community',
       system: 'he thong',
       messages: [{ role: 'user', content: 'day la anh may hong' }],
       images: [{ mediaType: 'image/png', base64: 'AAAA' }],

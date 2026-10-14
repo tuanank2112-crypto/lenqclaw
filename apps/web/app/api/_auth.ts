@@ -1,6 +1,5 @@
-// apps/web/app/api/_auth.ts — helper chung cho moi route handler cua P05-E
-// (SPEC-P04-Vendor-Console.md §8.1/§8.2). Mau tu `app/api/zalo/_shared.ts`
-// (`requireZaloAdmin`): 401 chua dang nhap, 403 sai vai.
+// apps/web/app/api/_auth.ts — helper chung cho moi route handler: 401 chua
+// dang nhap, 403 sai vai. Mau tu `app/api/zalo/_shared.ts` (`requireZaloAdmin`).
 
 import type { NextRequest } from 'next/server';
 import type { StaffRole } from '@lenqclaw/core';

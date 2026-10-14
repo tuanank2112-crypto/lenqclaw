@@ -4,7 +4,7 @@
 // ban ro/khoa vao thong diep loi (§7).
 //
 // Dinh dang bytea: [1 byte phien ban = 1][12 byte IV][16 byte tag][ciphertext].
-// AAD = id tai khoan ('bql'/'market') => ban ma cua tai khoan nay khong giai
+// AAD = id tai khoan ('community') => ban ma cua tai khoan nay khong giai
 // ma duoc khi gan nham sang tai khoan kia.
 
 import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';

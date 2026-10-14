@@ -13,13 +13,10 @@ interface ThreadState {
   messages: ThreadMessage[];
 }
 
-const RESIDENT_THREAD = { account: 'bql', threadId: 'sim-resident-1', threadType: 'user', defaultSender: 'resident-1' };
-const MARKET_GROUPS = [
-  'sim-market-dien_nuoc',
-  'sim-market-khoa',
-  'sim-market-dien_lanh',
-  'sim-market-xay_sua',
-];
+const ACCOUNT = 'community';
+// P01: mot khung DM + mot khung nhom (sim-group-1, co trong seed-sim). Giao dien nhom day du o P02.
+const DM_THREAD = { threadId: 'sim-dm-1', threadType: 'user', defaultSender: 'sim-mem-1' };
+const GROUP_THREAD = { threadId: 'sim-group-1', threadType: 'group', defaultSender: 'sim-mem-1' };
 
 function ThreadPanel({
   title,
@@ -115,7 +112,7 @@ function ThreadPanel({
           <input
             value={senderUid}
             onChange={(e) => setSenderUid(e.target.value)}
-            placeholder="sender_uid (tho dang go)"
+            placeholder="sender_uid (nguoi dang go)"
             style={{ width: 140 }}
           />
         ) : null}
@@ -136,8 +133,6 @@ function ThreadPanel({
 export default function SimBoard() {
   const [replaying, setReplaying] = useState(false);
   const [replayResult, setReplayResult] = useState<string | null>(null);
-  const [marketThreadId, setMarketThreadId] = useState(MARKET_GROUPS[0]!);
-  const [vendorUid, setVendorUid] = useState('sim-ven-1');
   const [ticking, setTicking] = useState(false);
   const [tickResult, setTickResult] = useState<string | null>(null);
 
@@ -187,44 +182,19 @@ export default function SimBoard() {
       </div>
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
         <ThreadPanel
-          title="Cu dan (tai khoan bql)"
-          account={RESIDENT_THREAD.account}
-          threadId={RESIDENT_THREAD.threadId}
-          threadType={RESIDENT_THREAD.threadType}
-          defaultSender={RESIDENT_THREAD.defaultSender}
+          title="Tin nhắn riêng (DM)"
+          account={ACCOUNT}
+          threadId={DM_THREAD.threadId}
+          threadType={DM_THREAD.threadType}
+          defaultSender={DM_THREAD.defaultSender}
         />
         <ThreadPanel
-          title="Nhom tho (tai khoan market)"
-          account="market"
-          threadId={marketThreadId}
-          threadType="group"
-          defaultSender="sim-ven-1"
-          threadIdOptions={MARKET_GROUPS}
-          onThreadIdChange={setMarketThreadId}
+          title="Nhóm (sim-group-1)"
+          account={ACCOUNT}
+          threadId={GROUP_THREAD.threadId}
+          threadType={GROUP_THREAD.threadType}
+          defaultSender={GROUP_THREAD.defaultSender}
         />
-        <div style={{ flex: '1 1 280px', minWidth: 280 }}>
-          <div style={{ marginBottom: 8 }}>
-            <label>
-              Thợ (DM):{' '}
-              <input value={vendorUid} onChange={(e) => setVendorUid(e.target.value)} style={{ width: 140 }} />
-            </label>
-          </div>
-          <ThreadPanel
-            key={vendorUid}
-            title="Thợ (DM, tài khoản market)"
-            account="market"
-            threadId={vendorUid}
-            threadType="user"
-            defaultSender={vendorUid}
-          />
-        </div>
-        <section style={{ border: '1px solid #ccc', borderRadius: 8, padding: 12, minWidth: 200 }}>
-          <h2 style={{ fontSize: 16 }}>Dashboard BQL</h2>
-          <p><a href="/tickets">Xem ticket</a></p>
-          <p><a href="/gate">Bao ve</a></p>
-          <p><a href="/vendors">Thợ &amp; slot</a></p>
-          <p><a href="/jobs">Cuốc</a></p>
-        </section>
       </div>
     </div>
   );

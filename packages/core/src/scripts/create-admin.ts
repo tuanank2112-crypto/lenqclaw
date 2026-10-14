@@ -1,6 +1,6 @@
 // packages/core/src/scripts/create-admin.ts — tao tai khoan nhan vien web
-// (SPEC-P01-Foundation.md §7). Dung:
-//   echo "mat-khau" | npm run create-admin -- --email a@b.c --role bql_admin
+// (SPEC-P01 §3). Dung:
+//   echo "mat-khau" | npm run create-admin -- --email a@b.c --role admin
 // Mat khau BAT BUOC doc tu stdin — CAM nhan qua tham so dong lenh
 // (OPERATIONS.md §6.2).
 
@@ -8,7 +8,7 @@ import { sql, closeDb } from '../adapters/db.js';
 import { hashPassword } from '../domain/password.js';
 import type { StaffRole } from '../domain/types.js';
 
-const ROLES: StaffRole[] = ['bql_admin', 'bql_staff', 'guard'];
+const ROLES: StaffRole[] = ['admin', 'operator'];
 
 function parseArgs(argv: string[]): Record<string, string> {
   const out: Record<string, string> = {};
@@ -38,7 +38,7 @@ async function main(): Promise<void> {
   const role = args.role as StaffRole | undefined;
 
   if (!email || !role) {
-    console.error('Dung: npm run create-admin -- --email <email> --role <bql_admin|bql_staff|guard>');
+    console.error('Dung: npm run create-admin -- --email <email> --role <admin|operator>');
     process.exit(2);
   }
   if (!ROLES.includes(role)) {
@@ -48,7 +48,7 @@ async function main(): Promise<void> {
 
   const password = await readStdin();
   if (!password) {
-    console.error('Mat khau rong — doc tu stdin, vd: echo "mat-khau" | npm run create-admin -- --email a@b.c --role bql_admin');
+    console.error('Mat khau rong — doc tu stdin, vd: echo "mat-khau" | npm run create-admin -- --email a@b.c --role admin');
     process.exit(2);
   }
 

@@ -1,0 +1,7 @@
+database: lenqclaw_probe
+OK   applied tu rong (001-009): applied 9
+OK   chay lai: applied 0
+OK   tenants co default: tenants=[default]
+OK   zalo_accounts.tenant_id = 'default': tenant_id=default
+OK   turn_traces outcome='xyz' bi CHECK tu choi: error=23514/turn_traces_outcome_check
+FAILS 0

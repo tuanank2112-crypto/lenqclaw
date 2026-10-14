@@ -22,11 +22,11 @@ describe('session cookie (HMAC-SHA256, SPEC-P01-Foundation.md §7)', () => {
   });
 
   it('tao roi xac minh => dung uid/role', async () => {
-    const cookie = await createSessionCookie('staff-1', 'bql_admin');
+    const cookie = await createSessionCookie('staff-1', 'admin');
     const payload = await verifySessionCookie(cookie);
     expect(payload).not.toBeNull();
     expect(payload!.uid).toBe('staff-1');
-    expect(payload!.role).toBe('bql_admin');
+    expect(payload!.role).toBe('admin');
   });
 
   it('sua 1 byte trong chu ky => khong hop le', async () => {
@@ -41,7 +41,7 @@ describe('session cookie (HMAC-SHA256, SPEC-P01-Foundation.md §7)', () => {
     // bits 7..2), moi doi deu chac chan lam sai gia tri byte giai ma =>
     // tat dinh 100% ĐỎ o day. Chon ky tu thay the KHAC ky tu goc mot cach
     // tat dinh (khong dua vao so sanh voi 1 hang so co the trung).
-    const cookie = await createSessionCookie('staff-1', 'bql_admin');
+    const cookie = await createSessionCookie('staff-1', 'admin');
     const dot = cookie.lastIndexOf('.');
     const body = cookie.slice(0, dot);
     const signature = cookie.slice(dot + 1);
@@ -53,7 +53,7 @@ describe('session cookie (HMAC-SHA256, SPEC-P01-Foundation.md §7)', () => {
   });
 
   it('het han => khong hop le', async () => {
-    const cookie = await createSessionCookie('staff-1', 'bql_admin');
+    const cookie = await createSessionCookie('staff-1', 'admin');
     vi.useFakeTimers();
     vi.setSystemTime(Date.now() + 13 * 60 * 60 * 1000);
     expect(await verifySessionCookie(cookie)).toBeNull();
@@ -68,18 +68,18 @@ describe('session cookie (HMAC-SHA256, SPEC-P01-Foundation.md §7)', () => {
   // verifySessionCookie ma unit test hien co chua phu.
 
   it('doi payload (role) nhung giu chu ky CU => khong hop le', async () => {
-    const cookie = await createSessionCookie('staff-1', 'bql_staff');
+    const cookie = await createSessionCookie('staff-1', 'operator');
     const dot = cookie.lastIndexOf('.');
     const oldSignature = cookie.slice(dot + 1);
     const payload = decodeBody(cookie);
-    const forgedBody = encodeBody({ ...payload, role: 'bql_admin' });
+    const forgedBody = encodeBody({ ...payload, role: 'admin' });
     const forged = `${forgedBody}.${oldSignature}`;
 
     expect(await verifySessionCookie(forged)).toBeNull();
   });
 
   it('doi truong exp nhung giu chu ky CU => khong hop le', async () => {
-    const cookie = await createSessionCookie('staff-1', 'bql_admin');
+    const cookie = await createSessionCookie('staff-1', 'admin');
     const dot = cookie.lastIndexOf('.');
     const oldSignature = cookie.slice(dot + 1);
     const payload = decodeBody(cookie);
@@ -90,7 +90,7 @@ describe('session cookie (HMAC-SHA256, SPEC-P01-Foundation.md §7)', () => {
   });
 
   it('chu ky rong => khong hop le', async () => {
-    const cookie = await createSessionCookie('staff-1', 'bql_admin');
+    const cookie = await createSessionCookie('staff-1', 'admin');
     const dot = cookie.lastIndexOf('.');
     const body = cookie.slice(0, dot);
 
@@ -98,7 +98,7 @@ describe('session cookie (HMAC-SHA256, SPEC-P01-Foundation.md §7)', () => {
   });
 
   it('thieu phan chu ky (khong co dau cham) => khong hop le', async () => {
-    const cookie = await createSessionCookie('staff-1', 'bql_admin');
+    const cookie = await createSessionCookie('staff-1', 'admin');
     const dot = cookie.lastIndexOf('.');
     const bodyOnly = cookie.slice(0, dot);
 

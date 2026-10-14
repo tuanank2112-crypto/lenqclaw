@@ -1,0 +1,6 @@
+violation: packages/core/src/agent/community/tools/_red_exec.ts:1: tool "exec"
+violation: packages/core/src/agent/community/tools/_red_exec.ts:1: tool "exec" khong thuoc TOOL_NAMES
+forbidden_tools: 1
+forbidden_actions: 0
+unlisted_tools: 1
+EXIT=1

@@ -17,6 +17,7 @@ const STEPS = [
   { label: 'test', cmd: npmCmd, args: ['test'] },
   { label: 'check_adapter_boundary', cmd: nodeCmd, args: ['scripts/check_adapter_boundary.mjs'] },
   { label: 'check_agent_tools', cmd: nodeCmd, args: ['scripts/check_agent_tools.mjs'] },
+  { label: 'check_pivot_cleanup', cmd: nodeCmd, args: ['scripts/check_pivot_cleanup.mjs'] },
 ];
 
 for (const step of STEPS) {

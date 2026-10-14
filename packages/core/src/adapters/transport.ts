@@ -6,12 +6,15 @@
 // day va ngoai db/migrations.
 
 import { sql } from './db.js';
+import type { AccountId, OutboxBody } from '../domain/types.js';
+
+export type { AccountId };
 
 export type SessionState = 'logged_out' | 'qr_pending' | 'connected' | 'kicked' | 'reconnecting' | 'dead';
 
 export interface InboundEvent {
   id: number;
-  zaloAccountId: string;
+  zaloAccountId: AccountId;
   zaloMsgId: string;
   threadId: string;
   threadType: 'user' | 'group';
@@ -21,27 +24,30 @@ export interface InboundEvent {
   receivedAt: string;
 }
 
+export type OutboxKind = 'text' | 'image' | 'typing' | 'seen' | 'action' | 'react';
+
 export interface OutboxInsert {
-  zaloAccountId: 'bql' | 'market';
+  zaloAccountId: AccountId;
   threadId: string;
   threadType: 'user' | 'group';
-  kind: 'text' | 'image' | 'typing' | 'seen';
-  body: Record<string, unknown>;
+  kind: OutboxKind;
+  /** 01-CONTRACTS §8.3. `Record<string, unknown>` van duoc nhan de cac
+   * dich vu cu khong phai doi kieu; kieu chat nam o `OutboxBody`. */
+  body: OutboxBody | Record<string, unknown>;
   notBefore?: Date;
-  jobId?: string | null;
 }
 
 export interface Transport {
   onInbound(handler: (e: InboundEvent) => Promise<void>): void;
   enqueue(msg: OutboxInsert): Promise<number>;
-  status(account: 'bql' | 'market'): Promise<SessionState>;
+  status(account: AccountId): Promise<SessionState>;
 }
 
 /** Ham DUY NHAT ghi bang `outbox` (BB-04). */
 export async function enqueue(msg: OutboxInsert): Promise<number> {
   const rows = await sql<{ id: number }>(
-    `insert into outbox (zalo_account_id, thread_id, thread_type, kind, body, not_before, job_id)
-     values ($1,$2,$3,$4,$5,$6,$7)
+    `insert into outbox (zalo_account_id, thread_id, thread_type, kind, body, not_before)
+     values ($1,$2,$3,$4,$5,$6)
      returning id`,
     [
       msg.zaloAccountId,
@@ -50,13 +56,12 @@ export async function enqueue(msg: OutboxInsert): Promise<number> {
       msg.kind,
       JSON.stringify(msg.body),
       msg.notBefore ?? new Date(),
-      msg.jobId ?? null,
     ]
   );
   return rows[0]!.id;
 }
 
-async function simStatus(account: 'bql' | 'market'): Promise<SessionState> {
+async function simStatus(account: AccountId): Promise<SessionState> {
   const rows = await sql<{ session_state: SessionState }>(
     `select session_state from zalo_accounts where id = $1`,
     [account]
@@ -85,12 +90,10 @@ function createSimTransport(): Transport {
 }
 
 /** `createTransport()` chon theo env `TRANSPORT` (`sim` mac dinh; `zalo` =>
- * nem loi "P02 chua lam" — SPEC-P01-Foundation.md §4). */
+ * cung object: core chi dung `enqueue`/`status`, worker la tien trinh rieng
+ * — 01-CONTRACTS §2.3). */
 export function createTransport(): Transport {
   const mode = (process.env.TRANSPORT ?? 'sim').trim();
-  if (mode === 'sim') return createSimTransport();
-  if (mode === 'zalo') {
-    throw new Error('TRANSPORT=zalo: P02 chua lam (SPEC-P02-Zalo-Transport.md).');
-  }
+  if (mode === 'sim' || mode === 'zalo') return createSimTransport();
   throw new Error(`TRANSPORT="${mode}" khong hop le. Chi nhan "sim" hoac "zalo".`);
 }

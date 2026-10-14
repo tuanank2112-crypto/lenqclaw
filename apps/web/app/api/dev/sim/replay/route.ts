@@ -14,7 +14,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'not_sim_mode' }, { status: 404 });
   }
   const session = await getSessionFromRequest(req);
-  if (!session || session.role !== 'bql_admin') {
+  if (!session || session.role !== 'admin') {
     return NextResponse.json({ error: 'forbidden' }, { status: 403 });
   }
 

@@ -1,4 +1,4 @@
-// POST /api/zalo/{account}/logout — SPEC-P02 §9.8: chi bql_admin; xoa
+// POST /api/zalo/{account}/logout — SPEC-P02 §9.8: chi admin; xoa
 // session_enc + qr_* + dat logged_out NGAY trong cung transaction (worker
 // khong chay van khong de phien mo coi); dong thoi dat logout_requested_at
 // de worker (neu dang chay) dut ket noi in-memory (listener/pacer) o nhip

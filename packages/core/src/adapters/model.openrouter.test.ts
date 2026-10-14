@@ -19,7 +19,7 @@ describe('callModel — nhanh openrouter (01-CONTRACTS §2c)', () => {
     setOpenRouterFetchForTest(null);
     delete process.env.MODEL_PROVIDER;
     delete process.env.MODEL_DEFAULT;
-    delete process.env.MODEL_DIAGNOSE;
+    delete process.env.MODEL_COMMUNITY;
     delete process.env.MODEL_FALLBACKS;
     delete process.env.OPENROUTER_API_KEY;
     delete process.env.OPENROUTER_BASE_URL;
@@ -27,7 +27,7 @@ describe('callModel — nhanh openrouter (01-CONTRACTS §2c)', () => {
 
   it('dich vao/ra vong tool 2 luot (nhieu tool_result mot luot, anh); data_collection:deny; key o header Bearer', async () => {
     process.env.MODEL_PROVIDER = 'openrouter';
-    process.env.MODEL_DIAGNOSE = 'or-test-main';
+    process.env.MODEL_COMMUNITY = 'or-test-main';
     process.env.OPENROUTER_API_KEY = 'sk-or-secret-123';
 
     const capturedUrls: string[] = [];
@@ -70,7 +70,7 @@ describe('callModel — nhanh openrouter (01-CONTRACTS §2c)', () => {
       },
     ];
 
-    const result = await callModel({ route: 'diagnose', system: 'ban la tro ly', messages, tools });
+    const result = await callModel({ route: 'community', system: 'ban la tro ly', messages, tools });
 
     // key o header Bearer, KHONG co trong URL.
     expect(capturedUrls[0]).not.toContain('sk-or-secret-123');
@@ -121,7 +121,7 @@ describe('callModel — nhanh openrouter (01-CONTRACTS §2c)', () => {
         ],
       },
     ];
-    await callModel({ route: 'diagnose', system: 'ban la tro ly', messages: round2Messages, tools });
+    await callModel({ route: 'community', system: 'ban la tro ly', messages: round2Messages, tools });
 
     const body2 = capturedBodies[1] as { messages: Array<{ role: string; content?: unknown; tool_calls?: unknown; tool_call_id?: string }> };
     // [0]=system, [1]=user(anh), [2]=assistant(tool_calls), [3]=tool(call_1), [4]=tool(call_2).
@@ -149,7 +149,7 @@ describe('callModel — nhanh openrouter (01-CONTRACTS §2c)', () => {
     };
     setOpenRouterFetchForTest(fake);
 
-    const result = await callModel({ route: 'diagnose', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] });
+    const result = await callModel({ route: 'community', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] });
 
     expect(result.model).toBe('or-fallback-1');
     // 3 lan goi model chinh (1 + 2 retry) roi 1 lan fallback thanh cong.
@@ -175,7 +175,7 @@ describe('callModel — nhanh openrouter (01-CONTRACTS §2c)', () => {
     setOpenRouterFetchForTest(fake);
 
     await expect(
-      callModel({ route: 'diagnose', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] })
+      callModel({ route: 'community', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] })
     ).rejects.toBeInstanceOf(ModelUnavailableError);
     expect(fetchCount).toBe(1);
     expect(calledModels).toEqual(['or-no-credit']);
@@ -194,7 +194,7 @@ describe('callModel — nhanh openrouter (01-CONTRACTS §2c)', () => {
     setOpenRouterFetchForTest(fake);
 
     await expect(
-      callModel({ route: 'diagnose', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] })
+      callModel({ route: 'community', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] })
     ).rejects.not.toBeInstanceOf(ModelUnavailableError);
     expect(fetchCount).toBe(1);
   });
@@ -216,13 +216,13 @@ describe('callModel — nhanh openrouter (01-CONTRACTS §2c)', () => {
       });
     setOpenRouterFetchForTest(fake);
 
-    const result = await callModel({ route: 'diagnose', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] });
+    const result = await callModel({ route: 'community', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] });
     const toolUse = result.message.content[0] as { type: string; input: unknown };
     expect(toolUse.type).toBe('tool_use');
     expect(toolUse.input).toEqual({});
   });
 
-  it('MODEL_PROVIDER=openrouter mac dinh model google/gemini-3.6-flash khi khong dat MODEL_DEFAULT/MODEL_DIAGNOSE', async () => {
+  it('MODEL_PROVIDER=openrouter mac dinh model google/gemini-3.6-flash khi khong dat MODEL_DEFAULT/MODEL_COMMUNITY', async () => {
     process.env.MODEL_PROVIDER = 'openrouter';
     process.env.OPENROUTER_API_KEY = 'k';
 
@@ -236,7 +236,7 @@ describe('callModel — nhanh openrouter (01-CONTRACTS §2c)', () => {
     };
     setOpenRouterFetchForTest(fake);
 
-    const result = await callModel({ route: 'diagnose', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] });
+    const result = await callModel({ route: 'community', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] });
     expect(result.model).toBe('google/gemini-3.6-flash');
   });
 
@@ -256,7 +256,7 @@ describe('callModel — nhanh openrouter (01-CONTRACTS §2c)', () => {
     };
     setOpenRouterFetchForTest(fake);
 
-    await callModel({ route: 'diagnose', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] });
+    await callModel({ route: 'community', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] });
     expect(capturedUrl).toBe('https://custom.example.com/v1/chat/completions');
   });
 });

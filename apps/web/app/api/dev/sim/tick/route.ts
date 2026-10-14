@@ -1,5 +1,4 @@
-// POST /api/dev/sim/tick — SPEC-P04-Vendor-Console.md §8.2, SPEC-P05-Dispatch
-// §10.11. Chi DATA_MODE=sim (khac => 404 nhu cac route dev khac); goi
+// POST /api/dev/sim/tick — chi DATA_MODE=sim (khac => 404 nhu cac route dev khac); goi
 // dong ho `runTimers(now)` roi phat outbox gia lap.
 
 import { NextResponse, type NextRequest } from 'next/server';
@@ -17,7 +16,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (process.env.DATA_MODE !== 'sim') {
     return NextResponse.json({ error: 'not_sim_mode' }, { status: 404 });
   }
-  const check = await requireRole(req, ['bql_admin']);
+  const check = await requireRole(req, ['admin']);
   if (!check.ok) {
     return NextResponse.json({ error: check.status === 401 ? 'unauthorized' : 'forbidden' }, { status: check.status });
   }

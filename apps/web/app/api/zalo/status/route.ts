@@ -1,5 +1,5 @@
 // GET /api/zalo/status — trang thai phien cho trang /zalo (tu lam moi 3 s).
-// Chi bql_admin. Anh QR chi tra khi con han (`qr_expires_at > now()`).
+// Chi admin. Anh QR chi tra khi con han (`qr_expires_at > now()`).
 // KHONG bao gio tra `session_enc`.
 
 import { NextResponse, type NextRequest } from 'next/server';

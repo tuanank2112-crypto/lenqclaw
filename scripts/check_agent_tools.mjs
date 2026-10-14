@@ -1,87 +1,41 @@
 #!/usr/bin/env node
-// scripts/check_agent_tools.mjs — BB-01, BB-02 (SPEC-P01-Foundation.md §8).
-// Vong 2 (R02-tham-dinh D2): (a) tim khoi `type JobCard = {...}` bang DEM
-// NGOAC (khong dung "}};" dau tien — mot kieu object long ben trong se lam
-// sai vi tri ket thuc), khoa PII cho phep tuy chon (`phone?:`), co nhay
-// ('phone': / "phone":); (b) quet ten tool cam trong agent/tools/** ca file
-// .js/.mjs/.cjs, cho phep khoa co nhay va gia tri dang template literal.
-// In "pii_keys_in_jobcard: <n>" va "forbidden_tools: <n>"; tong > 0 => exit 1.
+// scripts/check_agent_tools.mjs — BB-01, BB-06 (SPEC-P01 §6.1, ke hoach 02).
+// In dung 3 dong tren stdout (chi tiet tung vi pham ra stderr); tong > 0 => exit 1:
+//   forbidden_tools: <n>   ten tool cam (01-CONTRACTS §7.2, 22 ten) trong packages/core/src/agent/**
+//                          (tru *.test.ts): `name: '<x>'` — nhay don/kep/template, khoa co nhay.
+//   forbidden_actions: <n> chuoi `action: '<x>'` voi x thuoc 8 hanh dong cam, quet
+//                          packages/core/src/** + apps/zalo-worker/src/**.
+//   unlisted_tools: <n>    moi `name: '...'` trong agent/community/tools/*.ts (tru test,
+//                          tool-kit.ts, index.ts) PHAI thuoc ten khai trong
+//                          agent/community/policy.ts (cung bieu thuc `name:\s*['"]...['"]`);
+//                          chua co tool/policy => 0.
 
-import { readdir, readFile, stat } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
 
-const TYPES_FILE = path.join(ROOT, 'packages', 'core', 'src', 'domain', 'types.ts');
-const TOOLS_DIR = path.join(ROOT, 'packages', 'core', 'src', 'agent', 'tools');
-const TOOLS_EXT = new Set(['.ts', '.tsx', '.mts', '.cts', '.js', '.mjs', '.cjs']);
+const AGENT_DIR = path.join(ROOT, 'packages', 'core', 'src', 'agent');
+const TOOLS_DIR = path.join(AGENT_DIR, 'community', 'tools');
+const POLICY_FILE = path.join(AGENT_DIR, 'community', 'policy.ts');
+const ACTION_SCAN_DIRS = [path.join(ROOT, 'packages', 'core', 'src'), path.join(ROOT, 'apps', 'zalo-worker', 'src')];
 
-const FORBIDDEN_JOBCARD_KEYS = [
-  'apartment',
-  'apartment_code',
-  'apartment_id',
-  'floor',
-  'phone',
-  'resident_phone',
-  'resident_name',
-  'full_name',
-  'access_pass_code',
+const CODE_EXT = new Set(['.ts', '.tsx', '.js', '.mjs', '.cjs']);
+
+// 01-CONTRACTS §7.2 — 22 ten.
+const FORBIDDEN_TOOL_NAMES = [
+  'exec', 'shell', 'read_file', 'write_file', 'send_file', 'self_update', 'restart', 'restart_channel',
+  'disperse_group', 'change_group_owner', 'add_group_admin', 'remove_group_admin', 'add_group_deputy',
+  'remove_group_deputy', 'leave_group', 'send_friend_request', 'list_contacts', 'get_group_chat_history',
+  'update_config', 'kick_member', 'block_member', 'recall_full_history',
 ];
 
-const FORBIDDEN_TOOL_NAMES = ['exec', 'shell', 'read_file', 'write_file', 'list_contacts', 'approve_ticket', 'update_config'];
-
-/**
- * Tim khoi noi dung giua ngoac `{` mo dau va ngoac `}` KHOP no bang dem
- * do sau — chiu duoc kieu object literal long ben trong (vd
- * `price_band: [number, number] | null` khong co ngoac nhon nhung mot
- * truong `meta: { a: number }` thi co, va khong duoc lam sai vi tri dong).
- */
-function extractBalancedBlock(source, openBraceIndex) {
-  let depth = 0;
-  for (let i = openBraceIndex; i < source.length; i++) {
-    const ch = source[i];
-    if (ch === '{') depth++;
-    else if (ch === '}') {
-      depth--;
-      if (depth === 0) return source.slice(openBraceIndex, i + 1);
-    }
-  }
-  return null; // khong can bang — file loi cu phap, de tsc bat rieng
-}
-
-function extractJobCardBlock(source) {
-  const marker = 'type JobCard = ';
-  const markerIdx = source.indexOf(marker);
-  if (markerIdx === -1) return null;
-  const braceIdx = source.indexOf('{', markerIdx);
-  if (braceIdx === -1) return null;
-  return extractBalancedBlock(source, braceIdx);
-}
-
-async function checkJobCard() {
-  let source;
-  try {
-    source = await readFile(TYPES_FILE, 'utf8');
-  } catch {
-    console.error(`CHECK_AGENT_TOOLS_ERROR: khong doc duoc ${path.relative(ROOT, TYPES_FILE)}`);
-    process.exit(1);
-  }
-  const block = extractJobCardBlock(source);
-  if (!block) {
-    console.error('CHECK_AGENT_TOOLS_ERROR: khong tim thay khai bao "type JobCard = {...}" trong domain/types.ts');
-    process.exit(1);
-  }
-  const hits = [];
-  for (const key of FORBIDDEN_JOBCARD_KEYS) {
-    // Khoa co the: tran (`phone:`), tuy chon (`phone?:`), co nhay don/kep
-    // (`'phone':`, `"phone":`), voi khoang trang tuy y quanh `?`/`:`.
-    const re = new RegExp(`['"]?\\b${key}\\b['"]?\\s*\\?\\s*:|['"]?\\b${key}\\b['"]?\\s*:`, 'g');
-    if (re.test(block)) hits.push(key);
-  }
-  return hits;
-}
+const FORBIDDEN_ACTIONS = [
+  'disperse_group', 'change_group_owner', 'add_group_deputy', 'remove_group_deputy',
+  'leave_group', 'send_file', 'self_update', 'restart',
+];
 
 async function walk(dir) {
   let entries;
@@ -92,125 +46,85 @@ async function walk(dir) {
   }
   const files = [];
   for (const entry of entries) {
+    if (entry.name === 'node_modules' || entry.name === 'dist') continue;
     const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...(await walk(full)));
-    } else if (TOOLS_EXT.has(path.extname(entry.name))) {
-      files.push(full);
-    }
+    if (entry.isDirectory()) files.push(...(await walk(full)));
+    else if (CODE_EXT.has(path.extname(entry.name))) files.push(full);
   }
   return files;
+}
+
+const isTest = (file) => /\.test\.[a-z]+$/.test(file);
+const rel = (file) => path.relative(ROOT, file).split(path.sep).join('/');
+const lineOf = (content, index) => content.slice(0, index).split('\n').length;
+
+/** Tim `name: '<x>'` (khoa co the co nhay; gia tri nhay don/kep/template) voi x thuoc `names`. */
+function findNameHits(content, names) {
+  const hits = [];
+  for (const name of names) {
+    const re = new RegExp(`['"]?\\bname\\b['"]?\\s*:\\s*['"\`]${name}['"\`]`, 'g');
+    for (const m of content.matchAll(re)) hits.push({ name, line: lineOf(content, m.index ?? 0) });
+  }
+  return hits;
 }
 
 async function checkForbiddenTools() {
-  let exists = true;
-  try {
-    await stat(TOOLS_DIR);
-  } catch {
-    exists = false;
-  }
-  if (!exists) return [];
-
-  const files = await walk(TOOLS_DIR);
   const hits = [];
-  for (const file of files) {
+  for (const file of await walk(AGENT_DIR)) {
+    if (isTest(file)) continue;
     const content = await readFile(file, 'utf8');
-    for (const name of FORBIDDEN_TOOL_NAMES) {
-      // Khoa `name` co the tran hoac co nhay (`"name":`); gia tri co the
-      // nhay don/kep hoac template literal (`` `exec` ``).
-      const re = new RegExp(`['"]?\\bname\\b['"]?\\s*:\\s*['"\`]${name}['"\`]`, 'g');
-      if (re.test(content)) hits.push(`${path.relative(ROOT, file)}: tool "${name}"`);
+    for (const h of findNameHits(content, FORBIDDEN_TOOL_NAMES)) hits.push(`${rel(file)}:${h.line}: tool "${h.name}"`);
+  }
+  return hits;
+}
+
+async function checkForbiddenActions() {
+  const hits = [];
+  for (const dir of ACTION_SCAN_DIRS) {
+    for (const file of await walk(dir)) {
+      const content = await readFile(file, 'utf8');
+      for (const action of FORBIDDEN_ACTIONS) {
+        const re = new RegExp(`\\baction\\b['"]?\\s*:\\s*['"\`]${action}['"\`]`, 'g');
+        for (const m of content.matchAll(re)) hits.push(`${rel(file)}:${lineOf(content, m.index ?? 0)}: action "${action}"`);
+      }
     }
   }
   return hits;
 }
 
-// SPEC-P05-Dispatch.md §10.1.3/§10.10 (Đ27, P05-B): kieu `JobReveal` chi
-// duoc XUAT HIEN o `domain/types.ts` (khai bao) va `services/access.ts`
-// (noi DUY NHAT duoc tao — BB-11); `allowReveal: true` (gia tri, khong
-// phai khai bao kieu `allowReveal?: boolean`) chi duoc TRUYEN tu
-// `services/access.ts::dispatchToVendor`.
-const SRC_DIR = path.join(ROOT, 'packages', 'core', 'src');
-const SRC_EXT = new Set(['.ts', '.tsx', '.mts', '.cts']);
-const JOBREVEAL_ALLOWED = new Set(
-  [path.join('domain', 'types.ts'), path.join('services', 'access.ts')].map((p) => p.split(path.sep).join('/'))
-);
-const ALLOW_REVEAL_TRUE_ALLOWED = path.join('services', 'access.ts').split(path.sep).join('/');
+const NAME_RE = /name:\s*['"]([a-z_]+)['"]/g;
 
-async function walkSrc(dir) {
-  let entries;
+async function checkUnlistedTools() {
+  let listed = new Set();
   try {
-    entries = await readdir(dir, { withFileTypes: true });
+    const policy = await readFile(POLICY_FILE, 'utf8');
+    listed = new Set([...policy.matchAll(NAME_RE)].map((m) => m[1]));
   } catch {
-    return [];
+    // chua co policy.ts (P01) — khong co tool nao de doi chieu
   }
-  const files = [];
-  for (const entry of entries) {
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...(await walkSrc(full)));
-    } else if (SRC_EXT.has(path.extname(entry.name)) && !entry.name.endsWith('.test.ts')) {
-      files.push(full);
-    }
-  }
-  return files;
-}
-
-// Bo comment dong "//" va comment khoi truoc khi quet — tranh may do tu
-// bao dong gia tren CHINH cau giai thich luat nay (mau
-// scripts/check_adapter_boundary.mjs::findOutboxInsertOffsets).
-function stripComments(content) {
-  return content.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\/\/[^\n]*/g, ' ');
-}
-
-async function checkJobRevealScope() {
-  const files = await walkSrc(SRC_DIR);
   const hits = [];
-  for (const file of files) {
-    const rel = path.relative(SRC_DIR, file).split(path.sep).join('/');
-    if (JOBREVEAL_ALLOWED.has(rel)) continue;
-    const content = stripComments(await readFile(file, 'utf8'));
-    if (/\bJobReveal\b/.test(content)) {
-      hits.push(`${path.relative(ROOT, file)}: nhac "JobReveal" ngoai domain/types.ts va services/access.ts`);
+  for (const file of await walk(TOOLS_DIR)) {
+    const base = path.basename(file);
+    if (isTest(file) || base === 'tool-kit.ts' || base === 'index.ts') continue;
+    const content = await readFile(file, 'utf8');
+    for (const m of content.matchAll(NAME_RE)) {
+      if (!listed.has(m[1])) hits.push(`${rel(file)}:${lineOf(content, m.index ?? 0)}: tool "${m[1]}" khong thuoc TOOL_NAMES`);
     }
-  }
-  return hits;
-}
-
-async function checkAllowRevealScope() {
-  const files = await walkSrc(SRC_DIR);
-  const hits = [];
-  const re = /allowReveal\s*:\s*true\b/g;
-  for (const file of files) {
-    const rel = path.relative(SRC_DIR, file).split(path.sep).join('/');
-    if (rel === ALLOW_REVEAL_TRUE_ALLOWED) continue;
-    const content = stripComments(await readFile(file, 'utf8'));
-    if (re.test(content)) {
-      hits.push(`${path.relative(ROOT, file)}: "allowReveal: true" ngoai services/access.ts`);
-    }
-    re.lastIndex = 0;
   }
   return hits;
 }
 
 async function main() {
-  const piiHits = await checkJobCard();
-  const toolHits = await checkForbiddenTools();
-  const jobRevealHits = await checkJobRevealScope();
-  const allowRevealHits = await checkAllowRevealScope();
+  const tools = await checkForbiddenTools();
+  const actions = await checkForbiddenActions();
+  const unlisted = await checkUnlistedTools();
 
-  for (const h of piiHits) console.log(`pii_key: ${h}`);
-  for (const h of toolHits) console.log(`forbidden_tool: ${h}`);
-  for (const h of jobRevealHits) console.log(`jobreveal_leak: ${h}`);
-  for (const h of allowRevealHits) console.log(`allow_reveal_leak: ${h}`);
+  for (const h of [...tools, ...actions, ...unlisted]) console.error(`violation: ${h}`);
+  console.log(`forbidden_tools: ${tools.length}`);
+  console.log(`forbidden_actions: ${actions.length}`);
+  console.log(`unlisted_tools: ${unlisted.length}`);
 
-  console.log(`pii_keys_in_jobcard: ${piiHits.length}`);
-  console.log(`forbidden_tools: ${toolHits.length}`);
-  console.log(`jobreveal_outside_allowed: ${jobRevealHits.length}`);
-  console.log(`allow_reveal_outside_access: ${allowRevealHits.length}`);
-
-  const total = piiHits.length + toolHits.length + jobRevealHits.length + allowRevealHits.length;
-  process.exit(total > 0 ? 1 : 0);
+  process.exit(tools.length + actions.length + unlisted.length > 0 ? 1 : 0);
 }
 
 main().catch((err) => {

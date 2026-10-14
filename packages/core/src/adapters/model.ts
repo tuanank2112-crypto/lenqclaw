@@ -33,7 +33,7 @@ import { ModelUnavailableError } from '../domain/errors.js';
 // truc tiep — giu dung MOT diem import SDK trong toan repo (BB-07).
 export { APIError, APIConnectionError };
 
-export type ModelRoute = 'diagnose' | 'responsibility' | 'acceptance' | 'vendor_parse' | 'compose' | 'triage';
+export type ModelRoute = 'community' | 'triage';
 export type ModelProvider = 'gemini' | 'anthropic' | 'openrouter' | 'vyce';
 
 export interface ImageRef {
@@ -67,7 +67,7 @@ export interface ModelClientLike {
 let realClient: Anthropic | null = null;
 let testClient: ModelClientLike | null = null;
 // SPEC-P03 §11.10: route 'triage' PHAI co client/fetch RIENG trong test —
-// dung chung `testClient`/`testFetch` cua route 'diagnose' se "an" mot
+// dung chung `testClient`/`testFetch` cua route 'community' se "an" mot
 // phan hoi trong kich ban da soan cho vong tool chinh (lech thu tu, vo test
 // co san). Khong cau hinh rieng cho triage => coi nhu KHONG kha dung (nem
 // loi ngay, khong cham `testClient`) — `triageMessage` bat loi nay va tra
@@ -76,7 +76,7 @@ let testClient: ModelClientLike | null = null;
 let triageTestClient: ModelClientLike | null = null;
 let triageTestFetch: typeof fetch | null = null;
 
-function getAnthropicClient(route: ModelRoute = 'diagnose'): ModelClientLike {
+function getAnthropicClient(route: ModelRoute = 'community'): ModelClientLike {
   if (route === 'triage') {
     if (triageTestClient) return triageTestClient;
     if (testClient) {
@@ -133,11 +133,7 @@ export function setVyceFetchForTest(fake: typeof fetch | null): void {
 }
 
 const ROUTE_ENV: Record<ModelRoute, string> = {
-  diagnose: 'MODEL_DIAGNOSE',
-  responsibility: 'MODEL_RESPONSIBILITY',
-  acceptance: 'MODEL_ACCEPTANCE',
-  vendor_parse: 'MODEL_VENDOR_PARSE',
-  compose: 'MODEL_COMPOSE',
+  community: 'MODEL_COMMUNITY',
   triage: 'MODEL_TRIAGE',
 };
 
@@ -500,7 +496,7 @@ function getGeminiApiKey(): string {
   return key;
 }
 
-async function fetchGeminiOnce(model: string, body: unknown, route: ModelRoute = 'diagnose'): Promise<GeminiResponseBody> {
+async function fetchGeminiOnce(model: string, body: unknown, route: ModelRoute = 'community'): Promise<GeminiResponseBody> {
   const apiKey = getGeminiApiKey();
   const url = `${GEMINI_ENDPOINT_HOST}${encodeURIComponent(model)}:generateContent`;
   let fetchImpl: typeof fetch;
@@ -537,7 +533,7 @@ async function fetchGeminiOnce(model: string, body: unknown, route: ModelRoute =
 /** 01-CONTRACTS §2b "Loi": 429/500/503/504/mang/timeout ⇒ retry toi da 2
  * lan, lui 1s roi 3s, roi ModelUnavailableError; 400/401/403/404 ⇒ nem loi
  * goc ngay (khong retry). */
-async function callGeminiWithRetry(model: string, body: unknown, route: ModelRoute = 'diagnose'): Promise<GeminiResponseBody> {
+async function callGeminiWithRetry(model: string, body: unknown, route: ModelRoute = 'community'): Promise<GeminiResponseBody> {
   // SPEC-P03 §11.10: route 'triage' KHONG retry, khong MODEL_FALLBACKS — do
   // trung tam o `triageMessage` (mot lan goi, timeout rieng); o day ta van
   // giu duong retry cho cac route khac nguyen ven.

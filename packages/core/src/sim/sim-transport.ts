@@ -7,12 +7,13 @@ import { readFile } from 'node:fs/promises';
 import { sql } from '../adapters/db.js';
 import { audit } from '../services/audit.js';
 import { enqueue, type InboundEvent } from '../adapters/transport.js';
+import type { AccountId } from '../domain/types.js';
 
-/** Mau tra loi khi handler loi (SPEC-P03-Resident-Agent.md §10.1). */
+/** Mau tra loi khi handler loi (DM). Nhom: doi hanh vi o SPEC-P03 §2 (D20), KHONG o P01. */
 export const BUSY_REPLY = 'Xin lỗi, hệ thống đang bận, vui lòng thử lại sau ít phút.';
 
 export interface SimInboundArgs {
-  account: 'bql' | 'market';
+  account: AccountId;
   threadId: string;
   threadType: 'user' | 'group';
   senderUid: string;
@@ -27,7 +28,7 @@ export interface SimInboundResult {
 
 /** `INSERT inbound_events ... ON CONFLICT (zalo_account_id, zalo_msg_id) DO NOTHING`.
  * `msgId` mac dinh `sim-<uuid>`; `is_self=false`.
- * SPEC-P05-Dispatch.md §10.8.2/01-CONTRACTS §8 (Đ27): `sender_uid='system'`
+ * 01-CONTRACTS §8.5: `sender_uid='system'`
  * la gia tri DANH RIENG cho su kien he thong (`services/system-events.ts`)
  * — kenh gia lap PHAI tu choi, giong nguoi that (uid Zalo la so). */
 export async function simInbound(args: SimInboundArgs): Promise<SimInboundResult> {
@@ -54,7 +55,7 @@ export type InboundHandler = (e: InboundEvent) => Promise<void>;
 export const echoHandler: InboundHandler = async (e) => {
   const text = typeof (e.payload as { text?: unknown }).text === 'string' ? (e.payload as { text: string }).text : '';
   await enqueue({
-    zaloAccountId: e.zaloAccountId as 'bql' | 'market',
+    zaloAccountId: e.zaloAccountId,
     threadId: e.threadId,
     threadType: e.threadType,
     kind: 'text',
@@ -75,7 +76,7 @@ interface InboundRow {
 }
 
 /**
- * R02-tham-dinh D5, theo SPEC-P03-Resident-Agent.md §10.1: NHAN TRUOC, XU LY
+ * R02-tham-dinh D5, theo SPEC-P03 (runtime agent): NHAN TRUOC, XU LY
  * SAU. Mot cau `UPDATE ... WHERE id = (SELECT ... FOR UPDATE SKIP LOCKED)
  * RETURNING *` nhan (danh dau `processed_at`) DUNG MOT dong — day la MOT
  * cau lenh tu than atomic, KHONG can boc trong `tx()` — roi goi `handler`
@@ -100,7 +101,7 @@ export async function processInbound(handler: InboundHandler = echoHandler): Pro
   const r = rows[0]!;
   const event: InboundEvent = {
     id: r.id,
-    zaloAccountId: r.zalo_account_id,
+    zaloAccountId: r.zalo_account_id as AccountId,
     zaloMsgId: r.zalo_msg_id,
     threadId: r.thread_id,
     threadType: r.thread_type,
@@ -121,7 +122,7 @@ export async function processInbound(handler: InboundHandler = echoHandler): Pro
       data: { message: err instanceof Error ? err.message : String(err) },
     });
     await enqueue({
-      zaloAccountId: r.zalo_account_id as 'bql' | 'market',
+      zaloAccountId: r.zalo_account_id as AccountId,
       threadId: r.thread_id,
       threadType: r.thread_type,
       kind: 'text',
@@ -148,7 +149,7 @@ export async function simDeliver(opts: { limit?: number } = {}): Promise<{ deliv
 }
 
 export interface ScenarioLine {
-  account: 'bql' | 'market';
+  account: AccountId;
   thread_id: string;
   thread_type: 'user' | 'group';
   sender_uid: string;
@@ -165,10 +166,10 @@ export interface RunScenarioResult {
 /** `evals/scenarios/*.jsonl`: voi moi dong: `simInbound` -> `processInbound(handler)`
  * -> `simDeliver`. `inbound`/`outbound` chi tinh cac dong KHONG trung
  * `msg_id` (dong trung bi loai o `simInbound`, khong sinh outbox).
- * SPEC-P05-Dispatch.md §10.0 (L8, Đ27): `handler` mac dinh `echoHandler`
- * (test P01 `echo.jsonl` giu nguyen hanh vi) — route phat lai
- * `/api/dev/sim/replay` (apps/web, ngoai pham vi P05-B) truyen
- * `routeInboundEvent` de kich ban chay QUA agent that. */
+ * `handler` mac dinh `echoHandler`
+ * (test `echo.jsonl` giu nguyen hanh vi) — route phat lai
+ * `/api/dev/sim/replay` (apps/web) truyen `routeInboundEvent` de kich ban
+ * chay QUA router cong dong. */
 export async function runScenario(
   filePath: string,
   handler: InboundHandler = echoHandler

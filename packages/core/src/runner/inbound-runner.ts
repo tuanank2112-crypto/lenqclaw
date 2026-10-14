@@ -7,9 +7,9 @@
 import { pathToFileURL } from 'node:url';
 import { closeDb } from '../adapters/db.js';
 import { processInbound, type InboundHandler } from '../sim/sim-transport.js';
-import { routeInboundEvent } from '../agent/resident-agent.js';
+import { routeInboundEvent } from '../agent/community/router.js';
 import { runTimers, type TimerReport } from '../services/timers.js';
-import { readDispatchConfig } from '../services/dispatch-config.js';
+import { readCommunityConfig } from '../services/community-config.js';
 
 export const RUNNER_INTERVAL_MS = 1000;
 
@@ -20,9 +20,8 @@ export interface RunnerOptions {
   /** Goi sau moi tin da xu ly (test/log). */
   onProcessed?: () => void;
   onError?: (err: unknown) => void;
-  /** SPEC-P05-Dispatch.md §10.8.3: goi sau moi lan `runTimers` chay
-   * (test/log). Khong truyen => dung `TIMER_INTERVAL_MS` mac dinh cua
-   * `readDispatchConfig()`. */
+  /** Goi sau moi lan `runTimers` chay (test/log). Khong truyen
+   * `timerIntervalMs` => dung `TIMER_INTERVAL_MS` cua `readCommunityConfig()`. */
   onTimers?: (report: TimerReport) => void;
   timerIntervalMs?: number;
 }
@@ -51,14 +50,13 @@ function sleep(ms: number, signal?: AbortSignal): Promise<void> {
   });
 }
 
-/** Vong lap chinh: moi `intervalMs` rut het hang doi, roi (SPEC-P05-Dispatch.md
- * §10.8.3) neu da qua `timerIntervalMs` tu lan chay dong ho truoc thi goi
+/** Vong lap chinh: moi `intervalMs` rut het hang doi, roi neu da qua `timerIntervalMs` tu lan chay dong ho truoc thi goi
  * `runTimers(new Date())` mot lan. Loi DB tam thoi ⇒ log, thu lai vong sau;
  * loi dong ho khong lam dung vong tin nhan (rieng `onError`). */
 export async function runInboundLoop(opts: RunnerOptions = {}): Promise<void> {
   const handler = opts.handler ?? routeInboundEvent;
   const interval = opts.intervalMs ?? RUNNER_INTERVAL_MS;
-  const timerIntervalMs = opts.timerIntervalMs ?? readDispatchConfig().timerIntervalMs;
+  const timerIntervalMs = opts.timerIntervalMs ?? readCommunityConfig().timerIntervalMs;
   let lastTimerAt = 0;
   while (!opts.signal?.aborted) {
     try {

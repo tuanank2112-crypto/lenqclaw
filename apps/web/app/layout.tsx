@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 export const metadata = {
-  title: 'San viec tho — Console BQL',
+  title: 'lenqclaw — Trợ lý cộng đồng',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
