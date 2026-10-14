@@ -1,66 +1,69 @@
-# 📅 Nhật Ký Làm Việc Ngày 2026-09-24 (Session Memory Log)
+# 📅 Nhật Ký Làm Việc Ngày 2026-10-14 (Session Memory Log)
 
-> Cập nhật lúc: `2026-10-09` | Phiên bản: `v0.0.1` (hồ sơ 02 SPEC đã duyệt; hồ sơ 01 dừng)
+> Cập nhật lúc: `2026-10-14` | Phiên bản: `v0.0.1` (hồ sơ 02 SPEC đã duyệt + D22–D25) · PHIÊN MỚI NHẤT Ở TRÊN CÙNG (script xoay giữ phần đầu file)
 
 ---
 
-## 🏁 Phiên 2026-09-24 — Từ phân tích OpenClaw/ZaloClaw tới hồ sơ SPEC sàn việc thợ
+## 🏁 Phiên 2026-10-14 — Chuyển repo về workspace `vọc vạch`, D22–D25, lộ trình doanh nghiệp
 
 ### 🎯 Chỉ đạo
-Phân tích OpenClaw + ZaloClaw (monas-team) với tài khoản Zalo cá nhân → định hướng rebuild → chọn ngách "sàn việc thợ trong tòa nhà" → "pipeline chuẩn, vẽ diagram, lấy repo não lắp vào, đọc não rồi lên plan".
+Bỏ `D:\lenqclaw`, chỉ dùng bản ở workspace. Người dùng góp ý đề xuất "agent chuẩn doanh nghiệp": không giữ hội thoại dài (đọc ~5 lượt gần nhất + ghi chú cũ); dùng zca-js cho cả cộng đồng và doanh nghiệp của mình; thiếu kế hoạch skill/voice/constraint; thiếu lộ trình chuẩn doanh nghiệp.
 
 ### ✅ Đã làm
-- Phân tích 4 mảng (ZaloClaw source, OpenClaw zalouser, OpenClaw core, zca-js + rủi ro pháp lý) — kết luận ghi ở `docs/SYSTEM-MAP.md` và `-known-gotchas.md` G01–G07.
-- Sơ đồ PNG `docs/images/01…08` (08 = pipeline chuẩn, đã vẽ lại thành v0.2 theo Đ10).
-- Cài não: `init_brain.js` (engine 1.13.1, khung 1.7.1) từ `D:\brain4agent.release` (người dùng gọi là `D:\brain4agent`; chỉ có bản `.release`). `--check` ⇒ `NÃO ĐÃ OK`, kênh hub sạch.
-- Dựng hồ sơ `planning/01_2026-09-24_san-viec-tho-mvp/` đủ bộ SPEC.
+- Bước 0 `--check` exit 0 (cờ `--preserve-symlinks-main`).
+- So `D:\lenqclaw` với bản E: cùng HEAD `412f214`, 6 file chưa commit + `.env` giống từng byte ⇒ an toàn xoá; `rm -rf` bị cơ chế an toàn của Claude Code chặn ⇒ người tự xoá.
+- Plan 02: D22 (ngữ cảnh DM có trần, không nén), D23 (tenant `default`, migration 009), D24 (`turn_traces`), D25 (chỉ zca-js) + bảng thay thế; SPEC 00 (BB-13, BB-14, vùng cấm), 01 (§1, §2.1, §4 DDL 009, §6, §7.1 bỏ `recall_member_profile`, §10, §11), P01, P03, P04, P06, P07, P08, OPERATIONS, TESTING (G21).
+- Roadmap: lộ trình chuẩn doanh nghiệp 5 giai đoạn (0.1.0 → 1.0.0); kernel, changelog, -data-architecture đồng bộ.
 
-- **Người dùng sửa pipeline (Đ10):** agent phải điều phối trọn vòng, không chỉ phân loại. Luồng: phân loại → ticket BQL | ticket case → job ẩn danh → nhóm thợ → chốt → ticket xin BQL cấp quyền → giao việc → đóng case. Đã vẽ lại `docs/images/08-pipeline-chuan.png` (v0.2) và sửa plan, 00, 01, P03–P06, TESTING.
+- (tiếp) Người dùng đã dời `D:\lenqclaw` đi; workspace `CLAUDE.md` ghi bản ở đây là DUY NHẤT + luật "cập nhật não thường xuyên".
+- Push `origin/main` `eada365..0c0a5c6` (6 commit) — exit 0.
+- Sự cố xoay ký ức: `rotate_memory.js` giữ phiên ở ĐẦU file (quy ước mới nhất ở trên) nhưng `today.md` ghi nối cuối ⇒ lần xoay đầu giữ 3 phiên CŨ nhất, đẩy 10-09/10-14 vào archive. Hoàn tác (xoá 3 file archive do lần xoay sai sinh ra), đảo `today.md` thành mới nhất ở trên, xoay lại. Gotcha G30.
 
-- **Người dùng duyệt pipeline v0.2** sau khi xem ảnh (mở tab VS Code) + bản ASCII trong chat: "pipline khá ổn". Đồng bộ não bằng skill `nao-dong-bo` (không có git ⇒ đọc file trực tiếp).
+### ⏭ Treo
+- DDL 009 CHƯA áp thử (Docker tắt) ⇒ P01 áp thử, ghi `evidence/P01/migration-009-probe.txt`.
+- Hồ sơ kế hoạch 03 (Skill · Voice · Constraint) chưa dựng — mới có khung trong roadmap.
+- Các mục treo của phiên 2026-10-09 vẫn còn (trừ push — đã làm).
 
-- Người dùng hỏi: (1) dashboard BQL chưa có data thật ⇒ cần dựng dashboard nhận ticket từ agent; (2) cách tạo FOMO để thợ biết đến và chịu trả tiền giữ slot tháng. Đã làm mockup `docs/images/09-dashboard-bql-mockup.png` và đề xuất mô hình slot — ghi ở roadmap Idea Vault dạng CHỜ DUYỆT.
+---
 
-- Người dùng duyệt **Đ11** (dashboard ổn, rối mắt, fix sau) và chốt **Đ12**: bác slot hai hạng ("ai cũng mua thì hỏng") ⇒ slot đồng giá, ai nhanh tay thắng, ưu đãi thợ mới để sau. Đã sửa plan, 00, 01 (bảng slot_capacity/vendor_slots/slot_waitlist, ledger slot_fee), P00, P04, P05 §8, P06, OPERATIONS, TESTING (G15).
+## 🏁 Phiên 2026-10-09 — Pivot sang agent cộng đồng Zalo
 
-- **Đ13 (người dùng):** "đã đi quá xa — tập trung xây agent; FOMO chỉ là kế hoạch cho nhà đầu tư". Đã gỡ slot/phí/sổ phí/G0/P00 khỏi SPEC (01-CONTRACTS bỏ 3 bảng slot + ledger_entries; P05 §8, G15, trang /ledger bỏ), thêm `SimTransport` + chat giả lập `/dev/sim` + gate G16, đổi thứ tự P01 → P03 → P05 → P06.
+### 🎯 Chỉ đạo
+Người dùng: "thôi. không cần nữa… xoay quanh toàn bộ về agent chat chăm sóc các cộng đồng trong zalo trước". Sàn việc thợ "bỏ đi"; cộng đồng = người quan tâm AI agent + người muốn setup AI CSKH; bot là phó nhóm; dựa OpenClaw + monas-team/zaloclaw nhưng tự customize.
 
-- **Đ14 (người dùng sửa Đ13):** "vẫn phải có bài toán kinh tế thu phí thợ vào nhóm, nhưng free giữ slot khoảng thời gian đầu" ⇒ đưa lại slot đồng giá + trần + danh sách chờ + ledger, thêm dùng thử miễn phí `FREE_TRIAL_DAYS` (1 lần, chiếm chỗ). FOMO/P00/G0 vẫn ngoài phạm vi.
+### ✅ Đã làm
+- Bước 0 `init_brain.js --check` exit 0 (khung 1.7.1).
+- Nghiên cứu OpenClaw + zaloclaw (clone chỉ đọc, findings có file:line) — lỗi zaloclaw không lặp lại (xoá tin sai `uidFrom`, mega-tool 153 action, send-file, regex injection guard, đệm RAM) nằm ở vùng cấm 00-ARCHITECTURE §7.
+- **Đ32** (kế hoạch 01): DỪNG, không nghiệm thu; mọi `[ ]` còn lại BỎ.
+- Architect dựng bộ SPEC kế hoạch 02 (`7a58d6d`): 00, 01, P01–P08, OPERATIONS, TESTING + `evidence/ARCH/` (migration 007/008 áp từ rỗng 21/21, gate 28/28, ladder 14/14, budget 20 tin/giờ gap ≥ 9000 ms, db-checks 5/5).
+- SO duyệt (`f6a4465`): D12–D21 giữ, Q1–Q12 giữ giá trị tạm. Đồng bộ não theo kế hoạch 02 (phiên này, skill `nao-dong-bo`): kernel, project-intro, -data-architecture, index, roadmap, changelog.
 
-- Người dùng hỏi làm sao cư dân, BQL, thợ đều có lợi kinh tế và phải thấy nó hiện hữu trong hệ thống ⇒ vẽ `docs/images/10-kinh-te-ba-ben.png` (3 bề mặt + luật cân bằng), ghi Đ15 dạng CHỜ DUYỆT ở roadmap.
+### ⏭ Treo
+- 🖐 Người xác nhận GỠ 94 file sàn thợ (AGENTS §5.L.3) — mở khoá P01; code CHƯA đổi.
+- 🖐 Q1–Q12 (đang giá trị tạm); tài khoản Zalo phụ cho bot + Zalo thành viên thử + nhóm thử; persona thật + tri thức ban đầu; quota/billing Gemini cho golden; thông báo xử lý dữ liệu cho nhóm thật.
+- 🖐 5 file lạ chưa theo dõi: `lenqclaw_presentation_transcript.pdf` (root), `docs/presentation-transcript.html`, `docs/progress-dashboard.html`, `docs/lenqclaw_presentation_transcript.pdf`, `docs/images/11-tien-do-du-an.png`; `packages/core/src/agent/prompts/resident.ts` sửa dở (sàn thợ, BỎ — sẽ gỡ ở P01).
+- Push chưa làm; thu hồi key OpenRouter + Vyce đã dán trong chat.
 
-- Người dùng duyệt Đ15 ("tốt, đã gần đúng ý") và yêu cầu cập nhật não ⇒ ghi Đ15 vào plan.md, thêm gói P08 (SPEC-P08 chưa viết), đồng bộ kernel/roadmap/changelog/index/SYSTEM-MAP bằng skill `nao-dong-bo`.
+---
 
-- **Git + GitHub:** tạo repo private `github.com/tuanank2112-crypto/lenqclaw` qua GitHub API (gh CLI chưa đăng nhập; dùng credential Git Credential Manager). `git init -b main`, commit nền `478bf32` đã push.
-- **Đ16 — SPEC-P01:** soạn handoff P01 lộ ra quyết định chưa có trong 01-CONTRACTS ⇒ viết `specs/SPEC-P01-Foundation.md` (test không DB tách `test:db`, cookie HMAC, SQL thuần, SimTransport vọng lại, seed nền, DB dev `127.0.0.1:55432`); vá DDL `job_categories` mất cột `default_mode`. Commit `b7e907f`.
-- **P01 xong:** worker 🟠 thi công theo H01 (30 test) → thẩm định đối kháng H02 (🔴, agent khác) tìm D1/D2 chặn (máy đo bỏ lọt import nhiều dòng, `pg/lib/*`, khoá `phone?:`) + 8 lỗi nên sửa → R01 🔁 → vòng 2 vá hết (40 test) → SO đo lại trên DB rỗng + cây cố tình hỏng ⇒ R01 ✅, R02 ✅. G01–G03 ✅ local. Đồng bộ não (skill `nao-dong-bo`) + docs module `docs/{core,web,zalo-worker}.md`.
-- **Đ17 — chốt thi công P03** ở SPEC-P03 §10 (nhận-trước-xử-lý-sau đã làm luôn ở vòng 2 P01; truy hồi từ khoá; đồng ý tất định; QC-DEMO; golden LLM `blocked` khi thiếu key).
-- Thẩm định chưa chạy được phần giả mạo cookie qua HTTP (vỏ agent tự dừng) ⇒ bù bằng test unit `verifySessionCookie`; đã báo người.
+## 🏁 Phiên 2026-09-25 (khuya) — H08 vòng 4 bằng Gemini
+- Bước 0 exit 0. SO probe Gemini `gemini-3.6-flash` 22:50 ⇒ HTTP 200 (quota đã hồi) ⇒ phụ lục H08 §9 (`c1f51c0`): chấm lại đủ 4 bộ một lần với prompt `resident.ts` đang treo; đạt ⇒ commit prompt; trượt ⇒ đúng 1 vòng sửa; 429 dồn dập ⇒ nộp `blocked`, không đổi provider. Phóng worker 🟠 chạy nền.
 
-- **Push:** người dùng duyệt ⇒ `origin/main` = `4955b5a` (P01 + SPEC/H03).
-- **Đ18 — Gemini:** người dùng "sử dụng key gemini". Auto mode CHẶN việc chép key từ `D:\build phase\.env.local` (Credential Exploration) ⇒ người dùng tự dán key ⇒ ghi `.env` (gitignore). Probe: `gemini-3.6-flash`/`3-flash-preview` 200 + functionCall + `thoughtSignature`; `3.5-flash-lite` 200; `3.5-flash`/`3.1-flash-lite`/`flash-latest` 503; mọi `2.x` 404 (G13). Hợp đồng 01-CONTRACTS §2b + `MODEL_FALLBACKS`.
+- Architect soạn Đ27 (SPEC-P05 §10 + SPEC-P04 §8, 01-CONTRACTS/TESTING/OPERATIONS): hiểu ý thợ bằng model, 9 tool thợ, `runTimers(now)` không pg-boss, migration 006, P04 tối thiểu; tự chạy thử SQL trên DB tách riêng (200 claim/50 cuốc ⇒ 0 hai người thắng; bản hỏng 20). Commit `7dd16e4` CHỜ DUYỆT, Q1–Q10 có giá trị tạm.
+- R08 vòng 4 (`3be813e`): Docker tắt ⇒ worker tự bật lại; quota Gemini cạn giữa lượt ⇒ diagnosis/responsibility blocked, emergency 97/100 (nhiễu hạ tầng) ⇒ SO phán ⛔ DỪNG (G26). Phát hiện: model sập toàn phần ⇒ khẩn cấp gián tiếp chỉ còn lưới từ khoá.
+- 3 file presentation lạ xuất hiện 23:50 (1 ở root) — không phải của agent, chờ người.
 
-## 🏁 Phiên 2026-09-25 (tiếp) — P03 thi công xong, tạm dừng
-- Worker 🟠 thi công H03 ⇒ R03 ⏳ (`e3d2079`, report `ee362f7`): 8 tool, resident agent, migration 002, seed sim, 3 bộ golden + `eval_golden.mjs`. Bắt được bug thật: `pg` trả cột `date` thành JS `Date` ⇒ so hiệu lực sai ⇒ ép `::text`.
-- SO đo lại: phạm vi sạch (không đụng specs/brain/docs/check scripts); `npm ci`/typecheck/build/`npm test` 54/`test:db` 23 trên DB rỗng/gate = 0.
-- **Người dùng: "dừng lại rồi cập nhật não"** ⇒ CHƯA phóng thẩm định P03, CHƯA giao H04. Đồng bộ não.
+- **Đ28 (người dùng):** "dùng tạm deepseek trong vyce" ⇒ `.env` `MODEL_PROVIDER=vyce` (key dán lại trùng key cũ; probe 200, 1,4 s). Gate vẫn theo Đ26 — không chấm lại bằng DeepSeek.
+- Người dùng hỏi "chỉ cần thay deepseek vào phần gemini chưa làm?" ⇒ không ghép số hai model, nhưng **Đ29** chấm bù theo route (triage không đổi ⇒ giữ số khẩn cấp/đồng ý real-run-1). H08 vòng 5: cờ `--set` (`0347210`, R08 ✅ sau SO đo lại DB rỗng riêng + gate 0).
+- Người dùng: "toàn bộ quá trình tôi đều duyệt cho bạn làm" ⇒ Đ27 ĐÃ DUYỆT (Q1–Q10 giữ giá trị tạm), đồng bộ 00-ARCH §4/§7 + SPEC-P02 §3.5, H12 (P05-B) `a0f832a`, push `origin/main` = `a0f832a`, phóng worker 🟠.
+- R12 (P05-B) ✅: SO đo lại DB rỗng riêng — gate 0, `npm test` 296, `test:db` 165, 0 skip, `sim_claims` 0/`--break` 1. Chấp nhận 2 file ngoài danh sách tên (`job-state.ts` = máy trạng thái, `job-code.ts` export ALPHABET). Phóng H13 (P05-C) ∥ H14 (P05-E). Push `daf5239`.
 
-### ⏭ Treo / cần người
-- Thẩm định P03 (đối kháng, agent khác) rồi phán R03; H04 adapter Gemini (`model.ts` hiện chỉ Anthropic).
-- Câu hỏi mở R03: `window_start/end` khi mở case; `eval_golden` chấm một lượt đơn (không phải vòng tool thật); SDK Anthropic 0.68 không có `fallbacks`; SPEC-P03 §10.8 lệch Đ18.
-- Trạng thái `unassigned`/`disputed` chưa có đường ra (01-CONTRACTS §5) — chốt khi soạn P05/P06.
-- Giữ hay bỏ bước cư dân "Đồng ý"; chốt tham số phí + `MIN_EARNINGS_TO_FEE`; viết SPEC-P08.
-- Cần quy chế thật của tòa pilot để làm golden `responsibility` (G10).
+- Cả hai worker bị ngắt 3:10 vì giới hạn phiên Claude ⇒ chạy tiếp bằng SendMessage lúc 04:05 (chưa commit gì nên không mất việc).
+- R14 vòng 1 🔁: route đình chỉ thợ nhả cuốc trước khi đặt `suspended` + bỏ sót `access_granted` (lộ PII) ⇒ Đ30 SPEC-P05 §10.17 (G27). R13 vòng 1 🔁: 11/67 ca golden nằm nguyên văn trong prompt thợ (G28). Hai vòng 2 xong ⇒ SO đo cả cây DB rỗng: gate 0, `npm test` 317, `test:db` 192, 0 skip; bằng chứng đỏ độc lập (tắt chốt chặn ⇒ 1/6 đỏ) ⇒ R13 ✅, R14 ✅.
 
-## 🏁 Phiên 2026-09-25 (chiều) — Thẩm định P03, adapter Gemini, vòng vá, lớp hiểu ý
-- Bước 0 exit 0; Docker Desktop tắt ⇒ bật lại để có Postgres dev.
-- **Đ19** chốt 4 câu hỏi mở R03 (provider tách, fallback phía client, `max_tokens` 16000, G09/G10 chỉ chấm qua vòng agent thật).
-- H04 (worker 🟠) adapter Gemini ∥ H05 (thẩm định 🔴 ngữ cảnh sạch) chạy song song. R05: cổng xanh nhưng bộ phá đỏ 27/40 ⇒ 7 lỗi chặn; SO đo lại xác nhận ⇒ R05 ✅, R03 🔁.
-- **Đ20** SPEC-P03 §11 (vòng vá). Người dùng hỏi C1 ("BQL không ăn tiền cuốc") ⇒ giữ: BQL thu phí slot nên trích dẫn buộc kết luận là thứ giữ lòng tin cư dân. Người dùng: "bắt key rất khó và dễ sai" ⇒ **Đ21 lớp hiểu ý** `triageMessage` (khẩn cấp + đồng ý), từ khoá lùi thành lưới an toàn. Lưu memory `intent-by-model-not-keywords`.
-- R04 🔁 vì `test:db` đỏ 9/21 (lỗi phạm vi handoff của SO) ⇒ gộp vào H06 mục 0.
-- H06 vòng 1: 103/70 test; SO probe câu thật ⇒ lưới có dấu tê liệt (`\b` chỉ ASCII, G14) ⇒ 🔁; vòng 2 (cùng worker) vá + test sinh từ mảng + bằng chứng đỏ 35/78 ⇒ 173/76 ⇒ R06 ✅, R03 ✅, R04 ✅.
-- Lệch sót sau R06: `handoff_to_staff` ghi cứng 30 phút (§11.6 đòi env `HUMAN_TAKEOVER_MIN` = 60), `.env.example` thiếu biến triage — đưa vào gói kế.
+- **Đ31** (SO): model sập ⇒ hotline + đẩy cho người (SPEC-P03 §11.12). H15 ⇒ R15 ✅ (SO đo lại DB rỗng: 317/196; worker quên commit ⇒ SO commit). Gotcha G29 hàng đợi `inbound_events` dùng chung.
 
-### ⏭ Treo / cần người
-- Push các commit hôm nay (chưa push). Giữ/bỏ bước "Đồng ý"; tham số phí.
-- Gói kế: máy chấm model thật (G08–G10) — cần key Gemini trong `.env` (đã có).
+### ⏭ Treo
+- Lượt Gemini sau ~14h: H08 `--set diagnosis,responsibility` + golden thợ `vendor-intent.mjs`; review 🔴 prompt + golden thợ; lượt Gemini `--set diagnosis,responsibility` sau ~14h (quota ngày); duyệt Đ27 + Q1–Q10; quyết 3 file presentation; câu hỏi đường lùi khẩn cấp khi model sập.
+
+---
