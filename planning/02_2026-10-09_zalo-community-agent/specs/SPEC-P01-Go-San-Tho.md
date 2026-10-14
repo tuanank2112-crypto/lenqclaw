@@ -5,7 +5,7 @@
 
 ## §1. Thứ tự bắt buộc
 
-1. `git tag archive/plan-01-marketplace eada365` (hoặc HEAD lúc nhận việc nếu khác — ghi SHA vào report) và `git tag` phải in ra tag đó. KHÔNG push.
+1. (D26 — SO ĐÃ LÀM 2026-10-14) Tag `archive/plan-01-marketplace` = `d7f50eb`, đã push `origin`, đủ 94/94 file (`evidence/P01/archive-tag.txt`). Worker CHỈ kiểm: `git rev-parse archive/plan-01-marketplace^{commit}` = `d7f50eb…`; CẤM đánh lại/xoá/di chuyển tag. Mẫu port (vòng tool `resident-agent.ts`, `pii.ts`, `claim_job.ts`…) đọc bằng `git show archive/plan-01-marketplace:<đường>`.
 2. Thêm `db/migrations/007_drop_marketplace.sql` và `008_community.sql` NGUYÊN VĂN 01-CONTRACTS §4 (so sha256 với `evidence/ARCH/migration-draft-sha256.txt` sau khi chuẩn hoá LF; lệch ⇒ dừng, báo). Thêm `009_tenant_trace.sql` NGUYÊN VĂN 01-CONTRACTS §4 (D23/D24 — chưa có sha256 vì chưa áp thử): áp từ DB rỗng sau 008 + chạy lại ⇒ ghi `evidence/P01/migration-009-probe.txt` (`applied 1`, `applied 0`, `tenants` có `default`, `zalo_accounts.tenant_id = default`, insert `turn_traces` outcome lạ bị CHECK từ chối).
 3. Gỡ file theo §2; sửa file theo §3; viết lại seed §4, máy đo §6, `.env.example` §5.
 4. `npm run gate` ⇒ exit 0; `npm run test:db` ⇒ exit 0 (DB dev `127.0.0.1:55432`, migrations 001–009 áp sạch từ DB rỗng — test P01 mới kiểm `applied = 9` theo số file, không ghi cứng).

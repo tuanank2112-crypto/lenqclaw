@@ -93,6 +93,9 @@ Mỗi `runCommunityTurn` ghi đúng 1 dòng `turn_traces` (kind, trigger, số v
 ### D25 — 2026-10-14 · Chỉ zca-js (tài khoản Zalo cá nhân) cho cả cộng đồng LẪN doanh nghiệp của chủ; KHÔNG Zalo OA, KHÔNG dựng lớp `ChannelAdapter` (người dùng chốt)
 Người dùng chấp nhận rủi ro khoá tài khoản / điều khoản Zalo; giảm bằng D09 như cũ. Không cần lớp kênh mới: BB-02/BB-03 đã nhốt zca-js trong `apps/zalo-worker`, core chỉ thấy `inbound_events`/`outbox` — kênh khác (nếu có) là một worker mới ghi cùng hai bảng. Dùng cho doanh nghiệp (tài khoản thứ hai) là giai đoạn SAU 0.1: nới D12 (CHECK `zalo_accounts.id` + `AccountId`) + tenant thứ hai (D23). **Lật:** thêm kênh = worker mới, không đổi core.
 
+### D26 — 2026-10-14 · Người dùng xác nhận gỡ 94 file sàn thợ theo cách "di chuyển an toàn" — lưu trữ bằng tag ĐÃ PUSH (người dùng chốt, SO thi hành)
+Người dùng: "nếu không quan trọng thì di chuyển nó một cách an toàn". SO thi hành TRƯỚC khi phóng P01: (1) tag `archive/plan-01-marketplace` = `d7f50eb` (HEAD lúc đó, đủ 94/94 file — kiểm từng file bằng `git cat-file -e`), (2) **push tag lên `origin`** để còn bản ở GitHub kể cả khi máy hỏng, (3) bản sửa dở chưa commit của `prompts/resident.ts` lưu thành `evidence/P01/resident-ts-wip-diff.txt` rồi trả file về HEAD. Bằng chứng: [`evidence/P01/archive-tag.txt`](evidence/P01/archive-tag.txt). Khôi phục một file: `git checkout archive/plan-01-marketplace -- <đường>`. KHÔNG chép 94 file sang thư mục khác trong repo/workspace (rác root + `check_pivot_cleanup` đỏ; tag là bản lưu đầy đủ, có lịch sử). **Lật:** khôi phục từ tag — chi phí thấp.
+
 ### Quyết định bị thay thế
 | Mốc cũ | Phát biểu cũ | Thay bằng | Lý do |
 | :-- | :-- | :-- | :-- |
@@ -105,6 +108,7 @@ Người dùng chấp nhận rủi ro khoá tài khoản / điều khoản Zalo;
 | Kế hoạch 01 roles `bql_admin/bql_staff/guard`, tài khoản `bql/market` | | D12, D13 | pivot |
 | zaloclaw `delete-message` (`tool.ts:741`) | `uidFrom = uid bot` | SPEC-P02 §4.2 | không xoá được tin người khác |
 | zaloclaw mention gating (`monitor.ts:850`) | chỉ mention gốc | D04 | 4 cách kích hoạt + ambient |
+| SPEC-P01 §1 bước 1 (bản duyệt 2026-10-09) | worker tự đánh tag `eada365`, "KHÔNG push" | D26 | SO đã đánh tag `d7f50eb` + push để lưu trữ an toàn |
 | zaloclaw injection-guard | regex chặn/kick | D05(c) | báo nhầm trong cộng đồng AI; bảo mật bằng policy tool theo vai |
 | SPEC-P03 §5.1 bước 5 (bản duyệt 2026-10-09) | DM nạp "lịch sử 20 tin" | D22 | ≤ 5 lượt (10 tin) + ghi chú thành viên; chi phí |
 | 01-CONTRACTS §7.1 (bản duyệt 2026-10-09) | tool `recall_member_profile` (D) | D22 | ghi chú nạp sẵn mỗi lượt DM — tool thừa tốn token định nghĩa |
@@ -137,7 +141,8 @@ Thứ tự bắt buộc: `P01 → P02 → P03 → (P04 ∥ P05 ∥ P06 ∥ P07) 
 - [ ] 🖐 Người dùng: nội dung persona thật (SOUL/RULES/IDENTITY/CAPABILITIES) + tài liệu tri thức ban đầu (dán qua `/knowledge`)
 - [ ] 🖐 Người dùng: quota/billing Gemini cho golden (~4 bộ × ≥ 60 ca ≈ 300–500 lượt gọi/lượt chấm) — G26 cũ
 - [ ] 🖐 Người dùng: thông báo xử lý dữ liệu cho nhóm thật (OPERATIONS §3); dọn 5 file lạ ở root/docs (`lenqclaw_presentation_transcript.pdf`, `docs/*.html`, `docs/*.pdf`, `docs/images/11-*.png`) — không thuộc kế hoạch
-- [ ] P01 — gỡ sàn thợ (G01–G03 local)
+- [x] 🖐 Người dùng xác nhận gỡ 94 file ("di chuyển an toàn") — 2026-10-14; SO: tag `archive/plan-01-marketplace` = `d7f50eb` đã push, 94/94 file trong tag ([evidence](evidence/P01/archive-tag.txt)) — D26
+- [ ] P01 — gỡ sàn thợ (G01–G03 local) — handoff [H01](handoffs/H01_thi-cong_P01.md)
 - [ ] P02 — transport nhóm (G04–G06 local) + thẩm định 🔴
 - [ ] P03 — runtime agent (G07, G08, G14, G15 local)
 - [ ] P04 — tri thức (G12 local sau golden)

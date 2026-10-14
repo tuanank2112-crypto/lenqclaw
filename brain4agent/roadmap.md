@@ -12,7 +12,7 @@ Pivot 2026-10-09 (D01): agent chăm sóc cộng đồng Zalo. Bộ SPEC ĐÃ DUY
 - [x] Dựng bộ SPEC (00, 01, P01–P08, OPERATIONS, TESTING) + chạy thử 5 bộ kiểm (`evidence/ARCH/`) — 2026-10-09
 - [x] SO duyệt SPEC, giữ Q1–Q12 giá trị tạm — 2026-10-09
 - [x] Bổ sung D22–D25 (2026-10-14): ngữ cảnh DM ≤ 5 lượt + ghi chú, không nén · tenant `default` + `turn_traces` (migration 009) · chỉ zca-js cho cả cộng đồng lẫn doanh nghiệp
-- [ ] 🖐 Người xác nhận GỠ 94 file sàn thợ (AGENTS §5.L.3) — mở khoá P01
+- [x] 🖐 Người xác nhận GỠ 94 file sàn thợ — 2026-10-14 ("di chuyển an toàn": tag `archive/plan-01-marketplace` = `d7f50eb` đã push, D26)
 - [ ] P01 — gỡ sàn thợ, migration 007/008/009, tài khoản `community`, vai admin/operator, seed, `check_pivot_cleanup` (🟠, G01–G03)
 - [ ] P02 — transport nhóm: worker + action outbox + pacer nhóm + sim nhóm (🟠 thi công · 🔴 thẩm định, G04–G06)
 - [ ] P03 — runtime agent: cổng nhận tin, đệm, ambient, persona, policy tool, host ép trả lời (🔴/🟠, G07, G08, G14, G15)
@@ -41,7 +41,7 @@ Mỗi giai đoạn = một hồ sơ `planning/` đủ bộ SPEC, đóng bằng c
 | GĐ | SemVer | Mục tiêu | Nội dung chính | Cổng ra |
 | :-- | :-- | :-- | :-- | :-- |
 | 0 | `0.1.0` (kế hoạch 02) | Cộng đồng chạy thật | P01–P09 + D22–D25 | G01–G21 ✅ cột `vps` |
-| 1 | `0.2.0` (kế hoạch 03) | Khung hành vi: **Skill · Voice · Constraint** | Skill có phiên bản + bộ ca test riêng + bề mặt được dùng; Voice có cấu trúc (xưng hô, độ dài, emoji, từ ưu/cấm, ví dụ đúng-sai) theo tenant × bề mặt; Constraint 3 tầng: cứng trong tool (BB) · cổng ra kiểm bằng code theo tenant (trước `enqueue`) · mềm trong RULES đo bằng golden; kích hoạt phiên bản persona chỉ khi golden hồi quy đạt; so phiên bản bằng `turn_traces.persona_versions` | golden `voice` + `constraints` + ca từng skill đạt; 0 vi phạm tầng cứng; rollback phiên bản 1 thao tác |
+| 1 | `0.2.0` (kế hoạch 03) | Khung hành vi: **Skill · Voice · Constraint** (Voice = GIỌNG ĐIỆU, người dùng chốt 2026-10-14; tin nhắn thoại là GĐ4) | Skill có phiên bản + bộ ca test riêng + bề mặt được dùng; Voice có cấu trúc (xưng hô, độ dài, emoji, từ ưu/cấm, ví dụ đúng-sai) theo tenant × bề mặt; Constraint 3 tầng: cứng trong tool (BB) · cổng ra kiểm bằng code theo tenant (trước `enqueue`) · mềm trong RULES đo bằng golden; kích hoạt phiên bản persona chỉ khi golden hồi quy đạt; so phiên bản bằng `turn_traces.persona_versions` | golden `voice` + `constraints` + ca từng skill đạt; 0 vi phạm tầng cứng; rollback phiên bản 1 thao tác |
 | 2 | `0.3.0` (kế hoạch 04) | Doanh nghiệp của chủ | Tài khoản Zalo thứ 2 (nới D12), tenant thứ 2 (D23), kho tri thức + persona + skill riêng; luồng CSKH 1-1; chuyển người thật có hàng chờ + SLA + nhắc; staff và dashboard lọc theo tenant | 14 ngày chạy song song 2 tenant; 0 rò dữ liệu chéo tenant (test + truy vấn kiểm); SLA chuyển người đạt |
 | 3 | `0.4.0` | Vận hành chuẩn | Model dự phòng + ngắt mạch; kill switch toàn cục/nhóm; cảnh báo (tỉ lệ fallback, `model_down`, phiên Zalo rớt) qua DM chủ; chi phí/lượt & /tenant từ `turn_traces`; backup + diễn tập khôi phục; hạn giữ + xoá dữ liệu theo yêu cầu (Luật 91/2025); xoay secrets | diễn tập khôi phục đạt; cảnh báo bắn đúng trên lỗi giả lập; yêu cầu xoá dữ liệu xử lý ≤ 72 giờ |
 | 4 | `1.0.0` | Mở cho khách ngoài | Onboarding tenant tự phục vụ, RLS Postgres, quota theo tenant, nhận ảnh/voice (STT), nhiều runner (advisory lock / pg-boss) | ≥ 3 tenant ngoài chạy 30 ngày; thẩm định bảo mật đối kháng |
