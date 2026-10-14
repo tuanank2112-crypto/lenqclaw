@@ -21,11 +21,17 @@ Bỏ `D:\lenqclaw`, chỉ dùng bản ở workspace. Người dùng góp ý đ�
 
 - (tiếp) Người dùng: voice = GIỌNG ĐIỆU; xác nhận gỡ 94 file sàn thợ "di chuyển an toàn" ⇒ **D26**: SO đánh tag `archive/plan-01-marketplace` = `d7f50eb`, push tag, kiểm 94/94 file trong tag (`evidence/P01/archive-tag.txt`); WIP `resident.ts` lưu `evidence/P01/resident-ts-wip-diff.txt` rồi trả về HEAD. Commit `b356f07` (pushed).
 - Phóng song song: worker P01 (🟠, handoff `H01_thi-cong_P01.md`) và architect kế hoạch 03 Skill · Voice · Constraint (🔴, chỉ soạn `planning/03_2026-10-14_skill-voice-constraint/`, không commit). Docker Desktop bật lại; DB dev `lenqclaw-db-1` :55432.
-### ⏭ Treo
-- DDL 009 CHƯA áp thử (Docker tắt) ⇒ P01 áp thử, ghi `evidence/P01/migration-009-probe.txt`.
-- Chờ R01 (P01) để SO đo lại + phán; chờ architect nộp bộ SPEC kế hoạch 03 để SO duyệt + commit.
-- Các mục treo của phiên 2026-10-09 vẫn còn (trừ push — đã làm).
 
+### ⛔ DỪNG theo lệnh người dùng (2026-10-14 ~09:00) — trạng thái để tiếp tục
+- Hai agent nền bị dừng giữa chừng, KHÔNG agent nào commit.
+- **Worker P01 (dở, CHƯA đo lại, CHƯA phán):** cây làm việc có 94 file đã `git rm` (staged, khớp danh sách SPEC-P01 §2), 3 rename (gồm `search-regulations→search-knowledge`), ~65 file sửa, mới: migration `007/008/009`, `agent/community/{router,redact}.ts`, `services/community-config.ts`, `scripts/check_pivot_cleanup.mjs`, vài test. Đang làm tới test `sim-tick` của web. Evidence đã có: `migration-009-probe.txt` (FAILS 0), `red-pivot-before.txt`, `red-check-agent-tools.txt` (exit 1 — đúng là ĐỎ), `backup.txt`, `tag-check.txt`, `test-db.txt` (dở, không phải số cuối). CHƯA có: `gate.txt`, `test.txt`, `deleted-count.txt`, `diff-stat.txt`, report R01.
+- **DB dev đã migrate tới `009`** (9 migration). Bản sao lưu trước 007: `~/lenqclaw-backups/pre-007-2026-10-14.sql` (76 KB, ngoài repo). DB tạm probe đã xoá.
+- **Architect kế hoạch 03 (dở, untracked):** `planning/03_2026-10-14_skill-voice-constraint/` có `plan.md` (148 dòng), `specs/00-ARCHITECTURE.md`, `01-CONTRACTS.md`, `SPEC-P01-Skill.md`, `SPEC-P02-Voice.md`; THIẾU SPEC constraint/cổng ra, vòng đời phiên bản + golden, dashboard, `OPERATIONS.md`, `TESTING-ACCEPTANCE.md`. SO CHƯA đọc duyệt.
+
+### ⏭ Treo
+- Tiếp P01: giao lại worker (cùng handoff H01) chạy tiếp trên cây hiện có — KHÔNG `git checkout`/reset (mất việc dở); xong ⇒ R01 ⇒ SO đo lại + phán.
+- Tiếp kế hoạch 03: architect soạn nốt 5 phần thiếu ⇒ SO duyệt ⇒ commit.
+- Các mục treo của phiên 2026-10-09 vẫn còn (trừ push — đã làm).
 ---
 
 ## 🏁 Phiên 2026-10-09 — Pivot sang agent cộng đồng Zalo

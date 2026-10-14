@@ -38,7 +38,8 @@ Thứ tự gói: P01 → P02 → P03 → (P04 ∥ P05 ∥ P06 ∥ P07) → P08 �
 Câu hỏi Q1–Q12 (plan 02 §6) giữ GIÁ TRỊ TẠM: tên bot `Claw` · budget 20 tin/nhóm/giờ, 12 lượt ambient/giờ, gom 20 s · không react · /mute = ambient→mention · đệm 7 ngày ·
   agent_review vào nhóm: model im ⇒ cho vào · moderator duyệt kick/block thẻ nhóm mình · dev giữ provider vyce, gate chấm Gemini.
 Còn chờ người: xác nhận gỡ 94 file (mở P01) · tài khoản Zalo phụ (SIM riêng) + 2–3 Zalo thành viên thử + nhóm thử · persona thật + tri thức ban đầu · quota Gemini cho golden (~300–500 lượt/lượt chấm) ·
-  thông báo xử lý dữ liệu cho nhóm thật · 5 file lạ (lenqclaw_presentation_transcript.pdf ở root, docs/*.html, docs/*.pdf, docs/images/11-*.png) · thu hồi key OpenRouter + Vyce đã dán trong chat. (Đã push `0c0a5c6` 2026-10-14.)
+  thông báo xử lý dữ liệu cho nhóm thật · 5 file lạ (lenqclaw_presentation_transcript.pdf ở root, docs/*.html, docs/*.pdf, docs/images/11-*.png) · thu hồi key OpenRouter + Vyce đã dán trong chat. (Đã push tới `c0ee02d` 2026-10-14.)
+TRẠNG THÁI 2026-10-14 ~09:00 (DỪNG theo lệnh người): P01 thi công DỞ trong cây làm việc (94 file đã git rm staged, migration 007–009 untracked, DB dev đã ở 009, chưa gate/report) — tiếp bằng H01, KHÔNG reset cây. Kế hoạch 03 Skill·Voice·Constraint: bộ SPEC dở (5/≥9 file, untracked). Chi tiết: memory/hot/today.md.
 Nhật ký `memory/hot/today.md`: phiên MỚI NHẤT ở TRÊN cùng (G30). Cập nhật não sau MỖI việc có ý nghĩa rồi commit/push — không dồn cuối phiên.
 Sơ đồ/tài liệu cũ docs/SYSTEM-MAP.md, docs/DESIGN.md, docs/images/08–10 mô tả sàn thợ ⇒ lịch sử, KHÔNG phản ánh sản phẩm hiện tại.
 </repo_nature>

@@ -13,7 +13,7 @@ Pivot 2026-10-09 (D01): agent chăm sóc cộng đồng Zalo. Bộ SPEC ĐÃ DUY
 - [x] SO duyệt SPEC, giữ Q1–Q12 giá trị tạm — 2026-10-09
 - [x] Bổ sung D22–D25 (2026-10-14): ngữ cảnh DM ≤ 5 lượt + ghi chú, không nén · tenant `default` + `turn_traces` (migration 009) · chỉ zca-js cho cả cộng đồng lẫn doanh nghiệp
 - [x] 🖐 Người xác nhận GỠ 94 file sàn thợ — 2026-10-14 ("di chuyển an toàn": tag `archive/plan-01-marketplace` = `d7f50eb` đã push, D26)
-- [ ] P01 — gỡ sàn thợ, migration 007/008/009, tài khoản `community`, vai admin/operator, seed, `check_pivot_cleanup` (🟠, G01–G03)
+- [ ] P01 — ⏸ ĐANG DỞ (dừng 2026-10-14, cây làm việc chưa commit, tiếp bằng handoff H01) — gỡ sàn thợ, migration 007/008/009, tài khoản `community`, vai admin/operator, seed, `check_pivot_cleanup` (🟠, G01–G03)
 - [ ] P02 — transport nhóm: worker + action outbox + pacer nhóm + sim nhóm (🟠 thi công · 🔴 thẩm định, G04–G06)
 - [ ] P03 — runtime agent: cổng nhận tin, đệm, ambient, persona, policy tool, host ép trả lời (🔴/🟠, G07, G08, G14, G15)
 - [ ] P04 — tri thức: kho, embedding, truy hồi lai RRF, câu hỏi bỏ trống (🟠, G12)
