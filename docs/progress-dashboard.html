@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Báo Cáo Tiến Độ Dự Án lenqclaw</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+    :root {
+      --bg-dark: #090d16;
+      --card-bg: #111827;
+      --card-border: #1f293d;
+      --card-hover: #1e293b;
+      --accent-blue: #38bdf8;
+      --accent-indigo: #6366f1;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --accent-purple: #a855f7;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-sub: #64748b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      width: 1920px;
+      height: 1080px;
+      padding: 36px 44px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 20px;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo-badge {
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 800;
+      font-size: 22px;
+      color: #fff;
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+    }
+
+    .title-group h1 {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .title-group h1 span {
+      color: var(--accent-blue);
+    }
+
+    .title-group p {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .header-pills {
+      display: flex;
+      gap: 12px;
+    }
+
+    .pill {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pill-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .dot-green { background: var(--accent-emerald); box-shadow: 0 0 8px var(--accent-emerald); }
+    .dot-blue { background: var(--accent-blue); }
+
+    /* Top KPI Cards */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 1fr 1fr 1fr;
+      gap: 18px;
+      margin: 22px 0 24px 0;
+    }
+
+    .kpi-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 18px 22px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+
+    .kpi-blue::before { background: var(--accent-blue); }
+    .kpi-emerald::before { background: var(--accent-emerald); }
+    .kpi-indigo::before { background: var(--accent-indigo); }
+    .kpi-amber::before { background: var(--accent-amber); }
+    .kpi-purple::before { background: var(--accent-purple); }
+
+    .kpi-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-sub);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .kpi-value-row {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .kpi-main-val {
+      font-size: 36px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      line-height: 1;
+    }
+
+    .kpi-sub-val {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .progress-bar-bg {
+      background: #1e293b;
+      height: 6px;
+      border-radius: 999px;
+      margin-top: 12px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+    }
+
+    /* Main Grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr 0.85fr;
+      gap: 22px;
+      flex-grow: 1;
+      height: calc(100% - 240px);
+    }
+
+    .panel {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .panel-title {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .badge-done { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-wip { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-wait { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.3); }
+
+    /* Work Packages List */
+    .wp-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8.5px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .wp-item {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 9px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .wp-item.active-wp {
+      border-color: rgba(56, 189, 248, 0.4);
+      background: rgba(56, 189, 248, 0.05);
+    }
+
+    .wp-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .wp-code {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 12px;
+      width: 58px;
+      padding: 3px 6px;
+      border-radius: 6px;
+      text-align: center;
+    }
+
+    .code-done { background: #064e3b; color: #6ee7b7; }
+    .code-wip { background: #78350f; color: #fde68a; }
+    .code-wait { background: #1e293b; color: #94a3b8; }
+
+    .wp-name-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .wp-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #f1f5f9;
+    }
+
+    .wp-desc {
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+
+    .wp-status-text {
+      font-size: 11.5px;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Pipeline 8-Step Visualization */
+    .pipeline-stepper {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .step-node {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: rgba(15, 23, 42, 0.4);
+      border: 1px solid var(--card-border);
+    }
+
+    .step-node.completed {
+      border-color: rgba(16, 185, 129, 0.3);
+      background: rgba(16, 185, 129, 0.05);
+    }
+
+    .step-node.current {
+      border-color: rgba(245, 158, 11, 0.4);
+      background: rgba(245, 158, 11, 0.08);
+    }
+
+    .step-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      flex-shrink: 0;
+    }
+
+    .num-done { background: var(--accent-emerald); color: #000; }
+    .num-cur { background: var(--accent-amber); color: #000; }
+    .num-wait { background: #334155; color: #94a3b8; }
+
+    .step-content {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      align-items: center;
+    }
+
+    .step-name {
+      font-size: 12.5px;
+      font-weight: 600;
+    }
+
+    .step-agent-tool {
+      font-size: 11px;
+      color: var(--text-sub);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Benchmark Bars */
+    .benchmarks-group {
+      margin-top: auto;
+      border-top: 1px solid var(--card-border);
+      padding-top: 12px;
+    }
+
+    .bench-item {
+      margin-bottom: 10px;
+    }
+
+    .bench-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .bench-score {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+    }
+
+    /* Right Column - Blockers & Next Actions */
+    .blocker-card {
+      background: rgba(244, 63, 94, 0.08);
+      border: 1px solid rgba(244, 63, 94, 0.25);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+    }
+
+    .blocker-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #fb7185;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .blocker-desc {
+      font-size: 12px;
+      color: #fecdd3;
+      line-height: 1.45;
+    }
+
+    .next-action-item {
+      background: rgba(15, 23, 42, 0.6);
+      border-left: 3px solid var(--accent-blue);
+      border-radius: 0 8px 8px 0;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .next-action-tag {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--accent-blue);
+      margin-bottom: 2px;
+    }
+
+    /* Footer */
+    .footer {
+      border-top: 1px solid var(--card-border);
+      padding-top: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-sub);
+    }
+
+    .git-sha {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent-blue);
+      background: rgba(56, 189, 248, 0.1);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="brand-section">
+      <div class="logo-badge">LQ</div>
+      <div class="title-group">
+        <h1>LENQCLAW <span>:: DASHBOARD TIẾN ĐỘ THỰC CHIẾN</span></h1>
+        <p>Hồ Sơ Kế Hoạch 01 — Sàn Việc Thợ Tòa Nhà Điều Phối Bởi AI Agent Qua Zalo (MVP Pilot 1–2 Tòa)</p>
+      </div>
+    </div>
+    <div class="header-pills">
+      <div class="pill">
+        <span class="pill-dot dot-green"></span>
+        <span>Hệ Thống: ĐANG XÂY DỰNG (Building)</span>
+      </div>
+      <div class="pill">
+        <span class="pill-dot dot-blue"></span>
+        <span>Khung Não: Universal Brain v1.7.1</span>
+      </div>
+      <div class="pill">
+        <span class="pill-dot dot-blue"></span>
+        <span>Mục Tiêu SemVer: v0.1.0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI TOP CARDS -->
+  <div class="kpi-row">
+    <!-- Tiến độ tổng -->
+    <div class="kpi-card kpi-blue">
+      <div class="kpi-label">
+        <span>Tiến Độ MVP</span>
+        <span style="color: var(--accent-blue);">68%</span>
+      </div>
+      <div class="kpi-value-row">
+        <span class="kpi-main-val" style="color: var(--accent-blue);">68%</span>
+        <span class="kpi-sub-val">Đạt mốc lõi P01, P03, P02, P05</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" style="width: 68%; background: var(--accent-blue);"></div>
+      </div>
+    </div>
+
+    <!-- Bài Test Tự Động -->
+    <div class="kpi-card kpi-emerald">
+      <div class="kpi-label">
+        <span>Kiểm Thử Toàn Diện</span>
+        <span style="color: var(--accent-emerald);">100% PASS</span>
+      </div>
+      <div class="kpi-value-row">
+        <span class="kpi-main-val" style="color: var(--accent-emerald);">513</span>
+        <span class="kpi-sub-val">317 Unit + 196 DB (0 Skip)</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" style="width: 100%; background: var(--accent-emerald);"></div>
+      </div>
+    </div>
+
+    <!-- Quyết Định Kiến Trúc -->
+    <div class="kpi-card kpi-indigo">
+      <div class="kpi-label">
+        <span>Quyết Định Đã Chốt</span>
+        <span style="color: var(--accent-indigo);">Đ01 &rarr; Đ31</span>
+      </div>
+      <div class="kpi-value-row">
+        <span class="kpi-main-val" style="color: var(--accent-indigo);">31</span>
+        <span class="kpi-sub-val">Đã thẩm định & khoá SPEC</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" style="width: 100%; background: var(--accent-indigo);"></div>
+      </div>
+    </div>
+
+    <!-- Khẩn Cấp Golden -->
+    <div class="kpi-card kpi-amber">
+      <div class="kpi-label">
+        <span>Khẩn Cấp (Safety Net)</span>
+        <span style="color: var(--accent-amber);">100% ĐẠT</span>
+      </div>
+      <div class="kpi-value-row">
+        <span class="kpi-main-val" style="color: var(--accent-amber);">100/100</span>
+        <span class="kpi-sub-val">0 Bỏ sót &bull; 0 Báo nhầm</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" style="width: 100%; background: var(--accent-amber);"></div>
+      </div>
+    </div>
+
+    <!-- Bảo Vệ PII -->
+    <div class="kpi-card kpi-purple">
+      <div class="kpi-label">
+        <span>An Ninh Số Căn (PII)</span>
+        <span style="color: var(--accent-purple);">0 LỖ HỔNG</span>
+      </div>
+      <div class="kpi-value-row">
+        <span class="kpi-main-val" style="color: var(--accent-purple);">0</span>
+        <span class="kpi-sub-val">Khóa chặt cấp độ Type</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" style="width: 100%; background: var(--accent-purple);"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN 3-COLUMN CONTENT -->
+  <div class="main-grid">
+
+    <!-- CỘT 1: TIẾN ĐỘ WORK PACKAGES -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span>📦 Các Gói Công Việc (Work Packages)</span>
+        </div>
+        <span class="panel-badge badge-done">7 GÓI HOÀN THÀNH</span>
+      </div>
+
+      <div class="wp-list">
+        <div class="wp-item">
+          <div class="wp-left">
+            <span class="wp-code code-done">P01</span>
+            <div class="wp-name-group">
+              <span class="wp-name">Nền Tảng Monorepo & SimTransport</span>
+              <span class="wp-desc">Postgres 16, auth cookie HMAC, audit log, dev chat</span>
+            </div>
+          </div>
+          <span class="wp-status-text" style="color: var(--accent-emerald);">✅ R01 ĐÃ DUYỆT</span>
+        </div>
+
+        <div class="wp-item">
+          <div class="wp-left">
+            <span class="wp-code code-done">P03</span>
+            <div class="wp-name-group">
+              <span class="wp-name">Agent Cư Dân (Bước 0–3) & Triage</span>
+              <span class="wp-desc">Khẩn cấp, chẩn đoán, tra cứu quy chế có trích dẫn</span>
+            </div>
+          </div>
+          <span class="wp-status-text" style="color: var(--accent-emerald);">✅ R03/R06 ĐÃ DUYỆT</span>
+        </div>
+
+        <div class="wp-item">
+          <div class="wp-left">
+            <span class="wp-code code-done">P02-1</span>
+            <div class="wp-name-group">
+              <span class="wp-name">Zalo Transport Thật (Tài Khoản `bql`)</span>
+              <span class="wp-desc">zca-js 2.2.0, đăng nhập QR, watchdog, outbox pacer</span>
+            </div>
+          </div>
+          <span class="wp-status-text" style="color: var(--accent-emerald);">✅ R07/R09 ĐÃ THỬ</span>
+        </div>
+
+        <div class="wp-item">
+          <div class="wp-left">
+            <span class="wp-code code-done">P05-B</span>
+            <div class="wp-name-group">
+              <span class="wp-name">Nền Tảng Dispatch & PiiGate</span>
+              <span class="wp-desc">Dịch vụ chốt thợ nguyên tử, access passes, slot timers</span>
+            </div>
+          </div>
+          <span class="wp-status-text" style="color: var(--accent-emerald);">✅ R12 ĐÃ DUYỆT</span>
+        </div>
+
+        <div class="wp-item">
+          <div class="wp-left">
+            <span class="wp-code code-done">P05-C</span>
+            <div class="wp-name-group">
+              <span class="wp-name">Agent Thợ & 9 Tools Nghiệp Vụ</span>
+              <span class="wp-desc">Triage ý định thợ, claim cuốc, golden vendor intent</span>
+            </div>
+          </div>
+          <span class="wp-status-text" style="color: var(--accent-emerald);">✅ R13 ĐÃ DUYỆT</span>
+        </div>
+
+        <div class="wp-item">
+          <div class="wp-left">
+            <span class="wp-code code-done">P05-E</span>
+            <div class="wp-name-group">
+              <span class="wp-name">Console BQL Tối Thiểu (Next.js 15)</span>
+              <span class="wp-desc">Duyệt ticket /tickets, quản lý /gate, thợ & slot /vendors</span>
+            </div>
+          </div>
+          <span class="wp-status-text" style="color: var(--accent-emerald);">✅ R14 ĐÃ DUYỆT</span>
+        </div>
+
+        <div class="wp-item">
+          <div class="wp-left">
+            <span class="wp-code code-done">Đ31</span>
+            <div class="wp-name-group">
+              <span class="wp-name">Đường Lùi An Toàn Khi Model Sập</span>
+              <span class="wp-desc">Hotline BQL + handoff_to_staff(model_unavailable)</span>
+            </div>
+          </div>
+          <span class="wp-status-text" style="color: var(--accent-emerald);">✅ R15 ĐÃ DUYỆT</span>
+        </div>
+
+        <div class="wp-item active-wp">
+          <div class="wp-left">
+            <span class="wp-code code-wip">P05-D</span>
+            <div class="wp-name-group">
+              <span class="wp-name">Phía Cư Dân Mở Rộng & Đăng Nhóm</span>
+              <span class="wp-desc">Chờ H08 nhả file resident.ts để nối luồng đăng cuốc</span>
+            </div>
+          </div>
+          <span class="wp-status-text" style="color: var(--accent-amber);">⏳ ĐANG TREO H08</span>
+        </div>
+
+        <div class="wp-item">
+          <div class="wp-left">
+            <span class="wp-code code-wait">P06</span>
+            <div class="wp-name-group">
+              <span class="wp-name">Agent Bước 8: Nghiệm Thu & Đóng</span>
+              <span class="wp-desc">Ghi nhận giá thật, chấm điểm thợ, hẹn bảo hành 7 ngày</span>
+            </div>
+          </div>
+          <span class="wp-status-text" style="color: var(--text-sub);">⬜ CHỜ P05</span>
+        </div>
+
+        <div class="wp-item">
+          <div class="wp-left">
+            <span class="wp-code code-wait">P08</span>
+            <div class="wp-name-group">
+              <span class="wp-name">Sổ Lợi Ích Ba Bên & Cân Bằng Slot</span>
+              <span class="wp-desc">Phiếu hoàn thành 0đ, thẻ BQL, luật cân bằng thợ</span>
+            </div>
+          </div>
+          <span class="wp-status-text" style="color: var(--text-sub);">⬜ CHƯA VIẾT SPEC</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CỘT 2: PIPELINE 8 BƯỚC & BENCHMARK -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span>🔄 Trạng Thái Pipeline v0.2 & Golden Score</span>
+        </div>
+        <span class="panel-badge badge-wip">BƯỚC 0 &rarr; 7 KHẢ DỤNG</span>
+      </div>
+
+      <div class="pipeline-stepper">
+        <div class="step-node completed">
+          <div class="step-num num-done">0</div>
+          <div class="step-content">
+            <span class="step-name">Lọc Khẩn Cấp & Phân Làn</span>
+            <span class="step-agent-tool">Deterministic Regex</span>
+          </div>
+        </div>
+        <div class="step-node completed">
+          <div class="step-num num-done">1</div>
+          <div class="step-content">
+            <span class="step-name">Chẩn Đoán Sự Cố & Hỏi Thêm</span>
+            <span class="step-agent-tool">save_job_draft</span>
+          </div>
+        </div>
+        <div class="step-node completed">
+          <div class="step-num num-done">2</div>
+          <div class="step-content">
+            <span class="step-name">Phân Định Trách Nhiệm Tòa Nhà</span>
+            <span class="step-agent-tool">search_regulations</span>
+          </div>
+        </div>
+        <div class="step-node completed">
+          <div class="step-num num-done">3</div>
+          <div class="step-content">
+            <span class="step-name">Tạo Ticket Case & Xin Đồng Ý</span>
+            <span class="step-agent-tool">open_service_case</span>
+          </div>
+        </div>
+        <div class="step-node current">
+          <div class="step-num num-cur">4</div>
+          <div class="step-content">
+            <span class="step-name">Đăng Cuốc Ẩn Danh Vào Nhóm Thợ</span>
+            <span class="step-agent-tool">publish_job_to_group (P05-D)</span>
+          </div>
+        </div>
+        <div class="step-node completed">
+          <div class="step-num num-done">5</div>
+          <div class="step-content">
+            <span class="step-name">Chốt Thợ Thần Tốc (Atomic)</span>
+            <span class="step-agent-tool">claim_job (BB-05)</span>
+          </div>
+        </div>
+        <div class="step-node completed">
+          <div class="step-num num-done">6</div>
+          <div class="step-content">
+            <span class="step-name">Xin BQL Phê Duyệt Cấp Quyền</span>
+            <span class="step-agent-tool">request_access (BB-11)</span>
+          </div>
+        </div>
+        <div class="step-node completed">
+          <div class="step-num num-done">7</div>
+          <div class="step-content">
+            <span class="step-name">Giải Mã Thông Tin & Giao Việc</span>
+            <span class="step-agent-tool">dispatch_to_vendor</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Golden Benchmarks -->
+      <div class="benchmarks-group">
+        <div style="font-size: 13px; font-weight: 700; color: var(--accent-blue); margin-bottom: 8px;">
+          Đo Lường Bằng Máy Chấm Model Thật (Golden Eval):
+        </div>
+
+        <div class="bench-item">
+          <div class="bench-header">
+            <span>Emergency (Khẩn Cấp):</span>
+            <span class="bench-score" style="color: var(--accent-emerald);">100% (100/100)</span>
+          </div>
+          <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 100%; background: var(--accent-emerald);"></div></div>
+        </div>
+
+        <div class="bench-item">
+          <div class="bench-header">
+            <span>Diagnosis (Chẩn Đoán Lỗi):</span>
+            <span class="bench-score" style="color: var(--accent-emerald);">97.3% (36/37)</span>
+          </div>
+          <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 97.3%; background: var(--accent-emerald);"></div></div>
+        </div>
+
+        <div class="bench-item">
+          <div class="bench-header">
+            <span>Consent (Hiểu Ý Đồng Thuận):</span>
+            <span class="bench-score" style="color: var(--accent-emerald);">95.5% (42/44)</span>
+          </div>
+          <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 95.5%; background: var(--accent-emerald);"></div></div>
+        </div>
+
+        <div class="bench-item">
+          <div class="bench-header">
+            <span>Responsibility (Trích Dẫn Quy Chế):</span>
+            <span class="bench-score" style="color: var(--accent-amber);">86.7% (Cần &ge; 90%)</span>
+          </div>
+          <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 86.7%; background: var(--accent-amber);"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CỘT 3: ĐIỂM NGHẼN & BƯỚC TIẾP THEO -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span>⚠️ Điểm Nghẽn & Kế Hoạch Đóng Mốc</span>
+        </div>
+        <span class="panel-badge badge-wip">CẦN XỬ LÝ</span>
+      </div>
+
+      <!-- Điểm nghẽn -->
+      <div class="blocker-card">
+        <div class="blocker-title">🔴 1. Gemini Quota Limit</div>
+        <div class="blocker-desc">
+          Key Gemini trực tiếp hết hạn mức ngày (~700 calls). Đang tạm chạy dev bằng <code>vyce/deepseek-v4-flash</code> (Đ28). Chờ quota hồi sau ~14:00 để chạy máy chấm H08.
+        </div>
+      </div>
+
+      <div class="blocker-card" style="background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.25);">
+        <div class="blocker-title" style="color: #fbbf24;">🟠 2. Tham Số Kinh Doanh Chờ Chốt</div>
+        <div class="blocker-desc" style="color: #fef3c7;">
+          Cần người duyệt các hằng số: <code>FREE_TRIAL_DAYS</code> (dùng thử), <code>SLOT_FEE_MONTHLY</code> (phí slot), <code>BQL_SHARE_PCT</code> và luật cân bằng slot.
+        </div>
+      </div>
+
+      <!-- Hành động tiếp theo -->
+      <div style="font-size: 13px; font-weight: 700; color: var(--text-main); margin: 14px 0 8px 0;">
+        🎯 3 Bước Hành Động Cụ Thể Tiếp Theo:
+      </div>
+
+      <div class="next-action-item">
+        <div class="next-action-tag">Bước 1 &bull; Chạy Máy Chấm Gemini</div>
+        <div>Chạy <code>eval_golden.mjs --set diagnosis,responsibility</code> bằng Gemini khi hồi quota để đóng cổng G08–G10.</div>
+      </div>
+
+      <div class="next-action-item">
+        <div class="next-action-tag">Bước 2 &bull; Giải Phóng & Thi Công P05-D</div>
+        <div>Commit tệp prompt <code>resident.ts</code>, nối hoàn chỉnh luồng cư dân đồng ý & đăng cuốc tự động lên nhóm thợ.</div>
+      </div>
+
+      <div class="next-action-item">
+        <div class="next-action-tag">Bước 3 &bull; Thẩm Định Đối Kháng P05-F</div>
+        <div>Phóng Agent Red Team kiểm thử đối kháng toàn bộ luồng chốt thợ và cơ chế khóa PII trước khi đóng gói MVP.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div>
+      <span>Repository: <strong>lenqclaw</strong> (Private) &bull; Nhánh: <strong>main</strong> &bull; Commit Head: </span>
+      <span class="git-sha">eada365</span>
+    </div>
+    <div>
+      <span>Universal Brain Governance v1.7.1 &bull; Báo cáo tạo lúc: 26/09/2026 11:00 ICT</span>
+    </div>
+  </div>
+
+</body>
+</html>
