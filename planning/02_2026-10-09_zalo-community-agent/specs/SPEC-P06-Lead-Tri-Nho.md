@@ -11,7 +11,7 @@
 ## §2. Hồ sơ thành viên — `services/memory.ts` + `member_profiles`
 - `rememberMemberNote(account, uid, note, by)` ⇒ append `notes` (dòng `[YYYY-MM-DD HH:MM] (by) note`, cắt đầu khi > 4000 ký tự), cập nhật `display_name` nếu có; audit `memory.member_note`.
 - Tool `remember_member_note` (G/D/O): ở G chỉ GHI; ở D chỉ cho `uid = requester.uid`; O tự do.
-- Tool `recall_member_profile` (D, member): trả `{notes, interests, lead: {status, score} | null}` của CHÍNH requester — dùng để nhớ bối cảnh 1-1 giữa các phiên. Owner xem mọi hồ sơ qua `search_memory`/dashboard.
+- (D22) Nhớ bối cảnh 1-1 giữa các phiên = host nạp sẵn `memberNotes` + `openLead` của CHÍNH requester vào mỗi lượt DM (01-CONTRACTS §11, SPEC-P03 §5.1); tool `recall_member_profile` đã BỎ. Lịch sử DM chỉ ≤ 10 tin gần nhất và `messages` bị xoá sau `MESSAGES_RETENTION_DAYS` ⇒ ghi chú là trí nhớ dài hạn DUY NHẤT ngoài lead — prompt `rules` mục "Ghi nhớ" (SPEC-P03 §7.3) bắt agent ghi điều đáng nhớ. `services/memory.ts::loadMemberContext(account, uid) ⇒ {notes: string|null, openLead: {status, score, missing}|null}` (một truy vấn mỗi bảng). Owner xem mọi hồ sơ qua `search_memory`/dashboard.
 - BB-07: `loadPersonaBundle`/`buildSystemPrompt` cho lượt nhóm KHÔNG chạm bảng này (test SPEC-P03 §11 hàng 4).
 
 ## §3. Lead — `services/leads.ts`
@@ -50,6 +50,6 @@ export async function submitLead(a: { account; uid; now }): Promise<{ id; status
 | :-- | :-- | :-- |
 | 1 | `npm test -w @lenqclaw/core` — `leads.test.ts` | `scoreLead` 8 ca (rỗng 0; đủ 100; chỉ contact+budget 40); `missing` đúng thứ tự |
 | 2 | `npm run test:db -w @lenqclaw/core` — `p06-leads.db.test.ts` | `upsertLead` 3 lần ⇒ 1 dòng, `new→qualifying→qualified`; `submitLead` trước `qualified` ⇒ `LeadIncompleteError`; sau ⇒ `handed_off` + 1 outbox DM owner chứa `industry`; lead thứ 2 cùng uid khi mở ⇒ merge, không dòng mới; sau `closed` ⇒ dòng mới được tạo |
-| 3 | `p06-memory.db.test.ts` | `rememberMemberNote` cắt 4000; `searchMemory('agent zalo')` ⇒ note hôm qua xếp trên note 60 ngày (suy giảm); profile khớp xuất hiện; lượt nhóm (fake model) ⇒ body fetch giả KHÔNG chứa `notes` (BB-07) |
+| 3 | `p06-memory.db.test.ts` | `rememberMemberNote` cắt 4000; `loadMemberContext` uid chưa có gì ⇒ `{notes:null, openLead:null}`, có lead `qualifying` ⇒ `missing` đúng thứ tự §3; `searchMemory('agent zalo')` ⇒ note hôm qua xếp trên note 60 ngày (suy giảm); profile khớp xuất hiện; lượt nhóm (fake model) ⇒ body fetch giả KHÔNG chứa `notes` (BB-07) |
 | 4 | `p06-invite.db.test.ts` | `invite_to_private` với uid đã DM trước ⇒ 1 outbox nhóm (mention) + 1 outbox DM; uid chưa DM ⇒ chỉ 1 outbox nhóm; uid lạ ⇒ `UnknownMemberError` |
 | 5 | Golden thật `lead_intent.jsonl` | `scripts/eval_community.mjs --set lead_intent` exit 0 |

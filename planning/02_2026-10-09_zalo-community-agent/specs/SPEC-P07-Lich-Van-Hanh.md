@@ -20,7 +20,7 @@ Giờ VN cố định UTC+7 (không DST) — dùng `vn-time.ts` (giữ) để đ
 | 5 | `runAutomations` | §3 | n chạy, n lỗi |
 | 6 | `expireApprovals` + `expireJoinRequests` | P05 §5.5, §6 | n |
 | 7 | `reconcileDeletes` | P05 §9 | n |
-| 8 | `pruneBuffers` | `delete from group_messages where received_at < now - GROUP_BUFFER_RETENTION_DAYS` (mỗi tick, giới hạn 5000 dòng) + prune theo số (BB-11) | n xoá |
+| 8 | `pruneBuffers` | `delete from group_messages where received_at < now - GROUP_BUFFER_RETENTION_DAYS` (mỗi tick, giới hạn 5000 dòng) + prune theo số (BB-11) + (D22, BB-13) `delete from messages where created_at < now - MESSAGES_RETENTION_DAYS` (giới hạn 5000 dòng/tick; KHÔNG chạm `member_profiles`, `leads`, `turn_traces`, `audit_log`) | n xoá đệm, n xoá messages |
 | 9 | `embedPending` | P04 §1 (≤ 50 mục/tick; bỏ qua khi `EMBED_PROVIDER=none`) | n nhúng |
 | 10 | `syncGroups` | nhóm `enabled` có `last_synced_at` null hoặc `< now - GROUP_SYNC_HOURS` ⇒ `enqueueAction sync_group_info` (1 hàng/nhóm/chu kỳ, kiểm chưa có hàng `queued` cùng action) | n |
 | 11 | `dailyOwnerReport` | §5 (mỗi ngày một lần sau `DAILY_REPORT_HOUR` giờ VN — ghi mốc vào `automations` hệ thống `name='__daily_owner_report'` tạo tự động nếu thiếu, `kind='daily'`) | 0/1 |

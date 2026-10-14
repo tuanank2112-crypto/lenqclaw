@@ -35,7 +35,7 @@ Biến bắt buộc: `DATABASE_URL`, `SESSION_SECRET`, `ZALO_SESSION_KEY` (32 by
 ## §5. Runbook
 | Sự cố | Dấu hiệu | Làm gì |
 | :-- | :-- | :-- |
-| Bot nói quá nhiều trong nhóm | `audit turn.done` dày, than phiền | `/groups` hạ `ambient_turns_per_hour`/`budget_per_hour` hoặc `mode=mention`; sửa `rules` "Biết khi nào nên nói"; chấm lại golden `activation` |
+| Bot nói quá nhiều trong nhóm | `turn_traces` outcome `replied` dày ở nhóm (`/agent`), than phiền | `/groups` hạ `ambient_turns_per_hour`/`budget_per_hour` hoặc `mode=mention`; sửa `rules` "Biết khi nào nên nói"; chấm lại golden `activation` |
 | Bot xoá nhầm | `/moderation` verdict sai | admin "Xoá điểm" người đó; thêm câu vào golden `moderation.jsonl` (ok-set); KHÔNG nới ngưỡng ngay — chạy golden trước |
 | Thẻ duyệt không thi hành | `approvals.status='failed'` | xem `result.error.code`: 166 ⇒ đặt lại phó nhóm; khác ⇒ thử lại bằng nút "Duyệt lại" (tạo thẻ mới) |
 | Model sập kéo dài | nhiều `agent.model_error`, nhóm im, DM `MODEL_DOWN_DM_REPLY` | đổi `MODEL_FALLBACKS`/provider; welcome/lệnh vẫn chạy bằng template |
@@ -44,10 +44,10 @@ Biến bắt buộc: `DATABASE_URL`, `SESSION_SECRET`, `ZALO_SESSION_KEY` (32 by
 | Runner treo | không có `runner.processed` 5 phút trong khi `inbound_events processed_at null` tăng | restart runner; kiểm `lock_until` automations |
 
 ## §6. Deploy VPS (P09, sau khi local + Zalo thật ✅)
-Compose: `db` (pgvector pg16), `web`, `worker` (1 bản), `jobs` (`core:run`, 1 bản), `caddy` — như cũ, bỏ ghi chú pg-boss. Thứ tự: `up -d db` ⇒ migrate (001–008) ⇒ seed ⇒ `create-admin` ⇒ `up -d web jobs worker caddy` ⇒ `/zalo` QR ⇒ `/persona` nhập persona thật ⇒ `/knowledge` nhập tài liệu ⇒ `/groups` khai nhóm ⇒ chạy golden trên VPS (TESTING §4 cột `vps`).
+Compose: `db` (pgvector pg16), `web`, `worker` (1 bản), `jobs` (`core:run`, 1 bản), `caddy` — như cũ, bỏ ghi chú pg-boss. Thứ tự: `up -d db` ⇒ migrate (001–009) ⇒ seed ⇒ `create-admin` ⇒ `up -d web jobs worker caddy` ⇒ `/zalo` QR ⇒ `/persona` nhập persona thật ⇒ `/knowledge` nhập tài liệu ⇒ `/groups` khai nhóm ⇒ chạy golden trên VPS (TESTING §4 cột `vps`).
 
 ## §7. Backup & rollback
-- `pg_dump` hằng ngày (giữ). Migration chỉ THÊM từ 009 trở đi; 007 có `drop table` (không thể rollback bằng code cũ) ⇒ trước khi áp 007 trên DB có dữ liệu thật của kế hoạch 01 (không có — chưa pilot) phải `pg_dump` riêng tên `pre-007.sql`.
+- `pg_dump` hằng ngày (giữ). Migration chỉ THÊM từ 010 trở đi; 007 có `drop table` (không thể rollback bằng code cũ) ⇒ trước khi áp 007 trên DB có dữ liệu thật của kế hoạch 01 (không có — chưa pilot) phải `pg_dump` riêng tên `pre-007.sql`.
 - Rollback mã: image tag trước + DB từ `pre-007.sql`; tag `archive/plan-01-marketplace` là điểm khôi phục mã.
 
 ## §8. Nâng zca-js — giữ luật kế hoạch 01 §8 (probe trên máy dev, chạy test worker với fake, ghi gotcha).

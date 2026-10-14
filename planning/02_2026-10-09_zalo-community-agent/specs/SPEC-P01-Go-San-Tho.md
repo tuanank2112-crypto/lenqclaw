@@ -1,14 +1,14 @@
 # SPEC-P01 — Gỡ sàn thợ, đổi nền sang cộng đồng (D03)
 
 > Tầng 🟠 (thi công theo danh sách; không có quyết định mới). Đọc `00-ARCHITECTURE.md` §3, §7; `01-CONTRACTS.md` §1, §2, §3, §4, §9, §10 trước.
-> Mục tiêu gói: sau gói này repo KHÔNG còn mã sàn thợ, `npm run gate` và `npm run test:db` xanh trên schema 001–008, tài khoản Zalo là `community`, vai web là `admin`/`operator`. Gói này KHÔNG viết tính năng cộng đồng (chỉ khung rỗng để biên dịch).
+> Mục tiêu gói: sau gói này repo KHÔNG còn mã sàn thợ, `npm run gate` và `npm run test:db` xanh trên schema 001–009, tài khoản Zalo là `community`, vai web là `admin`/`operator`. Gói này KHÔNG viết tính năng cộng đồng (chỉ khung rỗng để biên dịch).
 
 ## §1. Thứ tự bắt buộc
 
 1. `git tag archive/plan-01-marketplace eada365` (hoặc HEAD lúc nhận việc nếu khác — ghi SHA vào report) và `git tag` phải in ra tag đó. KHÔNG push.
-2. Thêm `db/migrations/007_drop_marketplace.sql` và `008_community.sql` NGUYÊN VĂN 01-CONTRACTS §4 (so sha256 với `evidence/ARCH/migration-draft-sha256.txt` sau khi chuẩn hoá LF; lệch ⇒ dừng, báo).
+2. Thêm `db/migrations/007_drop_marketplace.sql` và `008_community.sql` NGUYÊN VĂN 01-CONTRACTS §4 (so sha256 với `evidence/ARCH/migration-draft-sha256.txt` sau khi chuẩn hoá LF; lệch ⇒ dừng, báo). Thêm `009_tenant_trace.sql` NGUYÊN VĂN 01-CONTRACTS §4 (D23/D24 — chưa có sha256 vì chưa áp thử): áp từ DB rỗng sau 008 + chạy lại ⇒ ghi `evidence/P01/migration-009-probe.txt` (`applied 1`, `applied 0`, `tenants` có `default`, `zalo_accounts.tenant_id = default`, insert `turn_traces` outcome lạ bị CHECK từ chối).
 3. Gỡ file theo §2; sửa file theo §3; viết lại seed §4, máy đo §6, `.env.example` §5.
-4. `npm run gate` ⇒ exit 0; `npm run test:db` ⇒ exit 0 (DB dev `127.0.0.1:55432`, migrations 001–008 áp sạch từ DB rỗng — test P01 mới kiểm `applied = 8` theo số file, không ghi cứng).
+4. `npm run gate` ⇒ exit 0; `npm run test:db` ⇒ exit 0 (DB dev `127.0.0.1:55432`, migrations 001–009 áp sạch từ DB rỗng — test P01 mới kiểm `applied = 9` theo số file, không ghi cứng).
 5. Cập nhật `docs/core.md`, `docs/web.md`, `docs/zalo-worker.md` (Ma Trận 6 Điểm): xoá mọi mục sàn thợ, ghi trạng thái "P01 kế hoạch 02 xong".
 
 ## §2. Danh sách GỠ (đo từ cây mã HEAD `eada365`, 2026-10-09; `git rm`)
@@ -135,7 +135,7 @@ Chỉ tạo khi có chép đoạn mã ≥ 10 dòng từ OpenClaw (MIT, OpenClaw 
 | 1 | `git tag --list 'archive/*'` | `archive/plan-01-marketplace` |
 | 2 | `npm run gate` | `GATE_OK`, exit 0 (5 bước + `check_pivot_cleanup`) |
 | 3 | `node scripts/check_pivot_cleanup.mjs` | `pivot_hits: 0` |
-| 4 | `npm run test:db` | exit 0, 0 skip; `p01.db.test.ts` in `applied: 8` (từ DB rỗng — test tự `drop schema public cascade; create schema public` ở `beforeAll` khi `TEST_DB_RESET=1`, mặc định dùng DB hiện có đã migrate) |
+| 4 | `npm run test:db` | exit 0, 0 skip; `p01.db.test.ts` in `applied: 9` (từ DB rỗng — test tự `drop schema public cascade; create schema public` ở `beforeAll` khi `TEST_DB_RESET=1`, mặc định dùng DB hiện có đã migrate) |
 | 5 | `npm test` | core ≥ 60, web ≥ 30, worker ≥ 37 test, 0 fail, 0 skip |
 | 6 | `git diff --stat --diff-filter=D <base>..HEAD \| tail -1` | `94 files changed` (rename `search-regulations→search-knowledge`, `tool-kit` không tính; sai lệch ⇒ giải thích từng file trong report) |
 | 7 | `grep -rn "bql\|market" apps packages scripts --include=*.ts --include=*.tsx --include=*.mjs -l \| grep -v node_modules \| wc -l` | `0` |

@@ -30,7 +30,7 @@ Lỗi DB ⇒ `KnowledgeUnavailableError` (01-CONTRACTS §9 bổ sung: caller —
 - `is_question` do triage đặt (`question_confidence ≥ 0.6`) khi ingest (P03 §5.2); nhóm `mode='mention'` + `moderation_enabled=false` ⇒ không có triage ⇒ không nhặt (🖐 Q7: giá trị tạm — chỉ nhóm có triage).
 - Câu SQL (đã đo `db-checks (b)`): câu hỏi `received_at <= now - UNANSWERED_AFTER_MIN` và `> now - UNANSWERED_MAX_AGE_HOURS`, chưa `answered_at`, chưa `deleted_at`, không `is_self`, và KHÔNG tồn tại tin sau đó (cùng nhóm, người gửi khác) quote nó hoặc mention người hỏi; `limit UNANSWERED_MAX_PER_TICK`. Chỉ nhóm `enabled` và `mode='ambient'` (nhóm `mention` không tự lên tiếng — 🖐 Q8 giá trị tạm).
 - Với mỗi câu: `update group_messages set answered_at = now()` (đánh dấu "đã xử lý" — tránh nhặt lại dù agent im) + `enqueueSystemEvent({event:'unanswered_question', threadId, groupMessageId})`. Lượt `group_unanswered` (P03 §6.1): agent `search_knowledge` ⇒ có căn cứ ⇒ `send_group_message` quote câu hỏi; không ⇒ im. Ngân sách ambient áp (`turns_in_window++`).
-- Audit `unanswered.picked {thread, groupMessageId}` và `turn.done`.
+- Audit `unanswered.picked {thread, groupMessageId}`; lượt ghi `turn_traces` (D24, thay `turn.done`).
 
 ## §6. Dashboard (P08) — `/knowledge`: danh sách tài liệu, trạng thái nhúng (`embedded/total`), dán văn bản ⇒ tách mục theo dòng trống hoặc `## `, nút "Nhúng lại", tìm thử (`searchKnowledge`) hiển thị hit + score.
 

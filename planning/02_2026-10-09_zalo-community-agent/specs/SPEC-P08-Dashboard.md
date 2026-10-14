@@ -15,7 +15,7 @@
 | `/moderation` · `GET /api/moderation?thread=` | admin, operator | `moderation_events` 7 ngày (verdict, source, action, tin đã xoá hiển thị rút gọn), `moderation_scores` top; nút "Xoá điểm" (admin) ⇒ `resetModerationScore` + audit |
 | `/knowledge` · `GET/POST /api/knowledge`, `POST /api/knowledge/{id}/reembed`, `GET /api/knowledge/search?q=` | admin ghi · operator đọc | SPEC-P04 §6 |
 | `/automations` · CRUD `/api/automations` | admin ghi · operator đọc | bảng + form (`kind`, giờ VN, nhóm, action, payload JSON); kiểm bằng `computeNextRun`; bật/tắt; `automation_runs` 20 dòng |
-| `/agent` · `GET /api/agent/timeline?thread=&since=` | admin, operator | Dòng thời gian: `agent_runs` (route, model, token, latency), `audit` (`turn.*`, `tool.*`, `zalo.*`, `timer.*`, `moderation.*`, `approval.*`), `messages private:true` (text riêng tư của lượt ambient — để người hiểu vì sao agent im) |
+| `/agent` · `GET /api/agent/timeline?thread=&since=` | admin, operator | (D24) Bảng `turn_traces` (kind, trigger, outcome, tools, rounds, token, latency, phiên bản persona) + thẻ tổng 24 giờ: số lượt theo `outcome`, token trung bình/lượt theo `kind`; bấm một lượt ⇒ các `agent_runs` cùng `turn_id`. Dòng thời gian: `agent_runs` (route, model, token, latency), `audit` (`turn.*`, `tool.*`, `zalo.*`, `timer.*`, `moderation.*`, `approval.*`), `messages private:true` (text riêng tư của lượt ambient — để người hiểu vì sao agent im) |
 | `/zalo` (giữ) | admin | như P02 cũ: QR, trạng thái, đăng xuất; tài khoản `community` |
 | `/dev/sim` (giữ, mở rộng P02 §7.3) | admin, `DATA_MODE=sim` | |
 

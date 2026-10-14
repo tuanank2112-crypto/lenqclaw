@@ -1,6 +1,6 @@
 # Kế hoạch 02 — Agent chăm sóc cộng đồng Zalo (phó nhóm AI cho cộng đồng AI agent / AI CSKH)
 
-> Hồ sơ kế hoạch. **KHÔNG chứa thiết kế chi tiết** — thiết kế nằm ở `specs/` (bảng Mục 5). Thứ tự đọc: Mục 2 (D01–D21) → [`specs/00-ARCHITECTURE.md`](specs/00-ARCHITECTURE.md) → [`specs/01-CONTRACTS.md`](specs/01-CONTRACTS.md) → SPEC gói đang làm.
+> Hồ sơ kế hoạch. **KHÔNG chứa thiết kế chi tiết** — thiết kế nằm ở `specs/` (bảng Mục 5). Thứ tự đọc: Mục 2 (D01–D25) → [`specs/00-ARCHITECTURE.md`](specs/00-ARCHITECTURE.md) → [`specs/01-CONTRACTS.md`](specs/01-CONTRACTS.md) → SPEC gói đang làm.
 
 ## 1. Metadata Header
 
@@ -9,7 +9,7 @@
 | Mã hồ sơ | `02_2026-10-09_zalo-community-agent` |
 | Ngày mở | 2026-10-09 |
 | Chủ trì | Super Orchestrator; bộ SPEC do architect (Fable 5.1) soạn 2026-10-09 10:14–11:00 ICT trên HEAD `eada365` |
-| Trạng thái | 🟢 SPEC ĐÃ DUYỆT (SO, 2026-10-09; D12–D21 giữ, Q1–Q12 giữ giá trị tạm) — chờ người xác nhận gỡ 94 file (AGENTS §5.L.3) trước khi phóng P01 |
+| Trạng thái | 🟢 SPEC ĐÃ DUYỆT (SO, 2026-10-09; D12–D21 giữ, Q1–Q12 giữ giá trị tạm) · bổ sung D22–D25 (2026-10-14, người dùng chốt hướng) — chờ người xác nhận gỡ 94 file (AGENTS §5.L.3) trước khi phóng P01 |
 | Phạm vi | Một tài khoản Zalo cá nhân `community` làm phó nhóm trong các nhóm Zalo của cộng đồng; kênh giả lập trước, Zalo thật sau; dashboard Next.js |
 | SemVer dự kiến | `0.1.0` (phát hành đầu tiên — D11; `package.json` ×4 đang `0.0.1`, chỉ tăng khi đóng kế hoạch) |
 | Đặc tả kế thừa | Kế hoạch 01 (dừng — Đ32 bên đó): giữ nền P01/P02 (monorepo, Postgres, adapter, worker zca-js 2.2.0, SimTransport, auth web, golden/máy chấm); mã sàn thợ gỡ ở P01 sau tag `archive/plan-01-marketplace`. Nguồn mẫu: OpenClaw (MIT) + monas-team/zaloclaw v2.5.11 (MIT) — PORT theo mô tả, không chép |
@@ -81,6 +81,18 @@ Lý do: câu "hệ thống đang bận" trong nhóm là tiếng ồn do lỗi h�
 ### D21 — 2026-10-09 10:50 · Host thi hành "bắt buộc trả lời" (D04): không gọi tool nhưng có text ⇒ host tự đăng text đó (quote tin kích hoạt); không text ⇒ gọi lại model 1 lần ⇒ vẫn không ⇒ câu cố định + `handoff_to_owner('no_reply')`; ambient: text cuối riêng tư, không đăng (architect)
 Lý do: OpenClaw `visibleReplies: message_tool` giữ text cuối riêng tư và "bounded delivery recovery"; ta chọn tự đăng text ở lượt mention vì model flash hay quên gọi tool — đo được bằng audit `turn.auto_posted_final` (TESTING §5). **Lật:** tắt tự đăng ⇒ luôn retry — một cờ env.
 
+### D22 — 2026-10-14 · Ngữ cảnh DM có trần, KHÔNG nén hội thoại (người dùng chốt)
+Lượt DM chỉ nạp `DM_HISTORY_TURNS` (5) lượt trao đổi gần nhất (≤ 10 tin) + ghi chú thành viên (`member_profiles.notes`) của CHÍNH người nhắn + tóm tắt lead mở (trạng thái, điểm, trường còn thiếu). Trí nhớ dài hạn = ghi chú agent chủ đích ghi (`remember_member_note`) + trường lead có cấu trúc. KHÔNG nén (compaction), KHÔNG gọi model tóm tắt hội thoại, KHÔNG nạp toàn bộ lịch sử. `messages` chỉ giữ `MESSAGES_RETENTION_DAYS` (30) ngày rồi timer xoá. Tool `recall_member_profile` BỎ (ghi chú đã nạp sẵn mỗi lượt DM). Hợp đồng: [01-CONTRACTS §6, §10, §11](specs/01-CONTRACTS.md), [SPEC-P03 §5.1, §6.1](specs/SPEC-P03-Runtime-Agent.md), [SPEC-P06 §2](specs/SPEC-P06-Lead-Tri-Nho.md), BB-13. Lý do: giữ hội thoại dài ⇒ token mỗi lượt tăng tuyến tính theo độ dài; khách quay lại sau nhiều ngày chỉ cần vài lượt gần nhất + điều đáng nhớ. **Lật:** số lượt/số ngày là env — chi phí thấp; thêm nén là vùng cấm (00-ARCH §7), cần D mới.
+
+### D23 — 2026-10-14 · Đường nối nhiều tenant: bảng `tenants` + `tenant_id` ở 3 bảng gốc (người dùng duyệt hướng, architect chốt hình)
+Migration MỚI `009_tenant_trace.sql` (KHÔNG sửa 007/008 — đã áp thử, có sha256): `tenants`; `tenant_id` (mặc định `'default'`) ở `zalo_accounts`, `staff_users`, `kb_documents`. Các bảng 008 đã khoá theo `zalo_account_id` ⇒ tenant suy ra qua tài khoản; KHÔNG nhân bản `tenant_id` sang ~15 bảng (hai nguồn chân lý). 0.1 chạy đúng 1 tenant `default`: không RLS, dashboard không lọc tenant. Lý do: thêm cột khi bảng còn rỗng gần như miễn phí; thêm sau khi có dữ liệu doanh nghiệp phải backfill. Hợp đồng: [01-CONTRACTS §4 (009)](specs/01-CONTRACTS.md). **Lật:** một migration drop cột — chi phí thấp.
+
+### D24 — 2026-10-14 · Vết từng lượt `turn_traces` + `agent_runs.turn_id`
+Mỗi `runCommunityTurn` ghi đúng 1 dòng `turn_traces` (kind, trigger, số vòng, tên tool đã gọi, `sent`, `outcome`, tổng token, latency, phiên bản persona đang active); mọi `agent_runs` trong lượt mang `turn_id`. Thay audit `turn.done` (audit chỉ còn quyết định/hành động). Không lưu nội dung tin hay prompt ⇒ không có PII ⇒ không cần hạn giữ ở 0.1. Chi phí USD tính lúc đọc, không lưu. Lý do: đo được chi phí/lượt, tỉ lệ im/fallback theo phiên bản persona — nền cho mọi tối ưu và cho kế hoạch skill/voice/constraint sau 0.1. Hợp đồng: [01-CONTRACTS §4 (009)](specs/01-CONTRACTS.md), [SPEC-P03 §6.6](specs/SPEC-P03-Runtime-Agent.md). **Lật:** chi phí thấp.
+
+### D25 — 2026-10-14 · Chỉ zca-js (tài khoản Zalo cá nhân) cho cả cộng đồng LẪN doanh nghiệp của chủ; KHÔNG Zalo OA, KHÔNG dựng lớp `ChannelAdapter` (người dùng chốt)
+Người dùng chấp nhận rủi ro khoá tài khoản / điều khoản Zalo; giảm bằng D09 như cũ. Không cần lớp kênh mới: BB-02/BB-03 đã nhốt zca-js trong `apps/zalo-worker`, core chỉ thấy `inbound_events`/`outbox` — kênh khác (nếu có) là một worker mới ghi cùng hai bảng. Dùng cho doanh nghiệp (tài khoản thứ hai) là giai đoạn SAU 0.1: nới D12 (CHECK `zalo_accounts.id` + `AccountId`) + tenant thứ hai (D23). **Lật:** thêm kênh = worker mới, không đổi core.
+
 ### Quyết định bị thay thế
 | Mốc cũ | Phát biểu cũ | Thay bằng | Lý do |
 | :-- | :-- | :-- | :-- |
@@ -94,12 +106,16 @@ Lý do: OpenClaw `visibleReplies: message_tool` giữ text cuối riêng tư và
 | zaloclaw `delete-message` (`tool.ts:741`) | `uidFrom = uid bot` | SPEC-P02 §4.2 | không xoá được tin người khác |
 | zaloclaw mention gating (`monitor.ts:850`) | chỉ mention gốc | D04 | 4 cách kích hoạt + ambient |
 | zaloclaw injection-guard | regex chặn/kick | D05(c) | báo nhầm trong cộng đồng AI; bảo mật bằng policy tool theo vai |
+| SPEC-P03 §5.1 bước 5 (bản duyệt 2026-10-09) | DM nạp "lịch sử 20 tin" | D22 | ≤ 5 lượt (10 tin) + ghi chú thành viên; chi phí |
+| 01-CONTRACTS §7.1 (bản duyệt 2026-10-09) | tool `recall_member_profile` (D) | D22 | ghi chú nạp sẵn mỗi lượt DM — tool thừa tốn token định nghĩa |
+| SPEC-P03 §6.6, SPEC-P04 §5 (bản duyệt 2026-10-09) | audit `turn.done` | D24 | `turn_traces` có cấu trúc |
+| 00-ARCH §3 "Nhiều tài khoản Zalo, Zalo OA" · roadmap "Kênh Zalo OA song song" · đề xuất `ChannelAdapter` (chat 2026-10-14) | OA là hướng sau 0.1 | D25 | chỉ zca-js; BB-02 đã cô lập kênh |
 
 ## 3. Work Packages (hai cột rời: Chặn bởi · Ước lượng)
 
 | Gói | Nội dung | Tầng | Chặn bởi | Ước lượng | SPEC |
 | :-- | :-- | :-- | :-- | :-- | :-- |
-| P01 | Tag, gỡ 94 file sàn thợ, migration 007/008, tài khoản `community`, vai web, seed mới, máy đo `check_pivot_cleanup`, khung router | 🟠 | — | 1 ngày | [SPEC-P01](specs/SPEC-P01-Go-San-Tho.md) |
+| P01 | Tag, gỡ 94 file sàn thợ, migration 007/008 + 009 (tenant + vết lượt — D23/D24), tài khoản `community`, vai web, seed mới, máy đo `check_pivot_cleanup`, khung router | 🟠 | — | 1 ngày | [SPEC-P01](specs/SPEC-P01-Go-San-Tho.md) |
 | P02 | Worker nhóm + sự kiện nhóm, action outbox (xoá/kick/block/duyệt vào/poll/nhắc/ghi chú/đồng bộ), pacer theo nhóm + ngân sách, sim nhóm + `/dev/sim` | 🟠 thi công · 🔴 thẩm định | P01 | 2 ngày | [SPEC-P02](specs/SPEC-P02-Transport-Nhom.md) |
 | P03 | Cổng nhận tin, đệm, phiên nhóm/DM, cửa sổ ambient, persona/prompt, policy tool, vòng lượt, host ép trả lời, triage cộng đồng | 🔴 hợp đồng · 🟠 thi công · review prompt 🔴 | P01, P02 (sim nhóm) | 3 ngày | [SPEC-P03](specs/SPEC-P03-Runtime-Agent.md) |
 | P04 | Kho tri thức, `embedTexts`, truy hồi lai RRF, `search_knowledge`, câu hỏi bỏ trống | 🟠 | P03 | 1,5 ngày | [SPEC-P04](specs/SPEC-P04-Tri-Thuc.md) |
@@ -116,6 +132,7 @@ Thứ tự bắt buộc: `P01 → P02 → P03 → (P04 ∥ P05 ∥ P06 ∥ P07) 
 - [x] Nghiên cứu OpenClaw + zaloclaw (clone chỉ đọc, findings có file:line) — 2026-10-09
 - [x] Dựng bộ SPEC (00, 01, P01–P08, OPERATIONS, TESTING) + chạy thử 5 bộ kiểm trên dữ liệu giả (`evidence/ARCH/`) — architect 2026-10-09
 - [x] 🖐 SO duyệt bộ SPEC + giữ giá trị tạm Q1–Q12 (Mục 6) — 2026-10-09; đo lại: `7a58d6d` chỉ chạm `planning/02` (20 file), vùng cấm hành động nguy hiểm có ở 00-ARCH BB-06, 01-CONTRACTS §8, SPEC-P01 §6, SPEC-P02
+- [x] Bổ sung D22–D25 vào bộ SPEC (00 BB-13 + vùng cấm, 01 §1/§4 migration 009/§6/§7.1/§10/§11, P01, P03, P06, P07, P08, TESTING G21) — 2026-10-14; DDL 009 CHƯA áp thử (Docker tắt) ⇒ P01 áp thử, ghi `evidence/P01/migration-009-probe.txt`
 - [ ] 🖐 Người dùng: tài khoản Zalo phụ cho bot (SIM riêng), 2–3 Zalo phụ làm thành viên thử, nhóm thử (OPERATIONS §2)
 - [ ] 🖐 Người dùng: nội dung persona thật (SOUL/RULES/IDENTITY/CAPABILITIES) + tài liệu tri thức ban đầu (dán qua `/knowledge`)
 - [ ] 🖐 Người dùng: quota/billing Gemini cho golden (~4 bộ × ≥ 60 ca ≈ 300–500 lượt gọi/lượt chấm) — G26 cũ

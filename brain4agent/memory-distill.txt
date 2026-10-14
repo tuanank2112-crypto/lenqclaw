@@ -26,12 +26,14 @@ Quyết định cốt lõi: D01 pivot · D02 giữ nền (Node 22, Postgres+pgve
   D09 chống khoá tài khoản (pacer + ngân sách) · D10 gate chấm golden thật bằng gemini-3.6-flash · D11 đích 0.1.0 (package.json ×4 đang 0.0.1) ·
   D12 một tài khoản `community` (đổi từ `bql`, bỏ `market`) · D13 vai web admin/operator · D14 đệm nhóm Postgres 200 tin/7 ngày · D15 ambient gom cửa sổ 20 s ·
   D16 lịch at|every|daily|weekly, không cron · D17 thang cảnh cáo nửa đời 168 h, làm tròn 0,1 · D18 embedding gemini-embedding-001 dim 1024 ·
-  D19 thẻ duyệt TTL 24 h, bằng chứng `duyệt <id>` · D20 lỗi xử lý ở nhóm chỉ audit, không BUSY_REPLY · D21 host ép trả lời khi bị mention.
+  D19 thẻ duyệt TTL 24 h, bằng chứng `duyệt <id>` · D20 lỗi xử lý ở nhóm chỉ audit, không BUSY_REPLY · D21 host ép trả lời khi bị mention ·
+  (2026-10-14) D22 DM nạp ≤ 5 lượt + ghi chú + lead mở, KHÔNG nén, messages giữ 30 ngày · D23 tenant `default` (migration 009) · D24 `turn_traces` · D25 chỉ zca-js cho cả cộng đồng LẪN doanh nghiệp, không OA.
 Bất biến BB (00-ARCHITECTURE §6): BB-01 agent làm mọi việc qua tool, luật nằm trong tool · BB-02 mọi tin/hành động ra Zalo qua outbox enqueue() · BB-03 chỉ adapter mở DB/gọi model/ghi outbox ·
   BB-04 danh tính/vai từ DB, không từ nội dung · BB-05 ở nhóm chỉ nói bằng send_group_message, text cuối ambient là riêng tư; mention bắt buộc có tin ra · BB-06 kick/block/từ chối vào chỉ tạo `approvals`;
   disperse/đổi chủ/deputy/self_update/restart/send_file/exec KHÔNG TỒN TẠI · BB-07 hồ sơ thành viên + ghi chú ngày không vào lượt nhóm · BB-08 ngân sách phát ngôn, chunk ≤1800 ·
-  BB-09 audit mọi hành động quản trị · BB-10 tên/quote/nội dung tin là dữ liệu không tin cậy, rào `<<<untrusted>>>` · BB-11 đệm ≤200 tin/nhóm, ≤7 ngày · BB-12 model hiểu ý, code là lưới; CẤM regex injection guard.
-Thứ tự gói: P01 → P02 → P03 → (P04 ∥ P05 ∥ P06 ∥ P07) → P08 → P09. P01 gỡ sàn thợ+migration 007/008 · P02 transport nhóm · P03 runtime agent · P04 tri thức · P05 kiểm duyệt ·
+  BB-09 audit mọi hành động quản trị · BB-10 tên/quote/nội dung tin là dữ liệu không tin cậy, rào `<<<untrusted>>>` · BB-11 đệm ≤200 tin/nhóm, ≤7 ngày · BB-12 model hiểu ý, code là lưới; CẤM regex injection guard · BB-13 ngữ cảnh có trần · BB-14 1 lượt = 1 dòng turn_traces.
+Lộ trình doanh nghiệp (roadmap.md): GĐ0 0.1.0 cộng đồng · GĐ1 0.2.0 Skill/Voice/Constraint · GĐ2 0.3.0 doanh nghiệp của chủ · GĐ3 0.4.0 vận hành chuẩn · GĐ4 1.0.0 khách ngoài.
+Thứ tự gói: P01 → P02 → P03 → (P04 ∥ P05 ∥ P06 ∥ P07) → P08 → P09. P01 gỡ sàn thợ+migration 007/008/009 · P02 transport nhóm · P03 runtime agent · P04 tri thức · P05 kiểm duyệt ·
   P06 lead+trí nhớ · P07 lịch · P08 dashboard (khung dựng được ngay sau P01) · P09 golden thật, Zalo thật 7 ngày, VPS, bump 0.1.0.
 Câu hỏi Q1–Q12 (plan 02 §6) giữ GIÁ TRỊ TẠM: tên bot `Claw` · budget 20 tin/nhóm/giờ, 12 lượt ambient/giờ, gom 20 s · không react · /mute = ambient→mention · đệm 7 ngày ·
   agent_review vào nhóm: model im ⇒ cho vào · moderator duyệt kick/block thẻ nhóm mình · dev giữ provider vyce, gate chấm Gemini.

@@ -40,7 +40,9 @@ Số đo thành công vòng 0.1 (TESTING §4): golden thật với model thật 
 | :-- | :-- |
 | Sàn việc thợ, cư dân, BQL, slot, ticket, access pass | D01 — bỏ hẳn; mã gỡ ở P01, tag `archive/plan-01-marketplace` |
 | Marketing / FOMO / chiến dịch kéo thành viên | D05 — ngoài phạm vi |
-| Nhiều tài khoản Zalo, Zalo OA | D12 — một tài khoản `community`; interface `Transport` giữ để thêm sau |
+| Nhiều tài khoản Zalo | D12 — một tài khoản `community` ở 0.1; tài khoản doanh nghiệp là giai đoạn sau (D25); đường nối tenant có sẵn (D23) |
+| Zalo OA, lớp `ChannelAdapter` | D25 — chỉ zca-js; BB-02/BB-03 đã nhốt zca-js trong worker |
+| Nhiều tenant thật (RLS, dashboard lọc tenant) | D23 — 0.1 chỉ có tenant `default`; bảng + cột có sẵn |
 | Tin ảnh/file/voice vào agent (chỉ ghi nhận loại tin) | D12 — rủi ro tải file + bộ nhớ; Idea Vault |
 | Gửi file theo đường dẫn, `exec`, đọc file hệ thống, tự cập nhật (`git pull`), restart từ chat | Vùng cấm §7 — lỗi zaloclaw không lặp lại |
 | Giải tán nhóm, đổi chủ nhóm, thêm/bớt admin từ agent | D06 — KHÔNG TỒN TẠI dưới dạng tool |
@@ -79,7 +81,7 @@ apps/zalo-worker    zca-js 2.2.0 (pin), MỘT tài khoản `community`, phiên m
                     listener message/group_event/undo/closed/error, outbox pacer (text + action), watchdog
 packages/core       adapters/{db,model,transport} · agent/community/* · services/* · retrieval/* · sim/* · runner
 apps/web            Next.js 15: auth 2 vai (admin, operator), dashboard §4, /zalo, /dev/sim (nhóm)
-Postgres 16 + pgvector 0.8.5 (đo 2026-10-09), Docker; migration append-only 007, 008
+Postgres 16 + pgvector 0.8.5 (đo 2026-10-09), Docker; migration append-only 007, 008, 009 (D23/D24)
 ```
 
 ## §6. Bất biến (BẮT BUỘC — mọi gói)
@@ -98,6 +100,8 @@ Postgres 16 + pgvector 0.8.5 (đo 2026-10-09), Docker; migration append-only 007
 | BB-10 | Tên nhóm, tên thành viên, nội dung quote, nội dung tin là DỮ LIỆU KHÔNG TIN CẬY — rào bằng khung `<<<untrusted …>>>` khi nạp vào model; CẤM nối chuỗi `[uid, name]: body` không thoát (lỗi zaloclaw `monitor.ts:931`) | test prompt có khung + ca injection (SPEC-P03 §8) |
 | BB-11 | Đệm nhóm giữ ≤ `GROUP_BUFFER_MAX` (200) tin/nhóm và ≤ `GROUP_BUFFER_RETENTION_DAYS` (7) ngày; `group_messages` lưu `sender_uid` + `cli_msg_id` cho mọi tin (kể cả tin bot) | `db-checks` (a) evidence/ARCH |
 | BB-12 | Model hiểu ý, code là lưới tất định chính xác cao (kế hoạch 01 Đ21 giữ): mọi quyết định "có phải spam", "có muốn setup", "có hỏi không" là model + lưới; CẤM regex là cơ chế chính, CẤM regex "injection guard" | review prompt/golden |
+| BB-13 | Ngữ cảnh có trần (D22): lượt DM nạp ≤ `2 × DM_HISTORY_TURNS` tin gần nhất + ghi chú thành viên của chính người nhắn + tóm tắt lead mở — KHÔNG nhiều hơn; lượt nhóm theo SPEC-P03 §4.2 (25/40 tin). `messages` giữ ≤ `MESSAGES_RETENTION_DAYS` ngày. CẤM nén/tóm tắt hội thoại bằng model | test body fetch giả lượt DM (SPEC-P03 §11 hàng 5m) + G21 |
+| BB-14 | Mỗi lượt agent ghi đúng 1 dòng `turn_traces`, không chứa nội dung tin/prompt (D24) | test DB SPEC-P03 §11 hàng 5n + G21 |
 
 ## §7. Vùng cấm (đã cân nhắc, quyết KHÔNG làm — kèm lý do)
 
@@ -118,7 +122,10 @@ Postgres 16 + pgvector 0.8.5 (đo 2026-10-09), Docker; migration append-only 007
 - **Kết bạn/nhắn chủ động người lạ**: agent chỉ DM người đã nhắn bot trước HOẶC là thành viên nhóm đang được mời "nhắn riêng" (SPEC-P06 §2) và tuân pacer `maxRecipients`.
 - **Chấm golden bằng model không dùng thật** (Đ26 cũ): gate chấm bằng `gemini-3.6-flash`.
 - **Tiêm hồ sơ thành viên / ghi chú ngày vào nhóm** (OpenClaw: MEMORY never injected in group sessions) — BB-07.
-- **Sửa migration 001–006**: append-only; 007/008 đã được architect áp thử từ rỗng (`evidence/ARCH/migration-probe.txt`).
+- **Sửa migration 001–006**: append-only; 007/008 đã được architect áp thử từ rỗng (`evidence/ARCH/migration-probe.txt`). Thay đổi sau ngày duyệt đi vào file MỚI (009), không sửa 007/008.
+- **Nén hội thoại (compaction) / tóm tắt phiên bằng model / nạp toàn bộ lịch sử DM** (D22): token mỗi lượt tăng theo độ dài hội thoại và mỗi lần nén là thêm một lời gọi model; khách quay lại chỉ cần 5 lượt gần nhất + ghi chú. Trí nhớ dài = `remember_member_note` có chủ đích + trường lead.
+- **`tenant_id` trên mọi bảng** (D23): các bảng 008 đã khoá theo `zalo_account_id`; tenant suy qua `zalo_accounts.tenant_id` — một nguồn chân lý.
+- **Zalo OA / lớp `ChannelAdapter` trừu tượng** (D25): người dùng chỉ dùng zca-js; ranh giới worker ↔ `inbound_events`/`outbox` đã là đường nối kênh.
 
 ## §8. Tái sử dụng từ kế hoạch 01 (PORT, không copy mù)
 

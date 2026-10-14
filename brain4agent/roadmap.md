@@ -11,8 +11,9 @@ Pivot 2026-10-09 (D01): agent chăm sóc cộng đồng Zalo. Bộ SPEC ĐÃ DUY
 - [x] Nghiên cứu OpenClaw + zaloclaw (clone chỉ đọc) — 2026-10-09
 - [x] Dựng bộ SPEC (00, 01, P01–P08, OPERATIONS, TESTING) + chạy thử 5 bộ kiểm (`evidence/ARCH/`) — 2026-10-09
 - [x] SO duyệt SPEC, giữ Q1–Q12 giá trị tạm — 2026-10-09
+- [x] Bổ sung D22–D25 (2026-10-14): ngữ cảnh DM ≤ 5 lượt + ghi chú, không nén · tenant `default` + `turn_traces` (migration 009) · chỉ zca-js cho cả cộng đồng lẫn doanh nghiệp
 - [ ] 🖐 Người xác nhận GỠ 94 file sàn thợ (AGENTS §5.L.3) — mở khoá P01
-- [ ] P01 — gỡ sàn thợ, migration 007/008, tài khoản `community`, vai admin/operator, seed, `check_pivot_cleanup` (🟠, G01–G03)
+- [ ] P01 — gỡ sàn thợ, migration 007/008/009, tài khoản `community`, vai admin/operator, seed, `check_pivot_cleanup` (🟠, G01–G03)
 - [ ] P02 — transport nhóm: worker + action outbox + pacer nhóm + sim nhóm (🟠 thi công · 🔴 thẩm định, G04–G06)
 - [ ] P03 — runtime agent: cổng nhận tin, đệm, ambient, persona, policy tool, host ép trả lời (🔴/🟠, G07, G08, G14, G15)
 - [ ] P04 — tri thức: kho, embedding, truy hồi lai RRF, câu hỏi bỏ trống (🟠, G12)
@@ -33,11 +34,19 @@ Người dùng: sàn việc thợ "bỏ đi". Kế hoạch 01 đóng ở trạng
 
 Việc treo của kế hoạch 01 — tất cả **BỎ do pivot**: lượt Gemini H08 (`--set diagnosis,responsibility`) và gate G08–G10 sàn thợ · nhả/commit `resident.ts` (đang sửa dở, chưa commit) · P05-D, P05-F · P06 sàn thợ, P07 cũ, P08 sổ lợi ích ba bên · bước cư dân "Đồng ý" · tham số phí (`FREE_TRIAL_DAYS`, `SLOT_FEE_MONTHLY`, `SLOT_MIN_JOBS_PER_VENDOR`, `BQL_SHARE_PCT`, `MIN_EARNINGS_TO_FEE`, `MINUTES_PER_CASE_BASELINE`) · Zalo `market` + nhóm thợ · thử người agent cư dân qua Zalo thật · SPEC-P08 sổ lợi ích · `.env.example` pacer của kế hoạch 01 · P04 dashboard BQL tối thiểu.
 
-## Tương lai (Upcoming)
+## Tương lai (Upcoming) — Lộ trình chuẩn doanh nghiệp (chốt hướng 2026-10-14)
 
-- Kênh Zalo OA song song (giữ interface `Transport`), nhiều tài khoản (D12 nới CHECK + `AccountId`).
-- Lịch `cron` (D16, thêm `cron_expr` + `croner`); pg-boss khi > 1 runner (D08).
-- Nhận ảnh/file/voice vào agent (non-goal 0.1).
+Mỗi giai đoạn = một hồ sơ `planning/` đủ bộ SPEC, đóng bằng cổng đo được. Kênh DUY NHẤT là zca-js (D25). Thứ tự GĐ1 ↔ GĐ2 đổi được nếu doanh nghiệp cần chạy sớm — GĐ2 khi đó dùng persona tự do như 0.1.
+
+| GĐ | SemVer | Mục tiêu | Nội dung chính | Cổng ra |
+| :-- | :-- | :-- | :-- | :-- |
+| 0 | `0.1.0` (kế hoạch 02) | Cộng đồng chạy thật | P01–P09 + D22–D25 | G01–G21 ✅ cột `vps` |
+| 1 | `0.2.0` (kế hoạch 03) | Khung hành vi: **Skill · Voice · Constraint** | Skill có phiên bản + bộ ca test riêng + bề mặt được dùng; Voice có cấu trúc (xưng hô, độ dài, emoji, từ ưu/cấm, ví dụ đúng-sai) theo tenant × bề mặt; Constraint 3 tầng: cứng trong tool (BB) · cổng ra kiểm bằng code theo tenant (trước `enqueue`) · mềm trong RULES đo bằng golden; kích hoạt phiên bản persona chỉ khi golden hồi quy đạt; so phiên bản bằng `turn_traces.persona_versions` | golden `voice` + `constraints` + ca từng skill đạt; 0 vi phạm tầng cứng; rollback phiên bản 1 thao tác |
+| 2 | `0.3.0` (kế hoạch 04) | Doanh nghiệp của chủ | Tài khoản Zalo thứ 2 (nới D12), tenant thứ 2 (D23), kho tri thức + persona + skill riêng; luồng CSKH 1-1; chuyển người thật có hàng chờ + SLA + nhắc; staff và dashboard lọc theo tenant | 14 ngày chạy song song 2 tenant; 0 rò dữ liệu chéo tenant (test + truy vấn kiểm); SLA chuyển người đạt |
+| 3 | `0.4.0` | Vận hành chuẩn | Model dự phòng + ngắt mạch; kill switch toàn cục/nhóm; cảnh báo (tỉ lệ fallback, `model_down`, phiên Zalo rớt) qua DM chủ; chi phí/lượt & /tenant từ `turn_traces`; backup + diễn tập khôi phục; hạn giữ + xoá dữ liệu theo yêu cầu (Luật 91/2025); xoay secrets | diễn tập khôi phục đạt; cảnh báo bắn đúng trên lỗi giả lập; yêu cầu xoá dữ liệu xử lý ≤ 72 giờ |
+| 4 | `1.0.0` | Mở cho khách ngoài | Onboarding tenant tự phục vụ, RLS Postgres, quota theo tenant, nhận ảnh/voice (STT), nhiều runner (advisory lock / pg-boss) | ≥ 3 tenant ngoài chạy 30 ngày; thẩm định bảo mật đối kháng |
+
+Việc lẻ chưa xếp giai đoạn: lịch `cron` (D16, `cron_expr` + `croner`).
 - *(Sàn thợ: mọi mục tương lai cũ về nhiều tòa/BQL đã BỎ do pivot.)*
 
 ## 💡 Kho Ý Tưởng & Backlog (Idea Vault)
@@ -45,7 +54,7 @@ Việc treo của kế hoạch 01 — tất cả **BỎ do pivot**: lượt Gemi
 > Mục của kế hoạch 01 (sàn thợ) bên dưới là LỊCH SỬ — đã BỎ do pivot (Đ32), chỉ giữ ý tưởng dùng lại được. Mục mới của kế hoạch 02 xếp ngay dưới dòng này.
 
 - **Nhận ảnh/file/voice vào agent cộng đồng** (speech-to-text, OCR ảnh chụp lỗi) — non-goal 0.1, cần giới hạn tải file + bộ nhớ.
-- **Zalo OA / nhiều tài khoản `community`** — D12; interface `Transport` đã theo tài khoản.
+- **Nhiều tài khoản `community` / tài khoản doanh nghiệp** — D12 + D25 (GĐ2 lộ trình). Zalo OA: người dùng BỎ (D25 — chỉ zca-js).
 - **Lịch `cron` + `croner`** — D16 chỉ làm `at|every|daily|weekly`.
 - **Khoá chống chạy hai runner (advisory lock)** vẫn dùng được cho kế hoạch 02.
 

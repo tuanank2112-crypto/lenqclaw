@@ -2,6 +2,16 @@
 
 Tất cả các quyết định kiến trúc và lịch sử nâng cấp phiên bản của dự án.
 
+## [Unreleased] - 2026-10-14: Bổ sung D22–D25 vào hồ sơ 02 (SPEC, mã CHƯA đổi)
+### Decided
+- **D22** ngữ cảnh DM có trần: ≤ `DM_HISTORY_TURNS` (5) lượt + ghi chú thành viên + lead mở; KHÔNG nén/tóm tắt bằng model; `messages` giữ 30 ngày; bỏ tool `recall_member_profile` (BB-13).
+- **D23** đường nối tenant: migration MỚI `009_tenant_trace.sql` — bảng `tenants` + `tenant_id` ở `zalo_accounts`/`staff_users`/`kb_documents` (mặc định `default`); bảng 008 suy tenant qua tài khoản.
+- **D24** vết từng lượt `turn_traces` + `agent_runs.turn_id`, thay audit `turn.done` (BB-14).
+- **D25** chỉ zca-js cho cả cộng đồng lẫn doanh nghiệp của chủ; không Zalo OA, không lớp `ChannelAdapter`.
+- Lộ trình chuẩn doanh nghiệp 5 giai đoạn (`0.1.0` → `1.0.0`) ghi ở `roadmap.md`; GĐ1 `0.2.0` = khung Skill · Voice · Constraint.
+### Superseded
+- SPEC-P03 §5.1 "lịch sử 20 tin", tool `recall_member_profile`, audit `turn.done`, hướng "Zalo OA song song" — xem plan 02 §2 bảng thay thế.
+
 ## [Unreleased] - 2026-10-09: Pivot sang agent chăm sóc cộng đồng Zalo — hồ sơ 02 (🟢 SPEC đã duyệt, mã CHƯA đổi)
 ### Decided
 - **Kiến trúc (không bump version; `0.1.0` khi đóng kế hoạch 02, `package.json` ×4 vẫn `0.0.1`):** Đ32 (kế hoạch 01) DỪNG sàn việc thợ; D01 (kế hoạch 02) sản phẩm = agent chat chăm sóc cộng đồng trong Zalo, tài khoản `community` làm phó nhóm, port mẫu OpenClaw + monas-team/zaloclaw (MIT), tự customize.

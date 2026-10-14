@@ -16,9 +16,9 @@ Kiểm mã thoát trực tiếp (`$?`), không qua `| tail` (G08).
 ## §2. Ma trận test theo gói (chi tiết "xong khi" nằm ở mục nghiệm thu từng SPEC)
 | Gói | Test bắt buộc (tóm tắt) |
 | :-- | :-- |
-| P01 | SPEC-P01 §10: tag, gate + `check_pivot_cleanup`, `test:db` từ rỗng `applied: 8`, 94 file xoá, grep `bql|market` = 0 |
+| P01 | SPEC-P01 §10: tag, gate + `check_pivot_cleanup`, `test:db` từ rỗng `applied: 9`, 94 file xoá, grep `bql|market` = 0 |
 | P02 | SPEC-P02 §10: ≥ 14 ca worker (nhóm, sự kiện, action với `uidFrom` đúng, 166 ⇒ `bot_is_admin=false`, chunk/quote, `simulatePacer` 20/giờ), `sim-actions`, `/api/dev/sim/send` nhóm |
-| P03 | SPEC-P03 §11: 28 ca cổng (nguyên văn `gate-ref`), policy ≥ 30, persona/BB-07, 12 ca DB lượt nhóm/DM, 0 model cho tin thường mode `mention` |
+| P03 | SPEC-P03 §11: 28 ca cổng (nguyên văn `gate-ref`), policy ≥ 30, persona/BB-07, 14 ca DB lượt nhóm/DM (gồm D22 ngữ cảnh DM, D24 vết lượt), 0 model cho tin thường mode `mention` |
 | P04 | SPEC-P04 §8: token/RRF, embed dịch đúng, DB lai, 5 ca câu hỏi bỏ trống (`db-checks (b)`) |
 | P05 | SPEC-P05 §10: 14 ca thang (`ladder-ref`), lưới 0 báo nhầm/40, bằng chứng duyệt ≥ 12 ca, 10 ca DB kiểm duyệt, join/welcome, thẩm định đối kháng ≥ 3 cách phá |
 | P06 | SPEC-P06 §7: điểm lead, trạng thái lead, trí nhớ không rò vào nhóm, mời riêng |
@@ -41,7 +41,7 @@ Bằng chứng đỏ bắt buộc cho máy chấm: `scripts/eval/community/red-f
 | Gate | Nội dung | local | zalo-thật | vps |
 | :-- | :-- | :-- | :-- | :-- |
 | G01 | Cổng §1 xanh trên cây sạch sau P01; tag `archive/plan-01-marketplace`; `pivot_hits: 0` | ⬜ | — | ⬜ |
-| G02 | Migration 001–008 từ DB rỗng `applied: 8`; chạy lại `applied: 0`; `pre-007.sql` tồn tại trước khi áp lên DB có dữ liệu | ⬜ | — | ⬜ |
+| G02 | Migration 001–009 từ DB rỗng `applied: 9`; chạy lại `applied: 0`; `pre-007.sql` tồn tại trước khi áp lên DB có dữ liệu | ⬜ | — | ⬜ |
 | G03 | Auth 2 vai + policy ≥ 14 ca + audit | ⬜ | — | ⬜ |
 | G04 | Transport nhóm: tin/sự kiện nhóm ghi đúng payload; `delete_message` dùng `uidFrom` người gửi (ca đỏ: uid bot); 166 ⇒ `bot_is_admin=false` | ⬜ | ⬜ (bot là phó nhóm thật, `sync_group_info` ⇒ `bot_is_admin=true`) | ⬜ |
 | G05 | Pacer: `simulatePacer` 100 tin/1 nhóm ⇒ `first_hour=20`, `min_gap≥8000`, `violations: 0`; DM 50 tin/20 người ⇒ 0 vi phạm (giữ) | ⬜ | ⬜ (24 giờ chạy thật: 0 lần backoff 221/no-msgId) | ⬜ |
@@ -60,6 +60,7 @@ Bằng chứng đỏ bắt buộc cho máy chấm: `scripts/eval/community/red-f
 | G18 | Dashboard: 4 bộ DB web xanh 3 lần + `next build && next start` curl | ⬜ | — | ⬜ |
 | G19 | 7 ngày chạy Zalo thật ≥ 2 nhóm (≥ 1 ambient): tài khoản không bị khoá, phiên `connected` ≥ 95% giờ 7–22h, 0 `approvals.status='failed'` do 166 sau khi đặt phó nhóm, than phiền "bot nói nhiều" = 0 (chủ ghi `daily_notes`) | — | ⬜ | ⬜ |
 | G20 | `package.json` ×4 `0.1.0`, `changelog.md` mục `0.1.0`, Ma Trận 6 Điểm đồng bộ (SO) | — | — | ⬜ |
+| G21 | D22/D24 (BB-13, BB-14): SPEC-P03 §11 hàng 5(m)(n) xanh; sau `runTimers` với `now` +31 ngày: `select count(*) from messages where created_at < $now - interval '30 days'` = `0`, `member_profiles`/`leads` không đổi số dòng; `select count(*) from turn_traces` = số lượt agent của bộ test; ca đỏ: `DM_HISTORY_TURNS` bị bỏ qua (nạp 30 tin) ⇒ hàng 5(m) ĐỎ | ⬜ | ⬜ (7 ngày: `avg(input_tokens)` lượt `dm` theo `turn_traces` ổn định, không tăng theo số ngày) | ⬜ |
 
 ## §5. Số đo lưới an toàn (sau mỗi lượt chạy thật, ghi vào report)
 ```sql

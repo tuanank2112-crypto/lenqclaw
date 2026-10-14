@@ -38,7 +38,7 @@ packages/core/src/
   runner/inbound-runner.ts        giữ (gọi routeInboundEvent mới + runTimers mới)
   db/migrate.ts · seed.ts · seed-sim.ts   seed viết lại (SPEC-P01 §4)
   domain/{types,errors,password}.ts
-db/migrations/007_drop_marketplace.sql · 008_community.sql   (§4, append-only)
+db/migrations/007_drop_marketplace.sql · 008_community.sql · 009_tenant_trace.sql   (§4, append-only; 009 = D23/D24)
 scripts/check_adapter_boundary.mjs (giữ) · check_agent_tools.mjs (viết lại, SPEC-P01 §6) · gate.mjs (giữ)
 scripts/eval_community.mjs + scripts/eval/community/*.mjs    (TESTING §3)
 evals/golden/community/{activation,moderation,lead_intent,unanswered}.jsonl · evals/scenarios/*.jsonl
@@ -50,7 +50,8 @@ THIRD_PARTY_NOTICES.md             chỉ khi có chép đoạn mã MIT (SPEC-P01
 ### §2.1 `adapters/model.ts` — giữ chữ ký, đổi route
 ```ts
 export type ModelRoute = 'community' | 'triage';            // bỏ diagnose/responsibility/acceptance/vendor_parse/compose
-export interface ModelCall { route: ModelRoute; system: string; messages: MessageParam[]; tools?: Tool[]; images?: ImageRef[]; conversationId?: string | null; }
+export interface ModelCall { route: ModelRoute; system: string; messages: MessageParam[]; tools?: Tool[]; images?: ImageRef[]; conversationId?: string | null;
+  turnId?: string; }   // D24: adapter ghi agent_runs.turn_id; thiếu ⇒ NULL (triage, embed)
 export function callModel(c: ModelCall): Promise<CallModelResult>;            // KHÔNG đổi (dạng Anthropic, dịch Gemini/OpenRouter/Vyce như §2b–§2d kế hoạch 01)
 export function callTriageModel(c: TriageModelCall): Promise<CallModelResult>; // KHÔNG đổi (không retry, không fallback, MODEL_TRIAGE)
 ```
@@ -90,7 +91,7 @@ Thứ tự: `account_owners(account, uid)` ⇒ `owner` · `threadId` ≠ null v�
 
 Vai quyết định: tool được gọi (§7.1), miễn trừ kiểm duyệt (SPEC-P05 §4), lệnh `/` (§6.2), người duyệt thẻ (§5.1).
 
-## §4. DDL — migration 007 + 008 (append-only; đã áp thử từ rỗng, `evidence/ARCH/migration-probe.txt`)
+## §4. DDL — migration 007 + 008 (append-only; đã áp thử từ rỗng, `evidence/ARCH/migration-probe.txt`) + 009 (D23/D24, chưa áp thử)
 
 Worker chép NGUYÊN VĂN hai file dưới đây vào `db/migrations/` (sha256 bản nháp: `evidence/ARCH/migration-draft-sha256.txt`). Thứ tự câu lệnh là BẮT BUỘC (đã đo: UPDATE trước DROP CONSTRAINT ⇒ lỗi 23514).
 
@@ -415,6 +416,49 @@ create table automation_runs (
 );
 ```
 
+### `db/migrations/009_tenant_trace.sql` (D23, D24 — thêm 2026-10-14; CHƯA áp thử ⇒ worker P01 áp từ rỗng sau 008, chạy lại `applied 0`, ghi `evidence/P01/migration-009-probe.txt`; lệch cú pháp ⇒ dừng báo, không tự sửa nghĩa)
+```sql
+-- 009_tenant_trace.sql — ke hoach 02 (D23 tenant, D24 vet tung luot). Chi THEM.
+
+-- 1. Tenant: 0.1 chi co 'default'. Bang 008 suy tenant qua zalo_accounts (D23).
+create table tenants (
+  id text primary key check (id ~ '^[a-z0-9-]{2,32}$'),
+  name text not null,
+  created_at timestamptz not null default now()
+);
+insert into tenants (id, name) values ('default', 'Mặc định') on conflict do nothing;
+alter table zalo_accounts add column tenant_id text not null default 'default' references tenants;
+alter table staff_users   add column tenant_id text not null default 'default' references tenants;
+alter table kb_documents  add column tenant_id text not null default 'default' references tenants;
+create index kb_documents_tenant_idx on kb_documents (tenant_id);
+
+-- 2. Vet tung luot agent (D24): khong chua noi dung tin/prompt.
+create table turn_traces (
+  id uuid primary key default gen_random_uuid(),
+  zalo_account_id text not null references zalo_accounts on update cascade,
+  conversation_id uuid,
+  thread_id text not null,
+  thread_type text not null check (thread_type in ('user','group')),
+  kind text not null,
+  trigger text,
+  requester_role text,
+  rounds int not null default 0 check (rounds >= 0),
+  tools text[] not null default '{}',
+  sent int not null default 0 check (sent >= 0),
+  outcome text not null check (outcome in ('replied','silent','auto_posted','fallback','model_down','refusal','error')),
+  input_tokens int not null default 0,
+  output_tokens int not null default 0,
+  latency_ms int not null default 0,
+  persona_versions jsonb not null default '{}',
+  created_at timestamptz not null default now()
+);
+create index turn_traces_account_time_idx on turn_traces (zalo_account_id, created_at desc);
+create index turn_traces_thread_idx on turn_traces (zalo_account_id, thread_id, created_at desc);
+alter table agent_runs add column turn_id uuid;
+create index agent_runs_turn_idx on agent_runs (turn_id) where turn_id is not null;
+```
+`outcome`: `replied` (nhóm `sent ≥ 1` do model gọi tool, hoặc DM có text cuối) · `silent` (lượt không bắt buộc trả lời, 0 tin) · `auto_posted` (host đăng text cuối — SPEC-P03 §6.4.1) · `fallback` (§6.4.2) · `model_down` (§6.5) · `refusal` · `error` (ngoại lệ chưa bắt). `persona_versions` = `{"soul":n,"rules":n,"identity":n,"capabilities":n}` của bản active lúc lượt chạy. `tools` = tên tool theo thứ tự gọi (lặp được). Tổng token = cộng các `agent_runs` cùng `turn_id`.
+
 Ghi chú DDL: bảng giữ nguyên từ 001–006: `zalo_accounts` (+ cột 004/005), `inbound_events`, `outbox`, `conversations`, `messages`, `agent_runs`, `audit_log`, `kb_documents`, `kb_sections` (tsv generated từ 002), `staff_users`, `schema_migrations`. `conversations.party_type` (text, không CHECK) ghi `'owner' | 'member' | 'stranger' | 'group'`; `party_id` để NULL. Tên hiển thị trong mọi bảng là dữ liệu KHÔNG TIN CẬY (BB-10).
 
 ## §5. Máy trạng thái
@@ -487,13 +531,17 @@ export interface GroupTurnContext {
 }
 export interface DmTurnContext { readonly kind: 'dm' | 'owner_dm'; readonly account: AccountId; readonly threadId: string; readonly botUid: string;
   readonly requester: { uid: string; role: Role; displayName: string | null }; readonly latestText: string; readonly latestMessageId: number;
-  readonly triage: CommunityTriage | null; readonly now: Date; readonly conversationId: string; }
+  readonly triage: CommunityTriage | null; readonly now: Date; readonly conversationId: string;
+  readonly memberNotes: string | null;                                  // D22: member_profiles.notes của CHÍNH requester (≤ 4000), null nếu chưa có
+  readonly openLead: { status: string; score: number; missing: string[] } | null;   // D22: lead mở của requester (SPEC-P06 §3)
+}
 export type ToolContext = GroupTurnContext | DmTurnContext;
 
 export interface CommunityTriage { verdict: 'ok' | 'spam' | 'scam' | 'ad' | 'harass' | 'unsure'; confidence: number;
   is_question: boolean; question_confidence: number; lead_intent: boolean; lead_confidence: number; wants_private: boolean }
 
-export interface PersonaBundle { soul: string; rules: string; identity: string; capabilities: string; namePatterns: RegExp[]; skills: Array<{ name: string; description: string }> }
+export interface PersonaBundle { soul: string; rules: string; identity: string; capabilities: string; namePatterns: RegExp[]; skills: Array<{ name: string; description: string }>;
+  versions: { soul: number; rules: number; identity: number; capabilities: number } }   // D24: ghi vào turn_traces.persona_versions
 
 export type OutboxAction =
   | { action: 'delete_message'; msgId: string; cliMsgId: string; uidFrom: string; onlyMe: false; approvalId?: string }
@@ -544,7 +592,6 @@ Bề mặt: **G** = lượt nhóm (mọi `group_*`), **D** = DM member/stranger,
 | `create_note` | `{title: string≤500, pin?: boolean}` | owner, moderator | | ✓ (`thread_id`) | outbox `create_note` |
 | `set_group_mode` | `{mode: 'mention'\|'ambient'}` | owner, moderator | | ✓ (`thread_id`) | cập nhật `zalo_groups.mode` + audit |
 | `mute_group` | `{action: 'mute'\|'unmute'}` | owner, moderator | | ✓ (`thread_id`) | `mute` ⇒ `zalo_groups.mode='mention'`; `unmute` ⇒ `mode='ambient'`; audit `group.mute` (không có cột `mute_until` — Q6) |
-| `recall_member_profile` | `{}` | | mọi vai | | chỉ hồ sơ của chính requester |
 | `save_lead` | `{industry?, channels?: string[], msg_volume?, deadline?, budget?, contact?, notes?}` | | mọi vai | | upsert lead mở của requester; tính `score` (SPEC-P06 §3); `new→qualifying→qualified` |
 | `submit_lead` | `{}` | | mọi vai | | lead `qualified` ⇒ `handed_off` + DM owner `LEAD_DM`; chưa đủ ⇒ `LeadIncompleteError` |
 | `list_groups` | `{}` | | | ✓ | nhóm + chế độ + ngân sách còn lại |
@@ -557,6 +604,8 @@ Bề mặt: **G** = lượt nhóm (mọi `group_*`), **D** = DM member/stranger,
 | `write_daily_note` | `{text: string≤2000}` | | | ✓ | append `daily_notes` hôm nay |
 | `daily_report` | `{}` | | | ✓ | số liệu 24 giờ (SPEC-P07 §5) |
 | `review_join_request` | `{uid: string, decision: 'approve'\|'reject', reason: string}` | chỉ lượt `group_join_review` | | ✓ (`thread_id`) | policy `agent_review` ⇒ approve: outbox `review_join` ngay; reject: cần `reason`, thi hành ngay (SPEC-P05 §6); policy `manual` ⇒ `ActionNotPermittedError` |
+
+Ghi chú D22: `recall_member_profile` (có trong bản duyệt 2026-10-09) đã BỎ — ghi chú + lead mở của requester được host nạp sẵn vào mỗi lượt DM (§11); KHÔNG được thêm lại tool đọc hồ sơ ở D.
 
 Ghi chú `mute_group`: CẤM thêm cột ngoài DDL §4 trong vòng này; `/mute 1h`/`/mute 24h` (§6.2) đều map sang `{action:'mute'}` — thời lượng bị bỏ qua ở 0.1 (🖐 Q6).
 
@@ -680,6 +729,7 @@ export async function enqueueSystemEvent(e: SystemEvent): Promise<number>;   // 
 | `KB_TOP_K` / `MEMORY_HALF_LIFE_DAYS` | 8 / 30 | SPEC-P04, P06 |
 | `LEAD_SCORE_HANDOFF` | 60 | SPEC-P06 |
 | `MAX_TOOL_ROUNDS` | 8 | SPEC-P03 §6 |
+| `DM_HISTORY_TURNS` / `MESSAGES_RETENTION_DAYS` | 5 (1–20) / 30 (≥ 1) | D22: SPEC-P03 §5.1, SPEC-P07 §2 bước 8 |
 | `HUMAN_TAKEOVER_MIN` / `TRIAGE_TIMEOUT_MS` / `DATA_MODE` / `TRANSPORT` | 60 / 4000 / `sim` / `sim` (giữ) | |
 
 Bỏ khỏi `.env.example`: mọi `HOLD_*`, `DISPATCH_*`, `SLOT_*`, `FREE_TRIAL_DAYS`, `BQL_*`, `QUOTE_*`, `NO_SHOW_*`, `ACCESS_*`, `PUBLISH_*`, `REQUEST_ACCESS_*`, `VENDOR_INTENT_MIN`, `WAITLIST_*`, `MODEL_DIAGNOSE/RESPONSIBILITY/ACCEPTANCE/VENDOR_PARSE/COMPOSE`, `TRIAGE_EMERGENCY_MIN`, `PACER_MIN_INTERVAL_MS`.
@@ -705,4 +755,14 @@ tên nhóm: "…" · thành viên trong đệm: 12 · bot là phó nhóm: có ·
 [#8820 uid=…9921 "Tên B" 09:50] @bot agent là gì?
 <<<end>>>
 ```
+Lượt DM (D22): `messages` = ≤ `2 × DM_HISTORY_TURNS` tin gần nhất (`loadHistory`, đã che SĐT, cũ → mới) + tin hiện tại; khối trí nhớ đứng ĐẦU tin hiện tại (không vào system prompt), chỉ khi có dữ liệu:
+```text
+<<<untrusted member_notes>>>
+[2026-10-02 14:10] (agent) đang làm shop mỹ phẩm, cần bot trả lời đơn trên Zalo
+<<<end>>>
+<<<lead status=qualifying score=45 missing=contact,budget>>>
+<<<end>>>
+```
+Ghi chú là dữ liệu do agent tự ghi từ lời người dùng ⇒ vẫn là untrusted. Không có ghi chú và không có lead mở ⇒ không chèn khối nào.
+
 uid hiển thị cho model = 4 số cuối + hash ngắn? KHÔNG — model cần uid để gọi tool (`mention_uids`, `warn_member`): hiển thị uid ĐẦY ĐỦ, tên trong ngoặc kép, mọi ký tự `<`/`>` trong tên/text được thay bằng `‹`/`›` để không phá khung.
