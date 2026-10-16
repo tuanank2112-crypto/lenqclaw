@@ -1,6 +1,23 @@
 # 📅 Nhật Ký Làm Việc Ngày 2026-10-14 (Session Memory Log)
 
-> Cập nhật lúc: `2026-10-14` | Phiên bản: `v0.0.1` (hồ sơ 02 SPEC đã duyệt + D22–D25) · PHIÊN MỚI NHẤT Ở TRÊN CÙNG (script xoay giữ phần đầu file)
+> Cập nhật lúc: `2026-10-16` | Phiên bản: `v0.0.1` (hồ sơ 02 SPEC đã duyệt + D22–D25) · PHIÊN MỚI NHẤT Ở TRÊN CÙNG (script xoay giữ phần đầu file)
+
+---
+
+## 🏁 Phiên 2026-10-16 — Đo lại `main`, sửa cổng DB dev, tiếp P01
+
+### 🎯 Chỉ đạo
+Người dùng: dựng hệ thống trước, test Zalo thật để sau (P09); "làm đi" ⇒ tiếp P01.
+
+### ✅ Đã làm
+- Bước 0 `--check` exit 0. SO đo `main` (`cdb0b3d`): `npm run gate` exit 0 `GATE_OK` (core 82 · web 31 · worker 37), `pivot_hits: 0` ⇒ phần WIP P01 biên dịch được.
+- `test:db` không chạy được: Windows giữ dải cổng 55386–55485 ⇒ Docker không publish 55432 (G31). Đổi cổng dev sang `127.0.0.1:15432`, dựng lại container trên volume cũ (DB còn 9 migration) — `a589539`. `.env` local: cổng 15432, `ZALO_ACCOUNTS=community`.
+- `test:db` sau sửa cổng: exit 1, `p01.db.test.ts` ca 4 (duplicates 6≠1, dữ liệu sót) + ca 5 (outbox 8≠12, tin nhóm không có outbox).
+- Phụ lục H01 §7 (`d05279f`), phóng worker 🟠 làm nốt P01 ⇒ R01.
+
+### ⏭ Treo
+- Chờ R01 ⇒ SO đo lại + phán ⇒ đồng bộ não ⇒ P02.
+- `repomix-output.xml` (root, chưa theo dõi, 1,7 MB, 2026-10-14 10:01) — chưa rõ ai tạo; chờ người quyết giữ/xoá.
 
 ---
 

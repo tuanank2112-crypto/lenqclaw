@@ -73,7 +73,7 @@
     },
     "eval_next": "gemini --set diagnosis,responsibility (D29) after quota reset ~14:00 ICT"
   },
-  "next": "Human confirms removal of the 94 marketplace files -> launch P01 (tag archive/plan-01-marketplace, remove, migrations 007/008) -> P02 -> P03 -> (P04||P05||P06||P07) -> P08 -> P09",
+  "next": "R01 -> SO re-measure + verdict -> brain sync -> P02 -> P03 -> (P04||P05||P06||P07) -> P08 -> P09",
   "approved": [
     "P01",
     "P03-code",
@@ -90,17 +90,19 @@
   ],
   "llm_provider": "vyce (deepseek-v4-flash, temporary D28; gate provider gemini D26)",
   "decisions_latest": "D32 (plan 01 stop) / D21 (plan 02)",
-  "in_progress": null,
-  "pushed": "origin/main = a0f832a (2026-09-26)",
+  "in_progress": "P01 (plan 02) - worker finishing per H01 appendix 2026-10-16; gate green, test:db red (2 tests)",
+  "pushed": "origin/main = cdb0b3d (2026-10-14)",
   "tests_now": {
-    "unit": 317,
-    "db": 196,
-    "skip": 0
+    "unit": 150,
+    "db": "red (p01 tests 4,5)",
+    "skip": 0,
+    "measured": "2026-10-16"
   },
   "active_plan": "planning/02_2026-10-09_zalo-community-agent",
-  "plan_status": "SPEC approved (7a58d6d, f6a4465); P01 waiting for human to confirm removal of 94 marketplace files",
+  "plan_status": "SPEC approved (7a58d6d, f6a4465); P01 WIP 601aac7, resuming 2026-10-16",
   "stopped_plans": [
     "planning/01_2026-09-24_san-viec-tho-mvp (D32, 2026-10-09)"
   ],
-  "open_questions": "Q1-Q12 plan 02 section 6 kept at temporary values"
+  "open_questions": "Q1-Q12 plan 02 section 6 kept at temporary values",
+  "dev_db": "127.0.0.1:15432 (G31)"
 }
