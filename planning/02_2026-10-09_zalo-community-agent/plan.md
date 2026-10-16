@@ -115,6 +115,9 @@ SO xác minh mục CHẶN R03 §1 trong mã (`actions.ts:86-96` gọi Zalo khôn
 9. **Hoãn (Idea Vault, không chặn):** xoá tin của chính bot (R03 §14 — cần `cliMsgId` của tin bot từ kết quả `sendMessage`; kiểm ở Zalo thật P09). `review_join` trả `{}` giữ coi là xong (R03 §10) tới khi đo trên Zalo thật. `msg_type` (R03 §16) giữ.
 **Lật:** không.
 
+### D30 — 2026-10-16 · Nghiệm thu P02 sau vòng sửa (R05 ✅); chốt các điểm còn mở (SO)
+SO đo lại trên `2723955`: gate exit 0 (31/102/85, có và không nạp `.env`), test:db exit 0 ×2 (33/24/73), `pacer-sim --group` `first_hour: 20`, `violations: 0`; đột biến SO tự làm (tắt cổng thẻ duyệt `pacer.ts:350`) ⇒ 12 test DB đỏ, đã trả mã. Chốt: (1) `runScenario` được truyền `extraThreadIds` cho thread kịch bản không `sim-` — chỉ đường test, route web vẫn chỉ `sim-%`; (2) `approvals.executed_at` làm dấu "đã nhận thẻ" (không thêm trạng thái/migration); thẻ treo khi worker chết giữa nhận và hoàn tất ⇒ P07 thêm bước cảnh báo owner (KHÔNG tự nhả — tránh kick lặp); (3) sim CHƯA kiểm thẻ duyệt cho kick/block ⇒ P05 bổ sung để test core thấy cổng như worker; (4) 4 điểm lệch R02 §6 (audit `zalo.action`/`zalo.action_failed`/`zalo.action_blocked`, `ZaloActionError.code` = tên lớp + `apiCode`, chữ ký mở rộng, `sync_group_info` tạo nhóm `enabled=false`) chấp nhận — ghi SPEC-P02 §11; (5) commit `88e3a52` mang nhầm message của worker nhưng chứa SPEC D28 của architect — giữ lịch sử, ghi chú tại đây. G04–G06 ✅ local. **Lật:** không.
+
 ### Quyết định bị thay thế
 | Mốc cũ | Phát biểu cũ | Thay bằng | Lý do |
 | :-- | :-- | :-- | :-- |
@@ -131,6 +134,15 @@ SO xác minh mục CHẶN R03 §1 trong mã (`actions.ts:86-96` gọi Zalo khôn
 | SPEC-P01 §10 hàng 4, 6 (bản duyệt 2026-10-09) | `applied: 9` trên DB dev · `94 files changed` | D27 | DB dev đã migrate in 0; `tool-kit.test.ts` dời + viết lại tính là xoá |
 | SPEC-P01 §1 bước 4, H01 §1 (cổng `55432`) | DB dev `127.0.0.1:55432` | D27 / G31 | Windows giữ dải cổng động ⇒ `15432` |
 | SPEC-P03 §6 (bản duyệt 2026-10-09) · 00-ARCH §4 "router.ts" tuần tự | Vòng lượt tự viết `turn.ts::runCommunityTurn` (port `resident-agent.ts`) | D28 | người dùng chốt LangGraph + pipeline đồ thị làm nền |
+| SPEC-P03 §2 (bản duyệt 2026-10-09) | `routeInboundEvent` gọi tuần tự `handleSystemEvent`/`handleGroupEvent`/`ingestGroupMessage→moderate→decideGroupInbound`/`handleDm` | D28 — `pipelineGraph` (SPEC-P03 §2, 01-CONTRACTS §12) | pipeline là đồ thị tường minh, hình = hợp đồng test được |
+| SPEC-P03 §4.1 bước 3 | `is_question` = kết quả triage lúc chèn đệm | D28 — chèn `false`, node `triage` cập nhật sau `ingest` | triage là node sau ingest |
+| SPEC-P03 §4.2 | "sau lượt" cập nhật `last_seen_message_id`, `pending_since=null`, `turns_in_window++` | D28 — node `prepare`, trước model | lượt lỗi không bị flush lặp |
+| SPEC-P03 §6.2 | refusal ở mention ⇒ fallback gồm gọi lại | D28 — `decideDelivery` D10: fallback ngay, không nudge | gọi lại sau refusal vô ích |
+| 01-CONTRACTS §6 `GroupTurnContext.sent`, §7.1 `ctx.sent++` | host kiểm mustReply qua ctx mutable | D28 — `TurnState.answered` + cờ tool `answers` | cạnh thuần chỉ đọc state |
+| SPEC-P05 §6 | `agent_review`: model không gọi tool ⇒ approve | D28 — D3 `join_default` cả khi model sập/refusal/chạm trần | một luật Q9 |
+| 00-ARCH §8 hàng "Vòng lượt tool" | port vòng `resident-agent.ts:135-269` | D28 — chỉ port LUẬT vào node `agent`/`tools` | vòng = cạnh `tools → agent` |
+| (mới) | — | D28 BB-17 / 00-ARCH §7 — cấm checkpointer, LangSmith, ChatModel/prebuilt LangChain | đo trong `evidence/ARCH-D28/spike.txt` |
+| SPEC-P02 §9 hàng "nhóm chưa có" (chỉ text) | huỷ `group_unknown` cho text | D29 — huỷ mọi text/action vào nhóm lạ hoặc `enabled=false` (trừ `sync_group_info`) | thẩm định R03 P2 |
 | zaloclaw injection-guard | regex chặn/kick | D05(c) | báo nhầm trong cộng đồng AI; bảo mật bằng policy tool theo vai |
 | SPEC-P03 §5.1 bước 5 (bản duyệt 2026-10-09) | DM nạp "lịch sử 20 tin" | D22 | ≤ 5 lượt (10 tin) + ghi chú thành viên; chi phí |
 | 01-CONTRACTS §7.1 (bản duyệt 2026-10-09) | tool `recall_member_profile` (D) | D22 | ghi chú nạp sẵn mỗi lượt DM — tool thừa tốn token định nghĩa |
@@ -165,8 +177,8 @@ Thứ tự bắt buộc: `P01 → P02 → P03 → (P04 ∥ P05 ∥ P06 ∥ P07) 
 - [ ] 🖐 Người dùng: thông báo xử lý dữ liệu cho nhóm thật (OPERATIONS §3); dọn 5 file lạ ở root/docs (`lenqclaw_presentation_transcript.pdf`, `docs/*.html`, `docs/*.pdf`, `docs/images/11-*.png`) — không thuộc kế hoạch
 - [x] 🖐 Người dùng xác nhận gỡ 94 file ("di chuyển an toàn") — 2026-10-14; SO: tag `archive/plan-01-marketplace` = `d7f50eb` đã push, 94/94 file trong tag ([evidence](evidence/P01/archive-tag.txt)) — D26
 - [x] P01 — gỡ sàn thợ (G01–G03 local ✅) — handoff [H01](handoffs/H01_thi-cong_P01.md) ↔ [R01](reports/R01_thi-cong_P01.md) ✅ DUYỆT 2026-10-16 (SO đo lại; D27) — WIP `601aac7` + `f164f23`, Base `b356f07`
-- [ ] P02 — transport nhóm (G04–G06 local) + thẩm định 🔴
-- [ ] D28 — architect 🔴 sửa SPEC theo LangGraph + sơ đồ pipeline (handoff [H04](handoffs/H04_kien-truc_LangGraph.md))
+- [x] P02 — transport nhóm (G04–G06 local ✅) — H02↔R02 🔁 · H03↔R03 thẩm định ✅ · H05↔R05 ✅ 2026-10-16 (D29, D30)
+- [x] D28 — architect 🔴 sửa SPEC theo LangGraph + sơ đồ pipeline — H04↔[R04](reports/R04_kien-truc_LangGraph.md) ✅ 2026-10-16 (SPEC ở `88e3a52`, report `a9d4a47`)
 - [ ] 🖐 Người dùng duyệt sơ đồ pipeline LangGraph — CHẶN P03
 - [ ] P03 — runtime agent trên LangGraph (G07, G08, G14, G15 local)
 - [ ] P04 — tri thức (G12 local sau golden)

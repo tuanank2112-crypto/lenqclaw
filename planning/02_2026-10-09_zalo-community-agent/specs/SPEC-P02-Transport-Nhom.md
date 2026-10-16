@@ -121,3 +121,12 @@ Thay vì chỉ `queued → sent`: với mỗi hàng `queued` theo thứ tự id:
 | 4 | `npm run test:db -w @lenqclaw/web` (`sim-send.db.test.ts`) | `POST /api/dev/sim/send` với `mentionBot:true` ⇒ `inbound_events.payload.mentions[0].uid='sim-bot'`; `event:'join_request'` ⇒ `payload.kind='group_event'`; `senderUid:'system'` ⇒ 400 |
 | 5 | `node --import tsx apps/zalo-worker/src/tools/pacer-sim.ts --group` | in `violations: 0`, `first_hour: 20` |
 | 6 | Người (sau P03, Zalo thật — OPERATIONS §4): bot được đặt phó nhóm trong nhóm thử; `sync_group_info` ⇒ `bot_is_admin=true`; `/dev/sim` không dùng | ghi `evidence/P02/live.txt` |
+
+## §11. Chốt sau thi công (D29, D30 — 2026-10-16; thắng mọi câu mâu thuẫn ở trên)
+- Kick/block: worker kiểm `approvals` (`approved`, đúng kind/thread/uid) + nhận thẻ CAS (`executed_at`) TRƯỚC khi gọi Zalo; sai ⇒ `failed('approval_invalid')` + audit `zalo.action_blocked` (D29.1).
+- Nhóm lạ hoặc `enabled=false`: mọi text/action (trừ `sync_group_info`) ⇒ `cancelled('group_unknown'|'group_disabled')` (D29.2). `sync_group_info` cho nhóm lạ tạo dòng `enabled=false`.
+- Ngân sách đếm theo `now()` của DB, tính cả hàng `sending` (D29.3, 8). Action không idempotent lỗi không rõ kết quả ⇒ `failed('outcome_unknown')`, không thử lại (D29.4).
+- `delete_message` `cliMsgId === msgId` ⇒ `failed('cli_msg_id_suspect')`; sim so `cliMsgId` thật (D29.5). `applySimOutbox` chỉ `sim-%` + `not_before` (ngoại lệ `extraThreadIds` cho `runScenario`) (D29.6, D30).
+- Audit: `zalo.action` (ok) · `zalo.action_failed` · `zalo.action_blocked`. `ZaloActionError.code = 'ZaloActionError'`, mã Zalo ở `apiCode` (theo 01-CONTRACTS §9).
+- Hoãn P09: xoá tin của chính bot; `review_join` trả `{}`.
+

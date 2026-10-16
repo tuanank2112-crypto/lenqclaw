@@ -86,4 +86,7 @@ Tổng: 23 đột biến (M1–M3, M7, M8, M15, M18, M19, M21, M22 + N1–N13) �
 ⭐ Nên làm trước: thẩm định R05 bằng agent khác họ model — điểm 1 chạm BB-06.
 ⏸ Chưa làm: điểm 9 D29 (hoãn tới P09), kiểm Zalo thật, `docs/core.md`.
 
-⏳ Chờ phán quyết.
+## Phán quyết SO (2026-10-16, Claude Opus 5.5)
+SO đo lại trên `2723955`: gate exit 0 (31/102/85; có và không nạp `.env` — điểm lệch 7 không tái hiện), test:db exit 0 ×2 (33/24/73), pacer-sim `first_hour: 20`, `violations: 0`; diff ⊆ phạm vi (+ `plan.md` của SO trong khoảng). Đột biến SO tự làm: tắt cổng thẻ duyệt ⇒ 12 test DB đỏ. Câu hỏi 1–4 chốt ở plan D30.
+
+✅ DUYỆT

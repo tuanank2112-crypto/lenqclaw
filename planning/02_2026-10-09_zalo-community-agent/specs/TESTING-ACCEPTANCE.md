@@ -44,9 +44,9 @@ Bằng chứng đỏ bắt buộc cho máy chấm: `scripts/eval/community/red-f
 | G01 | Cổng §1 xanh trên cây sạch sau P01; tag `archive/plan-01-marketplace`; `pivot_hits: 0` | ✅ 2026-10-16 (R01) | — | ⬜ |
 | G02 | Migration 001–009 từ DB rỗng `applied: 9`; chạy lại `applied: 0`; `pre-007.sql` tồn tại trước khi áp lên DB có dữ liệu | ✅ 2026-10-16 (R01) | — | ⬜ |
 | G03 | Auth 2 vai + policy ≥ 14 ca + audit | ✅ 2026-10-16 (15 ca) | — | ⬜ |
-| G04 | Transport nhóm: tin/sự kiện nhóm ghi đúng payload; `delete_message` dùng `uidFrom` người gửi (ca đỏ: uid bot); 166 ⇒ `bot_is_admin=false` | ⬜ | ⬜ (bot là phó nhóm thật, `sync_group_info` ⇒ `bot_is_admin=true`) | ⬜ |
-| G05 | Pacer: `simulatePacer` 100 tin/1 nhóm ⇒ `first_hour=20`, `min_gap≥8000`, `violations: 0`; DM 50 tin/20 người ⇒ 0 vi phạm (giữ) | ⬜ | ⬜ (24 giờ chạy thật: 0 lần backoff 221/no-msgId) | ⬜ |
-| G06 | Watchdog 3003/1006/im 20 phút (giữ test cũ, tài khoản `community`) | ⬜ | ⬜ | ⬜ |
+| G04 | Transport nhóm: tin/sự kiện nhóm ghi đúng payload; `delete_message` dùng `uidFrom` người gửi (ca đỏ: uid bot); 166 ⇒ `bot_is_admin=false` | ✅ 2026-10-16 (R05) | ⬜ (bot là phó nhóm thật, `sync_group_info` ⇒ `bot_is_admin=true`) | ⬜ |
+| G05 | Pacer: `simulatePacer` 100 tin/1 nhóm ⇒ `first_hour=20`, `min_gap≥8000`, `violations: 0`; DM 50 tin/20 người ⇒ 0 vi phạm (giữ) | ✅ 2026-10-16 (R05) | ⬜ (24 giờ chạy thật: 0 lần backoff 221/no-msgId) | ⬜ |
+| G06 | Watchdog 3003/1006/im 20 phút (giữ test cũ, tài khoản `community`) | ✅ 2026-10-16 | ⬜ | ⬜ |
 | G07 | Cổng nhận tin 28/28 + BB-04 giả mạo; 0 `agent_runs` cho 20 tin thường mode `mention` | ⬜ | ⬜ (nhóm thử: 1 ngày tin thường ⇒ 0 lượt model, đo `agent_runs`) | ⬜ |
 | G08 | Ambient: text cuối không đăng (BB-05), ngân sách 12 lượt/giờ, host ép trả lời khi mention (fallback 1 tin) | ⬜ | ⬜ | ⬜ |
 | G09 | Golden `activation` đạt (§3) bằng `gemini-3.6-flash` | ⬜ | — | ⬜ |

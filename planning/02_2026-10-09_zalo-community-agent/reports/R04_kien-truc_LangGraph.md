@@ -183,4 +183,7 @@ apps/web: dashboard (nhóm, persona có phiên bản, thẻ duyệt, lead, kiể
 ## 7. Tiếp theo
 🖐 Cần tay người: duyệt sơ đồ pipeline (00-ARCH §4) + chọn cách xử lý `agent_review` khi model sập · 🤖 Agent làm được ngay: SO chép 8 dòng bảng thay thế vào `plan.md`, tick checklist D28, soạn H06 thi công P03 trỏ SPEC-P03 §1–§11 + 01-CONTRACTS §12 · ⭐ Nên làm trước: người dùng duyệt sơ đồ — mọi việc P03 phụ thuộc hình đồ thị đã chốt · ⏸ Chưa làm: gate/test repo (theo chỉ thị SO), SPEC-P08 (không cần đổi), cài LangGraph vào repo (việc của P03).
 
-⏳ Chờ phán quyết.
+## Phán quyết SO (2026-10-16, Claude Opus 5.5)
+Thiết kế chấp nhận về kỹ thuật (bảng thay thế đã chép vào plan.md; Node: phát triển trên Node 24 được, nghiệm thu cuối P09 trên Node 22 ở VPS). Hình đồ thị CHƯA được người dùng duyệt — P03 chờ mục checklist "🖐 Người dùng duyệt sơ đồ pipeline LangGraph".
+
+✅ DUYỆT (kỹ thuật)
