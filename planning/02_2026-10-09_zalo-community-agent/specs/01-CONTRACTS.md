@@ -11,7 +11,8 @@ apps/zalo-worker/                 Node 22 — zca-js 2.2.0, MỘT tài khoản `
 packages/core/src/
   adapters/db.ts                  giữ nguyên (sql, tx, closeDb)
   adapters/model.ts               callModel (route 'community' | 'triage'), callTriageModel (giữ), + embedTexts (§2.2)
-  adapters/transport.ts           Transport, enqueue (hàm DUY NHẤT ghi outbox), OutboxInsert mở rộng (§8)
+  adapters/transport.ts           Transport, enqueue (hàm DUY NHẤT ghi outbox), OutboxInsert mở rộng (§8; D31: + inboundEventId)
+  adapters/alert.ts               (D32) sendAlert — hàm DUY NHẤT gọi Telegram Bot API (§2.4, BB-20)
   agent/community/
     router.ts                     routeInboundEvent(e) = runPipeline(e) — giữ TÊN cho runner/processInbound (D28)
     graph/                        (D28 — §12) đồ thị LangGraph
@@ -42,10 +43,13 @@ packages/core/src/
     audit.ts · vn-time.ts         giữ
   retrieval/search-knowledge.ts   truy hồi lai kb_sections (SPEC-P04 §2); search-memory.ts (SPEC-P06 §4)
   sim/sim-transport.ts            giữ; + sim/sim-actions.ts (thi hành action trên DB giả lập — SPEC-P02 §7)
-  runner/inbound-runner.ts        giữ (gọi routeInboundEvent mới + runTimers mới); runTimers KHÔNG nằm trong đồ thị (D28)
+  runner/inbound-runner.ts        giữ (gọi routeInboundEvent mới + runTimers mới); runTimers KHÔNG nằm trong đồ thị (D28); D31: dispatcher song song theo thread + advisory lock + heartbeat (SPEC-D31 §6, §9)
+  services/ops-watch.ts           (D32) checkOps(now, self) — SQL thuần, 0 model; gọi sendAlert (SPEC-D31 §10.2)
   db/migrate.ts · seed.ts · seed-sim.ts   seed viết lại (SPEC-P01 §4)
   domain/{types,errors,password}.ts
-db/migrations/007_drop_marketplace.sql · 008_community.sql · 009_tenant_trace.sql   (§4, append-only; 009 = D23/D24)
+db/migrations/007_drop_marketplace.sql · 008_community.sql · 009_tenant_trace.sql · 010_ops_latency.sql   (§4, append-only; 009 = D23/D24; 010 = D31/D32)
+apps/web/app/api/healthz/route.ts   (D32) GET không đăng nhập — SPEC-D31 §9
+scripts/latency_slo.mjs            (D31) đo SLO local bằng sim + model thật — TESTING G23
 scripts/check_adapter_boundary.mjs (giữ) · check_agent_tools.mjs (viết lại, SPEC-P01 §6) · gate.mjs (giữ)
 scripts/eval_community.mjs + scripts/eval/community/*.mjs    (TESTING §3)
 evals/golden/community/{activation,moderation,lead_intent,unanswered}.jsonl · evals/scenarios/*.jsonl
@@ -63,14 +67,22 @@ export function callModel(c: ModelCall): Promise<CallModelResult>;            //
 export function callTriageModel(c: TriageModelCall): Promise<CallModelResult>; // KHÔNG đổi (không retry, không fallback, MODEL_TRIAGE)
 ```
 D28: adapter này GIỮ — đồ thị KHÔNG thay nó. Node `agent` (§12.3) gọi `callModel({route:'community', …, turnId})`, node `triage` gọi `triageCommunityMessage` ⇒ `callTriageModel`; không node nào khác gọi model sinh; CẤM ChatModel của LangChain (00-ARCH §7). `messages` của state đồ thị là đúng `MessageParam[]` ở trên. Lưu ý mã hiện tại (đo `packages/core/src/adapters/model.ts:44-52`, HEAD `e53133d`): `ModelCall` CHƯA có `turnId` ⇒ P03 thêm (D24).
-`ROUTE_ENV = { community: 'MODEL_COMMUNITY', triage: 'MODEL_TRIAGE' }`. Mọi hành vi §2b/§2c/§2d của kế hoạch 01 (thoughtSignature, fallback phía client, `max_tokens` 16000, `data_collection: deny`, Vyce chỉ `DATA_MODE=sim`) GIỮ NGUYÊN — test adapter hiện có (`model.*.test.ts`) phải tiếp tục xanh (đổi tên route trong test).
+`ROUTE_ENV = { community: 'MODEL_COMMUNITY', triage: 'MODEL_TRIAGE' }`; (D31) route `community` + `tier:'fast'` ⇒ `MODEL_COMMUNITY_FAST`. Mọi hành vi §2b/§2c/§2d của kế hoạch 01 (thoughtSignature, fallback phía client, ~~`max_tokens` 16000~~ ⇒ D31: `MODEL_MAX_OUTPUT_TOKENS` 1024 cho route `community`, `data_collection: deny`, Vyce chỉ `DATA_MODE=sim`) GIỮ NGUYÊN — test adapter hiện có (`model.*.test.ts`) phải tiếp tục xanh (đổi tên route trong test).
+
+**D31 — hạn chót & timeout (BB-18, SPEC-D31 §5.3):**
+```ts
+export interface ModelCall { /* …như trên… */ tier?: 'fast' | 'default'; deadlineAt?: number /* epoch ms */ }
+export class ModelDeadlineError extends ModelUnavailableError {}   // code = 'ModelDeadlineError'
+export interface TriageModelCall { /* …giữ… */ timeoutMs: number }  // callTriageModel huỷ fetch bằng AbortSignal (thay Promise.race ở triage.ts)
+```
+Mỗi lần thử: `timeoutMs = min(MODEL_CALL_TIMEOUT_MS, deadlineAt − now)` qua `AbortSignal.timeout`; `deadlineAt − now < MODEL_MIN_ATTEMPT_MS` ⇒ ném `ModelDeadlineError` KHÔNG gọi mạng; lùi retry 1 s/3 s và thử `MODEL_FALLBACKS` CHỈ khi sau lùi vẫn còn ≥ `MODEL_MIN_ATTEMPT_MS`; không có `deadlineAt` ⇒ chỉ `MODEL_CALL_TIMEOUT_MS`. `agent_runs.outcome = 'deadline'` khi hết hạn. Mặc định model `tier:'fast'`: gemini `gemini-3.5-flash-lite` · openrouter `google/gemini-3.5-flash-lite` · anthropic/vyce = model route `community`.
 
 ### §2.2 Embedding (MỚI — SPEC-P04)
 ```ts
 export interface EmbedResult { vectors: number[][]; model: string; dim: number }
 export function embedTexts(texts: string[], opts?: { taskType?: 'RETRIEVAL_DOCUMENT' | 'RETRIEVAL_QUERY' }): Promise<EmbedResult>;
 ```
-- Chỉ nhánh `gemini`: `POST https://generativelanguage.googleapis.com/v1beta/models/${EMBED_MODEL}:batchEmbedContents`, header `x-goog-api-key`, body `{ requests: texts.map(t => ({ model: 'models/' + EMBED_MODEL, content: { parts: [{ text: t }] }, taskType, outputDimensionality: EMBED_DIM })) }` ⇒ `embeddings[i].values`. Tối đa 100 text/lời gọi (chia batch), retry 2 lần như `callGeminiWithRetry`.
+- Chỉ nhánh `gemini`: `POST https://generativelanguage.googleapis.com/v1beta/models/${EMBED_MODEL}:batchEmbedContents`, header `x-goog-api-key`, body `{ requests: texts.map(t => ({ model: 'models/' + EMBED_MODEL, content: { parts: [{ text: t }] }, taskType, outputDimensionality: EMBED_DIM })) }` ⇒ `embeddings[i].values`. Tối đa 100 text/lời gọi (chia batch), retry 2 lần như `callGeminiWithRetry`. D31: `opts.deadlineAt?: number`; mỗi lần thử `AbortSignal.timeout(min(EMBED_TIMEOUT_MS, deadlineAt − now))`; quá ⇒ `EmbeddingUnavailableError` (caller rơi về lexical).
 - `EMBED_DIM` mặc định 1024 = số chiều cột `kb_sections.embedding vector(1024)` (001_init.sql) và `daily_notes.embedding`. 🖐 Q3: nếu probe thực tế trả vector khác 1024 chiều ⇒ worker DỪNG, ghi report; không tự đổi DDL.
 - Nhánh `anthropic`/`openrouter`/`vyce` hoặc `EMBED_PROVIDER=none` ⇒ ném `EmbeddingUnavailableError` (§9); caller (knowledge.ts) rơi về lexical thuần + audit `kb.embed_unavailable`.
 - Test: `setEmbedFetchForTest(fake)`; 0 mạng trong `npm test`.
@@ -88,6 +100,24 @@ export interface Transport { onInbound(h: (e: InboundEvent) => Promise<void>): v
 export async function enqueue(msg: OutboxInsert): Promise<number>;   // hàm DUY NHẤT `insert into outbox` (BB-02)
 ```
 `createTransport()`: `TRANSPORT=sim` (mặc định) ⇒ SimTransport; `zalo` ⇒ KHÔNG ném lỗi nữa — trả cùng object (core chỉ dùng `enqueue`/`status`; worker là tiến trình riêng). Bỏ chuỗi "P02 chưa làm".
+
+### §2.4 `adapters/alert.ts` (D32, BB-20) — hợp đồng đầy đủ: [SPEC-D31 §10.1](SPEC-D31-Toc-Do-Giam-Sat.md)
+```ts
+export type AlertKind = 'zalo_session' | 'runner_stale' | 'worker_stale' | 'inbound_backlog' | 'model_down' | 'slo_breach' | 'bot_not_admin' | 'db_unreachable';
+export interface AlertInput { kind: AlertKind; key: string; severity: 'critical' | 'warning'; text: string; resolved?: boolean }
+export type AlertResult = 'sent' | 'suppressed' | 'disabled' | 'failed';
+export async function sendAlert(a: AlertInput, opts?: { localOnly?: boolean }): Promise<AlertResult>;   // KHÔNG BAO GIỜ ném
+export function setAlertFetchForTest(f: typeof fetch | null): void;
+```
+CHỈ file này chứa chuỗi `api.telegram.org` và đọc `TELEGRAM_BOT_TOKEN` (`check_adapter_boundary` mở rộng).
+
+### §2.5 `adapters/db.ts` — khoá một bản (D31, BB-19)
+```ts
+export interface AdvisoryLock { release(): Promise<void> }
+export async function holdAdvisoryLock(name: 'lenqclaw:runner' | 'lenqclaw:worker:community', onLost: (err: Error) => void): Promise<AdvisoryLock | null>;
+// kết nối pg.Client RIÊNG (không lấy từ pool), `select pg_try_advisory_lock(hashtextextended($1, 0))`; false ⇒ đóng client, trả null;
+// client 'error'/'end' khi đang giữ ⇒ onLost (caller: dừng nhận việc, exit 1).
+```
 
 ## §3. Danh tính & vai (D06, BB-04)
 
@@ -469,6 +499,67 @@ create index agent_runs_turn_idx on agent_runs (turn_id) where turn_id is not nu
 
 Ghi chú DDL: bảng giữ nguyên từ 001–006: `zalo_accounts` (+ cột 004/005), `inbound_events`, `outbox`, `conversations`, `messages`, `agent_runs`, `audit_log`, `kb_documents`, `kb_sections` (tsv generated từ 002), `staff_users`, `schema_migrations`. `conversations.party_type` (text, không CHECK) ghi `'owner' | 'member' | 'stranger' | 'group'`; `party_id` để NULL. Tên hiển thị trong mọi bảng là dữ liệu KHÔNG TIN CẬY (BB-10).
 
+### `db/migrations/010_ops_latency.sql` (D31, D32 — thiết kế architect H06 2026-10-16; đã áp thử trên DB TẠM sau 001–009: ok, view tính đúng `core = e2e − hold`, CAS `alert_state` lần 2 trả 0 dòng, CHECK `lane` đỏ đúng — `evidence/ARCH-D31/migration-010-probe.txt`; CHƯA áp DB dev ⇒ P03 áp từ rỗng sau 009, chạy lại `applied 0`, ghi `evidence/P03/migration-010-probe.txt`; lệch cú pháp ⇒ dừng báo, không tự sửa nghĩa)
+```sql
+-- 010_ops_latency.sql — ke hoach 02 (D31 toc do, D32 giam sat). Chi THEM.
+alter table turn_traces add column inbound_event_id bigint;
+alter table turn_traces add column received_at timestamptz;
+alter table turn_traces add column lane text check (lane in ('fast','rag','background'));
+alter table turn_traces add column queued_ms int;
+alter table turn_traces add column pre_turn_ms int;
+alter table turn_traces add column triage_ms int;
+alter table turn_traces add column model_ms int not null default 0;
+alter table turn_traces add column tool_ms int not null default 0;
+alter table turn_traces add column deadline_hit boolean not null default false;
+create index turn_traces_lane_time_idx on turn_traces (lane, created_at desc) where lane in ('fast','rag');
+
+alter table outbox add column inbound_event_id bigint;
+alter table outbox add column picked_at timestamptz;
+alter table outbox add column hold_reason text check (hold_reason in ('group_gap','thread_gap','per_minute','group_budget','backoff','recipients'));
+create index outbox_inbound_event_idx on outbox (inbound_event_id) where inbound_event_id is not null;
+
+create index inbound_events_pending_thread_idx on inbound_events (thread_id, id) where processed_at is null;
+
+create table process_heartbeats (
+  name text primary key check (name in ('runner','worker')),
+  pid int not null,
+  host text not null,
+  started_at timestamptz not null,
+  beat_at timestamptz not null,
+  info jsonb not null default '{}'
+);
+
+create table alert_state (
+  kind text not null,
+  key text not null check (char_length(key) <= 64),
+  open boolean not null default true,
+  last_sent_at timestamptz,
+  sent_count int not null default 0,
+  suppressed int not null default 0,
+  primary key (kind, key)
+);
+
+create view reply_latency as
+select t.id as turn_id, t.zalo_account_id, t.thread_id, t.kind, t.lane, t.outcome, t.deadline_hit,
+       t.received_at, o.created_at as enqueued_at, o.picked_at, o.sent_at, o.hold_reason,
+       t.queued_ms, t.pre_turn_ms, t.triage_ms, t.model_ms, t.tool_ms,
+       (extract(epoch from (o.created_at - t.received_at)) * 1000)::int as runtime_ms,
+       (extract(epoch from (o.sent_at - t.received_at)) * 1000)::int as e2e_ms,
+       case when o.hold_reason is null then 0
+            else (extract(epoch from (o.picked_at - o.created_at)) * 1000)::int end as hold_ms,
+       (extract(epoch from (o.sent_at - t.received_at)) * 1000)::int
+         - case when o.hold_reason is null then 0
+                else (extract(epoch from (o.picked_at - o.created_at)) * 1000)::int end as core_ms,
+       (extract(epoch from (o.sent_at - o.picked_at)) * 1000)::int as send_ms
+  from turn_traces t
+  join lateral (select * from outbox x
+                 where x.inbound_event_id = t.inbound_event_id and x.kind = 'text'
+                   and coalesce((x.body->>'part')::int, 0) = 0
+                 order by x.id limit 1) o on true
+ where t.lane in ('fast','rag') and t.received_at is not null;
+```
+`worker_lag_ms` không nằm trong view (cần `inbound_events.payload.ts` — đọc trực tiếp khi điều tra). Hàng ghi trước 010 có cột mới NULL ⇒ view bỏ qua. Ngữ nghĩa từng cột/bảng: [SPEC-D31 §6, §8–§11](SPEC-D31-Toc-Do-Giam-Sat.md).
+
 ## §5. Máy trạng thái
 
 ### §5.1 `approvals.status`
@@ -712,6 +803,7 @@ export async function enqueueSystemEvent(e: SystemEvent): Promise<number>;   // 
 | `AutomationInvalidError` | lịch không tính được `next_run_at` hoặc `at` ở quá khứ | agent sửa tham số; web 400 |
 | `EmbeddingUnavailableError` | provider không có embedding / lỗi mạng sau retry | `knowledge.ts` rơi về lexical + audit `kb.embed_unavailable`; KHÔNG chặn trả lời |
 | `ModelUnavailableError` | LLM 429/5xx sau retry + fallback | lượt `mustReply` ⇒ host gửi `MODEL_DOWN_GROUP_REPLY` (một câu, không hotline — cộng đồng không có BQL) + `handoff_to_owner('model_unavailable')`; ambient ⇒ im + audit; DM ⇒ `MODEL_DOWN_DM_REPLY` |
+| `ModelDeadlineError` (D31, con của `ModelUnavailableError`) | hết hạn chót lượt / còn < `MODEL_MIN_ATTEMPT_MS` | như `ModelUnavailableError` (`stop='model_down'`) + `TurnState.deadlineHit=true`; KHÔNG thử lại sau hạn (SPEC-D31 §14) |
 | `InvalidToolInputError` | input sai schema | `is_error`, không chạy tool (giữ) |
 | `TransportDeadError` / `RateLimitedError` | phiên `kicked`/`dead` / Zalo giới hạn (221, không msgId) | giữ hành vi P02 cũ: outbox giữ `queued`, lùi `PACER_BACKOFF_MS` |
 | `ZaloActionError` (worker) | `ZaloApiError` khi thi hành `action`; `code` zca-js kèm | outbox `failed` + `result.error`; 166 ⇒ `bot_is_admin=false` + DM owner `NEED_DEPUTY_DM` |
@@ -740,7 +832,19 @@ export async function enqueueSystemEvent(e: SystemEvent): Promise<number>;   // 
 | `MAX_TOOL_ROUNDS` | 8 (1–20) | SPEC-P03 §6; D28: `TURN_RECURSION_LIMIT = 2 × MAX_TOOL_ROUNDS + 11` tính từ biến này (§12.6), KHÔNG có env riêng |
 | `LANGSMITH_TRACING` / `LANGCHAIN_TRACING_V2` | KHÔNG đặt. Giá trị `true`/`1` (không phân biệt hoa thường) ⇒ `ConfigError` | D28, BB-17 |
 | `DM_HISTORY_TURNS` / `MESSAGES_RETENTION_DAYS` | 5 (1–20) / 30 (≥ 1) | D22: SPEC-P03 §5.1, SPEC-P07 §2 bước 8 |
-| `HUMAN_TAKEOVER_MIN` / `TRIAGE_TIMEOUT_MS` / `DATA_MODE` / `TRANSPORT` | 60 / 4000 / `sim` / `sim` (giữ) | |
+| `HUMAN_TAKEOVER_MIN` / `TRIAGE_TIMEOUT_MS` / `DATA_MODE` / `TRANSPORT` | 60 / 4000 / `sim` / `sim` (giữ) | D31: triage chỉ còn chạy cho tin KHÔNG gọi bot (SPEC-D31 T3) — giữ 4000 vì không nằm trên đường trả lời |
+| (D31) `MODEL_COMMUNITY_FAST` | rỗng ⇒ theo provider (gemini `gemini-3.5-flash-lite`; §2.1) | model lượt tương tác (`group_mention`, `dm`, `owner_dm`) |
+| (D31) `MODEL_MAX_OUTPUT_TOKENS` | 1024 (256–16000) | route `community` |
+| (D31) `MODEL_CALL_TIMEOUT_MS` / `MODEL_MIN_ATTEMPT_MS` | 30000 (1000–120000) / 800 (200–5000) | §2.1 |
+| (D31) `LANE_FAST_DEADLINE_MS` / `LANE_RAG_DEADLINE_MS` / `TURN_BACKGROUND_DEADLINE_MS` | 3500 (1000–4500) / 12500 (5000–14500) / 30000 (10000–120000); BẮT BUỘC fast < rag | BB-18 — trần trên chừa ≥ 500 ms cho pacer + gửi trong SLO 5 s / 15 s |
+| (D31) `TOOL_MIN_MS` / `EMBED_TIMEOUT_MS` | 300 (0–5000) / 1500 (200–10000) | node `tools`, §2.2 |
+| (D31) `RUNNER_CONCURRENCY` / `RUNNER_POLL_MS` / `RUNNER_DRAIN_MS` | 4 (1–8) / 200 (50–5000) / 30000 (0–120000) | BB-19, SPEC-D31 §6 |
+| (D32) `HEARTBEAT_INTERVAL_MS` / `HEARTBEAT_STALE_MS` / `TURN_STUCK_MS` | 5000 (1000–60000) / 60000 (≥ 3 × interval) / 120000 (≥ 10000) | SPEC-D31 §9, §10.2 |
+| (D32) `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` | rỗng ⇒ báo động TẮT + audit `alert.disabled` (KHÔNG `ConfigError`) | BB-20 |
+| (D32) `ALERT_REPEAT_MIN` / `ALERT_MAX_PER_HOUR` / `ALERT_TIMEOUT_MS` / `ALERT_MODEL_ERRORS` / `OPS_WATCH_INTERVAL_MS` | 30 (5–1440) / 20 (1–200) / 5000 (1000–15000) / 5 (1–100) / 60000 (10000–600000) | SPEC-D31 §10 |
+| (D32) `TRACE_RETENTION_DAYS` / `AUDIT_RETENTION_DAYS` | 180 (≥ 7) / 365 (≥ 30) | SPEC-D31 §11 |
+
+Worker (`readPacerConfig`, D31): `PACER_TICK_MS` mặc định 1000 ⇒ **250**; MỚI `PACER_TYPING_FRESH_MS` 8000 (0–30000; 0 = luôn typing trước text như cũ). Worker đọc thêm `HEARTBEAT_*`, `TELEGRAM_*`, `ALERT_*`, `OPS_WATCH_INTERVAL_MS` cùng giới hạn trên.
 
 Bỏ khỏi `.env.example`: mọi `HOLD_*`, `DISPATCH_*`, `SLOT_*`, `FREE_TRIAL_DAYS`, `BQL_*`, `QUOTE_*`, `NO_SHOW_*`, `ACCESS_*`, `PUBLISH_*`, `REQUEST_ACCESS_*`, `VENDOR_INTENT_MIN`, `WAITLIST_*`, `MODEL_DIAGNOSE/RESPONSIBILITY/ACCEPTANCE/VENDOR_PARSE/COMPOSE`, `TRIAGE_EMERGENCY_MIN`, `PACER_MIN_INTERVAL_MS`.
 
@@ -817,6 +921,9 @@ export interface TurnRequest {
   dm?: { conversationId: string; latestText: string; latestMessageId: number };
   joinedUids?: string[]; joinRequest?: { uid: string }; automation?: { automationId: string };
   triage: CommunityTriage | null;                          // node `turn` gộp từ PipelineState.triage
+  // D31 (SPEC-D31 §5.1): node `turn` điền từ event/state
+  inboundEventId: number; receivedAt: number; claimedAt: number;   // epoch ms; receivedAt = inbound_events.received_at (mốc SLO)
+  triageMs: number | null;                                 // null khi triage không chạy (tin gọi bot — T3)
 }
 export interface TurnResult { turnId: string; outcome: TurnOutcome; delivery: Delivery | null; rounds: number; answered: number; hostPosted: number }
 
@@ -831,6 +938,7 @@ export const PipelineState = Annotation.Root({
   turnRequest: keep<TurnRequest | null>(() => null),
   turnResult: keep<TurnResult | null>(() => null),
   stop: keep<PipelineStop | null>(() => null),             // vì sao pipeline dừng không có lượt (test/log)
+  triageMs: keep<number | null>(() => null),               // D31: node triage ghi (null = không gọi)
 });
 
 export type StopKind = 'tool_use' | 'end_turn' | 'max_tokens' | 'refusal' | 'model_down';
@@ -857,12 +965,20 @@ export const TurnState = Annotation.Root({
   delivery: keep<Delivery | null>(() => null),
   hostPosted: keep<number>(() => 0),                       // số tin host tự gửi trong deliver (0|1)
   outcome: keep<TurnOutcome | null>(() => null),
+  // D31 (BB-18, SPEC-D31 §5): prepare đặt; tools có thể nâng fast ⇒ rag; agent/tools cộng thời gian
+  lane: keep<Lane>(() => 'fast'),
+  deadlineAt: keep<number>(() => 0),
+  modelMs: keep<number>(() => 0),
+  toolMs: keep<number>(() => 0),
+  deadlineHit: keep<boolean>(() => false),
 });
+export type Lane = 'fast' | 'rag' | 'background';
 export type PipelineStateT = typeof PipelineState.State;
 export type TurnStateT = typeof TurnState.State;
 export type NodeFn<S> = (s: S) => Promise<Partial<S>>;   // mọi node: nhận state, trả PHẦN cập nhật; KHÔNG trả Command
 ```
 `AgentTool` (tool-kit.ts) thêm `readonly answers?: true` — tool tính là "đã trả lời lượt": `send_group_message`, `invite_to_private`, `review_join_request`. Không tool nào khác có cờ.
+D31: thêm `readonly extendsDeadline?: true` — tool truy hồi nâng làn `fast ⇒ rag`: `search_knowledge`, `search_memory`, `recall_group_history`, `read_skill`. `GroupTurnContext`/`DmTurnContext` (§6) thêm `readonly inboundEventId: number` và `readonly deadlineAt: number` (tool truyền xuống `enqueue`/`embedTexts`).
 
 ### §12.3 Node — chữ ký và tác dụng phụ (HỢP ĐỒNG BB-15)
 Mỗi node một file `graph/nodes/<tên>.ts`, export `<tênCamel>Node: NodeFn<…>`; node mỏng — gọi hàm nghiệp vụ có sẵn (cột "Gọi").
@@ -870,17 +986,17 @@ Mỗi node một file `graph/nodes/<tên>.ts`, export `<tênCamel>Node: NodeFn<�
 | Node | Đồ thị | Gọi | Ghi state | Ghi DB | outbox | model |
 | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
 | `ingest` | pipeline | `buffer.ts::ingestGroupMessage`, `roles.ts::resolveRole` | `group, sender, row, stop∈{group_unknown, group_disabled, self}` | `group_members`, `group_messages` (insert, cắt, `answered_at`), audit `group.denied` | ✗ | ✗ |
-| `triage` | pipeline | `needsTriage` (THUẦN) ⇒ `triage.ts::triageCommunityMessage` | `triage` (null khi không cần/quá hạn) | nhóm: `group_messages.is_question`; DM: `messages.content.triage` | ✗ | `callTriageModel` |
+| `triage` | pipeline | `isAddressedToBot` (THUẦN; namePatterns từ `loadPersonaBundle` cache, lỗi ⇒ `[]`) + `needsTriage` (THUẦN) ⇒ `triage.ts::triageCommunityMessage` (D31: tin gọi bot KHÔNG gọi) | `triage` (null khi không cần/quá hạn), `triageMs` | nhóm: `group_messages.is_question`; DM: `messages.content.triage` | ✗ | `callTriageModel` |
 | `moderate` | pipeline | `moderation.ts::moderateGroupMessage` + `applyLadderAction` (SPEC-P05) | `moderation`, `stop='deleted'` | `moderation_events/scores`, `group_messages.deleted_at`, `approvals`, audit | ✓ | ✗ |
 | `gate` | pipeline | `persona.ts::loadPersonaBundle` (namePatterns, cache 60 s) + `decideGroupInbound` (THUẦN) | `gate`, `turnRequest` (khi admitted ∧ trigger ≠ ambient), `stop='not_admitted'` | ✗ (chỉ đọc) | ✗ | ✗ |
 | `defer` | pipeline | `sessions.ts::markAmbientPending` | `stop='ambient_deferred'` | `group_sessions.pending_since` | ✗ | ✗ |
 | `group_event` | pipeline | `join-requests.ts`, `welcome.ts`, đồng bộ admin (SPEC-P05 §6–§7) | `stop='group_event_done'` | `group_members`, `join_requests`, `approvals`, `group_sessions.welcome_pending_since`, audit | ✓ | ✗ |
 | `system_event` | pipeline | kiểm `zaloMsgId LIKE 'sys-%'` ∧ `payload.kind='system'`; bảng SPEC-P03 §4.3 | `group`, `turnRequest` hoặc `stop∈{system_no_turn, forged_system_event}` | audit `router.forged_system_event` | ✓ (chỉ `APPROVAL_RESULT_DM`) | ✗ |
 | `dm_intake` | pipeline | `resolveRole`, `sessions.ts` (conversation, `saveMessage`) | `sender, turnRequest, stop∈{takeover, unsupported}` | `conversations`, `messages` | ✓ (chỉ `TEXT_ONLY_REPLY`) | ✗ |
-| `turn` | pipeline | `runTurn({...s.turnRequest, triage: s.triage})` | `turnResult` | (qua turnGraph) | (qua turnGraph) | (qua turnGraph) |
-| `prepare` | turn | `loadPersonaBundle`, `buildSystemPrompt` (§11), `toolsFor`, đọc đệm/lịch sử DM/`loadMemberContext` | `turnId, startedAt, ctx, personaVersions, system, toolNames, messages[0], roundCap, prepError` | `group_sessions` (đánh dấu TRƯỚC model — SPEC-P03 §4.2) | ✗ | ✗ |
-| `agent` | turn | `callModel({route:'community', system, messages, tools, conversationId, turnId})` | `messages(+assistant), stop, finalText` | `agent_runs` (adapter ghi) | ✗ | `callModel` |
-| `tools` | turn | mỗi `tool_use` theo thứ tự: `assertValidToolInput` ⇒ `assertToolAllowed` ⇒ `tool.run(ctx, input)` | `messages(+1 user chứa MỌI tool_result), rounds+1, toolsCalled, answered` | theo tool | ✓ (qua tool) | ✗ (embedding của `search_knowledge` qua `embedTexts` được phép) |
+| `turn` | pipeline | `runTurn({...s.turnRequest, triage: s.triage, inboundEventId, receivedAt, claimedAt, triageMs})` (D31) | `turnResult` | (qua turnGraph) | (qua turnGraph) | (qua turnGraph) |
+| `prepare` | turn | (D31) `enqueue` `typing` NGAY đầu node nếu `isInteractive(kind)`; `initialDeadline`; `loadPersonaBundle`, `buildSystemPrompt` (§11), `toolsFor`, đọc đệm/lịch sử DM/`loadMemberContext` | `turnId, startedAt, ctx, personaVersions, system, toolNames, messages[0], roundCap, prepError, lane, deadlineAt` | `group_sessions` (đánh dấu TRƯỚC model — SPEC-P03 §4.2) | ✓ CHỈ `typing` (D31) | ✗ |
+| `agent` | turn | `callModel({route:'community', system, messages, tools, conversationId, turnId, tier, deadlineAt})` (D31: `tier='fast'` khi tương tác) | `messages(+assistant), stop, finalText, modelMs, deadlineHit` | `agent_runs` (adapter ghi) | ✗ | `callModel` |
+| `tools` | turn | mỗi `tool_use` theo thứ tự: (D31) còn < `TOOL_MIN_MS` tới `deadlineAt` ⇒ `is_error DeadlineExceeded` không chạy; `assertValidToolInput` ⇒ `assertToolAllowed` ⇒ `tool.run(ctx, input)`; `escalateLane` | `messages(+1 user chứa MỌI tool_result), rounds+1, toolsCalled, answered, lane, deadlineAt, toolMs` | theo tool | ✓ (qua tool) | ✗ (embedding của `search_knowledge` qua `embedTexts` được phép) |
 | `nudge` | turn | — | `messages(+NUDGE_TEXT), nudged=true, roundCap=rounds+2` | ✗ | ✗ | ✗ |
 | `deliver` | turn | `decideDelivery` + `hostText` (THUẦN), `postGroupText` (dùng chung với `send_group_message`), `handoffToOwner`, `enqueue` DM | `delivery, outcome, hostPosted` | `messages` (assistant / `private:true`), `join_requests`, audit | ✓ | ✗ |
 | `trace` | turn | `services/turn-traces.ts::recordTurn` (không bao giờ ném — lỗi ⇒ audit `trace.error`) | — | `turn_traces` (1 dòng) | ✗ | ✗ |
@@ -920,8 +1036,17 @@ export function afterTriage(s: PipelineStateT): 'moderate' | 'turn';            
 export function afterModerate(s: PipelineStateT): 'gate' | typeof END;          // s.stop === 'deleted' ⇒ END
 export function afterGate(s: PipelineStateT): 'turn' | 'defer' | typeof END;   // !admitted ⇒ END · trigger==='ambient' ⇒ defer · còn lại ⇒ turn
 export function afterSystemEvent(s: PipelineStateT): 'turn' | typeof END;       // turnRequest !== null ⇒ turn
-export function needsTriage(i: { threadType: 'user' | 'group'; msgType: string; text: string; group: { moderationEnabled: boolean; mode: GroupMode } | null }): boolean;
-  // msgType==='webchat' ∧ text.trim()!=='' ∧ (threadType==='user' ∨ group.moderationEnabled ∨ group.mode==='ambient')
+export function needsTriage(i: { threadType: 'user' | 'group'; msgType: string; text: string; group: { moderationEnabled: boolean; mode: GroupMode } | null; addressed: boolean }): boolean;
+  // D31: ¬addressed ∧ msgType==='webchat' ∧ text.trim()!=='' ∧ (group.moderationEnabled ∨ group.mode==='ambient')   (DM luôn addressed ⇒ false)
+export function isAddressedToBot(i: { threadType: 'user' | 'group'; mentions: ReadonlyArray<{ uid: string }>; quoteOwnerUid: string | null; botUid: string;
+  text: string; botNamePatterns: readonly RegExp[]; hasControlCommand: boolean; role: Role }): boolean;
+  // D31: threadType==='user' ∨ mention botUid ∨ quoteOwnerUid===botUid ∨ namePattern khớp ∨ (hasControlCommand ∧ role ∈ {owner, moderator}) — = gate dòng 7–10
+export function isInteractive(kind: TurnKind): boolean;                          // D31: kind ∈ {group_mention, dm, owner_dm}
+export function initialDeadline(req: TurnRequest, startedAt: number, cfg: LaneConfig): { lane: Lane; deadlineAt: number };
+  // tương tác ⇒ {fast, req.receivedAt + cfg.fastMs} · khác ⇒ {background, startedAt + cfg.backgroundMs}
+export function escalateLane(t: TurnStateT, ranToolNames: readonly string[], cfg: LaneConfig): { lane: Lane; deadlineAt: number } | null;
+  // lane==='fast' ∧ có tool extendsDeadline ⇒ {rag, request.receivedAt + cfg.ragMs}; khác ⇒ null
+export interface LaneConfig { fastMs: number; ragMs: number; backgroundMs: number }
 export function afterPrepare(t: TurnStateT): 'agent' | 'deliver';              // prepError !== null ⇒ deliver
 export function isCapped(t: TurnStateT): boolean;                               // stop==='tool_use' ∧ rounds >= roundCap
 export function needsNudge(t: TurnStateT): boolean;
@@ -971,4 +1096,4 @@ Không checkpointer, không Store, không `thread_id` LangGraph. Lý do đo đư
 **Ngữ cảnh có trần (D22, BB-13) độc lập với checkpoint:** `TurnState.messages` LUÔN bắt đầu rỗng; `prepare` là nơi DUY NHẤT nạp lịch sử (≤ `2 × DM_HISTORY_TURNS` tin DM; nhóm 25/40 tin đệm); KHÔNG nén, KHÔNG tóm tắt bằng model. Nếu một D sau này cho phép checkpointer (vd treo đồ thị chờ người), nó CHỈ được lưu trạng thái điều khiển (`rounds`, `delivery`…), KHÔNG được dùng `thread_id` để nối `messages` giữa các lượt — spike đã đo cách đó làm lịch sử phình 4 ⇒ 8 messages sau 2 lượt.
 
 ### §12.8 `turn_traces` (D24) từ `TurnState`
-`id = turnId` · `zalo_account_id = request.account` · `conversation_id = ctx.conversationId` · `thread_id`, `thread_type` từ request · `kind` · `trigger` · `requester_role = request.requester?.role ?? null` · `rounds` · `tools = toolsCalled` · `sent = answered + hostPosted` · `outcome` · `input_tokens/output_tokens = sum(agent_runs where turn_id = id)` · `latency_ms = now − startedAt` · `persona_versions = personaVersions ?? {}`. KHÔNG cột nào chứa `messages`/`finalText`/`system`.
+`id = turnId` · `zalo_account_id = request.account` · `conversation_id = ctx.conversationId` · `thread_id`, `thread_type` từ request · `kind` · `trigger` · `requester_role = request.requester?.role ?? null` · `rounds` · `tools = toolsCalled` · `sent = answered + hostPosted` · `outcome` · `input_tokens/output_tokens = sum(agent_runs where turn_id = id)` · `latency_ms = now − startedAt` · `persona_versions = personaVersions ?? {}` · (D31, cột 010) `inbound_event_id = request.inboundEventId` · `received_at = request.receivedAt` · `lane` · `queued_ms = claimedAt − receivedAt` · `pre_turn_ms = startedAt − claimedAt` · `triage_ms = request.triageMs` · `model_ms = modelMs` · `tool_ms = toolMs` · `deadline_hit = deadlineHit`. KHÔNG cột nào chứa `messages`/`finalText`/`system`.

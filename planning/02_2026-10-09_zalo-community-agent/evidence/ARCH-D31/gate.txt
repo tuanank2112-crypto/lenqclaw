@@ -1,0 +1,131 @@
+# evidence/ARCH-D31/gate.txt — output MAY cua `npm run gate --silent` (ANSI da loc), chay tren cay lam viec H06 (chi doi .md + evidence)
+
+=== gate: typecheck ===
+
+=== gate: build ===
+   ▲ Next.js 15.5.26
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 2.6s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/10) ...
+   Generating static pages (2/10) 
+   Generating static pages (4/10) 
+   Generating static pages (7/10) 
+ ✓ Generating static pages (10/10)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
+┌ ƒ /                                      150 B         103 kB
+├ ○ /_not-found                            988 B         104 kB
+├ ƒ /api/auth/login                        150 B         103 kB
+├ ƒ /api/auth/logout                       150 B         103 kB
+├ ƒ /api/dev/sim/replay                    150 B         103 kB
+├ ƒ /api/dev/sim/send                      150 B         103 kB
+├ ƒ /api/dev/sim/thread                    150 B         103 kB
+├ ƒ /api/dev/sim/tick                      150 B         103 kB
+├ ƒ /api/zalo/[account]/login              150 B         103 kB
+├ ƒ /api/zalo/[account]/logout             150 B         103 kB
+├ ƒ /api/zalo/status                       150 B         103 kB
+├ ƒ /dev/sim                             2.48 kB         105 kB
+├ ○ /login                                 764 B         103 kB
+└ ƒ /zalo                                2.07 kB         105 kB
++ First Load JS shared by all             103 kB
+  ├ chunks/18-498168fb58dcd546.js        46.4 kB
+  ├ chunks/87c73c54-24122e7b92478d00.js  54.2 kB
+  └ other shared chunks (total)          1.95 kB
+
+
+ƒ Middleware                               35 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+=== gate: test ===
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/apps/web
+
+ ✓ app/api/zalo/policy.test.ts (2 tests) 4ms
+ ✓ app/zalo/display.test.ts (5 tests) 6ms
+ ✓ lib/auth/policy.test.ts (15 tests) 14ms
+ ✓ lib/auth/session.test.ts (9 tests) 19ms
+
+ Test Files  4 passed (4)
+      Tests  31 passed (31)
+   Start at  12:19:33
+   Duration  748ms (transform 272ms, setup 0ms, collect 503ms, tests 42ms, environment 1ms, prepare 936ms)
+
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/apps/zalo-worker
+
+ ✓ src/config.test.ts (7 tests) 10ms
+ ✓ src/zca-normalize.test.ts (3 tests) 7ms
+ ✓ src/crypto.test.ts (9 tests) 11ms
+ ✓ src/watchdog.test.ts (3 tests) 43ms
+{"t":"2026-10-16T05:19:35.867Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-16T05:19:35.872Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-16T05:19:35.873Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-16T05:19:35.874Z","event":"pacer.sent","account":"community","outbox_id":2}
+{"t":"2026-10-16T05:19:35.877Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-16T05:19:35.886Z","event":"pacer.backoff","account":"community","reason":"rate_limit_error","backoff_ms":1800000}
+{"t":"2026-10-16T05:19:35.887Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-16T05:19:35.890Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-16T05:19:35.891Z","event":"pacer.sent","account":"community","outbox_id":2}
+ ✓ src/pacer.test.ts (20 tests) 31ms
+ ✓ src/pacer-policy.test.ts (24 tests) 261ms
+ ✓ src/inbound.test.ts (15 tests) 15ms
+ ✓ src/actions.test.ts (14 tests) 21ms
+ ✓ src/check-agent-tools.test.ts (4 tests) 677ms
+ ✓ src/main.test.ts (3 tests) 2827ms
+   ✓ zalo-worker main — khoa phien > thieu ZALO_SESSION_KEY ⇒ exit 1 1371ms
+   ✓ zalo-worker main — khoa phien > khoa sai do dai ⇒ exit 1, khong in lai gia tri 751ms
+   ✓ zalo-worker main — khoa phien > khoa dung nhung ZALO_ACCOUNTS khac community ⇒ exit 1 704ms
+
+ Test Files  10 passed (10)
+      Tests  102 passed (102)
+   Start at  12:19:34
+   Duration  3.57s (transform 1.11s, setup 0ms, collect 3.36s, tests 3.90s, environment 3ms, prepare 2.30s)
+
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ✓ src/domain/errors.test.ts (22 tests) 15ms
+ ✓ src/services/vn-time.test.ts (8 tests) 8ms
+ ✓ src/services/community-config.test.ts (4 tests) 9ms
+ ✓ src/agent/community/tools/tool-kit.test.ts (7 tests) 9ms
+ ✓ src/adapters/transport.test.ts (3 tests) 6ms
+ ✓ src/retrieval/search-knowledge.test.ts (6 tests) 9ms
+ ✓ src/adapters/model.test.ts (5 tests) 12ms
+ ✓ src/sim/sim-mentions.test.ts (3 tests) 6ms
+ ✓ src/agent/community/redact.test.ts (4 tests) 5ms
+ ✓ src/agent/conversation.test.ts (2 tests) 3ms
+ ✓ src/domain/password.test.ts (2 tests) 159ms
+ ✓ src/adapters/model.vyce.test.ts (6 tests) 4038ms
+   ✓ callModel — nhanh vyce (01-CONTRACTS §2d) > 429 x3 (het retry) o model chinh => thu MODEL_FALLBACKS, thanh cong, model = fallback (dung chung retry voi §2c) 4016ms
+ ✓ src/adapters/model.openrouter.test.ts (7 tests) 4037ms
+   ✓ callModel — nhanh openrouter (01-CONTRACTS §2c) > 429 x3 (het retry) o model chinh => thu MODEL_FALLBACKS, thanh cong, model = fallback 4015ms
+ ✓ src/adapters/model.gemini.test.ts (6 tests) 4031ms
+   ✓ callModel — nhanh gemini (01-CONTRACTS §2b) > 503 x3 (het retry) o model chinh => thu MODEL_FALLBACKS, thanh cong, model = fallback 4012ms
+
+ Test Files  14 passed (14)
+      Tests  85 passed (85)
+   Start at  12:19:39
+   Duration  4.94s (transform 759ms, setup 0ms, collect 3.16s, tests 12.35s, environment 4ms, prepare 2.62s)
+
+
+=== gate: check_adapter_boundary ===
+violations: 0
+
+=== gate: check_agent_tools ===
+forbidden_tools: 0
+forbidden_actions: 0
+unlisted_tools: 0
+
+=== gate: check_pivot_cleanup ===
+pivot_hits: 0
+
+GATE_OK: tat ca cac buoc deu xanh.
+EXIT=0

@@ -1,0 +1,118 @@
+// budget-sim.mjs — H06/D31: mo phong Monte Carlo ngan sach 2 lan tu so do THAT (latency-probe.txt).
+// 0 loi goi model, 0 mang, 0 DB. Moi thanh phan = lognormal khop (p50, p95) do duoc; thanh phan CHUA do ghi "uoc".
+// Muc dich: kiem bang ngan sach (tong p95 tung buoc) bang p95 cua TONG, va so sanh hien trang vs thiet ke D31.
+// Seed co dinh => chay lai ra dung so.
+let seed = 20261016;
+const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+const gauss = () => { let u = 0, v = 0; while (u === 0) u = rnd(); while (v === 0) v = rnd(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+const LN = (p50, p95) => { const mu = Math.log(p50), s = (Math.log(p95) - mu) / 1.645; return () => Math.exp(mu + s * gauss()); };
+const U = (a, b) => () => a + (b - a) * rnd();
+const C = (x) => () => x;
+const pct = (a, p) => { const s = [...a].sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.ceil(p / 100 * s.length) - 1)]; };
+
+// ---- so do that (evidence/ARCH-D31/latency-probe.txt) ----
+const M = {
+  liteAnswer: LN(1516, 1520 * 1.49),   // flash-lite call2 (tra loi ~142 token ra, prompt ~3.5k token) p50 1516; p95 gian theo ti le p95/p50 cua mau n=8 (1562/1047=1.49) vi n=3 qua hep
+  liteCall1: LN(1166, 1250 * 1.39),    // flash-lite call1 (goi search_knowledge) p50 1166 p95 1250 (n=4) -> gian 1.39 ve ti le n=8
+  flashChat: LN(3078, 4419),           // 3.6-flash minimal 1 loi goi tra loi (n=3)
+  flashCall1: LN(1548, 2600),          // 3.6-flash minimal call1 RAG (n=4)
+  flashCall2: LN(2201, 3302),          // 3.6-flash minimal call2 RAG (n=4)
+  triage: LN(1577, 2953),              // flash-lite triage nhu adapter (n=5)
+  embed: LN(405, 447),                 // gemini-embedding-001 (n=10)
+  dbRrf: LN(66, 95),                   // lexical+vector+RRF 1 cau, 3000 muc (n=30)
+  dbQ: LN(1, 2),                       // 1 roundtrip DB (n=30)
+};
+// ---- uoc (CHUA do; do o P09 zalo-that) ----
+const EST = { workerLag: C(100), zcaSend: LN(300, 600) };
+
+function triageCapped(cap) { return () => Math.min(M.triage(), cap); }
+function dbNodes(n) { return () => { let t = 0; for (let i = 0; i < n; i++) t += M.dbQ(); return t + 5; }; }
+
+// mot luot: tra { runtime (nhan -> enqueue), e2e (nhan -> sent_at), deadlineHit }
+function turn(cfg) {
+  let t = EST.workerLag();
+  t += cfg.pickup();
+  if (rnd() < cfg.holRho) t += rnd() * Math.min(M.triage(), 4000);  // cho tin truoc cung thread dang triage (phan con lai)
+  t += dbNodes(4)();                                                  // ingest + moderate + gate (luoi)
+  if (cfg.triageOnPath) t += cfg.triageOnPath();
+  t += dbNodes(4)();                                                  // prepare (persona cache, dem, typing som)
+  let deadline = cfg.fastDeadline;
+  let hit = false;
+  const call = (fn) => { const d = fn(); if (t + d > deadline) { hit = true; t = deadline; return false; } t += d; return true; };
+  if (cfg.rag) {
+    if (call(cfg.call1)) {
+      deadline = cfg.ragDeadline;                                     // lan nang len rag khi tool truy hoi chay
+      const rounds = rnd() < cfg.secondRound ? 2 : 1;
+      for (let r = 0; r < rounds && !hit; r++) {
+        t += Math.min(M.embed(), 1500) + M.dbRrf() + 20;              // search_knowledge: embed (tran 1500) + RRF + dung ket qua
+        if (r < rounds - 1) call(cfg.call1);
+      }
+      if (!hit) call(cfg.call2);
+    }
+  } else {
+    call(cfg.answer);
+  }
+  t += 5;                                                              // enqueue
+  const runtime = t;
+  t += cfg.pacerWait();
+  t += cfg.typing();
+  t += EST.zcaSend();
+  return { runtime, e2e: t, hit };
+}
+
+const N = 100000;
+function run(name, cfg) {
+  const rt = [], e2e = []; let hits = 0;
+  for (let i = 0; i < N; i++) { const r = turn(cfg); rt.push(r.runtime); e2e.push(r.e2e); if (r.hit) hits++; }
+  console.log(`${name} | ${Math.round(pct(rt, 50))} | ${Math.round(pct(rt, 95))} | ${Math.round(pct(e2e, 50))} | ${Math.round(pct(e2e, 95))} | ${(100 * hits / N).toFixed(1)}%`);
+}
+
+const INF = 1e9;
+const NOW_COMMON = { pickup: U(0, 1000), pacerWait: U(0, 1000), typing: () => 1000 + 2000 * (300 / 1800), fastDeadline: INF, ragDeadline: INF, holRho: 0.16, secondRound: 0.2 };
+const D31_COMMON = { pickup: U(0, 200), pacerWait: U(0, 250), typing: C(0), fastDeadline: 3500, ragDeadline: 12500, holRho: 0.16, secondRound: 0.2 };
+
+console.log(`# budget-sim H06/D31 · Monte Carlo N=${N} · seed 20261016 · node ${process.version}`);
+console.log('# lognormal khop (p50,p95) tu latency-probe.txt; uoc chua do: worker lag 100 ms co dinh, zca sendText p50 300/p95 600');
+console.log('# HOL = xac suat tin goi bot phai cho tin truoc cung nhom dang triage (0.16 ~ nhom 1 tin/10 s; 0.40 ~ nhom on ao)');
+console.log('# runtime = nhan -> outbox enqueue (gate local G23) · e2e = nhan -> sent_at (SLO D31) · hit = ti le cham han chot (=> cau du phong)');
+console.log('kich ban | runtime p50 | runtime p95 | e2e p50 | e2e p95 | hit');
+run('A0 hien trang · lan nhanh · 3.6-flash minimal · triage tren duong (tran 4000) · poll 1000 · tick 1000 · typing 1.3 s', { ...NOW_COMMON, rag: false, answer: M.flashChat, triageOnPath: triageCapped(4000) });
+run('A1 hien trang · lan RAG · 3.6-flash minimal 2 loi goi · triage tren duong', { ...NOW_COMMON, rag: true, call1: M.flashCall1, call2: M.flashCall2, triageOnPath: triageCapped(4000) });
+run('B0 D31 · lan nhanh · flash-lite · KHONG triage tin goi bot · poll 200 · tick 250 · typing som', { ...D31_COMMON, rag: false, answer: M.liteAnswer, triageOnPath: null });
+run('B1 D31 · lan RAG · flash-lite 2 loi goi (+20% vong 2)', { ...D31_COMMON, rag: true, call1: M.liteCall1, call2: M.liteAnswer, triageOnPath: null });
+run('B2 D31 · lan nhanh · nhom on ao HOL 0.40', { ...D31_COMMON, holRho: 0.4, rag: false, answer: M.liteAnswer, triageOnPath: null });
+run('B3 D31 · lan RAG · nhom on ao HOL 0.40', { ...D31_COMMON, holRho: 0.4, rag: true, call1: M.liteCall1, call2: M.liteAnswer, triageOnPath: null });
+run('C0 bo phuong an · lan nhanh · 3.6-flash minimal (moi thu khac nhu D31)', { ...D31_COMMON, rag: false, answer: M.flashChat, triageOnPath: null });
+run('C1 bo phuong an · lan nhanh · flash-lite NHUNG giu triage tren duong (tran 4000)', { ...D31_COMMON, rag: false, answer: M.liteAnswer, triageOnPath: triageCapped(4000) });
+run('C2 lan RAG · 3.6-flash minimal (moi thu khac nhu D31)', { ...D31_COMMON, rag: true, call1: M.flashCall1, call2: M.flashCall2, triageOnPath: null });
+
+// ---- runner: tuan tu vs song song theo thread khi 1 luot treo ----
+function runnerSim(mode) {
+  // 3 nhom, moi nhom 1 tin goi bot / 20 s trong 120 s; nhom 0 co 1 luot treo 60 s (model khong timeout) luc t=10 s
+  const ev = [];
+  for (let g = 0; g < 3; g++) for (let t = 2000 + g * 3000; t < 120000; t += 20000) ev.push({ g, at: t, svc: 1800 });
+  ev.push({ g: 0, at: 10000, svc: 60000 });
+  ev.sort((a, b) => a.at - b.at);
+  const waits = [];
+  if (mode === 'seq') {
+    let free = 0;
+    for (const e of ev) { const start = Math.max(free, e.at); if (e.svc < 60000 && e.g !== 0) waits.push(start - e.at); free = start + e.svc; }
+  } else {
+    // dispatcher KHONG nhan tin cua thread dang ban (exclude) => chon tin co thoi diem san sang som nhat
+    const slots = [0, 0, 0, 0]; const threadFree = new Map(); const pending = [...ev];
+    while (pending.length) {
+      let bi = 0, best = Infinity;
+      pending.forEach((e, i) => { const r = Math.max(e.at, threadFree.get(e.g) ?? 0); if (r < best) { best = r; bi = i; } });
+      const e = pending.splice(bi, 1)[0];
+      const si = slots.indexOf(Math.min(...slots));
+      const start = Math.max(best, slots[si]);
+      if (e.svc < 60000 && e.g !== 0) waits.push(start - e.at);
+      slots[si] = start + e.svc; threadFree.set(e.g, start + e.svc);
+    }
+  }
+  return waits;
+}
+const seqW = runnerSim('seq'), poolW = runnerSim('pool');
+console.log('\n# runner: 3 nhom, tin goi bot moi 20 s/nhom, 1 luot treo 60 s o nhom 0 luc t=10 s; do thoi gian CHO cua tin nhom 1-2');
+console.log(`runner tuan tu 1 ban | n=${seqW.length} | cho p50 ${Math.round(pct(seqW, 50))} ms | max ${Math.round(Math.max(...seqW))} ms`);
+console.log(`runner song song theo thread (4 o) | n=${poolW.length} | cho p50 ${Math.round(pct(poolW, 50))} ms | max ${Math.round(Math.max(...poolW))} ms`);

@@ -4,6 +4,7 @@
 > **Nguồn chân lý cấp trên:** [`../plan.md`](../plan.md) §2 (D01–D11 của Super Orchestrator, D12–D20 của architect). Mâu thuẫn ⇒ `plan.md` thắng, rồi file này, rồi `01-CONTRACTS.md`, rồi SPEC-P từng gói, rồi `docs/`.
 > **Người đọc mục tiêu:** worker KHÔNG có lịch sử hội thoại. Mọi tên hàm/bảng/lệnh trong bộ SPEC này đã được đối chiếu với mã thật tại HEAD `eada365` ngày 2026-10-09 (xem §9).
 > **D28 (2026-10-16, architect H04):** runtime agent là ĐỒ THỊ LangGraph.js (`@langchain/langgraph` 1.4.18, pin chính xác): `pipelineGraph` (một sự kiện vào) + `turnGraph` (một lượt agent). §4 sơ đồ mới (Mermaid + ASCII), §5 thành phần, §6 cột "Node hiện thực" + BB-15…BB-17, §7 vùng cấm hệ LangChain. Hợp đồng đồ thị: [01-CONTRACTS §12](01-CONTRACTS.md); hành vi: [SPEC-P03 §2, §6](SPEC-P03-Runtime-Agent.md). Đo: `evidence/ARCH-D28/{versions,spike}.txt`.
+> **D31/D32/D33 (2026-10-16, architect H06):** mục tiêu tốc độ (ngoài công việc < 5 s, RAG < 15 s), runner song song theo thread + advisory lock, hạn chót mỗi lượt, giám sát heartbeat + báo động Telegram — hợp đồng đầy đủ: [SPEC-D31](SPEC-D31-Toc-Do-Giam-Sat.md). Hình đồ thị §4 KHÔNG đổi node/cạnh (chỉ nhãn mũi tên vào `processInbound`); thêm BB-18…BB-20, sửa §3, §7. Đo: `evidence/ARCH-D31/{latency-probe,budget-sim}.txt`.
 
 ## §1. Router thứ tự đọc
 
@@ -21,6 +22,7 @@
 | 10 | [`SPEC-P08-Dashboard.md`](SPEC-P08-Dashboard.md) | Mọi trang/route web mới | ✅ |
 | 11 | [`OPERATIONS.md`](OPERATIONS.md) | Trước lần chạy Zalo thật đầu tiên và trước deploy VPS | ❌ |
 | 12 | [`TESTING-ACCEPTANCE.md`](TESTING-ACCEPTANCE.md) | Trước khi báo "xong" bất kỳ gói nào | ❌ |
+| 13 | [`SPEC-D31-Toc-Do-Giam-Sat.md`](SPEC-D31-Toc-Do-Giam-Sat.md) | (D31/D32) Mọi việc chạm runner, adapter model (timeout/hạn chót), pacer, `prepare`/`agent`/`tools`, heartbeat, báo động, `/api/healthz` | ❌ với P03 |
 
 ## §2. Mục tiêu (D01, D05)
 
@@ -49,7 +51,7 @@ Số đo thành công vòng 0.1 (TESTING §4): golden thật với model thật 
 | Giải tán nhóm, đổi chủ nhóm, thêm/bớt admin từ agent | D06 — KHÔNG TỒN TẠI dưới dạng tool |
 | Lọc prompt-injection bằng regex | D05(c) — cộng đồng AI bàn prompt công khai; chống leo thang bằng chính sách tool theo vai |
 | Lịch dạng `cron` | D16 — chỉ `at`/`every`/`daily`/`weekly` (không thêm thư viện); cron khi có nhu cầu |
-| pg-boss, hàng đợi ngoài Postgres | Giữ Đ22/Đ27 của kế hoạch 01: một runner tuần tự + `runTimers(now)` |
+| pg-boss, hàng đợi ngoài Postgres | Giữ Đ22/Đ27 của kế hoạch 01: MỘT runner + `runTimers(now)` — D31: runner song song theo thread trong một tiến trình, chặn bản thứ hai bằng advisory lock (BB-19); vẫn không hàng đợi ngoài |
 | Thanh toán, hợp đồng với lead | Lead chỉ tới thẻ "chuyển chủ" |
 
 ## §4. Luồng chuẩn — pipeline là ĐỒ THỊ LangGraph (D28)
@@ -69,7 +71,7 @@ flowchart TD
   ZALO["Zalo · zca-js 2.2.0"] -->|listener| WORKER["apps/zalo-worker"]
   WORKER -->|"INSERT tin · group_event · undo"| IE[("inbound_events")]
   TIMERS["runTimers(now) · runner mỗi 10 s · SQL thuần, 0 model<br/>flushAmbient · flushWelcomes · pickUnanswered · runAutomations"] -->|"enqueueSystemEvent sender='system'"| IE
-  IE -->|"processInbound · nhận-trước-xử-lý-sau · 1 runner tuần tự"| START
+  IE -->|"processInbound · nhận-trước-xử-lý-sau · 1 runner, song song theo thread (D31)"| START
 
   subgraph PIPE["pipelineGraph · 1 invoke cho 1 inbound_event"]
     START{{"START · routeEvent"}}
@@ -118,6 +120,7 @@ flowchart TD
   GEV -->|"review_join · thẻ duyệt"| OUT
   SYS -->|"DM owner kết quả thẻ"| OUT
   DMI -->|"TEXT_ONLY_REPLY"| OUT
+  PREP -->|"typing sớm (D31, chỉ lượt tương tác)"| OUT
   TOOLS -->|"send_group_message · action · thẻ duyệt"| OUT
   DEL -->|"tin host · DM trả lời"| OUT
   TRACE --> TT[("turn_traces")]
@@ -130,7 +133,7 @@ flowchart TD
 Zalo (zca-js 2.2.0) ─listener─► apps/zalo-worker ─INSERT─► [inbound_events] ◄─enqueueSystemEvent(sender='system')─ runTimers(now)
                                                                 │                (SQL thuần, 0 model: flushAmbient · flushWelcomes ·
                                                                 │                 pickUnanswered · runAutomations)
-                              processInbound (nhận-trước-xử-lý-sau, 1 runner) ▼
+                 processInbound (nhận-trước-xử-lý-sau, 1 runner, song song theo thread — D31) ▼
 ┌─ pipelineGraph (1 invoke / 1 inbound_event; ┄► = cạnh điều kiện THUẦN) ─────────────────────────────────────────────────┐
 │ START ┄routeEvent┄┬┄ tin nhóm ┄► ingest ┄┬┄ nhóm chưa khai/tắt · tin bot ┄► END                                           │
 │                   │                      └┄► triage ┄┬┄ nhóm ┄► moderate ┄┬┄ tin đã xoá ┄► END                            │
@@ -152,7 +155,7 @@ Zalo (zca-js 2.2.0) ─listener─► apps/zalo-worker ─INSERT─► [inbound_
 │                                   └┄ xong · model sập · refusal · chạm trần ┄► deliver ─► trace ─► END                    │
 └──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 Ghi outbox (chỉ qua enqueue()/enqueueAction() — BB-02, BB-15): moderate · group_event · system_event · dm_intake (TEXT_ONLY_REPLY)
-  · tools · deliver.  KHÔNG ghi outbox: ingest · triage · gate · defer · prepare · agent · nudge · trace.
+  · tools · deliver · prepare (D31: CHỈ `typing` sớm của lượt tương tác).  KHÔNG ghi outbox: ingest · triage · gate · defer · agent · nudge · trace.
 Gọi model: CHỈ agent (callModel) và triage (callTriageModel) — qua adapters/model.ts (BB-03).
 Ghi DB chính: ingest→group_members/group_messages · triage→group_messages.is_question/messages.triage · moderate→moderation_* /approvals
   · defer/prepare→group_sessions · dm_intake→conversations/messages · tools→theo tool · deliver→messages/audit · trace→turn_traces.
@@ -175,13 +178,13 @@ Postgres 16 + pgvector 0.8.5 (đo 2026-10-09), Docker; migration append-only 007
 
 ## §6. Bất biến (BẮT BUỘC — mọi gói)
 
-D28: mọi BB cũ GIỮ NGUYÊN nghĩa; cột "Node hiện thực" chỉ nơi đặt mã trong đồ thị (01-CONTRACTS §12.3). Thêm BB-15…BB-17 cho chính đồ thị.
+D28: mọi BB cũ GIỮ NGUYÊN nghĩa; cột "Node hiện thực" chỉ nơi đặt mã trong đồ thị (01-CONTRACTS §12.3). Thêm BB-15…BB-17 cho chính đồ thị. D31/D32: thêm BB-18…BB-20 (hạn chót, một runner song song theo thread, báo động).
 
 | Mã | Bất biến | Node hiện thực (D28) | Cách canh |
 | :-- | :-- | :-- | :-- |
 | BB-01 | Agent thực hiện MỌI việc qua tool; luật cứng nằm TRONG tool (kiểm vai, ngân sách, trạng thái) và tool từ chối bằng lỗi có kiểu (01-CONTRACTS §9). Agent không có tool ngoài danh sách 01-CONTRACTS §7 | `prepare` (`toolsFor` lọc `tools[]`) · `tools` (`assertValidToolInput` ⇒ `assertToolAllowed` ⇒ `tool.run`; lỗi có `code` ⇒ `is_error`) | `scripts/check_agent_tools.mjs` (bản mới, SPEC-P01 §6) quét tên tool cấm + đối chiếu danh sách |
 | BB-02 | Mọi lời nói/hành động ra Zalo đi qua `outbox` bằng `enqueue()` của `adapters/transport.ts`; CẤM gọi zca-js ngoài `apps/zalo-worker` | node có cột "outbox ✓" ở 01-CONTRACTS §12.3 (`moderate`, `group_event`, `system_event`, `dm_intake`, `tools`, `deliver`) — luôn qua `enqueue`/`enqueueAction` | `scripts/check_adapter_boundary.mjs` (giữ nguyên + luật BB-15) |
-| BB-03 | Chỉ `adapters/db.ts` mở Postgres, chỉ `adapters/model.ts` gọi LLM/embedding (Gemini mặc định — Đ18 cũ giữ), chỉ `adapters/transport.ts` ghi outbox | `agent` gọi `callModel`, `triage` gọi `callTriageModel` — đều qua adapter; KHÔNG ChatModel LangChain, KHÔNG checkpointer mở pool riêng (§7) | `check_adapter_boundary` |
+| BB-03 | Chỉ `adapters/db.ts` mở Postgres, chỉ `adapters/model.ts` gọi LLM/embedding (Gemini mặc định — Đ18 cũ giữ), chỉ `adapters/transport.ts` ghi outbox; (D32) chỉ `adapters/alert.ts` gọi Telegram Bot API | `agent` gọi `callModel`, `triage` gọi `callTriageModel` — đều qua adapter; KHÔNG ChatModel LangChain, KHÔNG checkpointer mở pool riêng (§7) | `check_adapter_boundary` |
 | BB-04 | Danh tính & vai (`owner`/`moderator`/`member`/`stranger`) lấy từ `account_owners` + `group_members`, KHÔNG BAO GIỜ từ nội dung tin, tên hiển thị hay output model | `ingest` (upsert `group_members` TRƯỚC `resolveRole`) · `dm_intake` (`resolveRole`) · `gate` | test giả mạo `[userId: …]`, `@Tên` (SPEC-P03 §3 ca G24/G25) |
 | BB-05 | Ở nhóm, agent chỉ lên tiếng bằng tool `send_group_message`; text cuối của lượt `ambient` là RIÊNG TƯ (không đăng). Lượt `mention`/`reply_to_bot`/`name_pattern`/`owner_command` BẮT BUỘC có một tin ra (host thi hành, SPEC-P03 §6.4) | cạnh `afterAgent` + `needsNudge` + `decideDelivery` (THUẦN) · node `nudge` · node `deliver` | test lượt ambient không gọi tool ⇒ 0 outbox; lượt mention không gọi tool ⇒ 1 outbox fallback; bảng `decideDelivery` (SPEC-P03 §6.5) |
 | BB-06 | Hành động nguy hiểm (kick, block, từ chối vào nhóm khi policy `manual`, thông báo toàn nhóm do agent tự đề xuất) chỉ TẠO `approvals`; thi hành chỉ sau khi owner/moderator/staff duyệt. `disperse_group`, `change_group_owner`, `add/remove_group_deputy`, `self_update`, `restart`, `send_file`, `exec` KHÔNG TỒN TẠI dưới dạng tool hay action outbox | `tools` (`request_member_removal`) · `moderate` (`kick_requested`/`block_requested` ⇒ `createApproval`) · `group_event` (policy `manual`) | `check_agent_tools` cấm tên; `outbox.body.action` enum 01-CONTRACTS §8.3 |
@@ -196,6 +199,9 @@ D28: mọi BB cũ GIỮ NGUYÊN nghĩa; cột "Node hiện thực" chỉ nơi đ
 | BB-15 | (D28) Mỗi node chỉ có tác dụng phụ ghi trong bảng 01-CONTRACTS §12.3: node cột "outbox ✗" KHÔNG import `adapters/transport`, `services/outbox-actions`, `services/approvals`; CHỈ `nodes/agent.ts` gọi `callModel`, CHỈ `nodes/triage.ts` gọi `triageCommunityMessage`; model KHÔNG BAO GIỜ tự ghi outbox — mọi tin ra là kết quả của tool hoặc của `deliver` | toàn bộ `agent/community/graph/nodes/*` | `check_adapter_boundary.mjs` mở rộng (SPEC-P03 §11 hàng 12) + bằng chứng đỏ |
 | BB-16 | (D28) Mọi cạnh điều kiện và quyết định kết thúc lượt (`routeEvent`, `after*`, `needsTriage`, `needsNudge`, `isCapped`, `decideDelivery`, `hostText`) là hàm THUẦN của state trong `graph/edges.ts` (không I/O, không `Date.now()`, không model); mọi `addConditionalEdges` khai danh sách đích tường minh; hình hai đồ thị (node + cạnh) khớp ĐÚNG hằng `PIPELINE_SHAPE`/`TURN_SHAPE` = 01-CONTRACTS §12.4 = sơ đồ §4 đã duyệt | `graph/edges.ts`, `graph/pipeline.ts`, `graph/turn.ts` | `edges.test.ts` (bảng ca) + `graph-shape.test.ts` (so `getGraph()` với hằng) |
 | BB-17 | (D28) Đồ thị KHÔNG giữ trạng thái và KHÔNG gửi dữ liệu ra ngoài: không checkpointer/Store/`interrupt`; mỗi `inbound_events` một `invoke` mới với state rỗng, state bị bỏ khi xong; nguồn chân lý là bảng Postgres (`inbound_events`, `group_sessions`, `messages`, `approvals`, `turn_traces`…); không LangSmith/LangGraph Platform — `LANGSMITH_TRACING`/`LANGCHAIN_TRACING_V2` bật ⇒ `ConfigError` lúc khởi động | `pipeline.ts`, `turn.ts` (compile không checkpointer) · `services/community-config.ts` | grep cấm trong `check_adapter_boundary` (SPEC-P03 §11 hàng 12) + `community-config.test.ts` (hàng 11) |
+| BB-18 | (D31) Mọi lượt có hạn chót `deadlineAt` (làn `fast`: `received_at + LANE_FAST_DEADLINE_MS`; lên `rag` khi tool truy hồi chạy: `received_at + LANE_RAG_DEADLINE_MS`; nền: bắt đầu lượt + `TURN_BACKGROUND_DEADLINE_MS`); mọi lời gọi model/embedding/Telegram có timeout (`AbortSignal`), không lời gọi mạng nào chờ vô hạn; quá hạn ⇒ `ModelDeadlineError` ⇒ đường `model_down` có sẵn (BB-05 giữ: lượt `mustReply` vẫn có đúng 1 tin) | `prepare` (đặt hạn) · `agent` (`callModel({deadlineAt})`) · `tools` (nâng làn, `DeadlineExceeded`) · `triage` (`AbortSignal`) | `edges.test` (`initialDeadline`, `escalateLane`) + `model.*.test` fetch giả trễ + DB ca (t) + G23 |
+| BB-19 | (D31) Đúng MỘT runner và MỘT worker mỗi tài khoản — chặn bằng `pg_try_advisory_lock` trên kết nối riêng (thiếu khoá ⇒ exit 1); runner xử lý song song giữa các thread (≤ `RUNNER_CONCURRENCY`), TUẦN TỰ đúng thứ tự `id` trong một thread; chỉ một dispatcher nhận tin | runner/worker (ngoài đồ thị) | DB ca (v) + `holdAdvisoryLock` lần 2 ⇒ `null` |
+| BB-20 | (D32) Báo động vận hành chỉ qua `adapters/alert.ts` (Telegram); thiếu `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID` ⇒ tắt + audit, KHÔNG làm hỏng tiến trình; mỗi (loại, khoá) ≤ 1 tin / `ALERT_REPEAT_MIN` (CAS `alert_state`); tin KHÔNG chứa nội dung tin nhắn, PII, token; phát hiện chéo (runner canh worker, worker canh runner) | ngoài đồ thị: `services/ops-watch.ts`, worker | `check_adapter_boundary` (`api.telegram.org` chỉ ở adapter) + G24 |
 
 ## §7. Vùng cấm (đã cân nhắc, quyết KHÔNG làm — kèm lý do)
 
@@ -227,11 +233,13 @@ D28: mọi BB cũ GIỮ NGUYÊN nghĩa; cột "Node hiện thực" chỉ nơi đ
 - **`MessagesAnnotation` / `addMessages` / `messagesStateReducer` / `BaseMessage`**: đổi `MessageParam` dạng Anthropic (hợp đồng adapter) sang lớp LangChain. State giữ `MessageParam[]` với reducer nối mảng thường (spike A: messages ra khỏi đồ thị vẫn là object thuần đúng thứ tự vai).
 - **Checkpointer (`MemorySaver`, `PostgresSaver`, `@langchain/langgraph-checkpoint-*`), `Store`, `interrupt`/human-in-the-loop, time-travel**: đo trên DB tạm (`evidence/ARCH-D28/spike.txt`): `setup()` tự tạo 4 bảng ngoài `db/migrations` (`checkpoint_blobs/_migrations/_writes`, `checkpoints`); 2 lượt ngắn ⇒ 16 checkpoint · 64 blob · 50 write; chuỗi SĐT giả trong tin bị lưu nguyên văn (10 blob + 2 write); cùng `thread_id` ⇒ lượt 2 kế thừa lịch sử lượt 1 (4 ⇒ 8 messages). Trái BB-03 (pool riêng), BB-13/D22 (lịch sử tích luỹ), D24/Luật 91 (nội dung tin ngoài hạn giữ), luật migration append-only. Duyệt thẻ đã có `approvals` + sự kiện hệ thống (TTL 24 giờ) — không treo đồ thị chờ người.
 - **LangSmith / LangGraph Platform / Studio / `langgraph-cli` server**: đo: bật `LANGSMITH_TRACING=true` ⇒ thư viện TỰ gọi `GET /info` + `POST /runs/multipart` (không bật ⇒ 0 lần gọi mạng). Dữ liệu cộng đồng ra dịch vụ ngoài + chi phí ⇒ BB-17 chặn bằng `ConfigError`. Quan sát lượt = `turn_traces` + `agent_runs` + dashboard `/agent` (D24).
-- **`Send`/fan-out, chạy tool song song, nhiều node cùng ghi một kênh state trong một bước**: tool có ngân sách, đếm `answered`, thứ tự quan trọng; runner MỘT bản tuần tự (Đ22 cũ).
+- **`Send`/fan-out, chạy tool song song, nhiều node cùng ghi một kênh state trong một bước**: tool có ngân sách, đếm `answered`, thứ tự quan trọng; runner MỘT bản (BB-19) — D31: song song CHỈ giữa các thread khác nhau, trong một lượt và trong một thread vẫn tuần tự.
 - **State khai bằng zod (`StateSchema`, `MessagesZodState`)**: hai cách khai state trong một repo; `Annotation.Root` đủ và đã đo.
 - **Đưa `runTimers` hay lịch vào trong đồ thị** (cron/loop của LangGraph): timers giữ SQL thuần 0 model (D08) và vào đồ thị bằng `inbound_events sender='system'` — một cửa vào duy nhất.
 - **Phiên bản nổi (`^`, `~`) cho `@langchain/*`**: pin chính xác + `overrides` gói bắc cầu (01-CONTRACTS §12.1); nâng = quy trình như zca-js (OPERATIONS §8).
 - **Để `recursionLimit` mặc định (25)**: đo: lượt xấu nhất cần 2×8+10 = 26 super-step ⇒ mặc định ném `GraphRecursionError`; đặt `recursionLimit` = số step đúng bằng 26 VẪN ném (dù node cuối đã chạy) ⇒ trần BẮT BUỘC = `2 × MAX_TOOL_ROUNDS + 11` (spike J1, J1b, J2).
+
+**Vùng cấm D31/D32** (lý do đo được ở [SPEC-D31 §4, §15](SPEC-D31-Toc-Do-Giam-Sat.md)): streaming/tin tạm "đợi chút"; nới gap/ngân sách pacer để đạt SLO (chỉ người dùng quyết); bộ phân loại làn riêng; đổi model giữa lượt; triage song song bằng nhánh đồ thị mới; nhiều dispatcher; LISTEN/NOTIFY; báo động qua Zalo/từ `apps/web`; báo động chứa nội dung tin/PII/token; (D33) cổng eval chặn kích hoạt persona.
 
 ## §8. Tái sử dụng từ kế hoạch 01 (PORT, không copy mù)
 
@@ -265,4 +273,6 @@ Mẫu OpenClaw/zaloclaw (MIT) chỉ được port theo mô tả trong SPEC; nế
 | Ngân sách nhóm | 100 tin ⇒ 20 tin/giờ đầu, khoảng cách tối thiểu 9000 ms, mọi cửa sổ ≤ 20 | `evidence/ARCH/budget-ref.txt` |
 | SQL đệm/câu hỏi/ngân sách/ambient | 5/5 OK | `evidence/ARCH/db-checks.txt` |
 | (D28, 2026-10-16) Phiên bản LangGraph | `@langchain/langgraph` 1.4.18 (2026-09-25) · `@langchain/core` 1.2.14 (2026-10-01); 45 gói trong cây cài, `too_new=0` (mọi gói ≥ 14 ngày) | `evidence/ARCH-D28/versions.txt` |
+| (D31, 2026-10-16) Độ trễ thật (110/120 lời gọi) | flash-lite: ngắn p95 1562, lượt RAG 2 lời gọi p95 2770; 3.6-flash minimal: 1 lời gọi prompt thật p95 4419, RAG p95 5896; triage flash-lite p95 2953; embed p95 447 (1024 chiều); RRF 3000 mục p95 95; vyce 401 | `evidence/ARCH-D31/latency-probe.txt` |
+| (D31) Mô phỏng ngân sách (N=100 000) | hiện trạng làn nhanh e2e p95 9783 ⇒ thiết kế D31 3471 (chạm hạn 1,9 %); RAG 12116 ⇒ 6179; runner tuần tự + 1 lượt treo 60 s ⇒ nhóm khác chờ tới 46,8 s, song song ⇒ 0 | `evidence/ARCH-D31/budget-sim.txt` |
 | (D28) Spike đồ thị lượt + pipeline (Node 22.20.0, model giả, 0 mạng) | `tsc` strict exit 0; 18/18 PASS: dừng đúng 8 vòng/9 lời gọi model, nudge 1 lần, auto_post, fallback, model_down, refusal, trace lỗi đúng 1 dòng, `recursionLimit` 2M+11; checkpointer 3/3 (lý do cấm); LangSmith off 0 gọi mạng / on 2 | `evidence/ARCH-D28/spike.txt` |

@@ -16,6 +16,9 @@
 | `/knowledge` · `GET/POST /api/knowledge`, `POST /api/knowledge/{id}/reembed`, `GET /api/knowledge/search?q=` | admin ghi · operator đọc | SPEC-P04 §6 |
 | `/automations` · CRUD `/api/automations` | admin ghi · operator đọc | bảng + form (`kind`, giờ VN, nhóm, action, payload JSON); kiểm bằng `computeNextRun`; bật/tắt; `automation_runs` 20 dòng |
 | `/agent` · `GET /api/agent/timeline?thread=&since=` | admin, operator | (D24) Bảng `turn_traces` (kind, trigger, outcome, tools, rounds, token, latency, phiên bản persona) + thẻ tổng 24 giờ: số lượt theo `outcome`, token trung bình/lượt theo `kind`; bấm một lượt ⇒ các `agent_runs` cùng `turn_id`. Dòng thời gian: `agent_runs` (route, model, token, latency), `audit` (`turn.*`, `tool.*`, `zalo.*`, `timer.*`, `moderation.*`, `approval.*`), `messages private:true` (text riêng tư của lượt ambient — để người hiểu vì sao agent im) |
+| (D31) thẻ "Tốc độ 24 giờ" trên `/agent` | admin, operator | đọc view `reply_latency` (01-CONTRACTS §4 010): theo làn `fast`/`rag`: n, p50/p95 `core_ms` (đỏ khi > 5000 / 15000), p95 `e2e_ms`, % `deadline_hit`, % lượt có `hold_ms > 0`, trung vị `queued`/`pre_turn`/`model`/`tool`/pacer/`send` (SPEC-D31 §8) |
+| (D32) `GET /api/healthz` | KHÔNG cần đăng nhập | SPEC-D31 §9: 200/503 + `{ok, runner:{age_s}, worker:{age_s}, zalo}`; CẤM số liệu/tên/lỗi chi tiết/env; `dynamic='force-dynamic'` |
+| (D32) thẻ trên `/` | mọi vai | thêm: tuổi heartbeat runner/worker (đỏ > `HEARTBEAT_STALE_MS`), báo động đang mở (`alert_state.open`), Telegram bật/tắt (chỉ trạng thái, CẤM hiện token/chat id) |
 | `/zalo` (giữ) | admin | như P02 cũ: QR, trạng thái, đăng xuất; tài khoản `community` |
 | `/dev/sim` (giữ, mở rộng P02 §7.3) | admin, `DATA_MODE=sim` | |
 

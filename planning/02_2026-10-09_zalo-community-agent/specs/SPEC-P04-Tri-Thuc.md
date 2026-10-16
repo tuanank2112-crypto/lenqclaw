@@ -3,6 +3,7 @@
 > Tầng 🟠 (hợp đồng đã chốt ở 01-CONTRACTS §2.2, §4 `kb_*`, §7.1 `search_knowledge`). Đọc SPEC-P03 §4, §6 trước. Phụ thuộc: P03.
 > Port: `retrieval/search-regulations.ts:45-63` (token an toàn, N14), build-phase "retrieval + citation" (00-ARCH §8 kế hoạch 01).
 > D28: lượt `group_unanswered` đi `runTimers.pickUnanswered` ⇒ `inbound_events sys-%` ⇒ `pipelineGraph` node `system_event` ⇒ `turn` ⇒ `turnGraph` (SPEC-P03 §2, §6); `search_knowledge` chạy trong node `tools` (embedding qua `embedTexts` được phép ở đó — 01-CONTRACTS §12.3). Không đổi hợp đồng truy hồi.
+> D31 (2026-10-16): `search_knowledge` là tool `extendsDeadline` — gọi nó nâng lượt tương tác từ làn `fast` (< 5 s) lên `rag` (< 15 s). Ngân sách §2.1. Hợp đồng làn/hạn chót: [SPEC-D31](SPEC-D31-Toc-Do-Giam-Sat.md) §1, §5.
 
 ## §1. Kho tri thức (`services/knowledge.ts`)
 - `kb_documents(id text, title, version, status approved|draft|deprecated, effective_from, effective_to, source, tags[], updated_at)` + `kb_sections(document_id, section_id, heading, body, tsv generated, embedding vector(1024), embedded_at, embedding_model)` — giữ DDL 001/002/007.
@@ -16,8 +17,18 @@ export interface KnowledgeHit { documentId: string; title: string; sectionId: st
 export async function searchKnowledge(queryVi: string, opts?: { topK?: number /* KB_TOP_K 8 */; useVector?: boolean /* mặc định true */ }): Promise<KnowledgeHit[]>;
 ```
 1. Lexical: `buildTsQueryExpr(queryVi)` (giữ `buildQueryTokens`: NFD, bỏ dấu, `đ→d`, chỉ `[a-z0-9]`, ≤ 12 token, OR) ⇒ `ts_rank_cd(tsv, to_tsquery('simple', $1), 32)` top 20 trong `kb_sections` join `kb_documents` hợp lệ. Chuỗi rỗng ⇒ `[]` không chạm DB (giữ).
-2. Vector (nếu `useVector` và embedding khả dụng): `embedTexts([queryVi], {taskType:'RETRIEVAL_QUERY'})` ⇒ `order by embedding <=> $1::vector limit 20` (pgvector 0.8.5, toán tử cosine `<=>`), chỉ mục có `embedding not null`. `EmbeddingUnavailableError`/timeout 3 s ⇒ bỏ bước, `vectorRank=null`.
+2. Vector (nếu `useVector` và embedding khả dụng): `embedTexts([queryVi], {taskType:'RETRIEVAL_QUERY'})` ⇒ `order by embedding <=> $1::vector limit 20` (pgvector 0.8.5, toán tử cosine `<=>`), chỉ mục có `embedding not null`. `EmbeddingUnavailableError`/timeout ⇒ bỏ bước, `vectorRank=null`. D31: timeout = `min(EMBED_TIMEOUT_MS (1500), ctx.deadlineAt − now)` (thay 3 s), truyền `deadlineAt` vào `embedTexts`.
 3. Hợp nhất RRF: `score = Σ 1/(60 + rank)` trên hai danh sách; sắp giảm; cắt `topK`. Không có vector ⇒ score = RRF lexical thuần. Trả `body` nguyên văn (≤ 4000) — model tự trích.
+### §2.1 Ngân sách thời gian (D31 — đo `evidence/ARCH-D31/latency-probe.txt`)
+| Bước | p95 đo | Ngân sách | Quá ngân sách |
+| :-- | :-- | :-- | :-- |
+| `embedTexts([query], RETRIEVAL_QUERY)` 1024 chiều | 447 ms (n=10, p50 405) | ≤ 1500 ms (`EMBED_TIMEOUT_MS`) | bỏ vector, lexical thuần |
+| lexical `ts_rank_cd` top 20 (3000 mục, GIN) | 71 ms (n=30) | ≤ 200 ms | — (lỗi DB ⇒ `KnowledgeUnavailableError`) |
+| vector `<=>` top 20, KHÔNG chỉ mục (seqscan 3000 mục) | 18 ms (n=30) | ≤ 200 ms | — |
+| lexical + vector + RRF trong MỘT câu SQL | 95 ms (n=30) | — | (cách tương đương, tuỳ thi công) |
+| Cả tool (`embed` + 2 truy vấn + cắt 600 ký tự) | ≈ 550 ms | ≤ 2000 ms | `DeadlineExceeded` nếu hạn lượt không đủ (SPEC-D31 §5.2) |
+Lượt RAG đầy đủ (flash-lite: call1 p95 1250 + tool ~550 + call2 p95 1520) ⇒ tổng p95 mô phỏng `e2e` 6179 ms < 15000 (SPEC-D31 §3). Chưa cần chỉ mục vector (HNSW/IVFFlat) ở 0.1: seqscan 3000 mục p95 18 ms; đo lại khi `kb_sections` > 20 000 mục (Idea Vault) — thêm chỉ mục = migration mới.
+
 Lỗi DB ⇒ `KnowledgeUnavailableError` (01-CONTRACTS §9 bổ sung: caller — tool trả `is_error`, agent nói "mình chưa tra được tài liệu").
 
 ## §3. Tool `search_knowledge` (G/D/O, mọi vai)

@@ -22,12 +22,13 @@ Giờ VN cố định UTC+7 (không DST) — dùng `vn-time.ts` (giữ) để đ
 | 5 | `runAutomations` | §3 | n chạy, n lỗi |
 | 6 | `expireApprovals` + `expireJoinRequests` | P05 §5.5, §6 | n |
 | 7 | `reconcileDeletes` | P05 §9 | n |
-| 8 | `pruneBuffers` | `delete from group_messages where received_at < now - GROUP_BUFFER_RETENTION_DAYS` (mỗi tick, giới hạn 5000 dòng) + prune theo số (BB-11) + (D22, BB-13) `delete from messages where created_at < now - MESSAGES_RETENTION_DAYS` (giới hạn 5000 dòng/tick; KHÔNG chạm `member_profiles`, `leads`, `turn_traces`, `audit_log`) | n xoá đệm, n xoá messages |
+| 8 | `pruneBuffers` | `delete from group_messages where received_at < now - GROUP_BUFFER_RETENTION_DAYS` (mỗi tick, giới hạn 5000 dòng) + prune theo số (BB-11) + (D22, BB-13) `delete from messages where created_at < now - MESSAGES_RETENTION_DAYS` (giới hạn 5000 dòng/tick; KHÔNG chạm `member_profiles`, `leads`) + (D32, SPEC-D31 §11) `turn_traces`/`agent_runs` cũ hơn `TRACE_RETENTION_DAYS` (180), `audit_log` cũ hơn `AUDIT_RETENTION_DAYS` (365), mỗi bảng ≤ 5000 dòng/tick | n xoá đệm, n xoá messages |
 | 9 | `embedPending` | P04 §1 (≤ 50 mục/tick; bỏ qua khi `EMBED_PROVIDER=none`) | n nhúng |
 | 10 | `syncGroups` | nhóm `enabled` có `last_synced_at` null hoặc `< now - GROUP_SYNC_HOURS` ⇒ `enqueueAction sync_group_info` (1 hàng/nhóm/chu kỳ, kiểm chưa có hàng `queued` cùng action) | n |
 | 11 | `dailyOwnerReport` | §5 (mỗi ngày một lần sau `DAILY_REPORT_HOUR` giờ VN — ghi mốc vào `automations` hệ thống `name='__daily_owner_report'` tạo tự động nếu thiếu, `kind='daily'`) | 0/1 |
 | 12 | `weeklySummaries` | §4 — tạo tự động `automations name='__weekly_summary:<thread>' kind='weekly'` cho mỗi nhóm `enabled` (nếu thiếu); thi hành ở bước 5 | n tạo |
-Mọi bước nhận `now` tham số (CẤM `now()` Postgres trong so sánh — giữ luật cũ); lỗi ⇒ `audit timer.error {step}` + tiếp bước sau. Runner gọi mỗi `TIMER_INTERVAL_MS` (10 s) như cũ (`inbound-runner.ts` giữ cấu trúc).
+| 13 | `opsWatch` | (D32) `ops-watch.ts::checkOps(now, 'runner')` — tự giới hạn mỗi `OPS_WATCH_INTERVAL_MS` (60 s); SQL thuần, 0 model; báo động Telegram qua `adapters/alert.ts` (SPEC-D31 §10.2) | n kiểm, n gửi, n chặn lặp |
+Mọi bước nhận `now` tham số (CẤM `now()` Postgres trong so sánh — giữ luật cũ); lỗi ⇒ `audit timer.error {step}` + tiếp bước sau. Runner gọi mỗi `TIMER_INTERVAL_MS` (10 s) như cũ — D31: trên vòng RIÊNG, không chờ lượt agent nào (SPEC-D31 §6); bước 2/3 bỏ qua thread đang có sự kiện `sys-%` cùng loại chưa xử lý hoặc đang chạy (`TimerContext.busyThreads`).
 
 ## §3. `runAutomations(now)` — `services/automations.ts`
 - Chọn: `select … from automations where enabled and next_run_at <= $now and (lock_until is null or lock_until < $now) order by next_run_at limit 10 for update skip locked`; đặt `lock_until = now + 5 phút` trong cùng tx; chạy từng hàng ngoài tx.
@@ -49,7 +50,7 @@ Mọi bước nhận `now` tham số (CẤM `now()` Postgres trong so sánh — 
 
 ## §5. Báo cáo ngày cho owner (`services/reports.ts::buildDailyReport(account, now)`) — 0 model
 Nội dung (text ≤ 1800 ký tự, DM mọi owner): theo nhóm `enabled`: tin trong 24 giờ (`group_messages`), tin bot đã gửi (`outbox sent`), câu hỏi bỏ trống đã nhặt / đã trả lời, kiểm duyệt (warn/delete/thẻ), thành viên mới/rời, thẻ duyệt đang chờ (id ngắn), lead mới/chuyển, `agent_runs` tokens 24 giờ (`sum(input_tokens+output_tokens)`), cảnh báo (`bot_is_admin=false`, phiên không `connected`, `kb.embed_unavailable`). Ghi cùng nội dung vào `daily_notes (thread_id null)`. Chỉ gửi khi `zalo_accounts.session_state='connected'` hoặc `DATA_MODE=sim`; không gửi ⇒ vẫn ghi note + audit `report.skipped`.
-Heartbeat = CHÍNH báo cáo này (OpenClaw: heartbeat chỉ DM owner, không nhóm) — không có heartbeat khác.
+Heartbeat GỬI CHO NGƯỜI = CHÍNH báo cáo này (OpenClaw: heartbeat chỉ DM owner, không nhóm) — không có tin heartbeat khác. (D32) Dấu sống tiến trình `process_heartbeats` (SPEC-D31 §9) là bản ghi DB cho giám sát chéo, KHÔNG gửi tin cho ai; báo động sự cố đi Telegram (BB-20), không đi Zalo.
 
 ## §6. Vùng cấm P07
 - CẤM `cron` expression (D16) — người cần cron ⇒ Idea Vault.

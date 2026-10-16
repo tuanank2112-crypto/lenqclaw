@@ -1,0 +1,78 @@
+# evidence/ARCH-D31/latency-probe.txt — output MAY cua probe.mjs (ngoai repo: scratchpad/latency/probe.mjs, ban sao: probe.mjs.txt). KHONG sua tay.
+# lenh: (tu root repo) set -a; . ./.env; set +a; node probe.mjs  ⇒ phase 1 · node probe.mjs --phase2 ⇒ phase 2 (chay lai co gian cach sau 429)
+# HEAD repo luc do: bfbfc5e
+
+===== PHASE 1 =====
+# latency-probe H06/D31 · started 2026-10-16T04:57:31.119Z · node v24.12.0 · host-region: may dev nguoi dung (VN) · tran 120 loi goi model
+# model chinh (.env): provider=vyce model=deepseek-v4-flash · gemini key: co · vyce key: co
+# prompt luot thuc te: system 3292 ky tu · user 2247 ky tu (25 tin) · 11 tool · tool_result 3491 ky tu
+# preflight gemini-3.6-flash thinkingLevel=minimal: ok 2045 ms
+# embedding: so chieu tra ve = 1024 (Q3: ky vong 1024)
+# DB tam lenqclaw_latency_probe: kb_sections 3000 dong (tb 928 ky tu), GIN tsv, vector(1024) KHONG index (dung DDL hien tai) · pgvector 0.8.5
+# DB tam da xoa: con lai 0 database ten lenqclaw_latency_probe
+
+# TONG HOP (ms; p50/p95 = nearest-rank; n = so mau thanh cong)
+series | n | err | p50 | p95 | min | max | ghi chu
+1.short vyce/deepseek-v4-flash max_tokens=256 | 0 | 8 | NaN | NaN | Infinity | -Infinity | 
+   loi: HTTP 401 "Invalid API key."
+1.short gemini-3.6-flash thinking=default | 3 | 5 | 3021 | 4537 | 2940 | 4537 | finish={"STOP":3} out={"text":3} tb_in=33 tb_out=32 tb_think=368
+   loi: HTTP 429 "You exceeded your current quota, please check your plan and billing details. For more information on this error, head t
+1.short gemini-3.6-flash thinking=minimal | 2 | 6 | 1355 | 1862 | 1355 | 1862 | finish={"STOP":2} out={"text":2} tb_in=33 tb_out=30 tb_think=0
+   loi: HTTP 429 "You exceeded your current quota, please check your plan and billing details. For more information on this error, head t
+1.short gemini-3.5-flash-lite thinking=default | 8 | 0 | 1047 | 1562 | 910 | 1562 | finish={"STOP":8} out={"text":8} tb_in=33 tb_out=24 tb_think=0
+2.rag call1 gemini-3.6-flash thinking=minimal | 0 | 6 | NaN | NaN | Infinity | -Infinity | 
+   loi: HTTP 429 "You exceeded your current quota, please check your plan and billing details. For more information on this error, head t
+2.rag call2 gemini-3.6-flash thinking=minimal | 0 | 6 | NaN | NaN | Infinity | -Infinity | 
+   loi: call1 loi
+2.rag call1 gemini-3.6-flash thinking=default | 0 | 6 | NaN | NaN | Infinity | -Infinity | 
+   loi: HTTP 429 "You exceeded your current quota, please check your plan and billing details. For more information on this error, head t
+2.rag call2 gemini-3.6-flash thinking=default | 0 | 6 | NaN | NaN | Infinity | -Infinity | 
+   loi: call1 loi
+2.rag call1 vyce/deepseek-v4-flash | 0 | 6 | NaN | NaN | Infinity | -Infinity | 
+   loi: HTTP 401 "Invalid API key."
+2.rag call2 vyce/deepseek-v4-flash | 0 | 6 | NaN | NaN | Infinity | -Infinity | 
+   loi: call1 loi
+2.rag call1 gemini-3.5-flash-lite thinking=default | 4 | 2 | 1166 | 1250 | 963 | 1250 | finish={"STOP":4} out={"search_knowledge":4} tb_in=2525 tb_out=27 tb_think=0
+   loi: HTTP 429 "You exceeded your current quota, please check your plan and billing details. For more information on this error, head t
+2.rag call2 gemini-3.5-flash-lite thinking=default | 3 | 3 | 1516 | 1520 | 1497 | 1520 | finish={"STOP":3} out={"send_group_message":3} tb_in=3567 tb_out=142 tb_think=0
+   loi: HTTP 429 "You exceeded your current quota, please check your plan and billing details. For more information on this error, head t
+   loi: call1 loi
+2.rag call1+call2 gemini-3.5-flash-lite thinking=default | 4 | 0 | 2479 | 2770 | 1541 | 2770 | 
+2b.chat 1 call gemini-3.6-flash thinking=minimal max=512 | 0 | 6 | NaN | NaN | Infinity | -Infinity | 
+   loi: HTTP 429 "You exceeded your current quota, please check your plan and billing details. For more information on this error, head t
+T.triage gemini-3.5-flash-lite (nhu adapter, khong thinkingConfig) | 0 | 8 | NaN | NaN | Infinity | -Infinity | 
+   loi: HTTP 429 "You exceeded your current quota, please check your plan and billing details. For more information on this error, head t
+3.embed gemini-embedding-001 dim=1024 RETRIEVAL_QUERY | 10 | 0 | 405 | 447 | 386 | 447 | dim=1024
+4.db roundtrip select 1 | 30 | 0 | 1 | 2 | 1 | 2 | 
+4.db lexical ts_rank_cd top20 (3000 muc) | 30 | 0 | 53 | 71 | 48 | 73 | 
+4.db vector <=> top20 seqscan (3000 muc) | 30 | 0 | 12 | 18 | 11 | 24 | 
+4.db lexical+vector+RRF 1 cau SQL | 30 | 0 | 66 | 95 | 57 | 97 | 
+
+# model_calls_used: 87 / 120
+# finished 2026-10-16T04:58:35.921Z
+EXIT=0
+
+===== PHASE 2 =====
+# latency-probe PHASE 2 · started 2026-10-16T04:59:33.471Z · node v24.12.0 · tran 33 loi goi (120 - 87 da dung o phase 1)
+# gian cach: gemini-3.6-flash >= 13 s giua 2 loi goi, gemini-3.5-flash-lite >= 5 s (free tier RPM); KHONG goi vyce (401 o phase 1)
+# kiem quota sau 60 s: ok 1691 ms
+
+# TONG HOP PHASE 2 (ms; p50/p95 = nearest-rank)
+series | n | err | p50 | p95 | min | max | ghi chu
+1.short gemini-3.6-flash thinking=minimal | 2 | 1 | 1652 | 1691 | 1652 | 1691 | finish={"STOP":2} out={"text":2} tb_in=33 tb_out=31 tb_think=0
+   loi: HTTP 429 quotaId=GenerateRequestsPerDayPerProjectPerModel-FreeTier "You exceeded your current quota, please check your plan and
+2.rag call1 gemini-3.6-flash thinking=minimal | 4 | 0 | 1548 | 2600 | 1536 | 2600 | finish={"STOP":4} out={"search_knowledge":4} tb_in=2525 tb_out=28 tb_think=0
+2.rag call2 gemini-3.6-flash thinking=minimal | 4 | 0 | 2201 | 3302 | 2032 | 3302 | finish={"STOP":4} out={"send_group_message":4} tb_in=3568 tb_out=179 tb_think=0
+2.rag call1+call2 gemini-3.6-flash thinking=minimal | 4 | 0 | 4007 | 5896 | 3568 | 5896 | 
+2b.chat 1 call gemini-3.6-flash thinking=minimal max=512 | 3 | 1 | 3078 | 4419 | 2862 | 4419 | finish={"STOP":3} out={"send_group_message":3} tb_in=2509 tb_out=134 tb_think=0
+   loi: HTTP 503 quotaId=- "This model is currently experiencing high demand. Spikes in
+T.triage gemini-3.5-flash-lite (nhu adapter, khong thinkingConfig) | 5 | 0 | 1577 | 2953 | 1009 | 2953 | finish={"STOP":5} out={"text":5} tb_in=380 tb_out=53 tb_think=0
+2.rag call1 gemini-3.6-flash thinking=default | 1 | 1 | 4543 | 4543 | 4543 | 4543 | finish={"STOP":1} out={"search_knowledge":1} tb_in=2525 tb_out=28 tb_think=312
+   loi: HTTP 429 quotaId=GenerateRequestsPerDayPerProjectPerModel-FreeTier "You exceeded your current quota, please check your plan and
+2.rag call2 gemini-3.6-flash thinking=default | 0 | 2 | NaN | NaN | Infinity | -Infinity | 
+   loi: HTTP 429 quotaId=GenerateRequestsPerDayPerProjectPerModel-FreeTier "You exceeded your current quota, please check your plan and
+   loi: call1 loi
+
+# model_calls_used phase 2: 23 / 33 · tong 2 phase: 110 / 120
+# finished 2026-10-16T05:03:35.154Z
+EXIT=0

@@ -21,6 +21,7 @@ CẤM từ đơn, CẤM cụm nhập nhằng ("đầu tư", "kiếm tiền" đơ
 
 ## §3. Lớp model + hợp nhất — `moderation.ts::moderateGroupMessage(row, triage, ctx)`
 Input: `triage: CommunityTriage | null` (từ P03 §5.2 — cùng MỘT lời gọi với `is_question`/`lead_intent`), `grid = classifyGrid(...)`, vai người gửi.
+D31 (SPEC-D31 T3): tin GỌI BOT (mention/quote tin bot/tên bot/lệnh) KHÔNG triage ⇒ `triage=null` ⇒ dòng "triage null" của bảng §9 (lưới quyết); lớp model cho tin đó là chính agent: prompt `rules` thêm "tin gọi bạn có dấu hiệu lừa đảo/spam ⇒ gọi `flag_message` rồi trả lời một câu từ chối ngắn". Thẩm định đối kháng P05 (G16) BẮT BUỘC có ca "scam kèm @bot".
 ```text
 verdict, confidence =
   grid.hard                                  ⇒ ('scam' nếu scam_phrase, 'spam' nếu repeat_burst), 0.95, source 'grid'

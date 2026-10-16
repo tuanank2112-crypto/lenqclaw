@@ -1,0 +1,24 @@
+# evidence/ARCH-D31/migration-010-probe.txt — output MAY. DB TAM lenqclaw_mig010_probe (tao roi xoa); ap 001..009 tu db/migrations roi 010 tu 01-CONTRACTS §4 (trich nguyen van).
+# sha256 010 (trich): db170ce31d4eab1c181ee79c9ec5648afaaa3dbe67a6e0554110f1acc7ee5ec8
+NOTICE:  database "lenqclaw_mig010_probe" does not exist, skipping
+create db: ok
+apply 001_init.sql: ok
+apply 002_search.sql: ok
+apply 003_kb_building.sql: ok
+apply 004_zalo_login.sql: ok
+apply 005_zalo_ui.sql: ok
+apply 006_dispatch_slots.sql: ok
+apply 007_drop_marketplace.sql: ok
+apply 008_community.sql: ok
+apply 009_tenant_trace.sql: ok
+apply 010_ops_latency.sql: ok
+turn_traces new cols: 9
+outbox new cols: 3
+tables: alert_state,process_heartbeats,reply_latency
+reply_latency: lane=fast e2e~6s hold~3s core~3s runtime~2s
+cas lan 1: gui
+cas lan 2 (trong 30 phut) so dong tra ve: 0
+ca do CHECK lane: ERROR:  new row for relation "turn_traces" violates check constraint "turn_traces_lane_check"
+drop db: ok
+con lai: 0
+EXIT=0

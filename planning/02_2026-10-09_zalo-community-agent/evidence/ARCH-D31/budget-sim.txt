@@ -1,0 +1,20 @@
+# evidence/ARCH-D31/budget-sim.txt — output MAY cua budget-sim.mjs (ngoai repo; ban sao: budget-sim.mjs.txt). Lenh: node budget-sim.mjs. KHONG sua tay.
+# budget-sim H06/D31 · Monte Carlo N=100000 · seed 20261016 · node v24.12.0
+# lognormal khop (p50,p95) tu latency-probe.txt; uoc chua do: worker lag 100 ms co dinh, zca sendText p50 300/p95 600
+# HOL = xac suat tin goi bot phai cho tin truoc cung nhom dang triage (0.16 ~ nhom 1 tin/10 s; 0.40 ~ nhom on ao)
+# runtime = nhan -> outbox enqueue (gate local G23) · e2e = nhan -> sent_at (SLO D31) · hit = ti le cham han chot (=> cau du phong)
+kich ban | runtime p50 | runtime p95 | e2e p50 | e2e p95 | hit
+A0 hien trang · lan nhanh · 3.6-flash minimal · triage tren duong (tran 4000) · poll 1000 · tick 1000 · typing 1.3 s | 5496 | 7540 | 7665 | 9783 | 0.0%
+A1 hien trang · lan RAG · 3.6-flash minimal 2 loi goi · triage tren duong | 7061 | 9902 | 9234 | 12116 | 0.0%
+B0 D31 · lan nhanh · flash-lite · KHONG triage tin goi bot · poll 200 · tick 250 · typing som | 1812 | 2992 | 2272 | 3471 | 1.9%
+B1 D31 · lan RAG · flash-lite 2 loi goi (+20% vong 2) | 3684 | 5701 | 4150 | 6179 | 0.9%
+B2 D31 · lan nhanh · nhom on ao HOL 0.40 | 1967 | 3482 | 2430 | 3847 | 4.8%
+B3 D31 · lan RAG · nhom on ao HOL 0.40 | 3863 | 5940 | 4327 | 6410 | 2.2%
+C0 bo phuong an · lan nhanh · 3.6-flash minimal (moi thu khac nhu D31) | 3405 | 3505 | 3775 | 4166 | 44.8%
+C1 bo phuong an · lan nhanh · flash-lite NHUNG giu triage tren duong (tran 4000) | 3485 | 3505 | 3801 | 4178 | 49.0%
+C2 lan RAG · 3.6-flash minimal (moi thu khac nhu D31) | 4825 | 7416 | 5285 | 7891 | 3.2%
+
+# runner: 3 nhom, tin goi bot moi 20 s/nhom, 1 luot treo 60 s o nhom 0 luc t=10 s; do thoi gian CHO cua tin nhom 1-2
+runner tuan tu 1 ban | n=12 | cho p50 3000 ms | max 46800 ms
+runner song song theo thread (4 o) | n=12 | cho p50 0 ms | max 0 ms
+EXIT=0
