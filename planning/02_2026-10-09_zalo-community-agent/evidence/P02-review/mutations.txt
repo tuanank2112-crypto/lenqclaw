@@ -1,0 +1,303 @@
+M1: apps/zalo-worker/src/actions.ts
+  - "const uidFrom = reqStr(body.uidFrom, 'cli_msg_id_missing');"
+  + "const uidFrom = session.ownUid; void body.uidFrom;"
+  [apps/zalo-worker] npx vitest run --exclude "**/*.db.test.ts" ⇒ exit 1
+      → expected { msgId: 'm1', cliMsgId: 'c1', …(1) } to deeply equal { msgId: 'm1', cliMsgId: 'c1', …(1) }
+      Tests  2 failed | 91 passed (93)
+      ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      FAIL  src/actions.test.ts > delete_message > goi deleteMessage voi uidFrom = NGUOI GUI GOC trong body (khong phai uid bot), type=group, onlyMe=false
+      AssertionError: expected { msgId: 'm1', cliMsgId: 'c1', …(1) } to deeply equal { msgId: 'm1', cliMsgId: 'c1', …(1) }
+      FAIL  src/actions.test.ts > delete_message > thieu cliMsgId hoac uidFrom ⇒ cli_msg_id_missing, KHONG goi Zalo, KHONG doan bang msgId
+      AssertionError: promise resolved "{ ok: true, result: { status: +0 } }" instead of rejecting
+  [apps/zalo-worker] npx vitest run --config vitest.db.config.ts ⇒ exit 1
+      → expected 'community-self-uid' to be 'sender-goc-1' // Object.is equality
+      Tests  1 failed | 43 passed (44)
+      ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      FAIL  src/dbtests/p02-group.db.test.ts > delete_message (SPEC-P02 §4.2, vung cam zaloclaw tool.ts:741) > uidFrom = NGUOI GUI GOC (group_messages.sender_uid), khong phai uid bot
+      AssertionError: expected 'community-self-uid' to be 'sender-goc-1' // Object.is equality
+  restored: git checkout -- apps/zalo-worker/src/actions.ts
+
+M2: apps/zalo-worker/src/actions.ts
+  - "const cliMsgId = reqStr(body.cliMsgId, 'cli_msg_id_missing');"
+  + "const cliMsgId = reqStr(body.cliMsgId ?? body.msgId, 'cli_msg_id_missing');"
+  [apps/zalo-worker] npx vitest run --exclude "**/*.db.test.ts" ⇒ exit 1
+      → expected 'sent' to be 'failed' // Object.is equality
+      Tests  2 failed | 91 passed (93)
+      ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      FAIL  src/actions.test.ts > delete_message > thieu cliMsgId hoac uidFrom ⇒ cli_msg_id_missing, KHONG goi Zalo, KHONG doan bang msgId
+      AssertionError: promise resolved "{ ok: true, result: { status: +0 } }" instead of rejecting
+      FAIL  src/pacer.test.ts > action trong pacer (§4.1, §4.2, §9) > thieu cliMsgId ⇒ failed(cli_msg_id_missing), 0 lan goi Zalo, audit zalo.action_failed
+      AssertionError: expected 'sent' to be 'failed' // Object.is equality
+  [apps/zalo-worker] npx vitest run --config vitest.db.config.ts ⇒ exit 1
+      → expected [ { kind: 'deleteMessage', …(2) } ] to deeply equal []
+      Tests  1 failed | 43 passed (44)
+      ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      FAIL  src/dbtests/p02-group.db.test.ts > delete_message (SPEC-P02 §4.2, vung cam zaloclaw tool.ts:741) > thieu cli_msg_id ⇒ failed(cli_msg_id_missing), KHONG goi Zalo, audit zalo.action_failed
+      AssertionError: expected [ { kind: 'deleteMessage', …(2) } ] to deeply equal []
+  restored: git checkout -- apps/zalo-worker/src/actions.ts
+
+M3: apps/zalo-worker/src/pacer.ts
+  - "if (used < budget) {"
+  + "if (true) {"
+  [apps/zalo-worker] npx vitest run --exclude "**/*.db.test.ts" ⇒ exit 1
+      → expected 'sent' to be 'queued' // Object.is equality
+      Tests  1 failed | 92 passed (93)
+      ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      FAIL  src/pacer.test.ts > text nhom (§4.3, §5) > het ngan sach gio ⇒ giu queued, note group_budget; qua TTL ⇒ cancelled(budget_expired) + audit
+      AssertionError: expected 'sent' to be 'queued' // Object.is equality
+  [apps/zalo-worker] npx vitest run --config vitest.db.config.ts ⇒ exit 1
+      → expected undefined to be 'group_budget' // Object.is equality
+      → expected 'sent' to be 'cancelled' // Object.is equality
+      Tests  2 failed | 42 passed (44)
+      ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      FAIL  src/dbtests/p02-group.db.test.ts > text nhom: sent_at, link msgId that, ngan sach (§4.3, §5, §10 hang 2) > het ngan sach gio ⇒ hang giu queued (khong huy, khong gui); sau khi cua so truot ⇒ gui
+      AssertionError: expected undefined to be 'group_budget' // Object.is equality
+      FAIL  src/dbtests/p02-group.db.test.ts > text nhom: sent_at, link msgId that, ngan sach (§4.3, §5, §10 hang 2) > cho ngan sach qua GROUP_TEXT_TTL_MIN ⇒ cancelled(budget_expired) + audit pacer.budget_expired
+      AssertionError: expected 'sent' to be 'cancelled' // Object.is equality
+  restored: git checkout -- apps/zalo-worker/src/pacer.ts
+
+M4: apps/zalo-worker/src/pacer-policy.ts
+  - "const gap = isGroup ? this.cfg.groupGapMs : this.cfg.threadGapMs;"
+  + "const gap = this.cfg.threadGapMs;"
+  [apps/zalo-worker] npx vitest run --exclude "**/*.db.test.ts" ⇒ exit 1
+      → expected 4000 to be greater than or equal to 8000
+      → expected 4000 to be greater than or equal to 8000
+      → expected 4000 to be greater than or equal to 8000
+      → expected 4000 to be greater than or equal to 8000
+      → expected { ok: true } to deeply equal { ok: false, reason: 'group_gap' }
+      Tests  5 failed | 88 passed (93)
+      ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+      FAIL  src/pacer-policy.test.ts > pacer nhom + ngan sach (BB-08) > seed 1: 100 tin / 1 nhom, ngan sach 20/gio ⇒ first_hour=20, min_gap >= 8000, 0 vi pham
+      FAIL  src/pacer-policy.test.ts > pacer nhom + ngan sach (BB-08) > seed 2: 100 tin / 1 nhom, ngan sach 20/gio ⇒ first_hour=20, min_gap >= 8000, 0 vi pham
+      FAIL  src/pacer-policy.test.ts > pacer nhom + ngan sach (BB-08) > seed 7: 100 tin / 1 nhom, ngan sach 20/gio ⇒ first_hour=20, min_gap >= 8000, 0 vi pham
+      FAIL  src/pacer-policy.test.ts > pacer nhom + ngan sach (BB-08) > seed 2026: 100 tin / 1 nhom, ngan sach 20/gio ⇒ first_hour=20, min_gap >= 8000, 0 vi pham
+      AssertionError: expected 4000 to be greater than or equal to 8000
+  restored: git checkout -- apps/zalo-worker/src/pacer-policy.ts
+
+M5: apps/zalo-worker/src/pacer.ts
+  - "if (budget === null) {"
+  + "if (budget === null) { eligible.push(row); continue; } if (false) {"
+  [apps/zalo-worker] npx vitest run --exclude "**/*.db.test.ts" ⇒ exit 1
+      → expected 'sent' to be 'cancelled' // Object.is equality
+      Tests  1 failed | 92 passed (93)
+      ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      FAIL  src/pacer.test.ts > text nhom (§4.3, §5) > nhom khong co dong zalo_groups ⇒ cancelled(group_unknown) + audit, KHONG gui
+      AssertionError: expected 'sent' to be 'cancelled' // Object.is equality
+  [apps/zalo-worker] npx vitest run --config vitest.db.config.ts ⇒ exit 1
+      → expected { status: 'queued', reason: null } to deeply equal { status: 'cancelled', …(1) }
+      → expected undefined to be 'group_unknown' // Object.is equality
+      Tests  2 failed | 42 passed (44)
+      ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      FAIL  src/dbtests/p02-group.db.test.ts > text nhom: sent_at, link msgId that, ngan sach (§4.3, §5, §10 hang 2) > nhom chua co dong zalo_groups ⇒ cancelled(group_unknown) + audit pacer.group_unknown
+      AssertionError: expected undefined to be 'group_unknown' // Object.is equality
+      FAIL  src/dbtests/p02-worker.db.test.ts > pacer tren DB (§5, §8) > tin vao nhom chua khai trong zalo_groups ⇒ cancelled (group_unknown), KHONG gui (P02 ke hoach 02 §5)
+      AssertionError: expected { status: 'queued', reason: null } to deeply equal { status: 'cancelled', …(1) }
+  restored: git checkout -- apps/zalo-worker/src/pacer.ts
+
+M6: apps/zalo-worker/src/pacer-policy.ts
+  - "if (this.perMinuteBlocked(now)) return { ok: false, reason: 'per_minute' };\n    return { ok: true };\n  }\n\n  /** Ghi"
+  + "return { ok: true };\n  }\n\n  /** Ghi"
+  [apps/zalo-worker] npx vitest run --exclude "**/*.db.test.ts" ⇒ exit 1
+      → expected 3 to be 2 // Object.is equality
+      → expected { ok: true } to deeply equal { ok: false, reason: 'per_minute' }
+      Tests  2 failed | 91 passed (93)
+      ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      FAIL  src/pacer-policy.test.ts > pacer nhom + ngan sach (BB-08) > action tinh maxPerMinute nhung khong tinh recipients / gian cach
+      AssertionError: expected { ok: true } to deeply equal { ok: false, reason: 'per_minute' }
+      FAIL  src/pacer.test.ts > action trong pacer (§4.1, §4.2, §9) > action tinh maxPerMinute: maxPerMinute=2 ⇒ chi 2 action/phut, note per_minute
+      AssertionError: expected 3 to be 2 // Object.is equality
+  restored: git checkout -- apps/zalo-worker/src/pacer-policy.ts
+
+M7: apps/zalo-worker/src/store.ts
+  - "coalesce(sent_at, created_at) > $3::timestamptz - interval '1 hour'"
+  + "coalesce(sent_at, created_at) > $3::timestamptz - interval '10 minutes'"
+  [apps/zalo-worker] npx vitest run --config vitest.db.config.ts ⇒ exit 0
+      Tests  44 passed (44)
+  restored: git checkout -- apps/zalo-worker/src/store.ts
+
+M8: apps/zalo-worker/src/actions.ts
+  - "    default:\n      throw new InvalidActionError"
+  + "    case 'leave_group':\n      return { ok: true, result: {} };\n    default:\n      throw new InvalidActionError"
+  [apps/zalo-worker] npx vitest run --exclude "**/*.db.test.ts" ⇒ exit 1
+      Tests  1 failed | 92 passed (93)
+      ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      FAIL  src/actions.test.ts > vung cam §8 > hanh dong cam / la ⇒ unknown_action, 0 lan goi Zalo
+      AssertionError: promise resolved "{ ok: true, result: {} }" instead of rejecting
+  [.] node scripts/check_agent_tools.mjs ⇒ exit 0
+      forbidden_tools: 0
+      forbidden_actions: 0
+      unlisted_tools: 0
+  restored: git checkout -- apps/zalo-worker/src/actions.ts
+
+M9: apps/zalo-worker/src/pacer.ts
+  - "if (row.kind === 'seen' && row.thread_type === 'group') {"
+  + "if (false) {"
+  [apps/zalo-worker] npx vitest run --exclude "**/*.db.test.ts" ⇒ exit 1
+      → expected 'sent' to be 'cancelled' // Object.is equality
+      Tests  1 failed | 92 passed (93)
+      ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      FAIL  src/pacer.test.ts > text nhom (§4.3, §5) > nhom KHONG gui "da xem": hang seen nhom bi huy; DM van gui
+      AssertionError: expected 'sent' to be 'cancelled' // Object.is equality
+  restored: git checkout -- apps/zalo-worker/src/pacer.ts
+
+M10: apps/zalo-worker/src/store.ts
+  - "role = case when excluded.role = 'moderator' then 'moderator' else group_members.role end"
+  + "role = excluded.role"
+  [apps/zalo-worker] npx vitest run --config vitest.db.config.ts ⇒ exit 1
+      → expected [ Array(4) ] to deeply equal [ Array(4) ]
+      Tests  1 failed | 43 passed (44)
+      ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      FAIL  src/dbtests/p02-group.db.test.ts > sync_group_info ⇒ zalo_groups + group_members (§4.2) > upsert nhom + thanh vien (memberIds rong ⇒ memVerList); admin ⇒ moderator, khong ha vai; vang mat ⇒ left_at
+      AssertionError: expected [ Array(4) ] to deeply equal [ Array(4) ]
+  restored: git checkout -- apps/zalo-worker/src/store.ts
+
+M11: apps/zalo-worker/src/actions.ts
+  - "const REVIEW_DONE = new Set([0, 170, 178]);"
+  + "const REVIEW_DONE = new Set([0, 170]);"
+  [apps/zalo-worker] npx vitest run --exclude "**/*.db.test.ts" ⇒ exit 1
+      → expected 'failed' to be 'sent' // Object.is equality
+      → expected false to be true // Object.is equality
+      Tests  2 failed | 91 passed (93)
+      ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      FAIL  src/actions.test.ts > review_join > 170 (khong con trong danh sach) / 178 (da vao) ⇒ coi la XONG, khong botNotAdmin
+      AssertionError: expected false to be true // Object.is equality
+      FAIL  src/pacer.test.ts > action trong pacer (§4.1, §4.2, §9) > review_join tra 166 cho uid ⇒ failed + bot_is_admin=false; 170/178 ⇒ sent
+      AssertionError: expected 'failed' to be 'sent' // Object.is equality
+  [apps/zalo-worker] npx vitest run --config vitest.db.config.ts ⇒ exit 1
+      → expected 'failed' to be 'sent' // Object.is equality
+      Tests  1 failed | 43 passed (44)
+      ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      FAIL  src/dbtests/p02-group.db.test.ts > ket qua action ghi vao DB (§4.2, §9) > review_join 170/178 ⇒ sent, result ghi ma
+      AssertionError: expected 'failed' to be 'sent' // Object.is equality
+  restored: git checkout -- apps/zalo-worker/src/actions.ts
+
+M12: apps/zalo-worker/src/inbound.ts
+  - "  'update',\n]);"
+  + "  'update',\n  'new_link',\n]);"
+  [apps/zalo-worker] npx vitest run --exclude "**/*.db.test.ts" ⇒ exit 1
+      → new_link: expected { …(5) } to be null
+      Tests  1 failed | 92 passed (93)
+      ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      FAIL  src/inbound.test.ts > su kien nhom (§2.2) > NEW_LINK / pin / board / remind / avatar / block_member / unknown ⇒ KHONG ghi
+      AssertionError: new_link: expected { …(5) } to be null
+  restored: git checkout -- apps/zalo-worker/src/inbound.ts
+
+M13: apps/zalo-worker/src/pacer.ts
+  - "if (part === 0 && row.body.quote"
+  + "if (row.body.quote"
+  [apps/zalo-worker] npx vitest run --exclude "**/*.db.test.ts" ⇒ exit 1
+      → expected { msgId: 'q', cliMsgId: 'c', …(5) } to be undefined
+      Tests  1 failed | 92 passed (93)
+      ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      FAIL  src/pacer.test.ts > text nhom (§4.3, §5) > buildSplitBodies + buildOutboundText: part>0 khong mang quote du body co
+      AssertionError: expected { msgId: 'q', cliMsgId: 'c', …(5) } to be undefined
+  restored: git checkout -- apps/zalo-worker/src/pacer.ts
+
+M14: apps/zalo-worker/src/pacer.ts
+  - "if (this.now() - row.created_ms > this.cfg.groupTextTtlMin * 60_000) {"
+  + "if (false) {"
+  [apps/zalo-worker] npx vitest run --exclude "**/*.db.test.ts" ⇒ exit 1
+      → expected 'queued' to be 'cancelled' // Object.is equality
+      Tests  1 failed | 92 passed (93)
+      ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      FAIL  src/pacer.test.ts > text nhom (§4.3, §5) > het ngan sach gio ⇒ giu queued, note group_budget; qua TTL ⇒ cancelled(budget_expired) + audit
+      AssertionError: expected 'queued' to be 'cancelled' // Object.is equality
+  [apps/zalo-worker] npx vitest run --config vitest.db.config.ts ⇒ exit 1
+      → expected 'queued' to be 'cancelled' // Object.is equality
+      Tests  1 failed | 43 passed (44)
+      ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      FAIL  src/dbtests/p02-group.db.test.ts > text nhom: sent_at, link msgId that, ngan sach (§4.3, §5, §10 hang 2) > cho ngan sach qua GROUP_TEXT_TTL_MIN ⇒ cancelled(budget_expired) + audit pacer.budget_expired
+      AssertionError: expected 'queued' to be 'cancelled' // Object.is equality
+  restored: git checkout -- apps/zalo-worker/src/pacer.ts
+
+M15: apps/zalo-worker/src/pacer.ts
+  - "logEvent('pacer.sent', { account: this.account, outbox_id: row.id });"
+  + "logEvent('pacer.sent', { account: this.account, outbox_id: row.id, text: String(row.body.text) });"
+  [apps/zalo-worker] npx vitest run --exclude "**/*.db.test.ts" ⇒ exit 0
+      Tests  93 passed (93)
+  [apps/zalo-worker] npx vitest run --config vitest.db.config.ts ⇒ exit 0
+      Tests  44 passed (44)
+  restored: git checkout -- apps/zalo-worker/src/pacer.ts
+
+M16: apps/zalo-worker/src/pacer.ts
+  - "        thread: row.thread_id,\n        ok: out.ok,"
+  + "        thread: row.thread_id + '|' + JSON.stringify(row.body),\n        ok: out.ok,"
+  [apps/zalo-worker] npx vitest run --exclude "**/*.db.test.ts" ⇒ exit 1
+      → expected [ [ 'markSent', 1 ], …(2) ] to deep equally contain [ 'auditAction', 'zalo.action', …(1) ]
+      → expected [ [ 'markBotNotAdmin', 'g1' ], …(4) ] to deep equally contain [ 'auditAction', …(2) ]
+      Tests  2 failed | 91 passed (93)
+      ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      FAIL  src/pacer.test.ts > action trong pacer (§4.1, §4.2, §9) > delete_message: gui, markSent+result, audit zalo.action (ok, khong noi dung), approvalId ⇒ completeApproval(true)
+      AssertionError: expected [ [ 'markSent', 1 ], …(2) ] to deep equally contain [ 'auditAction', 'zalo.action', …(1) ]
+      FAIL  src/pacer.test.ts > action trong pacer (§4.1, §4.2, §9) > ZaloActionError 166 ⇒ failed, bot_is_admin=false, alert deputy_missing, result.error.code=166, approval failed
+      AssertionError: expected [ [ 'markBotNotAdmin', 'g1' ], …(4) ] to deep equally contain [ 'auditAction', …(2) ]
+  [apps/zalo-worker] npx vitest run --config vitest.db.config.ts ⇒ exit 1
+      → expected +0 to be 1 // Object.is equality
+      → expected +0 to be 1 // Object.is equality
+      Tests  2 failed | 42 passed (44)
+      ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      FAIL  src/dbtests/p02-group.db.test.ts > delete_message (SPEC-P02 §4.2, vung cam zaloclaw tool.ts:741) > uidFrom = NGUOI GUI GOC (group_messages.sender_uid), khong phai uid bot
+      AssertionError: expected +0 to be 1 // Object.is equality
+      FAIL  src/dbtests/p02-group.db.test.ts > delete_message (SPEC-P02 §4.2, vung cam zaloclaw tool.ts:741) > thieu cli_msg_id ⇒ failed(cli_msg_id_missing), KHONG goi Zalo, audit zalo.action_failed
+      AssertionError: expected +0 to be 1 // Object.is equality
+  restored: git checkout -- apps/zalo-worker/src/pacer.ts
+
+M17: apps/zalo-worker/src/pacer.ts
+  - "if (isGroup) await store.linkSentGroupMessage(row.id, msgId);"
+  + ""
+  [apps/zalo-worker] npx vitest run --exclude "**/*.db.test.ts" ⇒ exit 1
+      Tests  1 failed | 92 passed (93)
+      ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      FAIL  src/pacer.test.ts > text nhom (§4.3, §5) > gui xong ⇒ linkSentGroupMessage(outboxId, msgId that) de doi "out-<id>"
+  [apps/zalo-worker] npx vitest run --config vitest.db.config.ts ⇒ exit 1
+      → expected 'out-2669' to be 'fake-out-1001' // Object.is equality
+      Tests  1 failed | 43 passed (44)
+      ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      FAIL  src/dbtests/p02-group.db.test.ts > text nhom: sent_at, link msgId that, ngan sach (§4.3, §5, §10 hang 2) > gui that: text nhom ⇒ typing → text, group_messages "out-<id>" nhan msgId that, sent_at co gia tri
+      AssertionError: expected 'out-2669' to be 'fake-out-1001' // Object.is equality
+  restored: git checkout -- apps/zalo-worker/src/pacer.ts
+
+M18: apps/web/app/api/dev/sim/thread/route.ts
+  - "if (!session || session.role !== 'admin') {"
+  + "if (false) {"
+  [apps/web] npx vitest run --config vitest.db.config.ts tests/sim-send.db.test.ts ⇒ exit 0
+      Tests  7 passed (7)
+  restored: git checkout -- apps/web/app/api/dev/sim/thread/route.ts
+
+M19: apps/web/app/api/dev/sim/thread/route.ts
+  - "if (process.env.DATA_MODE !== 'sim') {"
+  + "if (false) {"
+  [apps/web] npx vitest run --config vitest.db.config.ts tests/sim-send.db.test.ts ⇒ exit 0
+      Tests  7 passed (7)
+  restored: git checkout -- apps/web/app/api/dev/sim/thread/route.ts
+
+M20: packages/core/src/sim/sim-actions.ts
+  - "if (found[0]!.sender_uid !== uidFrom) return fail('uidFrom_mismatch');"
+  + ""
+  [packages/core] npx vitest run --config vitest.db.config.ts src/dbtests/sim-actions.db.test.ts ⇒ exit 1
+      → expected 0 to be greater than or equal to 1
+      → expected 'executed' to be 'failed' // Object.is equality
+      Tests  2 failed | 11 passed (13)
+      ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      FAIL  src/dbtests/sim-actions.db.test.ts > applySimOutbox — action tren DB gia lap (§7.2) > delete_message SAI uidFrom (uid bot) ⇒ failed, result.error="uidFrom_mismatch", tin KHONG bi xoa
+      AssertionError: expected 0 to be greater than or equal to 1
+      FAIL  src/dbtests/sim-actions.db.test.ts > applySimOutbox — action tren DB gia lap (§7.2) > action co approvalId ⇒ approvals approved → executed (thanh cong) / failed (uidFrom_mismatch)
+      AssertionError: expected 'executed' to be 'failed' // Object.is equality
+  restored: git checkout -- packages/core/src/sim/sim-actions.ts
+
+M21: apps/zalo-worker/src/pacer.ts
+  - "this.policy.record(now, row.thread_id, isGroup);"
+  + "this.policy.record(now, row.thread_id, false);"
+  [apps/zalo-worker] npx vitest run --exclude "**/*.db.test.ts" ⇒ exit 0
+      Tests  93 passed (93)
+  [apps/zalo-worker] npx vitest run --config vitest.db.config.ts ⇒ exit 0
+      Tests  44 passed (44)
+  restored: git checkout -- apps/zalo-worker/src/pacer.ts
+
+M22: apps/zalo-worker/src/store.ts
+  - "kind = 'text' and status in ('sent','sending')\n       and coalesce(sent_at, created_at) > $3"
+  + "kind = 'text' and status in ('sent')\n       and coalesce(sent_at, created_at) > $3"
+  [apps/zalo-worker] npx vitest run --config vitest.db.config.ts ⇒ exit 0
+      Tests  44 passed (44)
+  restored: git checkout -- apps/zalo-worker/src/store.ts
+

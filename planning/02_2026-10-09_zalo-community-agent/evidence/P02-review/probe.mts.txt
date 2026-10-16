@@ -1,0 +1,186 @@
+// Tham dinh P02 — ca pha tren DB that + zca-js GIA (khong mang). Khong sua file repo.
+// Chay tu root repo: node --import tsx <scratch>/probe.ts
+import { pathToFileURL } from 'node:url';
+
+const ROOT = 'E:/vọc vạch/lenqclaw/';
+const imp = (p: string) => import(pathToFileURL(ROOT + p).href);
+
+const core = await imp('packages/core/dist/index.js');
+const { sql, closeDb, enqueue } = core;
+const { AccountPacer } = await imp('apps/zalo-worker/src/pacer.ts');
+const store = await imp('apps/zalo-worker/src/store.ts');
+const H = await imp('apps/zalo-worker/src/dbtests/group-helpers.ts');
+const simActions = await imp('packages/core/dist/sim/sim-actions.js');
+
+const out: string[] = [];
+const log = (s: string) => {
+  out.push(s);
+  console.log(s);
+};
+const ACC = 'community';
+
+async function approval(group: string, status: string): Promise<string> {
+  const r = await sql(
+    `insert into approvals (zalo_account_id, kind, thread_id, target_uid, reason, requested_by, status, expires_at)
+     values ($1,'kick_member',$2,'u-victim','probe','agent',$3, now() + interval '1 hour') returning id`,
+    [ACC, group, status]
+  );
+  return r[0].id;
+}
+const pacer = (s: any, now?: () => number) => new AccountPacer(ACC, H.FAST, () => s.getSession(), { rng: () => 0, ...(now ? { now } : {}) });
+const kinds = (fake: any) => fake.actions.map((a: any) => a.kind).join(',') || '(none)';
+
+await H.resetAccount();
+
+// ---- P1 (c): kick/block KHONG qua approvals
+{
+  const { s, fake } = await H.connectedSession();
+  const g = H.uid('pg');
+  await H.makeGroup(g);
+  const pend = await approval(g, 'pending');
+  const rej = await approval(g, 'rejected');
+  const id1 = await H.enqueueId({ zaloAccountId: ACC, threadId: g, threadType: 'group', kind: 'action', body: { action: 'remove_member', uid: 'u-victim' } });
+  const id2 = await H.enqueueId({ zaloAccountId: ACC, threadId: g, threadType: 'group', kind: 'action', body: { action: 'remove_member', uid: 'u-victim', approvalId: pend } });
+  const id3 = await H.enqueueId({ zaloAccountId: ACC, threadId: g, threadType: 'group', kind: 'action', body: { action: 'block_member', uid: 'u-victim', approvalId: rej } });
+  await pacer(s).tick();
+  const st = await sql(`select id, status from approvals where id = any($1::uuid[])`, [[pend, rej]]);
+  log(`P1 zalo calls: ${kinds(fake)}`);
+  for (const id of [id1, id2, id3]) log(`P1 outbox ${id}: status=${(await H.outboxRow(id)).status}`);
+  log(`P1 approvals after: ${st.map((r: any) => `${r.id === pend ? 'pending-one' : 'rejected-one'}=${r.status}`).join(' ')}`);
+  await sql(`delete from approvals where id = any($1::uuid[])`, [[pend, rej]]);
+  await H.dropGroup(g);
+  await s.stop();
+}
+
+// ---- P2 (§9): action vao nhom KHONG co dong zalo_groups
+{
+  const { s, fake } = await H.connectedSession();
+  const g = H.uid('nogroup');
+  const id = await H.enqueueId({ zaloAccountId: ACC, threadId: g, threadType: 'group', kind: 'action', body: { action: 'delete_message', msgId: 'm1', cliMsgId: 'c1', uidFrom: 'u1' } });
+  const id2 = await H.enqueueId({ zaloAccountId: ACC, threadId: g, threadType: 'group', kind: 'action', body: { action: 'create_poll', question: 'q', options: ['a', 'b'] } });
+  await pacer(s).tick();
+  log(`P2 zalo calls: ${kinds(fake)}; outbox ${id}=${(await H.outboxRow(id)).status}, ${id2}=${(await H.outboxRow(id2)).status}`);
+  await s.stop();
+}
+
+// ---- P3 (a): cliMsgId doan = msgId — worker + sim
+{
+  const { s, fake } = await H.connectedSession();
+  const g = H.uid('pg');
+  await H.makeGroup(g);
+  const id = await H.enqueueId({ zaloAccountId: ACC, threadId: g, threadType: 'group', kind: 'action', body: { action: 'delete_message', msgId: '777', cliMsgId: '777', uidFrom: 'u1' } });
+  await pacer(s).tick();
+  const call = fake.actions.find((a: any) => a.kind === 'deleteMessage');
+  log(`P3 worker: outbox=${(await H.outboxRow(id)).status} deleteMessage.args=${JSON.stringify(call?.args?.dest?.data ?? null)}`);
+  await s.stop();
+  // sim: tin that co cli_msg_id 'real-cli', core gui cliMsgId = msgId
+  await sql(`update outbox set status='cancelled' where status='queued'`);
+  await sql(
+    `insert into group_messages (zalo_account_id, thread_id, zalo_msg_id, cli_msg_id, sender_uid, text) values ($1,$2,'888','real-cli','u1','x')`,
+    [ACC, g]
+  );
+  const sid = Number(await enqueue({ zaloAccountId: ACC, threadId: g, threadType: 'group', kind: 'action', body: { action: 'delete_message', msgId: '888', cliMsgId: '888', uidFrom: 'u1' } }));
+  await simActions.applySimOutbox();
+  const gm = await sql(`select deleted_at is not null as del from group_messages where zalo_account_id=$1 and zalo_msg_id='888'`, [ACC]);
+  log(`P3 sim: outbox=${(await H.outboxRow(sid)).status} deleted=${gm[0].del} (cliMsgId gui='888', cli_msg_id that='real-cli')`);
+  await H.dropGroup(g);
+}
+
+// ---- P4 (b): dong ho worker lech DB +61 phut ⇒ ngan sach "reset"
+{
+  const { s, fake } = await H.connectedSession();
+  const g = H.uid('pg');
+  await H.makeGroup(g, 3);
+  for (let i = 0; i < 3; i++) {
+    await sql(
+      `insert into outbox (zalo_account_id, thread_id, thread_type, kind, body, status, sent_at) values ($1,$2,'group','text','{"text":"x"}','sent', now() - interval '5 minutes')`,
+      [ACC, g]
+    );
+  }
+  log(`P4 groupTextSentLastHour(now)=${await store.groupTextSentLastHour(ACC, g, Date.now())} vs (now+61m)=${await store.groupTextSentLastHour(ACC, g, Date.now() + 61 * 60_000)}`);
+  const id = await H.enqueueId({ zaloAccountId: ACC, threadId: g, threadType: 'group', kind: 'text', body: { text: 'hello' } });
+  const skew = 61 * 60_000;
+  const p = pacer(s, () => Date.now() + skew);
+  await p.tick();
+  await p.tick();
+  log(`P4 budget=3, 3 sent 5 phut truoc, worker clock +61m: outbox=${(await H.outboxRow(id)).status}, sentText=${fake.sent.length}`);
+  await sql(`delete from outbox where thread_id=$1`, [g]);
+  await H.dropGroup(g);
+  await s.stop();
+}
+
+// ---- P5 (c/b): action khong idempotent bi thu lai sau loi mang ⇒ 2 lan createPoll
+{
+  const { s, fake } = await H.connectedSession();
+  const g = H.uid('pg');
+  await H.makeGroup(g);
+  const id = await H.enqueueId({ zaloAccountId: ACC, threadId: g, threadType: 'group', kind: 'action', body: { action: 'create_poll', question: 'q', options: ['a', 'b'] } });
+  fake.nextActionError = new Error('ECONNRESET');
+  await pacer(s).tick();
+  await sql(`update outbox set not_before = now() where id = $1`, [id]);
+  await pacer(s).tick();
+  log(`P5 createPoll calls=${fake.actions.filter((a: any) => a.kind === 'createPoll').length}; outbox=${(await H.outboxRow(id)).status}`);
+  await H.dropGroup(g);
+  await s.stop();
+}
+
+// ---- P6 (f): sync_group_info tren nhom chua khai ⇒ tu TAO dong zalo_groups ⇒ text het group_unknown
+{
+  const { s, fake } = await H.connectedSession();
+  const g = H.uid('nogroup');
+  fake.groupInfo = { ...(fake.groupInfo ?? {}), name: 'Nhom la', adminIds: [], creatorId: 'x', memberIds: ['a', 'b'], memVerList: [], totalMember: 2, setting: { joinAppr: 0 } };
+  await H.enqueueId({ zaloAccountId: ACC, threadId: g, threadType: 'group', kind: 'action', body: { action: 'sync_group_info' } });
+  await pacer(s).tick();
+  const zg = await sql(`select enabled, budget_per_hour from zalo_groups where zalo_account_id=$1 and thread_id=$2`, [ACC, g]);
+  const id = await H.enqueueId({ zaloAccountId: ACC, threadId: g, threadType: 'group', kind: 'text', body: { text: 'hi' } });
+  await pacer(s).tick();
+  log(`P6 zalo_groups sau sync: ${JSON.stringify(zg[0] ?? null)}; text vao nhom do: ${(await H.outboxRow(id)).status}`);
+  await sql(`delete from group_members where zalo_account_id=$1 and thread_id=$2`, [ACC, g]);
+  await sql(`delete from outbox where thread_id=$1`, [g]);
+  await H.dropGroup(g);
+  await s.stop();
+}
+
+// ---- P7 (f): review_join Zalo tra {} (khong co uid nao) ⇒ coi la XONG
+{
+  const { s, fake } = await H.connectedSession();
+  const g = H.uid('pg');
+  await H.makeGroup(g);
+  fake.reviewResult = {};
+  const origReview = fake.reviewJoin.bind(fake);
+  fake.reviewJoin = async (uids: string[], approve: boolean, gid: string) => {
+    await origReview(uids, approve, gid);
+    return {};
+  };
+  const id = await H.enqueueId({ zaloAccountId: ACC, threadId: g, threadType: 'group', kind: 'action', body: { action: 'review_join', uids: ['u9'], approve: true } });
+  await pacer(s).tick();
+  const r = await H.outboxRow(id);
+  log(`P7 review_join ket qua {} ⇒ outbox=${r.status} result=${JSON.stringify(r.result)}`);
+  await H.dropGroup(g);
+  await s.stop();
+}
+
+// ---- P8 (b): pacer THAT — 2 text cung nhom, tick t=0 va t=+4s (> threadGap 3s, < groupGap 8s)
+{
+  const { s, fake } = await H.connectedSession();
+  const g = H.uid('pg');
+  await H.makeGroup(g);
+  let t = Date.now();
+  const p = pacer(s, () => t);
+  await H.enqueueId({ zaloAccountId: ACC, threadId: g, threadType: 'group', kind: 'text', body: { text: 'a' } });
+  await H.enqueueId({ zaloAccountId: ACC, threadId: g, threadType: 'group', kind: 'text', body: { text: 'b' } });
+  await p.tick();
+  t += 4000;
+  const r = await p.tick();
+  log(`P8 sau 4s: texts gui=${fake.sent.filter((x: any) => x.kind === 'text').length} note=${r.note}`);
+  t += 8000;
+  await p.tick();
+  log(`P8 sau 12s: texts gui=${fake.sent.filter((x: any) => x.kind === 'text').length}`);
+  await sql(`delete from outbox where thread_id=$1`, [g]);
+  await H.dropGroup(g);
+  await s.stop();
+}
+
+await H.resetAccount();
+await sql(`update inbound_events set processed_at = now() where processed_at is null`);
+await closeDb();

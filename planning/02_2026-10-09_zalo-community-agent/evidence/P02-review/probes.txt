@@ -1,0 +1,29 @@
+{"t":"2026-10-16T03:38:56.961Z","event":"zalo.state","account":"community","state":"connected"}
+P1 zalo calls: removeMember,removeMember,blockMember
+P1 outbox 2894: status=sent
+P1 outbox 2895: status=sent
+P1 outbox 2896: status=sent
+P1 approvals after: pending-one=pending rejected-one=rejected
+{"t":"2026-10-16T03:38:57.044Z","event":"zalo.state","account":"community","state":"connected"}
+P2 zalo calls: deleteMessage,createPoll; outbox 2897=sent, 2898=sent
+{"t":"2026-10-16T03:38:57.083Z","event":"zalo.state","account":"community","state":"connected"}
+P3 worker: outbox=sent deleteMessage.args={"msgId":"777","cliMsgId":"777","uidFrom":"u1"}
+P3 sim: outbox=sent deleted=true (cliMsgId gui='888', cli_msg_id that='real-cli')
+{"t":"2026-10-16T03:38:57.137Z","event":"zalo.state","account":"community","state":"connected"}
+P4 groupTextSentLastHour(now)=3 vs (now+61m)=0
+{"t":"2026-10-16T03:38:57.172Z","event":"pacer.sent","account":"community","outbox_id":2904}
+P4 budget=3, 3 sent 5 phut truoc, worker clock +61m: outbox=sent, sentText=2
+{"t":"2026-10-16T03:38:57.191Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T03:38:57.205Z","event":"pacer.action_error","account":"community","outbox_id":2905,"error":"Error: ECONNRESET"}
+P5 createPoll calls=2; outbox=sent
+{"t":"2026-10-16T03:38:57.237Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T03:38:57.280Z","event":"pacer.sent","account":"community","outbox_id":2907}
+P6 zalo_groups sau sync: {"enabled":false,"budget_per_hour":20}; text vao nhom do: sent
+{"t":"2026-10-16T03:38:57.303Z","event":"zalo.state","account":"community","state":"connected"}
+P7 review_join ket qua {} ⇒ outbox=sent result={}
+{"t":"2026-10-16T03:38:57.336Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T03:38:57.361Z","event":"pacer.sent","account":"community","outbox_id":2909}
+P8 sau 4s: texts gui=1 note=blocked
+{"t":"2026-10-16T03:38:57.382Z","event":"pacer.sent","account":"community","outbox_id":2910}
+P8 sau 12s: texts gui=2
+EXIT=0
