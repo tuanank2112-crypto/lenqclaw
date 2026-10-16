@@ -118,6 +118,15 @@ SO xác minh mục CHẶN R03 §1 trong mã (`actions.ts:86-96` gọi Zalo khôn
 ### D30 — 2026-10-16 · Nghiệm thu P02 sau vòng sửa (R05 ✅); chốt các điểm còn mở (SO)
 SO đo lại trên `2723955`: gate exit 0 (31/102/85, có và không nạp `.env`), test:db exit 0 ×2 (33/24/73), `pacer-sim --group` `first_hour: 20`, `violations: 0`; đột biến SO tự làm (tắt cổng thẻ duyệt `pacer.ts:350`) ⇒ 12 test DB đỏ, đã trả mã. Chốt: (1) `runScenario` được truyền `extraThreadIds` cho thread kịch bản không `sim-` — chỉ đường test, route web vẫn chỉ `sim-%`; (2) `approvals.executed_at` làm dấu "đã nhận thẻ" (không thêm trạng thái/migration); thẻ treo khi worker chết giữa nhận và hoàn tất ⇒ P07 thêm bước cảnh báo owner (KHÔNG tự nhả — tránh kick lặp); (3) sim CHƯA kiểm thẻ duyệt cho kick/block ⇒ P05 bổ sung để test core thấy cổng như worker; (4) 4 điểm lệch R02 §6 (audit `zalo.action`/`zalo.action_failed`/`zalo.action_blocked`, `ZaloActionError.code` = tên lớp + `apiCode`, chữ ký mở rộng, `sync_group_info` tạo nhóm `enabled=false`) chấp nhận — ghi SPEC-P02 §11; (5) commit `88e3a52` mang nhầm message của worker nhưng chứa SPEC D28 của architect — giữ lịch sử, ghi chú tại đây. G04–G06 ✅ local. **Lật:** không.
 
+### D31 — 2026-10-16 · Mục tiêu tốc độ trả lời: ngoài công việc < 5 s, công việc/tra tài liệu (RAG) < 15 s (người dùng chốt)
+Người dùng: "tôi cần nhanh hơn. các câu trả lời ngoài luồng công việc phải <5s. còn liên quan đến công việc, dataset, phải rag thì <15s". Bối cảnh (bóc tách 2026-10-16): SPEC chưa có mục tiêu tốc độ; lời gọi model chính KHÔNG có timeout (`adapters/model.ts`, chỉ triage có 4 s); runner xử lý tuần tự 1 bản (`runner/inbound-runner.ts:30-38`) ⇒ một lượt treo chặn mọi nhóm/DM; khoảng cách tin nhóm ≥ 9 s (D09) có thể vượt 5 s nếu bot vừa nói. Architect 🔴 thiết kế "làn nhanh / làn RAG" + đo thật ⇒ [H06](handoffs/H06_kien-truc_toc-do.md); thay đổi hình đồ thị đã duyệt (ảnh 12) phải đưa người dùng duyệt lại. **Lật:** người dùng đổi mục tiêu.
+
+### D32 — 2026-10-16 · Kênh báo động ngoài Zalo = Telegram (người dùng chốt)
+Người dùng: "báo qua telegram". Lý do cần: khi phiên Zalo chết (kicked/dead) bot không DM được chủ và báo cáo ngày cũng không gửi (P07 §5, OPERATIONS §4.3) ⇒ chủ không biết. Telegram dùng cho BÁO ĐỘNG vận hành (phiên Zalo chết, runner/worker mất heartbeat, model sập kéo dài, vượt SLO D31), KHÔNG phải kênh chat với thành viên. Thiết kế ở H06 §3.f. **Lật:** đổi kênh = đổi một adapter.
+
+### D33 — 2026-10-16 · Kích hoạt persona KHÔNG bắt buộc qua eval (người dùng chốt)
+Người dùng: "không". Kích hoạt phiên bản persona trên dashboard có hiệu lực ngay như SPEC-P08; eval golden vẫn chạy tay theo OPERATIONS §5. CẤM thêm cổng eval chặn kích hoạt persona. **Lật:** người dùng đổi ý.
+
 ### Quyết định bị thay thế
 | Mốc cũ | Phát biểu cũ | Thay bằng | Lý do |
 | :-- | :-- | :-- | :-- |
@@ -179,7 +188,8 @@ Thứ tự bắt buộc: `P01 → P02 → P03 → (P04 ∥ P05 ∥ P06 ∥ P07) 
 - [x] P01 — gỡ sàn thợ (G01–G03 local ✅) — handoff [H01](handoffs/H01_thi-cong_P01.md) ↔ [R01](reports/R01_thi-cong_P01.md) ✅ DUYỆT 2026-10-16 (SO đo lại; D27) — WIP `601aac7` + `f164f23`, Base `b356f07`
 - [x] P02 — transport nhóm (G04–G06 local ✅) — H02↔R02 🔁 · H03↔R03 thẩm định ✅ · H05↔R05 ✅ 2026-10-16 (D29, D30)
 - [x] D28 — architect 🔴 sửa SPEC theo LangGraph + sơ đồ pipeline — H04↔[R04](reports/R04_kien-truc_LangGraph.md) ✅ 2026-10-16 (SPEC ở `88e3a52`, report `a9d4a47`)
-- [ ] 🖐 Người dùng duyệt sơ đồ pipeline LangGraph — CHẶN P03
+- [x] 🖐 Người dùng duyệt sơ đồ pipeline LangGraph (luồng xử lý trong nhóm, [ảnh 12](../../docs/images/12-pipeline-langgraph.png)) — "ok đây là luồng xử lý trong group" 2026-10-16
+- [ ] 🖐 Người dùng xem bóc tách luồng kỹ thuật: tốc độ output · chất lượng · eval · status · sessions (yêu cầu 2026-10-16) — có thể bổ sung SPEC P03 trước khi thi công
 - [ ] P03 — runtime agent trên LangGraph (G07, G08, G14, G15 local)
 - [ ] P04 — tri thức (G12 local sau golden)
 - [ ] P05 — kiểm duyệt (G13, G16)
