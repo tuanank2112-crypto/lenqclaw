@@ -8,7 +8,7 @@
 1. (D26 — SO ĐÃ LÀM 2026-10-14) Tag `archive/plan-01-marketplace` = `d7f50eb`, đã push `origin`, đủ 94/94 file (`evidence/P01/archive-tag.txt`). Worker CHỈ kiểm: `git rev-parse archive/plan-01-marketplace^{commit}` = `d7f50eb…`; CẤM đánh lại/xoá/di chuyển tag. Mẫu port (vòng tool `resident-agent.ts`, `pii.ts`, `claim_job.ts`…) đọc bằng `git show archive/plan-01-marketplace:<đường>`.
 2. Thêm `db/migrations/007_drop_marketplace.sql` và `008_community.sql` NGUYÊN VĂN 01-CONTRACTS §4 (so sha256 với `evidence/ARCH/migration-draft-sha256.txt` sau khi chuẩn hoá LF; lệch ⇒ dừng, báo). Thêm `009_tenant_trace.sql` NGUYÊN VĂN 01-CONTRACTS §4 (D23/D24 — chưa có sha256 vì chưa áp thử): áp từ DB rỗng sau 008 + chạy lại ⇒ ghi `evidence/P01/migration-009-probe.txt` (`applied 1`, `applied 0`, `tenants` có `default`, `zalo_accounts.tenant_id = default`, insert `turn_traces` outcome lạ bị CHECK từ chối).
 3. Gỡ file theo §2; sửa file theo §3; viết lại seed §4, máy đo §6, `.env.example` §5.
-4. `npm run gate` ⇒ exit 0; `npm run test:db` ⇒ exit 0 (DB dev `127.0.0.1:55432`, migrations 001–009 áp sạch từ DB rỗng — test P01 mới kiểm `applied = 9` theo số file, không ghi cứng).
+4. `npm run gate` ⇒ exit 0; `npm run test:db` ⇒ exit 0 (DB dev `127.0.0.1:15432` — đổi 2026-10-16, G31/D27; migrations 001–009 áp sạch từ DB rỗng — test P01 mới kiểm `applied = 9` theo số file, không ghi cứng).
 5. Cập nhật `docs/core.md`, `docs/web.md`, `docs/zalo-worker.md` (Ma Trận 6 Điểm): xoá mọi mục sàn thợ, ghi trạng thái "P01 kế hoạch 02 xong".
 
 ## §2. Danh sách GỠ (đo từ cây mã HEAD `eada365`, 2026-10-09; `git rm`)
@@ -135,8 +135,8 @@ Chỉ tạo khi có chép đoạn mã ≥ 10 dòng từ OpenClaw (MIT, OpenClaw 
 | 1 | `git tag --list 'archive/*'` | `archive/plan-01-marketplace` |
 | 2 | `npm run gate` | `GATE_OK`, exit 0 (5 bước + `check_pivot_cleanup`) |
 | 3 | `node scripts/check_pivot_cleanup.mjs` | `pivot_hits: 0` |
-| 4 | `npm run test:db` | exit 0, 0 skip; `p01.db.test.ts` in `applied: 9` (từ DB rỗng — test tự `drop schema public cascade; create schema public` ở `beforeAll` khi `TEST_DB_RESET=1`, mặc định dùng DB hiện có đã migrate) |
+| 4 | `npm run test:db` | exit 0, 0 skip; `p01.db.test.ts` in `applied: 9` khi chạy trên DB tạm với `TEST_DB_RESET=1` (DB dev đã migrate in `applied: 0` — D27) (từ DB rỗng — test tự `drop schema public cascade; create schema public` ở `beforeAll` khi `TEST_DB_RESET=1`, mặc định dùng DB hiện có đã migrate) |
 | 5 | `npm test` | core ≥ 60, web ≥ 30, worker ≥ 37 test, 0 fail, 0 skip |
-| 6 | `git diff --stat --diff-filter=D <base>..HEAD \| tail -1` | `94 files changed` (rename `search-regulations→search-knowledge`, `tool-kit` không tính; sai lệch ⇒ giải thích từng file trong report) |
+| 6 | `git diff --stat --diff-filter=D <base>..HEAD \| tail -1` | `95 files changed` (D27: 94 file §2 + `agent/tools/tool-kit.test.ts` — dời sang `agent/community/tools/` và viết lại nên git tính xoá; rename `search-regulations→search-knowledge`, `tool-kit` không tính; sai lệch ⇒ giải thích từng file trong report) |
 | 7 | `grep -rn "bql\|market" apps packages scripts --include=*.ts --include=*.tsx --include=*.mjs -l \| grep -v node_modules \| wc -l` | `0` |
 | 8 | `ls planning/01_2026-09-24_san-viec-tho-mvp/specs \| wc -l` | `11` (không đổi) |

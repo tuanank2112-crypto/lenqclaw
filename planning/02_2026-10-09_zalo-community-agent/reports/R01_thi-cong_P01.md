@@ -49,4 +49,7 @@ SPEC-P01 §10: 1 `archive/plan-01-marketplace` ✅ · 2 `GATE_OK` ✅ · 3 `pivo
 ## 7. Tiếp theo
 🖐 Cần tay người: không có · 🤖 Agent làm được ngay: SO phán quyết R01, đồng bộ `brain4agent/`, rồi phóng P02 · ⭐ Nên làm trước: đo lại hàng §10 (gate, test:db) rồi sửa SPEC theo mục 6 — để hàng 6 không đỏ giả · ⏸ Chưa làm: push (chờ lệnh), cập nhật `brain4agent/` (cấm đụng, SO làm sau phán quyết)
 
-⏳ Chờ phán quyết.
+## Phán quyết SO (2026-10-16, Claude Opus 5.5 — đo lại độc lập trên `f164f23`)
+gate exit 0 (82/31/37) · test:db exit 0 ×2 (16/14/27, 0 skip) · pivot 0 + đỏ mới (file thử ⇒ `pivot_hits: 1`, exit 1) · hàng 7 = 0 · hàng 8 = 11 · tag `d7f50eb` · diff của worker (`49eaf7f..f164f23`) chỉ chạm `p01.db.test.ts`, `redact.ts`, `check_pivot_cleanup.mjs` + evidence/report — trong phạm vi. Hàng 6 = 95 và hàng 4 chấp nhận, SPEC đã chỉnh (D27).
+
+✅ DUYỆT

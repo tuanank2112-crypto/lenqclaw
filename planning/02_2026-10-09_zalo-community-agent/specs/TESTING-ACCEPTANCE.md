@@ -40,9 +40,9 @@ Bằng chứng đỏ bắt buộc cho máy chấm: `scripts/eval/community/red-f
 ## §4. Exit Gates (đánh dấu theo môi trường — kế hoạch chỉ đóng khi cột `vps` ✅)
 | Gate | Nội dung | local | zalo-thật | vps |
 | :-- | :-- | :-- | :-- | :-- |
-| G01 | Cổng §1 xanh trên cây sạch sau P01; tag `archive/plan-01-marketplace`; `pivot_hits: 0` | ⬜ | — | ⬜ |
-| G02 | Migration 001–009 từ DB rỗng `applied: 9`; chạy lại `applied: 0`; `pre-007.sql` tồn tại trước khi áp lên DB có dữ liệu | ⬜ | — | ⬜ |
-| G03 | Auth 2 vai + policy ≥ 14 ca + audit | ⬜ | — | ⬜ |
+| G01 | Cổng §1 xanh trên cây sạch sau P01; tag `archive/plan-01-marketplace`; `pivot_hits: 0` | ✅ 2026-10-16 (R01) | — | ⬜ |
+| G02 | Migration 001–009 từ DB rỗng `applied: 9`; chạy lại `applied: 0`; `pre-007.sql` tồn tại trước khi áp lên DB có dữ liệu | ✅ 2026-10-16 (R01) | — | ⬜ |
+| G03 | Auth 2 vai + policy ≥ 14 ca + audit | ✅ 2026-10-16 (15 ca) | — | ⬜ |
 | G04 | Transport nhóm: tin/sự kiện nhóm ghi đúng payload; `delete_message` dùng `uidFrom` người gửi (ca đỏ: uid bot); 166 ⇒ `bot_is_admin=false` | ⬜ | ⬜ (bot là phó nhóm thật, `sync_group_info` ⇒ `bot_is_admin=true`) | ⬜ |
 | G05 | Pacer: `simulatePacer` 100 tin/1 nhóm ⇒ `first_hour=20`, `min_gap≥8000`, `violations: 0`; DM 50 tin/20 người ⇒ 0 vi phạm (giữ) | ⬜ | ⬜ (24 giờ chạy thật: 0 lần backoff 221/no-msgId) | ⬜ |
 | G06 | Watchdog 3003/1006/im 20 phút (giữ test cũ, tài khoản `community`) | ⬜ | ⬜ | ⬜ |
