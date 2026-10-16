@@ -2,6 +2,15 @@
 
 Tất cả các quyết định kiến trúc và lịch sử nâng cấp phiên bản của dự án.
 
+## [Unreleased] - 2026-10-16: P02 nghiệm thu + D28 runtime LangGraph
+### Changed
+- P02: transport nhóm (tin + sự kiện nhóm, action quản trị qua outbox, pacer + ngân sách theo nhóm, kênh giả lập nhóm). Thẩm định đối kháng tìm lỗi CHẶN kick/block không kiểm thẻ duyệt ⇒ sửa (D29): worker là lớp chặn cuối BB-06.
+### Decided
+- **D28 (người dùng):** runtime agent dựng trên LangGraph.js 1.4.18, pipeline là đồ thị tường minh — nền cho kế hoạch 03 và giai đoạn doanh nghiệp. BB-15/16/17 mới (tác dụng phụ theo node, cạnh thuần, cấm checkpointer/LangSmith/ChatModel LangChain).
+- **D29/D30:** cách sửa P02 và các điểm chốt sau nghiệm thu.
+### Superseded
+- Vòng tool tự viết SPEC-P03 §6 (port `resident-agent.ts`) — thay bởi `turnGraph` (D28).
+
 ## [Unreleased] - 2026-10-16: P01 kế hoạch 02 nghiệm thu — repo không còn mã sàn thợ
 ### Changed
 - Gỡ 95 file sàn thợ (agent cư dân/thợ, dispatch, slot, access, ticket, golden cũ); migration `007_drop_marketplace`, `008_community`, `009_tenant_trace`; tài khoản Zalo `community`; vai web `admin`/`operator`; seed persona/skill/nhóm mô phỏng; khung `agent/community/router.ts`; máy đo `check_pivot_cleanup` vào `gate`. Không bump version (D11: `0.1.0` khi đóng kế hoạch 02).

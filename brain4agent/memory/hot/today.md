@@ -16,8 +16,13 @@ Người dùng: dựng hệ thống trước, test Zalo thật để sau (P09); 
 - Phụ lục H01 §7 (`d05279f`), phóng worker 🟠 làm nốt P01 ⇒ R01 (`f164f23` công việc: cô lập dữ liệu ca 4 theo G29, máy quét tách chuỗi từ khoá; `f0585fd` report).
 - SO đo lại độc lập: gate exit 0 (82/31/37), test:db exit 0 ×2 (16/14/27, 0 skip), pivot 0 + đỏ mới (file thử ⇒ 1, exit 1), hàng 7 = 0, hàng 8 = 11, tag `d7f50eb`, diff worker trong phạm vi ⇒ **R01 ✅ DUYỆT**, D27 (SPEC §10 hàng 4 đo trên DB tạm, hàng 6 = 95 vì `tool-kit.test.ts` dời + viết lại). G01–G03 ✅ local. Não đồng bộ 6 điểm.
 
+- Người dùng hỏi "repomix là gì" ⇒ giải thích (Repomix gom repo 1 file XML cho AI, không lộ key) ⇒ người bảo bỏ ⇒ đã xoá.
+- P02: H02 → worker 🟠 (R02) → SO đo khớp → thẩm định đối kháng 🔴 H03/R03 (agent khác, không đọc R02): 1 CHẶN (kick/block không kiểm thẻ duyệt — SO xác minh `actions.ts:86-96`) + 6 bộ đo lọt đột biến ⇒ R02 🔁, D29 (8 điểm) → H05/R05 → SO đo lại + tự đột biến (tắt cổng thẻ ⇒ 12 đỏ) ⇒ ✅ (D30). G04–G06 ✅ local.
+- **D28 (người dùng chốt TRONG PHIÊN NÀY):** "bảo sử dụng nó và pipeline nữa mà" ⇒ LangGraph.js + pipeline đồ thị là nền. SO từng ghi nhầm là "chỉ đạo cũ thất lạc", người dùng sửa ⇒ đã sửa D28 + bộ nhớ. Architect 🔴 H04/R04: pin 1.4.18, spike 18/18, 2 đồ thị (pipelineGraph 9 node + turnGraph), không checkpointer (đo: tự tạo 4 bảng, phình lịch sử, lưu SĐT nguyên văn). Sơ đồ ở 00-ARCH §4.
+- G32: commit `88e3a52` lẫn index giữa 2 agent song song.
+
 ### ⏭ Treo
-- P02 transport nhóm (🟠 thi công · 🔴 thẩm định) — kế tiếp.
+- 🖐 Người dùng duyệt sơ đồ pipeline LangGraph (00-ARCH §4) + chọn `agent_review` khi model sập (cho vào | thẻ duyệt owner) ⇒ mới thi công P03.
 - `repomix-output.xml` (root, chưa theo dõi, 1,7 MB, 2026-10-14 10:01) — chưa rõ ai tạo; chờ người quyết giữ/xoá.
 
 ---

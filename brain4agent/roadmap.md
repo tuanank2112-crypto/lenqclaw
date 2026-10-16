@@ -14,7 +14,10 @@ Pivot 2026-10-09 (D01): agent chăm sóc cộng đồng Zalo. Bộ SPEC ĐÃ DUY
 - [x] Bổ sung D22–D25 (2026-10-14): ngữ cảnh DM ≤ 5 lượt + ghi chú, không nén · tenant `default` + `turn_traces` (migration 009) · chỉ zca-js cho cả cộng đồng lẫn doanh nghiệp
 - [x] 🖐 Người xác nhận GỠ 94 file sàn thợ — 2026-10-14 ("di chuyển an toàn": tag `archive/plan-01-marketplace` = `d7f50eb` đã push, D26)
 - [x] P01 — gỡ sàn thợ, migration 007/008/009, tài khoản `community`, vai admin/operator, seed, `check_pivot_cleanup` (🟠, G01–G03 ✅ local) — R01 ✅ 2026-10-16 (D27)
-- [ ] P02 — transport nhóm (🟠 thi công · 🔴 thẩm định) — KẾ TIẾP
+- [x] P02 — transport nhóm (G04–G06 ✅ local) — R02 🔁 → thẩm định R03 → R05 ✅ 2026-10-16 (D29, D30)
+- [x] D28 — SPEC runtime trên LangGraph (R04 ✅ kỹ thuật)
+- [ ] 🖐 Người dùng duyệt sơ đồ pipeline LangGraph — CHẶN P03
+- [ ] P03 — runtime agent trên LangGraph — KẾ TIẾP sau duyệt
 - [ ] P02 — transport nhóm: worker + action outbox + pacer nhóm + sim nhóm (🟠 thi công · 🔴 thẩm định, G04–G06)
 - [ ] P03 — runtime agent: cổng nhận tin, đệm, ambient, persona, policy tool, host ép trả lời (🔴/🟠, G07, G08, G14, G15)
 - [ ] P04 — tri thức: kho, embedding, truy hồi lai RRF, câu hỏi bỏ trống (🟠, G12)
@@ -86,6 +89,8 @@ Việc lẻ chưa xếp giai đoạn: lịch `cron` (D16, `cron_expr` + `croner`
 
 ## Đã hoàn thành (Done)
 
+- [x] **2026-10-16 — P02 kế hoạch 02 (R05 ✅, D29/D30):** worker nhận tin/sự kiện nhóm, 10 action quản trị, kick/block chỉ khi thẻ duyệt `approved` (CAS), pacer 20 tin/giờ/nhóm cách ≥ 9 s, sim nhóm `/dev/sim`; thẩm định đối kháng 22 đột biến → sửa → 23/23 bắt.
+- [x] **2026-10-16 — D28 LangGraph:** người dùng chốt LangGraph + pipeline đồ thị làm nền; architect thiết kế lại SPEC (R04).
 - [x] **2026-10-16 — P01 kế hoạch 02 (R01 ✅, D27):** gỡ 95 file sàn thợ (94 theo §2 + `tool-kit.test.ts` dời chỗ), migration 007–009, nền cộng đồng biên dịch được; gate xanh (unit 82/31/37), test:db 16/14/27, `pivot_hits: 0`. Cổng DB dev → `15432` (G31).
 - [x] **2026-10-09 — Pivot sang agent cộng đồng Zalo:** nghiên cứu OpenClaw + zaloclaw, Đ32 dừng kế hoạch 01, architect dựng bộ SPEC kế hoạch 02 (`7a58d6d`, bằng chứng `evidence/ARCH/`), SO duyệt (`f6a4465`). Chưa đổi mã; P01 chờ người xác nhận gỡ file. Các mục Done bên dưới là của sàn thợ (kế hoạch 01), giữ làm lịch sử và nền tái dùng.
 
