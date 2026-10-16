@@ -1,0 +1,19 @@
+# git diff --stat bfbfc5e..33248d1 (output MAY)
+ .../evidence/ARCH-D31/budget-sim.mjs.txt           | 118 +++++++
+ .../evidence/ARCH-D31/budget-sim.txt               |  20 ++
+ .../evidence/ARCH-D31/gate.txt                     | 131 ++++++++
+ .../evidence/ARCH-D31/latency-probe.txt            |  78 +++++
+ .../evidence/ARCH-D31/migration-010-probe.txt      |  24 ++
+ .../evidence/ARCH-D31/probe.mjs.txt                | 353 +++++++++++++++++++++
+ .../specs/00-ARCHITECTURE.md                       |  24 +-
+ .../specs/01-CONTRACTS.md                          | 153 ++++++++-
+ .../specs/OPERATIONS.md                            |  25 +-
+ .../specs/SPEC-D31-Toc-Do-Giam-Sat.md              | 248 +++++++++++++++
+ .../specs/SPEC-P02-Transport-Nhom.md               |   1 +
+ .../specs/SPEC-P03-Runtime-Agent.md                |  21 +-
+ .../specs/SPEC-P04-Tri-Thuc.md                     |  13 +-
+ .../specs/SPEC-P05-Kiem-Duyet.md                   |   1 +
+ .../specs/SPEC-P07-Lich-Van-Hanh.md                |   7 +-
+ .../specs/SPEC-P08-Dashboard.md                    |   3 +
+ .../specs/TESTING-ACCEPTANCE.md                    |   8 +-
+ 17 files changed, 1188 insertions(+), 40 deletions(-)
