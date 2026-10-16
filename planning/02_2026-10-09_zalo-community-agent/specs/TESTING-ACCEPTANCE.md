@@ -1,6 +1,7 @@
 # TESTING-ACCEPTANCE — Ma trận test, golden thật, Exit Gates
 
 > "Xong" = lệnh chạy ra số, số đạt ngưỡng, bằng chứng nằm trong `evidence/<gói>/*.txt` (stdout máy, CẤM sửa tay). Không có bằng chứng ⇒ chưa xong. Mọi bộ đo MỚI phải có bằng chứng ĐỎ trên hệ cố tình hỏng ít nhất một lần (`evidence/<gói>/red-*.txt`).
+> D28 (2026-10-16): runtime là đồ thị LangGraph — thêm hàng P03 §11 hàng 8–13 (cạnh THUẦN, hình đồ thị = sơ đồ duyệt, pin phụ thuộc, chặn LangSmith, ranh giới node), gate G22; `routeInboundEvent` = `runPipeline` nên mọi golden/e2e gọi qua nó giữ nguyên.
 > Số nền đo 2026-10-09 (HEAD `eada365`): `npm test` 317 (core 244 · web 36 · worker 37); bộ kiểm của architect: `evidence/ARCH/{gate-ref,ladder-ref,budget-ref,db-checks,migration-probe}.txt` đều exit 0.
 
 ## §1. Cổng không cần DB/LLM (mọi gói) — `npm run gate`
@@ -8,7 +9,7 @@
 | :-- | :-- |
 | `npm run typecheck` · `npm run build` | exit 0 (build không cần `DATABASE_URL`) |
 | `npm test` | 0 fail, 0 skip; số test từng workspace không giảm so với report gói trước (P01 đặt sàn mới: core ≥ 60, web ≥ 30, worker ≥ 37) |
-| `node scripts/check_adapter_boundary.mjs` | `violations: 0` (BB-02, BB-03) |
+| `node scripts/check_adapter_boundary.mjs` | `violations: 0` (BB-02, BB-03; từ P03 thêm BB-15, BB-17 — SPEC-P03 §11 hàng 12) |
 | `node scripts/check_agent_tools.mjs` | `forbidden_tools: 0`, `forbidden_actions: 0`, `unlisted_tools: 0` (BB-01, BB-06) |
 | `node scripts/check_pivot_cleanup.mjs` | `pivot_hits: 0` (D03) |
 Kiểm mã thoát trực tiếp (`$?`), không qua `| tail` (G08).
@@ -18,7 +19,7 @@ Kiểm mã thoát trực tiếp (`$?`), không qua `| tail` (G08).
 | :-- | :-- |
 | P01 | SPEC-P01 §10: tag, gate + `check_pivot_cleanup`, `test:db` từ rỗng `applied: 9`, 94 file xoá, grep `bql|market` = 0 |
 | P02 | SPEC-P02 §10: ≥ 14 ca worker (nhóm, sự kiện, action với `uidFrom` đúng, 166 ⇒ `bot_is_admin=false`, chunk/quote, `simulatePacer` 20/giờ), `sim-actions`, `/api/dev/sim/send` nhóm |
-| P03 | SPEC-P03 §11: 28 ca cổng (nguyên văn `gate-ref`), policy ≥ 30, persona/BB-07, 14 ca DB lượt nhóm/DM (gồm D22 ngữ cảnh DM, D24 vết lượt), 0 model cho tin thường mode `mention` |
+| P03 | SPEC-P03 §11: 28 ca cổng (nguyên văn `gate-ref`), policy ≥ 30, persona/BB-07, 19 ca DB lượt nhóm/DM (a–s: gồm D22 ngữ cảnh DM, D24 vết lượt, D28 trần vòng/đường xấu nhất/lỗi giữa lượt/refusal/nudge), 0 model cho tin thường mode `mention`; D28: `edges.test` ≥ 60 ca, `graph-shape.test` (hình = 01-CONTRACTS §12.4), `npm ls` pin, `ConfigError` LangSmith, boundary BB-15/BB-17 + bằng chứng đỏ |
 | P04 | SPEC-P04 §8: token/RRF, embed dịch đúng, DB lai, 5 ca câu hỏi bỏ trống (`db-checks (b)`) |
 | P05 | SPEC-P05 §10: 14 ca thang (`ladder-ref`), lưới 0 báo nhầm/40, bằng chứng duyệt ≥ 12 ca, 10 ca DB kiểm duyệt, join/welcome, thẩm định đối kháng ≥ 3 cách phá |
 | P06 | SPEC-P06 §7: điểm lead, trạng thái lead, trí nhớ không rò vào nhóm, mời riêng |
@@ -60,12 +61,13 @@ Bằng chứng đỏ bắt buộc cho máy chấm: `scripts/eval/community/red-f
 | G18 | Dashboard: 4 bộ DB web xanh 3 lần + `next build && next start` curl | ⬜ | — | ⬜ |
 | G19 | 7 ngày chạy Zalo thật ≥ 2 nhóm (≥ 1 ambient): tài khoản không bị khoá, phiên `connected` ≥ 95% giờ 7–22h, 0 `approvals.status='failed'` do 166 sau khi đặt phó nhóm, than phiền "bot nói nhiều" = 0 (chủ ghi `daily_notes`) | — | ⬜ | ⬜ |
 | G20 | `package.json` ×4 `0.1.0`, `changelog.md` mục `0.1.0`, Ma Trận 6 Điểm đồng bộ (SO) | — | — | ⬜ |
+| G22 | D28 (BB-15…BB-17): SPEC-P03 §11 hàng 8–13 xanh; `graph-shape.test` khớp sơ đồ người dùng đã duyệt; `select count(*) from information_schema.tables where table_name like 'checkpoint%'` = `0`; `npm ls` đúng pin 01-CONTRACTS §12.1; `turn_traces` có đúng 1 dòng/lượt kể cả ca lỗi (5q) | ⬜ | ⬜ (7 ngày: `select outcome, count(*) from turn_traces group by 1` không có `error` do `GraphRecursionError`) | ⬜ |
 | G21 | D22/D24 (BB-13, BB-14): SPEC-P03 §11 hàng 5(m)(n) xanh; sau `runTimers` với `now` +31 ngày: `select count(*) from messages where created_at < $now - interval '30 days'` = `0`, `member_profiles`/`leads` không đổi số dòng; `select count(*) from turn_traces` = số lượt agent của bộ test; ca đỏ: `DM_HISTORY_TURNS` bị bỏ qua (nạp 30 tin) ⇒ hàng 5(m) ĐỎ | ⬜ | ⬜ (7 ngày: `avg(input_tokens)` lượt `dm` theo `turn_traces` ổn định, không tăng theo số ngày) | ⬜ |
 
 ## §5. Số đo lưới an toàn (sau mỗi lượt chạy thật, ghi vào report)
 ```sql
 select action, count(*)::int as n from audit_log
- where action in ('turn.fallback_reply','turn.auto_posted_final','ambient.budget_skip','pacer.budget_expired','moderation.need_deputy','tool.denied','router.forged_system_event','agent.model_error','timer.error','kb.embed_unavailable')
+ where action in ('turn.fallback_reply','turn.auto_posted_final','turn.round_cap','agent.refusal','ambient.budget_skip','pacer.budget_expired','moderation.need_deputy','tool.denied','router.forged_system_event','agent.model_error','timer.error','kb.embed_unavailable')
    and created_at > $since group by action order by action;
 ```
-Ngưỡng (≥ 100 lượt nhóm với model thật): `turn.fallback_reply` ≤ 3%; `tool.denied` = 0 (nếu > 0 ⇒ bảng policy hoặc prompt sai); `router.forged_system_event` = 0 ngoài test; `pacer.budget_expired` ≤ 5% số tin nhóm; `moderation.need_deputy` = 0 khi bot là phó nhóm. Vượt ⇒ sửa prompt/tool/ngân sách, KHÔNG nới lưới.
+Ngưỡng (≥ 100 lượt nhóm với model thật): `turn.fallback_reply` ≤ 3%; `turn.round_cap` ≤ 1% (D28 — nhiều hơn ⇒ prompt/tool khiến model lặp); `tool.denied` = 0 (nếu > 0 ⇒ bảng policy hoặc prompt sai); `router.forged_system_event` = 0 ngoài test; `pacer.budget_expired` ≤ 5% số tin nhóm; `moderation.need_deputy` = 0 khi bot là phó nhóm. Vượt ⇒ sửa prompt/tool/ngân sách, KHÔNG nới lưới.

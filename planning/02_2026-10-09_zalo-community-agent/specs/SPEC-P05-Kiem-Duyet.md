@@ -1,10 +1,11 @@
 # SPEC-P05 — Kiểm duyệt, thang cảnh cáo, thẻ duyệt, duyệt vào nhóm, chào mừng (D05b, D05c, D06)
 
 > Tầng 🔴 hợp đồng (file này) · 🟠 thi công · thẩm định 🔴 (bảo mật: hành động quản trị). Đọc 01-CONTRACTS §5.1, §5.3, §7.1, §8.3, §9 và SPEC-P03 §4, §6. Phụ thuộc: P02 (action), P03 (lượt).
+> D28: kiểm duyệt là node `moderate` của `pipelineGraph` (sau `triage`, trước `gate`; tin bị xoá ⇒ cạnh `afterModerate` ⇒ END); sự kiện nhóm là node `group_event`; `welcome_flush`/`join_request` ⇒ node `system_event` ⇒ `turnGraph`; đường lùi khi model im/sập là node `deliver` (`hostText`, `join_default` — 01-CONTRACTS §12.5). P03 dựng KHUNG các node này; P05 điền thân, KHÔNG đổi node/cạnh.
 > Mẫu port: thang cảnh cáo suy giảm theo (nhóm, người) (findings zaloclaw "escalating warn ladder with decay" — tự thiết kế lại, bản tham chiếu `evidence/ARCH/ladder-ref.txt`); thẻ duyệt OpenClaw (approval cards with scope summary).
 
 ## §1. Phạm vi
-`services/{moderation,moderation-ladder,approvals,join-requests,welcome}.ts`, tool `flag_message`, `delete_message`, `warn_member`, `request_member_removal`, `decide_approval`, `review_join_request`, lệnh `/approve`, `/reject`; web `/approvals` (P08). Mọi tin nhóm đã đệm ở nhóm `moderation_enabled` đi qua §3 TRƯỚC cổng nhận tin (P03 §2).
+`services/{moderation,moderation-ladder,approvals,join-requests,welcome}.ts`, tool `flag_message`, `delete_message`, `warn_member`, `request_member_removal`, `decide_approval`, `review_join_request`, lệnh `/approve`, `/reject`; web `/approvals` (P08). Mọi tin nhóm đã đệm ở nhóm `moderation_enabled` đi qua §3 TRƯỚC cổng nhận tin (P03 §2 — D28: node `moderate`, cạnh `triage ⇒ moderate ⇒ gate`).
 
 ## §2. Lưới tất định — `moderation-grid.ts::classifyGrid(text, ctx)` (THUẦN, ưu tiên CHÍNH XÁC)
 Trả `{ hits: GridHit[]; hard: boolean }`. `GridHit` ∈:
@@ -70,13 +71,13 @@ Sự kiện `join_request` (uids[]) ở nhóm `enabled`:
 | :-- | :-- |
 | `auto_approve` | `join_requests(decision='approved', decided_by='policy')` + `enqueueAction({action:'review_join', uids, approve:true})` — 0 model |
 | `manual` | `join_requests pending` + `createApproval(kind:'approve_join', requestedBy:'moderation')` một thẻ cho MỖI uid (ghi `payload.display_name`); owner duyệt ⇒ `review_join approve:true`, từ chối ⇒ `approve:false` |
-| `agent_review` | `join_requests pending` + `enqueueSystemEvent({event:'join_request', threadId, uid})` ⇒ lượt `group_join_review` (P03 §4.3): context = tên hiển thị (untrusted), số lần xin vào trước, `zalo_groups.system_prompt` (có thể chứa tiêu chí); tool DUY NHẤT `review_join_request(uid, decision, reason)` ⇒ approve: `review_join approve:true` ngay; reject: cần `reason` ≥ 10 ký tự ⇒ `review_join approve:false` ngay + audit; model không gọi tool ⇒ host `approve` mặc định (🖐 Q9 giá trị tạm: mặc định CHO VÀO) |
+| `agent_review` | `join_requests pending` + `enqueueSystemEvent({event:'join_request', threadId, uid})` ⇒ lượt `group_join_review` (P03 §4.3): context = tên hiển thị (untrusted), số lần xin vào trước, `zalo_groups.system_prompt` (có thể chứa tiêu chí); tool DUY NHẤT `review_join_request(uid, decision, reason)` (cờ `answers`) ⇒ approve: `review_join approve:true` ngay; reject: cần `reason` ≥ 10 ký tự ⇒ `review_join approve:false` ngay + audit; model không gọi tool thành công (im / sập / refusal / chạm trần — D28 `decideDelivery` D3) ⇒ node `deliver` = `join_default`: host `approve` mặc định (🖐 Q9 giá trị tạm: mặc định CHO VÀO) |
 Mọi quyết định ghi `join_requests.decision/decided_by/decided_at/reason` + audit `join.<decision>`. `pending` quá `JOIN_REQUEST_TTL_HOURS` ⇒ `expired` (timer). Nhóm chưa khai ⇒ bỏ qua (audit).
 
 ## §7. Chào mừng — `welcome.ts`
 ### §7.1 Gom: sự kiện `join` ⇒ upsert `group_members(joined_at=now, welcomed_at=null)`; nếu `zalo_groups.welcome_enabled` ⇒ `group_sessions.welcome_pending_since = coalesce(welcome_pending_since, now)`. Timer `flushWelcomes(now)`: phiên `welcome_pending_since <= now - WELCOME_DEBOUNCE_SEC` ⇒ `uids = group_members where welcomed_at is null and joined_at > now - WELCOME_WINDOW_MIN and left_at is null` ⇒ `enqueueSystemEvent({event:'welcome_flush', threadId, uids})`, đặt `welcomed_at=now()` cho các uid đó (trước lượt — tránh chào hai lần), `welcome_pending_since=null`.
-### §7.2 Lượt `group_welcome` (P03 §6.1): `joinedUids`, tên hiển thị; agent `send_group_message` với `mention_uids = joinedUids` (≤ 5; >5 ⇒ nêu số người, mention 5 đầu). `mustReply=true`, ngân sách nhóm áp.
-### §7.3 Đường lùi: model sập / không gọi tool ⇒ host gửi `WELCOME_TEMPLATE(names)` = `"Chào mừng {names} đã tham gia {groupName}! Bạn cứ hỏi mình về AI agent hoặc gõ @{botName} nhé."` (hằng TS).
+### §7.2 Lượt `group_welcome` (P03 §6.1; D28: `system_event` dựng `TurnRequest{kind:'group_welcome', mustReply:true, joinedUids}`): `joinedUids`, tên hiển thị; agent `send_group_message` với `mention_uids = joinedUids` (≤ 5; >5 ⇒ nêu số người, mention 5 đầu). `mustReply=true` ⇒ nudge 1 lần như mention (SPEC-P03 §6.4), ngân sách nhóm áp.
+### §7.3 Đường lùi (D28: node `deliver`, `hostText` nhánh `group_welcome`): model sập / không gọi tool sau nudge ⇒ host gửi `WELCOME_TEMPLATE(names)` = `"Chào mừng {names} đã tham gia {groupName}! Bạn cứ hỏi mình về AI agent hoặc gõ @{botName} nhé."` (hằng TS).
 
 ## §8. Vùng cấm P05
 - CẤM kick/block/review-reject (policy `manual`) mà không có `approvals.status='approved'` — `ApprovalRequiredError` là bug.

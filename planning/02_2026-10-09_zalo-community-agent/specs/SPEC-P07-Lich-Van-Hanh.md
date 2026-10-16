@@ -3,6 +3,8 @@
 > Tầng 🟠. Đọc 01-CONTRACTS §4 `automations`, §5.4, §7.1 (poll/reminder/note/announce/schedule_*), §8.3, §8.5 và SPEC-P03 §4.2, §4.3. Phụ thuộc: P02, P03.
 > Mẫu port: `services/timers.ts` cũ (`runTimers(now)` tham số, mỗi bước idempotent, lỗi ⇒ `timer.error` không dừng vòng); OpenClaw automations `at|every` + heartbeat chỉ DM owner (`docs/gateway/heartbeat.md:43`); condition watcher không gọi model khi im (`docs/automation/cron-jobs/schedules.md:93-120`) ⇒ các watcher của ta là SQL thuần.
 
+> D28: `runTimers` KHÔNG nằm trong đồ thị LangGraph — mọi bước là SQL thuần, 0 model; bước nào cần agent thì ghi `inbound_events sender='system'` ⇒ runner ⇒ `pipelineGraph` node `system_event` ⇒ `turn` (SPEC-P03 §2). Lượt `automation`/`weekly_summary` chạy trong `turnGraph` như mọi lượt (`mustReply=false`, tool theo SPEC-P03 §8).
+
 ## §1. `schedule.ts` (THUẦN)
 ```ts
 export type ScheduleSpec = { kind: 'at'; at: Date } | { kind: 'every'; everySeconds: number; anchor: Date } | { kind: 'daily'; timeOfDay: 'HH:MM' } | { kind: 'weekly'; dayOfWeek: 0|1|2|3|4|5|6; timeOfDay: 'HH:MM' };
@@ -34,7 +36,7 @@ Mọi bước nhận `now` tham số (CẤM `now()` Postgres trong so sánh — 
   | :-- | :-- | :-- |
   | `send_text` | `payload.text` ⇒ outbox text tới `thread_id` (nhóm — ngân sách áp) hoặc DM owner | ✗ |
   | `poll` | `payload: {question, options, expires_hours?}` ⇒ `enqueueAction create_poll` | ✗ |
-  | `agent_turn` | `enqueueSystemEvent({event:'automation', automationId, threadId})` ⇒ lượt `automation` với chỉ dẫn `payload.instruction` (≤ 1000 ký tự), tool: `send_group_message`, `search_knowledge`, `recall_group_history`, `create_poll` | ✓ (ngân sách ambient nhóm áp) |
+  | `agent_turn` | `enqueueSystemEvent({event:'automation', automationId, threadId})` ⇒ (D28: `system_event` ⇒ `turn`) lượt `automation` với chỉ dẫn `payload.instruction` (≤ 1000 ký tự), tool: `send_group_message`, `search_knowledge`, `recall_group_history`, `create_poll` | ✓ (ngân sách ambient nhóm áp) |
   | `weekly_summary` | như `agent_turn` với chỉ dẫn cố định `WEEKLY_SUMMARY_INSTRUCTION` (tóm tắt 7 ngày: chủ đề chính, câu hỏi hay, thành viên mới, việc còn mở; ≤ 1200 ký tự; đăng vào nhóm bằng `send_group_message`) — `recall_group_history` được mở `limit ≤ 200` cho lượt này | ✓ |
   | `daily_owner_report` | §5 | ✗ |
   | `watch_unanswered` | không dùng ở 0.1 (đã là bước 4) — bị từ chối khi tạo (`AutomationInvalidError`) | |

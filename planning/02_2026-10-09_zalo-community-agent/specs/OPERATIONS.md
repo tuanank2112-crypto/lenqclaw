@@ -1,6 +1,7 @@
 # OPERATIONS — Chạy thử Zalo thật, deploy, runbook, rollback
 
 > Giữ nguyên hạ tầng kế hoạch 01 (VPS Việt Nam IP tĩnh, Docker, Caddy, `pg_dump` 02:00 giữ 14 bản). Mục này ghi phần KHÁC.
+> D28: runtime agent chạy đồ thị LangGraph TRONG tiến trình runner (`core:run`) — không thêm tiến trình/dịch vụ (không LangGraph Platform/Studio/server), không thêm bảng (không checkpointer). Thêm: §1 cấm env tracing, §5 hàng runbook, §8 nâng LangGraph.
 
 ## §1. Tiến trình & lệnh (máy dev; mọi lệnh từ root; script npm KHÔNG tự nạp `.env` — G20)
 ```powershell
@@ -12,6 +13,7 @@ npm run dev -w @lenqclaw/web                                                   #
 node --env-file=.env --import tsx packages/core/src/runner/inbound-runner.ts  # cửa sổ 2 — runner (ĐÚNG 1 bản; đồng hồ runTimers bên trong)
 node --env-file=.env --import tsx apps/zalo-worker/src/main.ts                # cửa sổ 3 — worker (ĐÚNG 1 bản)
 ```
+D28: KHÔNG đặt `LANGSMITH_TRACING`/`LANGCHAIN_TRACING_V2` (`true`/`1` ⇒ `ConfigError`, runner exit 1 — BB-17: bật thì thư viện tự gửi vết ra endpoint ngoài, đã đo); `LANGSMITH_API_KEY` nếu có trong máy không được dùng.
 Biến bắt buộc: `DATABASE_URL`, `SESSION_SECRET`, `ZALO_SESSION_KEY` (32 byte), `MODEL_PROVIDER` + key tương ứng, `ZALO_ACCOUNTS=community`, `DATA_MODE`, `TRANSPORT`; toàn bộ bảng 01-CONTRACTS §10 có mặc định. Dọn `.env` cũ: xoá biến sàn thợ (SPEC-P01 §5) — `readCommunityConfig` KHÔNG lỗi với biến thừa, nhưng `check_pivot_cleanup` không quét `.env`.
 
 ## §2. Thứ tự lần đầu trên máy dev (sau P03)
@@ -42,6 +44,8 @@ Biến bắt buộc: `DATABASE_URL`, `SESSION_SECRET`, `ZALO_SESSION_KEY` (32 by
 | Embedding không khả dụng | `kb.embed_unavailable` | truy hồi lexical vẫn chạy; kiểm `EMBED_PROVIDER`/key |
 | Phiên Zalo chết | `kicked`/`dead` | như kế hoạch 01 §5 (QR lại; kiểm IP) |
 | Runner treo | không có `runner.processed` 5 phút trong khi `inbound_events processed_at null` tăng | restart runner; kiểm `lock_until` automations |
+| (D28) Lượt lỗi đồ thị | `turn_traces.outcome='error'` tăng; audit `inbound.handler_error` chứa `GraphRecursionError` hoặc lỗi node | `GraphRecursionError` = bug cạnh/trần (KHÔNG nâng `recursionLimit` tay) ⇒ ghi `-known-gotchas.md`, sửa theo SPEC-P03 §6.7; lỗi node khác ⇒ xem `data.message`, lượt đó đã mất (không chạy lại — 01-CONTRACTS §12.7) |
+| (D28) Bot lặp tool | `turn.round_cap` > 1% lượt | xem `turn_traces.tools` của lượt chạm trần; sửa prompt/tool trả lỗi rõ hơn; KHÔNG nới `MAX_TOOL_ROUNDS` trước khi chạy lại golden |
 
 ## §6. Deploy VPS (P09, sau khi local + Zalo thật ✅)
 Compose: `db` (pgvector pg16), `web`, `worker` (1 bản), `jobs` (`core:run`, 1 bản), `caddy` — như cũ, bỏ ghi chú pg-boss. Thứ tự: `up -d db` ⇒ migrate (001–009) ⇒ seed ⇒ `create-admin` ⇒ `up -d web jobs worker caddy` ⇒ `/zalo` QR ⇒ `/persona` nhập persona thật ⇒ `/knowledge` nhập tài liệu ⇒ `/groups` khai nhóm ⇒ chạy golden trên VPS (TESTING §4 cột `vps`).
@@ -51,3 +55,4 @@ Compose: `db` (pgvector pg16), `web`, `worker` (1 bản), `jobs` (`core:run`, 1 
 - Rollback mã: image tag trước + DB từ `pre-007.sql`; tag `archive/plan-01-marketplace` là điểm khôi phục mã.
 
 ## §8. Nâng zca-js — giữ luật kế hoạch 01 §8 (probe trên máy dev, chạy test worker với fake, ghi gotcha).
+(D28) Nâng `@langchain/langgraph`/`@langchain/core`: cùng quy trình — chỉ bản phát hành ≥ 14 ngày; đo lại toàn cây (`npm view <gói> time`) và cập nhật `overrides` (01-CONTRACTS §12.1); chạy lại SPEC-P03 §11 hàng 5, 8–13 trên Node 22; đọc changelog mục `recursionLimit`/`getGraph`/reducer; ghi D mới + gotcha. CẤM nâng kèm việc khác trong cùng commit.

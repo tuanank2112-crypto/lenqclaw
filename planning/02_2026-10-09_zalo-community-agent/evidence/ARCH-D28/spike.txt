@@ -1,0 +1,148 @@
+# evidence/ARCH-D28/spike.txt — output may, KHONG sua tay. Spike NGOAI repo (scratchpad/lg-spike): src/turn-graph.ts, spike.ts, checkpoint-probe.ts, tracing-probe.ts, shape-probe.ts, mermaid-vs-shape.mjs; scratchpad/mmd/parse.mjs (mermaid 12.0.0 + jsdom 30.1.1)
+# date_utc=2026-10-16T04:04:41Z node22=v22.20.0 sha256(src):
+#   c4037259eb1d916dd7ca2c92fff6d96e963713a2c97f09857ad7403f3f7d955d *src/checkpoint-probe.ts
+#   c5428ba99973ce9e7939f43c36b1ffa74158a435555eea48870d35d313965439 *src/shape-probe.ts
+#   a64d38db96e5f42cabce767a5d6088c855d14d382aa4ace1c7686072bc72c1e8 *src/spike.ts
+#   413a57e7e9d24bb4468b3ccc5bf574659d16ff106d2a4f8063c3656cff69b60f *src/tracing-probe.ts
+#   dbdbf982cc69024b737807c8a9ba072d96024843128fb7322385cbe96017cf58 *src/turn-graph.ts
+#   afcbb82f725dc9a56d2e437e610aef051c54aa577e1549ef662ef7d5abadbb3a *src/audit-versions.mjs
+#   56c060121e5287b61bd7e33a66bab919a909b2032ae65d266283cb2bc606f4c9 *src/mermaid-vs-shape.mjs
+#   19958afdfe5cccdce9575cd6dfb998db62b6f4cc4cf9661541db75c3d71b2013 *../mmd/parse.mjs
+
+$ npx tsc -p tsconfig.json   (strict, NodeNext, ES2022 — giong tsconfig.base.json cua repo)
+exit=0
+
+$ node22 dist/spike.js   (do thi luot + pipeline, model GIA, 0 mang)
+node=v22.20.0 langgraph=1.4.18 core=1.2.14 MAX_TOOL_ROUNDS=8 recursionLimit=27
+-- A mention search+send: steps=8 [prepare,agent,tools,agent,tools,agent,deliver,trace] modelCalls=3 rounds=2 sent=1 delivery=none outcome=replied outbox=["tool:send_group_message"] traces=[{"outcome":"replied","rounds":2,"tools":["search_knowledge","send_group_message"],"sent":1}] error=null
+PASS A rounds=2 sent=1 outcome=replied, 1 outbox tu tool, 1 trace :: {"rounds":2,"sent":1,"outcome":"replied"}
+PASS A messages giu dang Anthropic (user,assistant,user,assistant,user,assistant), khoi tool_result la object thuong :: "user,assistant,user,assistant,user,assistant"
+-- B tool loop vo han: steps=20 [prepare,agent,tools,agent,tools,agent,tools,agent,tools,agent,tools,agent,tools,agent,tools,agent,tools,agent,deliver,trace] modelCalls=9 rounds=8 sent=0 delivery=fallback outcome=fallback outbox=["host:fallback"] traces=[{"outcome":"fallback","rounds":8,"tools":["search_knowledge","search_knowledge","search_knowledge","search_knowledge","search_knowledge","search_knowledge","search_knowledge","search_knowledge"],"sent":0}] error=null
+PASS B rounds=8 modelCalls=9 => fallback (mustReply, khong nudge khi cham tran) :: {"rounds":8,"modelCalls":9,"toolsCalled":8}
+-- C mention text-only: steps=4 [prepare,agent,deliver,trace] modelCalls=1 rounds=0 sent=0 delivery=auto_post outcome=auto_posted outbox=["host:auto_post"] traces=[{"outcome":"auto_posted","rounds":0,"tools":[],"sent":0}] error=null
+PASS C auto_post 1 outbox host, outcome=auto_posted :: [{"text":"Agent là chương trình tự hành.","by":"host:auto_post"}]
+-- D mention rong x2: steps=6 [prepare,agent,nudge,agent,deliver,trace] modelCalls=2 rounds=0 sent=0 delivery=fallback outcome=fallback outbox=["host:fallback"] traces=[{"outcome":"fallback","rounds":0,"tools":[],"sent":0}] error=null
+PASS D nudge dung 1 lan, 2 model calls, fallback :: {"modelCalls":2,"steps":["prepare","agent","nudge","agent","deliver","trace"]}
+-- D2 mention rong -> nudge -> send: steps=8 [prepare,agent,nudge,agent,tools,agent,deliver,trace] modelCalls=3 rounds=1 sent=1 delivery=none outcome=replied outbox=["tool:send_group_message"] traces=[{"outcome":"replied","rounds":1,"tools":["send_group_message"],"sent":1}] error=null
+PASS D2 sau nudge sent=1 outcome=replied, 0 tin host :: [{"text":"Trả lời sau nhắc","by":"tool:send_group_message"}]
+-- E ambient text-only: steps=4 [prepare,agent,deliver,trace] modelCalls=1 rounds=0 sent=0 delivery=none outcome=silent outbox=[] traces=[{"outcome":"silent","rounds":0,"tools":[],"sent":0}] error=null
+PASS E ambient: 0 outbox, outcome=silent, khong nudge :: ["prepare","agent","deliver","trace"]
+-- F model sap: steps=4 [prepare,agent,deliver,trace] modelCalls=1 rounds=0 sent=0 delivery=model_down outcome=model_down outbox=["host:model_down"] traces=[{"outcome":"model_down","rounds":0,"tools":[],"sent":0}] error=null
+PASS F model_down: 1 outbox MODEL_DOWN_GROUP_REPLY, outcome=model_down :: [{"text":"Mình đang gặp trục trặc kỹ thuật, bạn hỏi lại sau ít phút nhé.","by":"host:model_down"}]
+-- F2 model sap ambient: steps=4 [prepare,agent,deliver,trace] modelCalls=1 rounds=0 sent=0 delivery=model_down outcome=model_down outbox=[] traces=[{"outcome":"model_down","rounds":0,"tools":[],"sent":0}] error=null
+PASS F2 model_down ambient: 0 outbox :: []
+-- G refusal: steps=4 [prepare,agent,deliver,trace] modelCalls=1 rounds=0 sent=0 delivery=fallback outcome=refusal outbox=["host:fallback"] traces=[{"outcome":"refusal","rounds":0,"tools":[],"sent":0}] error=null
+PASS G refusal: fallback 1 tin, outcome=refusal, 1 model call :: {"outcome":"refusal"}
+-- H deliver nem loi: steps=2 [prepare,agent] modelCalls=1 rounds=0 sent=0 delivery=null outcome=null outbox=[] traces=[{"outcome":"error","rounds":0,"tools":[],"sent":0}] error=Error: deliver: DB sap (gia lap)
+PASS H loi o deliver: error != null, 1 trace outcome=error :: {"error":"Error: deliver: DB sap (gia lap)","traces":[{"outcome":"error","rounds":0,"tools":[],"sent":0}]}
+-- I tool la + input sai: steps=8 [prepare,agent,tools,agent,tools,agent,deliver,trace] modelCalls=3 rounds=2 sent=1 delivery=none outcome=replied outbox=["tool:send_group_message"] traces=[{"outcome":"replied","rounds":2,"tools":["kick_member","send_group_message","send_group_message"],"sent":1}] error=null
+PASS I 2 tool_result is_error trong MOT message user (ToolNotAllowedError, InvalidToolInputError) :: ["{\"code\":\"ToolNotAllowedError\",\"message\":\"tool la: kick_member\"}","{\"code\":\"InvalidToolInputError\",\"message\":\"thieu text\"}"]
+-- J1 ca xau nhat, recursionLimit mac dinh: steps=25 [prepare,agent,tools,agent,tools,agent,tools,agent,tools,agent,tools,agent,tools,agent,tools,agent,tools,agent,nudge,agent,tools,agent,tools,agent,deliver] modelCalls=12 rounds=10 sent=0 delivery=fallback outcome=fallback outbox=["host:fallback"] traces=[{"outcome":"error","rounds":10,"tools":["search_knowledge","search_knowledge","search_knowledge","search_knowledge","search_knowledge","search_knowledge","search_knowledge","search_knowledge","search_knowledge","search_knowledge"],"sent":0}] error=GraphRecursionError: Recursion limit of 25 reached without hitting a stop condition. You can increase the limit by setting the "recursionLimit" config key.
+
+Troubleshooting URL: https://docs.langchain.com/oss/javascript/langgraph/GRAPH_RECURSION_LIMIT/
+
+PASS J1 recursionLimit mac dinh (25) KHONG du => GraphRecursionError, trace error dung 1 :: {"steps":25,"error":"GraphRecursionError: Recursion limit of 25 reached without hitting a stop condition. You can increase the limit by setting the \"recursionLimit\" config key.","traces":1}
+-- J1b ca xau nhat, recursionLimit = so step (26): steps=26 [prepare,agent,tools,agent,tools,agent,tools,agent,tools,agent,tools,agent,tools,agent,tools,agent,tools,agent,nudge,agent,tools,agent,tools,agent,deliver,trace] modelCalls=12 rounds=10 sent=0 delivery=fallback outcome=fallback outbox=["host:fallback"] traces=[{"outcome":"fallback","rounds":10,"tools":["search_knowledge","search_knowledge","search_knowledge","search_knowledge","search_knowledge","search_knowledge","search_knowledge","search_knowledge","search_knowledge","search_knowledge"],"sent":0}] error=GraphRecursionError: Recursion limit of 26 reached without hitting a stop condition. You can increase the limit by setting the "recursionLimit" config key.
+
+Troubleshooting URL: https://docs.langchain.com/oss/javascript/langgraph/GRAPH_RECURSION_LIMIT/
+
+PASS J1b limit == so step (26) VAN GraphRecursionError du trace da chay => limit phai > so step; wrapper khong ghi trace lan 2 :: {"steps":26,"traces":["fallback"]}
+-- J2 ca xau nhat, recursionLimit=2M+11: steps=26 [prepare,agent,tools,agent,tools,agent,tools,agent,tools,agent,tools,agent,tools,agent,tools,agent,tools,agent,nudge,agent,tools,agent,tools,agent,deliver,trace] modelCalls=12 rounds=10 sent=0 delivery=fallback outcome=fallback outbox=["host:fallback"] traces=[{"outcome":"fallback","rounds":10,"tools":["search_knowledge","search_knowledge","search_knowledge","search_knowledge","search_knowledge","search_knowledge","search_knowledge","search_knowledge","search_knowledge","search_knowledge"],"sent":0}] error=null
+PASS J2 recursionLimit=27 du: steps=26, rounds=10, fallback :: {"steps":26,"rounds":10}
+PASS J0 GraphRecursionError la lop export duoc (bat theo kieu) :: "GraphRecursionError"
+PASS K pipeline: mention=>turn(replied), ambient=>defer, mention-mode thuong=>END (0 model) :: {"a":"replied","b":true,"c":"drop","modelCalls":2}
+-- K drawMermaid (pipeline spike):
+%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	gate(gate)
+	turn(turn)
+	defer(defer)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> gate;
+	defer --> __end__;
+	turn --> __end__;
+	gate -.-> turn;
+	gate -.-> defer;
+	gate -.-> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+
+-- K drawMermaid (turn spike):
+%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	prepare(prepare)
+	agent(agent)
+	tools(tools)
+	nudge(nudge)
+	deliver(deliver)
+	trace(trace)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> prepare;
+	deliver --> trace;
+	nudge --> agent;
+	prepare --> agent;
+	tools --> agent;
+	trace --> __end__;
+	agent -.-> tools;
+	agent -.-> nudge;
+	agent -.-> deliver;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+
+PASS K drawMermaid sinh duoc so do tu do thi that (co node agent/tools/nudge/deliver/trace) :: "ok"
+RESULT fails=0
+exit=0
+
+$ node22 dist/checkpoint-probe.js   (DB tam lg_spike tren lenqclaw-db-1 127.0.0.1:15432, xoa sau)
+created database lg_spike
+tables after setup(): checkpoint_blobs,checkpoint_migrations,checkpoint_writes,checkpoints
+PASS setup() tu tao bang NGOAI db/migrations (khong qua schema_migrations cua repo) :: ["checkpoint_blobs","checkpoint_migrations","checkpoint_writes","checkpoints"]
+r1.messages=4 r2.messages=8 r2.rounds=2 r2.toolsCalled=2 errors=null,null
+PASS cung thread_id: luot 2 KE THUA messages/toolsCalled cua luot 1 (lich su tich luy — trai D22/BB-13 neu dung) :: {"r1":4,"r2":8}
+row counts: {"checkpoint_blobs":64,"checkpoint_migrations":5,"checkpoint_writes":50,"checkpoints":16}
+PASS noi dung tin (chuoi SDT gia) bi luu nguyen van trong bang checkpoint (PII ngoai han giu MESSAGES_RETENTION_DAYS) :: {"checkpoint_blobs":10,"checkpoint_writes":2,"checkpoints":0}
+dropped database lg_spike; remaining=0
+RESULT fails=0
+exit=0
+
+$ node22 dist/tracing-probe.js off
+mode=off outcome=replied fetch_calls=0 body_contains_message_text=0 hosts=[] paths=[]
+PASS khong env tracing => 0 lan goi mang
+exit=0
+
+$ node22 dist/tracing-probe.js on   (fetch bi thay, KHONG ra mang that; endpoint 127.0.0.1:9)
+mode=on outcome=replied fetch_calls=2 body_contains_message_text=0 hosts=["127.0.0.1:9"] paths=["/info","/runs/multipart"]
+PASS LANGSMITH_TRACING=true => thu vien TU goi mang (gui vet ra endpoint ngoai) => phai chan bang ConfigError
+exit=0
+
+$ node22 dist/shape-probe.js specs/01-CONTRACTS.md   (dung do thi tu hang SHAPE §12.4 bang LangGraph that, so getGraph())
+PASS pipeline: getGraph() == SHAPE (nodes=9, edges=20)
+PASS turn: getGraph() == SHAPE (nodes=6, edges=10)
+PASS ca do: do thi noi nudge>deliver thay nudge>agent => so sanh LECH (graph-shape.test se do)
+PASS ca do 2: bo canh agent>nudge => compile() nem UnreachableNodeError (LangGraph tu chan node mo coi)
+RESULT fails=0
+exit=0
+
+$ node22 src/mermaid-vs-shape.mjs specs/00-ARCHITECTURE.md specs/01-CONTRACTS.md   (canh so do §4.1 == SHAPE §12.4)
+PASS mermaid pipeline == SHAPE (mermaid=20, shape=20) missing=[] extra=[]
+PASS mermaid turn == SHAPE (mermaid=10, shape=10) missing=[] extra=[]
+RESULT fails=0
+exit=0
+
+$ (ca do) sed "s/NUDGE --> AGENT/NUDGE --> DEL/" 00-ARCHITECTURE.md > arch-red.md; node22 src/mermaid-vs-shape.mjs arch-red.md specs/01-CONTRACTS.md
+PASS mermaid pipeline == SHAPE (mermaid=20, shape=20) missing=[] extra=[]
+FAIL mermaid turn == SHAPE (mermaid=10, shape=10) missing=["nudge>agent>false"] extra=["nudge>deliver>false"]
+RESULT fails=1
+exit=1 (ky vong 1)
+
+$ node22 ../mmd/parse.mjs specs/*.md   (cu phap Mermaid)
+OK E:/vọc vạch/lenqclaw/planning/02_2026-10-09_zalo-community-agent/specs/00-ARCHITECTURE.md#0 type=flowchart-v2 lines=58
+exit=0
+
+$ docker exec lenqclaw-db-1 psql -U lenqclaw -d lenqclaw -Atc "select count(*) from pg_database where datname='lg_spike'"
+0
+exit=0

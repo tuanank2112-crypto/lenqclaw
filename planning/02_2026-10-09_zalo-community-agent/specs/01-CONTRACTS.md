@@ -13,18 +13,25 @@ packages/core/src/
   adapters/model.ts               callModel (route 'community' | 'triage'), callTriageModel (giữ), + embedTexts (§2.2)
   adapters/transport.ts           Transport, enqueue (hàm DUY NHẤT ghi outbox), OutboxInsert mở rộng (§8)
   agent/community/
-    router.ts                     routeInboundEvent(e): ingest nhóm → kiểm duyệt → cổng → lượt
+    router.ts                     routeInboundEvent(e) = runPipeline(e) — giữ TÊN cho runner/processInbound (D28)
+    graph/                        (D28 — §12) đồ thị LangGraph
+      state.ts                    PipelineState, TurnState (Annotation.Root), TurnRequest, TurnResult, Delivery, StopKind
+      edges.ts                    MỌI cạnh điều kiện + decideDelivery/hostText — THUẦN (BB-16)
+      shape.ts                    PIPELINE_SHAPE, TURN_SHAPE (hằng = §12.4; graph-shape.test so với getGraph())
+      pipeline.ts                 buildPipelineGraph(), pipelineGraph (compile 1 lần), runPipeline(e)
+      turn.ts                     buildTurnGraph(), turnGraph, runTurn(req), TURN_RECURSION_LIMIT
+      nodes/{ingest,triage,moderate,gate,defer,group-event,system-event,dm-intake,prepare,agent,tools,nudge,deliver,trace}.ts
     gate.ts                       decideGroupInbound (THUẦN, §6.2)
     roles.ts                      resolveRole (§3)
     buffer.ts                     group_messages: insert + prune + đọc đệm + đánh dấu answered
     sessions.ts                   group_sessions / conversations / messages (DM)
     persona.ts                    loadPersonaBundle, buildSystemPrompt (§11)
     policy.ts                     TOOL_POLICY (§7.1) + assertToolAllowed
-    turn.ts                       runCommunityTurn(kind, ctx) — vòng tool ≤ MAX_TOOL_ROUNDS (SPEC-P03 §6)
+    (turn.ts — `runCommunityTurn` vòng tool tự viết: KHÔNG tạo, thay bởi D28 ⇒ graph/turn.ts)
     triage.ts                     triageCommunityMessage (§5) — route 'triage'
     prompts/{system,triage}.ts    hằng TS (không .md — lý do R03 kế hoạch 01)
-    tools/<ten_tool>.ts           mỗi tool một file `{ definition, run(ctx, input) }` + tools/index.ts
-    tools/tool-kit.ts             GIỮ (AgentTool, ToolDefinition, assertValidToolInput)
+    tools/<ten_tool>.ts           mỗi tool một file `{ definition, answers?, run(ctx, input) }` + tools/index.ts
+    tools/tool-kit.ts             GIỮ (AgentTool, ToolDefinition, assertValidToolInput) + cờ `answers?: true` (D28, §12.2)
   services/
     community-config.ts           readCommunityConfig(env) (§10)
     moderation.ts · moderation-ladder.ts (THUẦN) · approvals.ts · join-requests.ts · welcome.ts
@@ -35,7 +42,7 @@ packages/core/src/
     audit.ts · vn-time.ts         giữ
   retrieval/search-knowledge.ts   truy hồi lai kb_sections (SPEC-P04 §2); search-memory.ts (SPEC-P06 §4)
   sim/sim-transport.ts            giữ; + sim/sim-actions.ts (thi hành action trên DB giả lập — SPEC-P02 §7)
-  runner/inbound-runner.ts        giữ (gọi routeInboundEvent mới + runTimers mới)
+  runner/inbound-runner.ts        giữ (gọi routeInboundEvent mới + runTimers mới); runTimers KHÔNG nằm trong đồ thị (D28)
   db/migrate.ts · seed.ts · seed-sim.ts   seed viết lại (SPEC-P01 §4)
   domain/{types,errors,password}.ts
 db/migrations/007_drop_marketplace.sql · 008_community.sql · 009_tenant_trace.sql   (§4, append-only; 009 = D23/D24)
@@ -55,6 +62,7 @@ export interface ModelCall { route: ModelRoute; system: string; messages: Messag
 export function callModel(c: ModelCall): Promise<CallModelResult>;            // KHÔNG đổi (dạng Anthropic, dịch Gemini/OpenRouter/Vyce như §2b–§2d kế hoạch 01)
 export function callTriageModel(c: TriageModelCall): Promise<CallModelResult>; // KHÔNG đổi (không retry, không fallback, MODEL_TRIAGE)
 ```
+D28: adapter này GIỮ — đồ thị KHÔNG thay nó. Node `agent` (§12.3) gọi `callModel({route:'community', …, turnId})`, node `triage` gọi `triageCommunityMessage` ⇒ `callTriageModel`; không node nào khác gọi model sinh; CẤM ChatModel của LangChain (00-ARCH §7). `messages` của state đồ thị là đúng `MessageParam[]` ở trên. Lưu ý mã hiện tại (đo `packages/core/src/adapters/model.ts:44-52`, HEAD `e53133d`): `ModelCall` CHƯA có `turnId` ⇒ P03 thêm (D24).
 `ROUTE_ENV = { community: 'MODEL_COMMUNITY', triage: 'MODEL_TRIAGE' }`. Mọi hành vi §2b/§2c/§2d của kế hoạch 01 (thoughtSignature, fallback phía client, `max_tokens` 16000, `data_collection: deny`, Vyce chỉ `DATA_MODE=sim`) GIỮ NGUYÊN — test adapter hiện có (`model.*.test.ts`) phải tiếp tục xanh (đổi tên route trong test).
 
 ### §2.2 Embedding (MỚI — SPEC-P04)
@@ -527,7 +535,7 @@ export interface GroupTurnContext {
   readonly joinedUids?: readonly string[];                   // group_welcome
   readonly joinRequest?: { uid: string; displayName: string | null }; // group_join_review
   readonly now: Date; readonly conversationId: string;
-  sent: number;                                              // số lần send_group_message trong lượt (mutable — host kiểm mustReply)
+  // D28: BỎ trường mutable `sent` — đếm "đã trả lời" là `TurnState.answered` (§12.2), do node `tools` cộng; ctx bất biến sau `prepare`.
 }
 export interface DmTurnContext { readonly kind: 'dm' | 'owner_dm'; readonly account: AccountId; readonly threadId: string; readonly botUid: string;
   readonly requester: { uid: string; role: Role; displayName: string | null }; readonly latestText: string; readonly latestMessageId: number;
@@ -578,7 +586,7 @@ Bề mặt: **G** = lượt nhóm (mọi `group_*`), **D** = DM member/stranger,
 | `search_knowledge` | `{query: string, top_k?: integer≤12}` | mọi vai | mọi vai | ✓ | trả `KnowledgeHit[]` có `document_id/section_id/heading/quote` (SPEC-P04 §2) |
 | `describe_capabilities` | `{}` | mọi vai | mọi vai | ✓ | trả `persona.capabilities` + danh sách skill |
 | `read_skill` | `{name: string}` | mọi vai | mọi vai | ✓ | chỉ skill `enabled`; không có ⇒ `SkillNotFoundError` |
-| `send_group_message` | `{text: string≤4000, reply_to_msg_id?: string, mention_uids?: string[]≤5}` | mọi vai | | | ctx nhóm; ngân sách BB-08 (`GroupBudgetExceededError`); `reply_to_msg_id` phải có trong đệm (`MessageNotInBufferError`); `mention_uids` phải là thành viên (`UnknownMemberError`); chunk + quote ở chunk đầu; `ctx.sent++`; ghi `messages` role assistant |
+| `send_group_message` | `{text: string≤4000, reply_to_msg_id?: string, mention_uids?: string[]≤5}` | mọi vai | | | ctx nhóm; ngân sách BB-08 (`GroupBudgetExceededError`); `reply_to_msg_id` phải có trong đệm (`MessageNotInBufferError`); `mention_uids` phải là thành viên (`UnknownMemberError`); chunk + quote ở chunk đầu; cờ `answers` (D28: node `tools` cộng `TurnState.answered`, thay `ctx.sent++`); ghi `messages` role assistant |
 | `recall_group_history` | `{limit?: integer≤50, before_id?: integer}` | mọi vai | | | chỉ đệm của chính `ctx.threadId`; text đã che SĐT |
 | `flag_message` | `{msg_id: string, verdict: 'spam'\|'scam'\|'ad'\|'harass'\|'ok', reason: string}` | mọi vai | | | ghi `moderation_events(source='agent')` ⇒ thang cảnh cáo (SPEC-P05 §4); người gửi owner/moderator ⇒ chỉ log |
 | `delete_message` | `{msg_id: string, reason: string}` | mọi vai | | | `moderation_enabled` ∧ `bot_is_admin` (`ActionNotPermittedError`); tin trong đệm, không phải của owner/moderator, ≤ 24 giờ; outbox `delete_message` với `uidFrom = group_messages.sender_uid`; tin của bot: cho phép |
@@ -707,7 +715,8 @@ export async function enqueueSystemEvent(e: SystemEvent): Promise<number>;   // 
 | `InvalidToolInputError` | input sai schema | `is_error`, không chạy tool (giữ) |
 | `TransportDeadError` / `RateLimitedError` | phiên `kicked`/`dead` / Zalo giới hạn (221, không msgId) | giữ hành vi P02 cũ: outbox giữ `queued`, lùi `PACER_BACKOFF_MS` |
 | `ZaloActionError` (worker) | `ZaloApiError` khi thi hành `action`; `code` zca-js kèm | outbox `failed` + `result.error`; 166 ⇒ `bot_is_admin=false` + DM owner `NEED_DEPUTY_DM` |
-| `ConfigError` | env sai (`readCommunityConfig`, `readPacerConfig`) | tiến trình exit 1 khi khởi động |
+| `ConfigError` | env sai (`readCommunityConfig`, `readPacerConfig`); D28: `LANGSMITH_TRACING`/`LANGCHAIN_TRACING_V2` bật | tiến trình exit 1 khi khởi động |
+| `GraphRecursionError` (`@langchain/langgraph`) | (D28) đồ thị vượt `recursionLimit` — chỉ xảy ra khi cạnh/trần vòng sai (trần thiết kế đã > số step tối đa, §12.6) | là BUG: KHÔNG bắt để "thử lại"; `runTurn` ghi `turn_traces outcome='error'` (nếu `trace` chưa chạy) rồi ném tiếp ⇒ `processInbound` audit `inbound.handler_error` (nhóm: không `BUSY_REPLY` — D20) |
 
 ## §10. Cấu hình (`services/community-config.ts::readCommunityConfig(env)`; số sai ⇒ `ConfigError`)
 
@@ -728,7 +737,8 @@ export async function enqueueSystemEvent(e: SystemEvent): Promise<number>;   // 
 | `DAILY_REPORT_HOUR` / `WEEKLY_SUMMARY_DOW` / `WEEKLY_SUMMARY_HOUR` | 20 / 0 / 19 (giờ VN) | SPEC-P07 |
 | `KB_TOP_K` / `MEMORY_HALF_LIFE_DAYS` | 8 / 30 | SPEC-P04, P06 |
 | `LEAD_SCORE_HANDOFF` | 60 | SPEC-P06 |
-| `MAX_TOOL_ROUNDS` | 8 | SPEC-P03 §6 |
+| `MAX_TOOL_ROUNDS` | 8 (1–20) | SPEC-P03 §6; D28: `TURN_RECURSION_LIMIT = 2 × MAX_TOOL_ROUNDS + 11` tính từ biến này (§12.6), KHÔNG có env riêng |
+| `LANGSMITH_TRACING` / `LANGCHAIN_TRACING_V2` | KHÔNG đặt. Giá trị `true`/`1` (không phân biệt hoa thường) ⇒ `ConfigError` | D28, BB-17 |
 | `DM_HISTORY_TURNS` / `MESSAGES_RETENTION_DAYS` | 5 (1–20) / 30 (≥ 1) | D22: SPEC-P03 §5.1, SPEC-P07 §2 bước 8 |
 | `HUMAN_TAKEOVER_MIN` / `TRIAGE_TIMEOUT_MS` / `DATA_MODE` / `TRANSPORT` | 60 / 4000 / `sim` / `sim` (giữ) | |
 
@@ -766,3 +776,199 @@ Lượt DM (D22): `messages` = ≤ `2 × DM_HISTORY_TURNS` tin gần nhất (`lo
 Ghi chú là dữ liệu do agent tự ghi từ lời người dùng ⇒ vẫn là untrusted. Không có ghi chú và không có lead mở ⇒ không chèn khối nào.
 
 uid hiển thị cho model = 4 số cuối + hash ngắn? KHÔNG — model cần uid để gọi tool (`mention_uids`, `warn_member`): hiển thị uid ĐẦY ĐỦ, tên trong ngoặc kép, mọi ký tự `<`/`>` trong tên/text được thay bằng `‹`/`›` để không phá khung.
+
+## §12. Đồ thị LangGraph (D28) — `agent/community/graph/*`
+
+> Hình đồ thị = [00-ARCH §4](00-ARCHITECTURE.md) (chờ người dùng duyệt — chặn P03). Hành vi từng node: [SPEC-P03 §2, §6](SPEC-P03-Runtime-Agent.md). Số đo: `evidence/ARCH-D28/{versions,spike}.txt` (spike ngoài repo, Node 22.20.0, model giả, 0 mạng).
+
+### §12.1 Phụ thuộc — PIN CHÍNH XÁC (đo 2026-10-16; mọi gói trong cây cài ≥ 14 ngày, `too_new=0`)
+| Chỗ | Khai | Ghi chú |
+| :-- | :-- | :-- |
+| `packages/core/package.json` `dependencies` | `"@langchain/langgraph": "1.4.18"`, `"@langchain/core": "1.2.14"` | `@langchain/core` là peer bắt buộc của langgraph; mã repo KHÔNG import trực tiếp từ nó |
+| root `package.json` `overrides` | `{"@langchain/langgraph-checkpoint": "1.1.5", "@langchain/langgraph-sdk": {".": "1.12.0", "p-queue": "9.3.3"}, "langsmith": "0.10.7", "zod": "4.6.5"}` | không override ⇒ npm kéo bản < 14 ngày (đo: checkpoint 1.2.0, sdk 1.12.4, langsmith 0.11.0, p-queue 9.3.5); `@babel/runtime` trong lock repo đã là 7.29.7 |
+| KHÔNG cài | `@langchain/langgraph-checkpoint-postgres`, mọi `@langchain/<provider>` | BB-03, BB-17 |
+
+Xong khi (P03): `npm ls @langchain/langgraph @langchain/core @langchain/langgraph-checkpoint @langchain/langgraph-sdk langsmith zod` in đúng bảng trên, exit 0. Import được phép: `Annotation`, `StateGraph`, `START`, `END`, `GraphRecursionError` từ `@langchain/langgraph` — KHÔNG gì khác (BB-15/BB-17 quét).
+
+### §12.2 State (`graph/state.ts` — kiểu TS CHÍNH XÁC)
+```ts
+import { Annotation } from '@langchain/langgraph';
+import type { MessageParam } from '@anthropic-ai/sdk/resources/messages';
+
+const last = <T>(_prev: T, next: T): T => next;
+const keep = <T>(init: () => T) => Annotation<T>({ reducer: last, default: init });
+
+export type PipelineStop = 'group_unknown' | 'group_disabled' | 'self' | 'deleted' | 'not_admitted' | 'ambient_deferred'
+  | 'group_event_done' | 'system_no_turn' | 'forged_system_event' | 'takeover' | 'unsupported';
+
+export interface GroupRow {                                // một dòng zalo_groups (§4 008), tên camelCase
+  threadId: string; name: string | null; enabled: boolean; mode: GroupMode; joinPolicy: JoinPolicy; welcomeEnabled: boolean;
+  moderationEnabled: boolean; budgetPerHour: number; ambientTurnsPerHour: number; systemPrompt: string | null;
+  allowUsers: string[]; denyUsers: string[]; botIsAdmin: boolean;
+}
+// ToolName = (typeof TOOL_NAMES)[number] — policy.ts (SPEC-P03 §8)
+
+export interface TurnRequest {
+  kind: TurnKind; account: AccountId; threadId: string; threadType: 'user' | 'group';
+  requester: { uid: string; role: Role } | null;          // null: ambient_flush · unanswered · welcome · join_review · automation
+  trigger: GroupTrigger | null;
+  mustReply: boolean;                                      // NHÓM: bắt buộc có tin ra (BB-05). DM luôn false — DM có luật riêng (§12.5 D5–D7)
+  focusMessageIds: number[];                               // group_messages.id; ambient_flush: [] (prepare đọc id > last_seen_message_id)
+  dm?: { conversationId: string; latestText: string; latestMessageId: number };
+  joinedUids?: string[]; joinRequest?: { uid: string }; automation?: { automationId: string };
+  triage: CommunityTriage | null;                          // node `turn` gộp từ PipelineState.triage
+}
+export interface TurnResult { turnId: string; outcome: TurnOutcome; delivery: Delivery | null; rounds: number; answered: number; hostPosted: number }
+
+export const PipelineState = Annotation.Root({
+  event: Annotation<InboundEvent>,                         // vào; KHÔNG node nào ghi lại
+  group: keep<GroupRow | null>(() => null),                // zalo_groups của thread (ingest/system_event)
+  sender: keep<{ uid: string; role: Role } | null>(() => null),
+  row: keep<GroupMessageRow | null>(() => null),           // tin vừa đệm
+  triage: keep<CommunityTriage | null>(() => null),
+  moderation: keep<{ verdict: string; action: string; exempt: boolean } | null>(() => null),
+  gate: keep<GateDecision | null>(() => null),
+  turnRequest: keep<TurnRequest | null>(() => null),
+  turnResult: keep<TurnResult | null>(() => null),
+  stop: keep<PipelineStop | null>(() => null),             // vì sao pipeline dừng không có lượt (test/log)
+});
+
+export type StopKind = 'tool_use' | 'end_turn' | 'max_tokens' | 'refusal' | 'model_down';
+export type Delivery = 'none' | 'auto_post' | 'fallback' | 'model_down' | 'dm_reply' | 'dm_empty' | 'join_default' | 'persona_invalid';
+export type TurnOutcome = 'replied' | 'silent' | 'auto_posted' | 'fallback' | 'model_down' | 'refusal' | 'error';   // = CHECK turn_traces.outcome (§4 009)
+
+export const TurnState = Annotation.Root({
+  request: Annotation<TurnRequest>,                        // vào; bất biến
+  turnId: keep<string>(() => ''),                          // randomUUID() ở prepare = turn_traces.id = agent_runs.turn_id
+  startedAt: keep<number>(() => 0),
+  ctx: keep<ToolContext | null>(() => null),               // GroupTurnContext | DmTurnContext (§6) — bất biến sau prepare
+  personaVersions: keep<PersonaBundle['versions'] | null>(() => null),
+  system: keep<string>(() => ''),
+  toolNames: keep<ToolName[]>(() => []),                   // = toolsFor(kind, role) — model chỉ thấy các tool này
+  messages: Annotation<MessageParam[]>({ reducer: (a, b) => a.concat(b), default: () => [] }),   // KHÔNG MessagesAnnotation
+  rounds: keep<number>(() => 0),                           // số lần node tools đã chạy
+  roundCap: keep<number>(() => 0),                         // MAX_TOOL_ROUNDS; sau nudge = rounds + NUDGE_ROUNDS (2)
+  toolsCalled: Annotation<string[]>({ reducer: (a, b) => a.concat(b), default: () => [] }),
+  answered: keep<number>(() => 0),                         // số lần tool có cờ `answers` chạy THÀNH CÔNG
+  stop: keep<StopKind | null>(() => null),
+  finalText: keep<string>(() => ''),                       // text của message assistant cuối KHÔNG có tool_use
+  nudged: keep<boolean>(() => false),
+  prepError: keep<'persona_invalid' | null>(() => null),
+  delivery: keep<Delivery | null>(() => null),
+  hostPosted: keep<number>(() => 0),                       // số tin host tự gửi trong deliver (0|1)
+  outcome: keep<TurnOutcome | null>(() => null),
+});
+export type PipelineStateT = typeof PipelineState.State;
+export type TurnStateT = typeof TurnState.State;
+export type NodeFn<S> = (s: S) => Promise<Partial<S>>;   // mọi node: nhận state, trả PHẦN cập nhật; KHÔNG trả Command
+```
+`AgentTool` (tool-kit.ts) thêm `readonly answers?: true` — tool tính là "đã trả lời lượt": `send_group_message`, `invite_to_private`, `review_join_request`. Không tool nào khác có cờ.
+
+### §12.3 Node — chữ ký và tác dụng phụ (HỢP ĐỒNG BB-15)
+Mỗi node một file `graph/nodes/<tên>.ts`, export `<tênCamel>Node: NodeFn<…>`; node mỏng — gọi hàm nghiệp vụ có sẵn (cột "Gọi").
+
+| Node | Đồ thị | Gọi | Ghi state | Ghi DB | outbox | model |
+| :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+| `ingest` | pipeline | `buffer.ts::ingestGroupMessage`, `roles.ts::resolveRole` | `group, sender, row, stop∈{group_unknown, group_disabled, self}` | `group_members`, `group_messages` (insert, cắt, `answered_at`), audit `group.denied` | ✗ | ✗ |
+| `triage` | pipeline | `needsTriage` (THUẦN) ⇒ `triage.ts::triageCommunityMessage` | `triage` (null khi không cần/quá hạn) | nhóm: `group_messages.is_question`; DM: `messages.content.triage` | ✗ | `callTriageModel` |
+| `moderate` | pipeline | `moderation.ts::moderateGroupMessage` + `applyLadderAction` (SPEC-P05) | `moderation`, `stop='deleted'` | `moderation_events/scores`, `group_messages.deleted_at`, `approvals`, audit | ✓ | ✗ |
+| `gate` | pipeline | `persona.ts::loadPersonaBundle` (namePatterns, cache 60 s) + `decideGroupInbound` (THUẦN) | `gate`, `turnRequest` (khi admitted ∧ trigger ≠ ambient), `stop='not_admitted'` | ✗ (chỉ đọc) | ✗ | ✗ |
+| `defer` | pipeline | `sessions.ts::markAmbientPending` | `stop='ambient_deferred'` | `group_sessions.pending_since` | ✗ | ✗ |
+| `group_event` | pipeline | `join-requests.ts`, `welcome.ts`, đồng bộ admin (SPEC-P05 §6–§7) | `stop='group_event_done'` | `group_members`, `join_requests`, `approvals`, `group_sessions.welcome_pending_since`, audit | ✓ | ✗ |
+| `system_event` | pipeline | kiểm `zaloMsgId LIKE 'sys-%'` ∧ `payload.kind='system'`; bảng SPEC-P03 §4.3 | `group`, `turnRequest` hoặc `stop∈{system_no_turn, forged_system_event}` | audit `router.forged_system_event` | ✓ (chỉ `APPROVAL_RESULT_DM`) | ✗ |
+| `dm_intake` | pipeline | `resolveRole`, `sessions.ts` (conversation, `saveMessage`) | `sender, turnRequest, stop∈{takeover, unsupported}` | `conversations`, `messages` | ✓ (chỉ `TEXT_ONLY_REPLY`) | ✗ |
+| `turn` | pipeline | `runTurn({...s.turnRequest, triage: s.triage})` | `turnResult` | (qua turnGraph) | (qua turnGraph) | (qua turnGraph) |
+| `prepare` | turn | `loadPersonaBundle`, `buildSystemPrompt` (§11), `toolsFor`, đọc đệm/lịch sử DM/`loadMemberContext` | `turnId, startedAt, ctx, personaVersions, system, toolNames, messages[0], roundCap, prepError` | `group_sessions` (đánh dấu TRƯỚC model — SPEC-P03 §4.2) | ✗ | ✗ |
+| `agent` | turn | `callModel({route:'community', system, messages, tools, conversationId, turnId})` | `messages(+assistant), stop, finalText` | `agent_runs` (adapter ghi) | ✗ | `callModel` |
+| `tools` | turn | mỗi `tool_use` theo thứ tự: `assertValidToolInput` ⇒ `assertToolAllowed` ⇒ `tool.run(ctx, input)` | `messages(+1 user chứa MỌI tool_result), rounds+1, toolsCalled, answered` | theo tool | ✓ (qua tool) | ✗ (embedding của `search_knowledge` qua `embedTexts` được phép) |
+| `nudge` | turn | — | `messages(+NUDGE_TEXT), nudged=true, roundCap=rounds+2` | ✗ | ✗ | ✗ |
+| `deliver` | turn | `decideDelivery` + `hostText` (THUẦN), `postGroupText` (dùng chung với `send_group_message`), `handoffToOwner`, `enqueue` DM | `delivery, outcome, hostPosted` | `messages` (assistant / `private:true`), `join_requests`, audit | ✓ | ✗ |
+| `trace` | turn | `services/turn-traces.ts::recordTurn` (không bao giờ ném — lỗi ⇒ audit `trace.error`) | — | `turn_traces` (1 dòng) | ✗ | ✗ |
+
+### §12.4 Hình đồ thị — hằng `graph/shape.ts` (BB-16; `[nguồn, đích, có điều kiện]`; `__start__`/`__end__` là tên LangGraph)
+```ts
+export const PIPELINE_SHAPE = {
+  nodes: ['ingest', 'triage', 'moderate', 'gate', 'defer', 'group_event', 'system_event', 'dm_intake', 'turn'],
+  edges: [
+    ['__start__', 'ingest', true], ['__start__', 'group_event', true], ['__start__', 'system_event', true], ['__start__', 'dm_intake', true], // routeEvent
+    ['ingest', 'triage', true], ['ingest', '__end__', true],                                   // afterIngest
+    ['dm_intake', 'triage', true], ['dm_intake', '__end__', true],                             // afterDmIntake
+    ['triage', 'moderate', true], ['triage', 'turn', true],                                    // afterTriage
+    ['moderate', 'gate', true], ['moderate', '__end__', true],                                 // afterModerate
+    ['gate', 'turn', true], ['gate', 'defer', true], ['gate', '__end__', true],                // afterGate
+    ['system_event', 'turn', true], ['system_event', '__end__', true],                         // afterSystemEvent
+    ['group_event', '__end__', false], ['defer', '__end__', false], ['turn', '__end__', false],
+  ],
+} as const;
+export const TURN_SHAPE = {
+  nodes: ['prepare', 'agent', 'tools', 'nudge', 'deliver', 'trace'],
+  edges: [
+    ['__start__', 'prepare', false],
+    ['prepare', 'agent', true], ['prepare', 'deliver', true],                                  // afterPrepare
+    ['agent', 'tools', true], ['agent', 'nudge', true], ['agent', 'deliver', true],            // afterAgent
+    ['tools', 'agent', false], ['nudge', 'agent', false], ['deliver', 'trace', false], ['trace', '__end__', false],
+  ],
+} as const;
+```
+Hàm cạnh (`graph/edges.ts`, THUẦN — chữ ký chính xác; `END` = `'__end__'`):
+```ts
+export function routeEvent(s: PipelineStateT): 'ingest' | 'group_event' | 'system_event' | 'dm_intake';
+  // senderUid==='system' ⇒ system_event · threadType==='group' ⇒ (payload.kind==='group_event' ? group_event : ingest) · còn lại ⇒ dm_intake
+export function afterIngest(s: PipelineStateT): 'triage' | typeof END;          // s.stop !== null ⇒ END
+export function afterDmIntake(s: PipelineStateT): 'triage' | typeof END;        // s.stop !== null ⇒ END
+export function afterTriage(s: PipelineStateT): 'moderate' | 'turn';            // threadType==='group' ⇒ moderate
+export function afterModerate(s: PipelineStateT): 'gate' | typeof END;          // s.stop === 'deleted' ⇒ END
+export function afterGate(s: PipelineStateT): 'turn' | 'defer' | typeof END;   // !admitted ⇒ END · trigger==='ambient' ⇒ defer · còn lại ⇒ turn
+export function afterSystemEvent(s: PipelineStateT): 'turn' | typeof END;       // turnRequest !== null ⇒ turn
+export function needsTriage(i: { threadType: 'user' | 'group'; msgType: string; text: string; group: { moderationEnabled: boolean; mode: GroupMode } | null }): boolean;
+  // msgType==='webchat' ∧ text.trim()!=='' ∧ (threadType==='user' ∨ group.moderationEnabled ∨ group.mode==='ambient')
+export function afterPrepare(t: TurnStateT): 'agent' | 'deliver';              // prepError !== null ⇒ deliver
+export function isCapped(t: TurnStateT): boolean;                               // stop==='tool_use' ∧ rounds >= roundCap
+export function needsNudge(t: TurnStateT): boolean;
+  // kind ∈ {group_mention, group_welcome} ∧ mustReply ∧ answered===0 ∧ finalText==='' ∧ !nudged ∧ stop ∈ {end_turn, max_tokens}
+export function afterAgent(t: TurnStateT): 'tools' | 'nudge' | 'deliver';       // tool_use ∧ rounds<roundCap ⇒ tools · needsNudge ⇒ nudge · còn lại ⇒ deliver
+export function decideDelivery(t: TurnStateT): { delivery: Delivery; outcome: TurnOutcome };   // bảng §12.5
+export function hostText(req: TurnRequest, reason: 'fallback' | 'model_down', v: { names: readonly string[]; groupName: string | null; botName: string }): string;
+```
+
+### §12.5 `decideDelivery` — bảng (xét theo thứ tự, dừng ở dòng đầu khớp; `capped = isCapped(t)`; DM = `kind ∈ {dm, owner_dm}`)
+| # | Điều kiện | `delivery` | `outcome` |
+| :-- | :-- | :-- | :-- |
+| D1 | `prepError === 'persona_invalid'` | `persona_invalid` | `error` |
+| D2 | `kind = group_join_review ∧ answered > 0` | `none` | `replied` |
+| D3 | `kind = group_join_review` (model im/sập/refusal/chạm trần) | `join_default` (Q9: CHO VÀO) | `model_down` nếu `stop=model_down`, `refusal` nếu `stop=refusal`, còn lại `fallback` |
+| D4 | `stop = model_down` | `model_down` | `model_down` |
+| D5 | DM ∧ `stop = refusal` | `dm_empty` | `refusal` |
+| D6 | DM ∧ `finalText ≠ ''` ∧ `!capped` | `dm_reply` | `replied` |
+| D7 | DM (rỗng / chạm trần) | `dm_empty` | `fallback` |
+| D8 | `answered > 0` | `none` | `replied` |
+| D9 | `!mustReply` | `none` | `silent` |
+| D10 | `stop = refusal` | `fallback` | `refusal` |
+| D11 | `finalText ≠ ''` ∧ `!capped` | `auto_post` | `auto_posted` |
+| D12 | còn lại (rỗng sau nudge · chạm trần) | `fallback` | `fallback` |
+
+`hostText(req, reason, v)`: `kind = group_welcome` ⇒ `WELCOME_TEMPLATE(v.names, v.groupName, v.botName)` (cả hai lý do) · `trigger = owner_command ∧ reason = model_down` ⇒ `COMMANDS_HELP` · `reason = model_down` ⇒ `MODEL_DOWN_GROUP_REPLY` · còn lại ⇒ `FALLBACK_GROUP_REPLY`. Mọi câu là hằng TS trong `prompts/system.ts`.
+
+### §12.6 Chạy đồ thị (`pipeline.ts`, `turn.ts`)
+```ts
+export const PIPELINE_RECURSION_LIMIT = 10;            // đường dài nhất 5 step: ingest→triage→moderate→gate→turn
+export function turnRecursionLimit(maxToolRounds: number): number;   // = 2 × maxToolRounds + 11 (spike J: xấu nhất 2M+10 step; limit = đúng số step VẪN ném)
+export const NUDGE_ROUNDS = 2;
+export function buildPipelineGraph(): StateGraph<…>;   // không mở DB khi build; addConditionalEdges LUÔN kèm mảng đích
+export function buildTurnGraph(): StateGraph<…>;
+export const pipelineGraph: ReturnType<…['compile']>;  // compile() KHÔNG truyền checkpointer/store (BB-17); compile 1 lần khi nạp module
+export const turnGraph: ReturnType<…['compile']>;
+export async function runPipeline(e: InboundEvent): Promise<PipelineStateT>;   // pipelineGraph.invoke({ event: e }, { recursionLimit: PIPELINE_RECURSION_LIMIT })
+export async function runTurn(req: TurnRequest): Promise<TurnResult>;
+  // turnGraph.stream({ request: req }, { streamMode: ['values', 'updates'], recursionLimit: turnRecursionLimit(cfg.maxToolRounds) })
+  // giữ state 'values' cuối + danh sách node đã chạy ('updates'). Ngoại lệ: nếu 'trace' CHƯA chạy ⇒ recordTurn({...lastValues, outcome: 'error'})
+  // rồi NÉM LẠI (processInbound audit inbound.handler_error; nhóm không BUSY_REPLY — D20). 'trace' đã chạy ⇒ chỉ ném lại (không ghi lần 2).
+```
+`routeInboundEvent(e)` (router.ts) = `await runPipeline(e)` — giữ tên để `inbound-runner.ts`, `processInbound`, golden không đổi.
+
+### §12.7 Checkpoint — KHÔNG (BB-17)
+Không checkpointer, không Store, không `thread_id` LangGraph. Lý do đo được ở 00-ARCH §7 (bảng tự tạo ngoài migration, nội dung tin lưu nguyên văn, lịch sử tích luỹ theo `thread_id`, 16 checkpoint cho 2 lượt). Bền vững đã có: `inbound_events.processed_at` (nhận-trước-xử-lý-sau, tối đa 1 lần), `group_sessions` (cửa sổ ambient), `messages` (≤ 10 tin DM — D22), `approvals` (chờ người), `turn_traces`. Tiến trình chết giữa lượt ⇒ lượt đó mất, không chạy lại (giống trước D28).
+**Ngữ cảnh có trần (D22, BB-13) độc lập với checkpoint:** `TurnState.messages` LUÔN bắt đầu rỗng; `prepare` là nơi DUY NHẤT nạp lịch sử (≤ `2 × DM_HISTORY_TURNS` tin DM; nhóm 25/40 tin đệm); KHÔNG nén, KHÔNG tóm tắt bằng model. Nếu một D sau này cho phép checkpointer (vd treo đồ thị chờ người), nó CHỈ được lưu trạng thái điều khiển (`rounds`, `delivery`…), KHÔNG được dùng `thread_id` để nối `messages` giữa các lượt — spike đã đo cách đó làm lịch sử phình 4 ⇒ 8 messages sau 2 lượt.
+
+### §12.8 `turn_traces` (D24) từ `TurnState`
+`id = turnId` · `zalo_account_id = request.account` · `conversation_id = ctx.conversationId` · `thread_id`, `thread_type` từ request · `kind` · `trigger` · `requester_role = request.requester?.role ?? null` · `rounds` · `tools = toolsCalled` · `sent = answered + hostPosted` · `outcome` · `input_tokens/output_tokens = sum(agent_runs where turn_id = id)` · `latency_ms = now − startedAt` · `persona_versions = personaVersions ?? {}`. KHÔNG cột nào chứa `messages`/`finalText`/`system`.

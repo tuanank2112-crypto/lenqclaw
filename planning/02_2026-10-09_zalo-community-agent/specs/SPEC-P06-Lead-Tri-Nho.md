@@ -2,6 +2,7 @@
 
 > Tầng 🟠 (hợp đồng ở 01-CONTRACTS §4 `leads/member_profiles/daily_notes`, §5.2, §7.1). Đọc SPEC-P03 §5, §8 trước. Phụ thuộc: P03 (DM), P04 (embedding — có thể chạy lexical trước).
 > Mẫu port: OpenClaw memory (curated MEMORY + daily notes, hybrid vector+BM25, suy giảm 30 ngày — `docs/concepts/memory-search.md:95-101,150-155`), quy tắc "MEMORY never injected in group sessions".
+> D28: "host nạp sẵn" = node `prepare` của `turnGraph` (nhánh DM gọi `loadMemberContext`; nhánh nhóm KHÔNG — BB-07); tool chạy trong node `tools`. Trí nhớ dài hạn vẫn CHỈ là `member_profiles`/`leads`/`daily_notes` — đồ thị không có checkpointer/Store (BB-17).
 
 ## §1. Kéo việc riêng sang 1-1 — tool `invite_to_private` (G, mọi vai)
 - Khi nào (prompt `rules`): câu hỏi/thảo luận mang tính cá nhân (dự án riêng, báo giá, dữ liệu khách hàng), hoặc `triage.wants_private`/`lead_intent` của tin kích hoạt.
@@ -11,7 +12,7 @@
 ## §2. Hồ sơ thành viên — `services/memory.ts` + `member_profiles`
 - `rememberMemberNote(account, uid, note, by)` ⇒ append `notes` (dòng `[YYYY-MM-DD HH:MM] (by) note`, cắt đầu khi > 4000 ký tự), cập nhật `display_name` nếu có; audit `memory.member_note`.
 - Tool `remember_member_note` (G/D/O): ở G chỉ GHI; ở D chỉ cho `uid = requester.uid`; O tự do.
-- (D22) Nhớ bối cảnh 1-1 giữa các phiên = host nạp sẵn `memberNotes` + `openLead` của CHÍNH requester vào mỗi lượt DM (01-CONTRACTS §11, SPEC-P03 §5.1); tool `recall_member_profile` đã BỎ. Lịch sử DM chỉ ≤ 10 tin gần nhất và `messages` bị xoá sau `MESSAGES_RETENTION_DAYS` ⇒ ghi chú là trí nhớ dài hạn DUY NHẤT ngoài lead — prompt `rules` mục "Ghi nhớ" (SPEC-P03 §7.3) bắt agent ghi điều đáng nhớ. `services/memory.ts::loadMemberContext(account, uid) ⇒ {notes: string|null, openLead: {status, score, missing}|null}` (một truy vấn mỗi bảng). Owner xem mọi hồ sơ qua `search_memory`/dashboard.
+- (D22) Nhớ bối cảnh 1-1 giữa các phiên = node `prepare` (D28) nạp sẵn `memberNotes` + `openLead` của CHÍNH requester vào mỗi lượt DM (01-CONTRACTS §11, SPEC-P03 §5.1, §6.1); tool `recall_member_profile` đã BỎ. Lịch sử DM chỉ ≤ 10 tin gần nhất và `messages` bị xoá sau `MESSAGES_RETENTION_DAYS` ⇒ ghi chú là trí nhớ dài hạn DUY NHẤT ngoài lead — prompt `rules` mục "Ghi nhớ" (SPEC-P03 §7.3) bắt agent ghi điều đáng nhớ. `services/memory.ts::loadMemberContext(account, uid) ⇒ {notes: string|null, openLead: {status, score, missing}|null}` (một truy vấn mỗi bảng). Owner xem mọi hồ sơ qua `search_memory`/dashboard.
 - BB-07: `loadPersonaBundle`/`buildSystemPrompt` cho lượt nhóm KHÔNG chạm bảng này (test SPEC-P03 §11 hàng 4).
 
 ## §3. Lead — `services/leads.ts`
