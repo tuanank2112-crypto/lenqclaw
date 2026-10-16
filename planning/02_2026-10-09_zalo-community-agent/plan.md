@@ -127,6 +127,9 @@ Người dùng: "báo qua telegram". Lý do cần: khi phiên Zalo chết (kicke
 ### D33 — 2026-10-16 · Kích hoạt persona KHÔNG bắt buộc qua eval (người dùng chốt)
 Người dùng: "không". Kích hoạt phiên bản persona trên dashboard có hiệu lực ngay như SPEC-P08; eval golden vẫn chạy tay theo OPERATIONS §5. CẤM thêm cổng eval chặn kích hoạt persona. **Lật:** người dùng đổi ý.
 
+### D34 — 2026-10-16 · Duyệt kỹ thuật SPEC-D31 (R06); SO chốt các câu không cần người (SO)
+SO kiểm `33248d1`: 0 key lộ trong evidence/specs/report, gate exit 0 (218 test), hình đồ thị KHÔNG đổi node/cạnh (chỉ chú thích §4.1/§4.2 + tác dụng phụ typing của `prepare`) ⇒ không cần người duyệt lại ảnh 12. SO chốt: Q-D31-4 CHẤP NHẬN tin gọi bot không qua triage (lưới tất định + agent `flag_message` + kiểm duyệt ở tin sau); Q-D31-5 ping ngoài `/api/healthz` HOÃN tới P09/VPS; Q-D31-6 giữ `turn_traces`/`agent_runs` 180 ngày, `audit_log` 365 ngày. Xếp gói: runtime D31 (làn, hạn chót, runner song song + advisory lock, typing sớm) vào P03; worker D31 (tick 250, advisory lock, heartbeat) + adapter báo động Telegram + dọn dữ liệu thành gói **P03b** 🟠 sau P03; thẻ dashboard + `/api/healthz` vào P08. Hạn giữ `inbound_events`/`outbox` (chứa nội dung tin) ⇒ Idea Vault, quyết trước P09. CHỜ NGƯỜI: Q-D31-1 (flash-lite cho tin gọi bot), Q-D31-2 (nới gap nhóm D09), Q-D31-3 (billing Gemini + `MODEL_PROVIDER=gemini`; Vyce đang 401). **Lật:** không.
+
 ### Quyết định bị thay thế
 | Mốc cũ | Phát biểu cũ | Thay bằng | Lý do |
 | :-- | :-- | :-- | :-- |
@@ -152,6 +155,16 @@ Người dùng: "không". Kích hoạt phiên bản persona trên dashboard có 
 | 00-ARCH §8 hàng "Vòng lượt tool" | port vòng `resident-agent.ts:135-269` | D28 — chỉ port LUẬT vào node `agent`/`tools` | vòng = cạnh `tools → agent` |
 | (mới) | — | D28 BB-17 / 00-ARCH §7 — cấm checkpointer, LangSmith, ChatModel/prebuilt LangChain | đo trong `evidence/ARCH-D28/spike.txt` |
 | SPEC-P02 §9 hàng "nhóm chưa có" (chỉ text) | huỷ `group_unknown` cho text | D29 — huỷ mọi text/action vào nhóm lạ hoặc `enabled=false` (trừ `sync_group_info`) | thẩm định R03 P2 |
+| 00-ARCH §3, §7 · OPERATIONS §1 · `inbound-runner.ts` (Đ22 cũ) | Một runner xử lý TUẦN TỰ toàn cục | D31 — BB-19, SPEC-D31 §6: một runner, song song theo thread, tuần tự trong thread | một lượt treo chặn mọi nhóm (mô phỏng: chờ 46,8 s) |
+| OPERATIONS §4 mục 2 | "advisory lock vẫn là Idea Vault — vận hành bằng luật" | D31 — advisory lock bắt buộc (runner + worker) | song song chỉ an toàn khi chắc một dispatcher |
+| SPEC-P03 §5.1 bước 4, §5.2 (b) · 01-CONTRACTS §12.4 `needsTriage` | Mọi tin DM (và mọi tin nhóm có kiểm duyệt, kể cả tin gọi bot) qua triage | D31 T3 — tin gọi bot không triage | triage p95 2953 ms ⇒ 49 % lượt chạm hạn 5 s |
+| 01-CONTRACTS §2.1 (`max_tokens` 16000) · route `community` một model | 16000 token; một model cho mọi lượt | D31 T2, T10 — `MODEL_COMMUNITY_FAST` cho lượt tương tác, `MODEL_MAX_OUTPUT_TOKENS` 1024 | 3.6-flash 1 lời gọi p95 4419 ms |
+| 01-CONTRACTS §2.1 / `callModel` | lời gọi model không timeout; retry + fallback không trần | D31 BB-18 — hạn chót lượt + `AbortSignal` + `ModelDeadlineError` | trường hợp xấu không có trần |
+| SPEC-P04 §2 bước 2 | embed timeout 3 s | D31 T11 — `EMBED_TIMEOUT_MS` 1500 ∧ ≤ hạn lượt | p95 đo 447 ms |
+| SPEC-P02 §5 / `PACER_DEFAULTS` | tick 1000 ms; typing 1–3 s ngay trước mọi text | D31 T7, T9 — tick 250; bỏ typing lặp khi đã có typing sớm | tiết kiệm 1–3,7 s/tin, không đổi giới hạn D09 |
+| SPEC-P07 §5 "Heartbeat = CHÍNH báo cáo này — không có heartbeat khác" | không có heartbeat khác | D32 — dấu sống tiến trình `process_heartbeats` (không gửi cho ai) + báo động Telegram | runner/worker chết thì không ai biết |
+| D24 "không cần hạn giữ ở 0.1" · SPEC-P07 §2 bước 8 "KHÔNG chạm `turn_traces`, `audit_log`" | giữ vết vô hạn | D32 e4 — `turn_traces`/`agent_runs` 180 ngày, `audit_log` 365 ngày | bảng tăng không giới hạn; 365 ngày cho BB-09 |
+| 01-CONTRACTS §2.2 / plan.md Q3 | "giả định 1024 chiều; probe ở P04" | đóng Q3 — đo trả đúng 1024 | `latency-probe.txt` |
 | zaloclaw injection-guard | regex chặn/kick | D05(c) | báo nhầm trong cộng đồng AI; bảo mật bằng policy tool theo vai |
 | SPEC-P03 §5.1 bước 5 (bản duyệt 2026-10-09) | DM nạp "lịch sử 20 tin" | D22 | ≤ 5 lượt (10 tin) + ghi chú thành viên; chi phí |
 | 01-CONTRACTS §7.1 (bản duyệt 2026-10-09) | tool `recall_member_profile` (D) | D22 | ghi chú nạp sẵn mỗi lượt DM — tool thừa tốn token định nghĩa |
@@ -190,7 +203,10 @@ Thứ tự bắt buộc: `P01 → P02 → P03 → (P04 ∥ P05 ∥ P06 ∥ P07) 
 - [x] D28 — architect 🔴 sửa SPEC theo LangGraph + sơ đồ pipeline — H04↔[R04](reports/R04_kien-truc_LangGraph.md) ✅ 2026-10-16 (SPEC ở `88e3a52`, report `a9d4a47`)
 - [x] 🖐 Người dùng duyệt sơ đồ pipeline LangGraph (luồng xử lý trong nhóm, [ảnh 12](../../docs/images/12-pipeline-langgraph.png)) — "ok đây là luồng xử lý trong group" 2026-10-16
 - [ ] 🖐 Người dùng xem bóc tách luồng kỹ thuật: tốc độ output · chất lượng · eval · status · sessions (yêu cầu 2026-10-16) — có thể bổ sung SPEC P03 trước khi thi công
-- [ ] P03 — runtime agent trên LangGraph (G07, G08, G14, G15 local)
+- [x] D31–D33 — SPEC tốc độ + giám sát Telegram — H06↔[R06](reports/R06_kien-truc_toc-do.md) ✅ kỹ thuật (D34)
+- [ ] 🖐 Người dùng: Q-D31-1 (model cho tin gọi bot) · Q-D31-2 (gap nhóm) · Q-D31-3 (billing Gemini, `.env`)
+- [ ] P03 — runtime agent trên LangGraph (G07, G08, G14, G15 local) + runtime D31
+- [ ] P03b — worker D31 + báo động Telegram + dọn dữ liệu (🟠, sau P03)
 - [ ] P04 — tri thức (G12 local sau golden)
 - [ ] P05 — kiểm duyệt (G13, G16)
 - [ ] P06 — lead & trí nhớ

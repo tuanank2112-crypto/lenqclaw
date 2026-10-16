@@ -113,4 +113,7 @@ Thẩm định nội bộ: tự đối chiếu chéo tham chiếu §/tên env gi
 ## 13. Tiếp theo
 🖐 Cần tay người: trả lời Q-D31-1…6 (mặc định đã ghi); bật billing Gemini + sửa `.env` (Q-D31-3); tạo bot Telegram khi tới P09 (OPERATIONS §9). · 🤖 Agent làm được ngay: SO ghi D34 + 10 dòng "Quyết định bị thay thế" (§9) + đóng Q3 vào `plan.md`, xếp WP, render lại ảnh 13. · ⭐ Nên làm trước: Q-D31-1 + Q-D31-3 — quyết định model và quota chặn mọi số đo G23 của P03. · ⏸ Chưa làm: đo 3.6-flash đủ n, đo chéo model, đo zca-js sendText (thiếu quota / cần Zalo thật); hạn giữ `inbound_events`/`outbox` (ngoài phạm vi).
 
-⏳ Chờ phán quyết.
+## Phán quyết SO (2026-10-16, Claude Opus 5.5)
+Kiểm: 0 key lộ; gate exit 0; hình không đổi node/cạnh. Bảng thay thế đã chép vào plan.md; Q-D31-4/5/6 SO chốt, Q-D31-1/2/3 chờ người (plan D34).
+
+✅ DUYỆT (kỹ thuật)
