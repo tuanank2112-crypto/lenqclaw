@@ -17,8 +17,8 @@ export default async function DevSimPage() {
 
   return (
     <main style={{ padding: 24 }}>
-      <h1>Man chat gia lap (DATA_MODE=sim)</h1>
-      <p>Hai khung: tin nhan rieng (DM) va nhom gia lap sim-group-1.</p>
+      <h1>Màn chat giả lập (DATA_MODE=sim)</h1>
+      <p>Ba khung: nhóm giả lập (nhiều người gửi, @bot, trả lời, sự kiện vào/rời), DM thành viên và DM chủ.</p>
       <SimBoard />
     </main>
   );

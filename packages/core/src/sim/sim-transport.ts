@@ -8,10 +8,18 @@ import { sql } from '../adapters/db.js';
 import { audit } from '../services/audit.js';
 import { enqueue, type InboundEvent } from '../adapters/transport.js';
 import type { AccountId } from '../domain/types.js';
+import { applySimOutbox } from './sim-actions.js';
+
+/** uid cua bot trong kenh gia lap (mention/quote tin bot). `zalo_accounts.display_name` KHONG dung lam uid. */
+export const BOT_UID_SIM = 'sim-bot';
 
 /** Mau tra loi khi handler loi (DM). Nhom: doi hanh vi o SPEC-P03 §2 (D20), KHONG o P01. */
 export const BUSY_REPLY = 'Xin lỗi, hệ thống đang bận, vui lòng thử lại sau ít phút.';
 
+export type SimMsgType = 'webchat' | 'chat.sticker' | 'chat.photo';
+export type SimGroupEventName = 'join' | 'join_request' | 'leave' | 'remove_member' | 'add_admin' | 'remove_admin';
+
+/** SPEC-P02 §7.1. `event` ⇒ su kien nhom (`kind:'group_event'`), `text` bi bo qua. */
 export interface SimInboundArgs {
   account: AccountId;
   threadId: string;
@@ -19,6 +27,68 @@ export interface SimInboundArgs {
   senderUid: string;
   text: string;
   msgId?: string;
+  senderName?: string;
+  /** Mention bot: `@bot` trong text (them o dau neu thieu) ⇒ `mentions[0].uid = BOT_UID_SIM`. */
+  mentionBot?: boolean;
+  mentionUids?: string[];
+  /** Tra loi (quote) tin co `zalo_msg_id` nay — tra cuu `group_messages` / outbox / inbound de lay `owner_id`. */
+  quoteMsgId?: string | null;
+  msgType?: SimMsgType;
+  event?: SimGroupEventName;
+  eventUids?: string[];
+  eventNames?: string[];
+}
+
+/** `quoteMsgId` khong tra cuu duoc (route web ⇒ 400 `quote_not_found`). */
+export class SimQuoteNotFoundError extends Error {
+  readonly code = 'SimQuoteNotFoundError';
+  constructor(quoteMsgId: string) {
+    super(`simInbound: khong tim thay tin de tra loi (quoteMsgId="${quoteMsgId}").`);
+    this.name = 'SimQuoteNotFoundError';
+  }
+}
+
+const SIM_TYPE_LABELS: Record<string, string> = { 'chat.sticker': 'sticker', 'chat.photo': 'ảnh' };
+
+/** Them `@bot`/`@uid` vao text neu thieu va tinh `pos/len` (01-CONTRACTS §8.2). */
+export function buildMentions(
+  text: string,
+  mentionBot: boolean,
+  mentionUids: readonly string[]
+): { text: string; mentions: Array<{ uid: string; pos: number; len: number }> } {
+  let out = text;
+  const want: Array<{ uid: string; tag: string }> = [];
+  if (mentionBot) want.push({ uid: BOT_UID_SIM, tag: '@bot' });
+  for (const uid of mentionUids) want.push({ uid, tag: `@${uid}` });
+  for (const w of want) {
+    if (out.indexOf(w.tag) < 0) out = w.uid === BOT_UID_SIM ? `${w.tag} ${out}` : `${out} ${w.tag}`.trim();
+  }
+  // tinh pos SAU khi text on dinh (chen o dau chuoi lam dich cac mention truoc do)
+  return { text: out, mentions: want.map((w) => ({ uid: w.uid, pos: out.indexOf(w.tag), len: w.tag.length })) };
+}
+
+/** Tra cuu tin de quote: `group_messages` → outbox (tin bot, owner = BOT_UID_SIM) → `inbound_events`. */
+async function resolveQuote(
+  account: AccountId,
+  quoteMsgId: string
+): Promise<{ owner_id: string; global_msg_id: string; msg: string }> {
+  const gm = await sql<{ sender_uid: string; text: string | null }>(
+    `select sender_uid, text from group_messages where zalo_account_id=$1 and zalo_msg_id=$2`,
+    [account, quoteMsgId]
+  );
+  if (gm[0]) return { owner_id: gm[0].sender_uid, global_msg_id: quoteMsgId, msg: gm[0].text ?? '' };
+  const ob = await sql<{ text: string | null }>(
+    `select body->>'text' as text from outbox
+     where zalo_account_id=$1 and (zalo_msg_id=$2 or ('sim-out-' || id) = $2 or ('out-' || id) = $2) limit 1`,
+    [account, quoteMsgId]
+  );
+  if (ob[0]) return { owner_id: BOT_UID_SIM, global_msg_id: quoteMsgId, msg: ob[0].text ?? '' };
+  const ie = await sql<{ sender_uid: string; text: string | null }>(
+    `select sender_uid, payload->>'text' as text from inbound_events where zalo_account_id=$1 and zalo_msg_id=$2`,
+    [account, quoteMsgId]
+  );
+  if (ie[0]) return { owner_id: ie[0].sender_uid, global_msg_id: quoteMsgId, msg: ie[0].text ?? '' };
+  throw new SimQuoteNotFoundError(quoteMsgId);
 }
 
 export interface SimInboundResult {
@@ -35,13 +105,62 @@ export async function simInbound(args: SimInboundArgs): Promise<SimInboundResult
   if (args.senderUid === 'system') {
     throw new Error('simInbound: senderUid="system" la gia tri danh rieng cho su kien he thong.');
   }
-  const msgId = args.msgId ?? `sim-${randomUUID()}`;
+  let msgId: string;
+  let payload: Record<string, unknown>;
+  const ts = String(Date.now());
+  if (args.event) {
+    if (args.threadType !== 'group') throw new Error('simInbound: su kien nhom chi hop le voi threadType="group".');
+    msgId = args.msgId ?? `gev-sim-${randomUUID()}`;
+    const g = await sql<{ name: string | null }>(
+      `select name from zalo_groups where zalo_account_id=$1 and thread_id=$2`,
+      [args.account, args.threadId]
+    );
+    payload = {
+      kind: 'group_event',
+      event: args.event,
+      uids: args.eventUids ?? [],
+      names: args.eventNames ?? [],
+      source_uid: args.senderUid,
+      group_name: g[0]?.name ?? null,
+      time: ts,
+      raw: { sim: true },
+    };
+  } else {
+    msgId = args.msgId ?? `sim-${randomUUID()}`;
+    const msgType = args.msgType ?? 'webchat';
+    const cli = `sim-cli-${msgId}`;
+    if (msgType === 'webchat') {
+      const { text, mentions } = buildMentions(args.text, args.mentionBot === true, args.mentionUids ?? []);
+      payload = {
+        kind: 'text',
+        text,
+        msg_type: msgType,
+        ts,
+        cli_msg_id: cli,
+        d_name: args.senderName ?? null,
+        mentions,
+        quote: args.quoteMsgId ? await resolveQuote(args.account, args.quoteMsgId) : null,
+        raw: { sim: true },
+      };
+    } else {
+      payload = {
+        kind: 'unsupported',
+        text: `[thành viên gửi ${SIM_TYPE_LABELS[msgType] ?? 'tin nhắn loại khác'} — chưa hỗ trợ]`,
+        unsupported: true,
+        msg_type: msgType,
+        ts,
+        cli_msg_id: cli,
+        d_name: args.senderName ?? null,
+        raw: { sim: true },
+      };
+    }
+  }
   const rows = await sql<{ id: number }>(
     `insert into inbound_events (zalo_account_id, zalo_msg_id, thread_id, thread_type, sender_uid, is_self, payload)
      values ($1,$2,$3,$4,$5,false,$6)
      on conflict (zalo_account_id, zalo_msg_id) do nothing
      returning id`,
-    [args.account, msgId, args.threadId, args.threadType, args.senderUid, JSON.stringify({ text: args.text })]
+    [args.account, msgId, args.threadId, args.threadType, args.senderUid, JSON.stringify(payload)]
   );
   if (rows.length === 0) return { id: null, duplicate: true };
   return { id: rows[0]!.id, duplicate: false };
@@ -133,19 +252,11 @@ export async function processInbound(handler: InboundHandler = echoHandler): Pro
   return { processed: 1 };
 }
 
-/** Chuyen `outbox` `queued -> sent` (khong pacer — pacer that la P02), dat
- * `zalo_msg_id='sim-out-<id>'`. */
-export async function simDeliver(opts: { limit?: number } = {}): Promise<{ delivered: number }> {
-  const limit = opts.limit ?? 100;
-  const rows = await sql<{ id: number }>(
-    `update outbox set status = 'sent', zalo_msg_id = 'sim-out-' || id
-     where id in (
-       select id from outbox where status = 'queued' order by id limit $1 for update skip locked
-     )
-     returning id`,
-    [limit]
-  );
-  return { delivered: rows.length };
+/** Giao `outbox` `queued` o kenh gia lap (khong pacer — do rieng bang `simulatePacer`): text ⇒
+ * `sent` + `zalo_msg_id='sim-out-<id>'`; `action` ⇒ thi hanh tren DB gia lap
+ * (`sim-actions.ts::applySimOutbox`, SPEC-P02 §7.2). `delivered` dem hang chuyen `sent`. */
+export async function simDeliver(opts: { limit?: number } = {}): Promise<{ delivered: number; failed: number }> {
+  return applySimOutbox(opts);
 }
 
 export interface ScenarioLine {
