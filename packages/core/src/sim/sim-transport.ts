@@ -255,7 +255,7 @@ export async function processInbound(handler: InboundHandler = echoHandler): Pro
 /** Giao `outbox` `queued` o kenh gia lap (khong pacer — do rieng bang `simulatePacer`): text ⇒
  * `sent` + `zalo_msg_id='sim-out-<id>'`; `action` ⇒ thi hanh tren DB gia lap
  * (`sim-actions.ts::applySimOutbox`, SPEC-P02 §7.2). `delivered` dem hang chuyen `sent`. */
-export async function simDeliver(opts: { limit?: number } = {}): Promise<{ delivered: number; failed: number }> {
+export async function simDeliver(opts: { limit?: number; extraThreadIds?: string[] } = {}): Promise<{ delivered: number; failed: number }> {
   return applySimOutbox(opts);
 }
 
@@ -311,7 +311,7 @@ export async function runScenario(
     }
     inbound++;
     await processInbound(handler);
-    const { delivered } = await simDeliver();
+    const { delivered } = await simDeliver({ extraThreadIds: [parsed.thread_id] }); // kich ban tu khai thread cua no
     outbound += delivered;
   }
 

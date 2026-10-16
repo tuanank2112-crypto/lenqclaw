@@ -23,6 +23,10 @@ export const RETRY_DELAY_MS = 30_000;
 export const MAX_ATTEMPTS = 5;
 /** Cache `zalo_groups.budget_per_hour` 60 s (01-CONTRACTS §8.4). */
 export const BUDGET_CACHE_MS = 60_000;
+/** Action CO TAC DUNG PHU, khong idempotent: loi mo ho ⇒ `failed('outcome_unknown')`, KHONG thu lai (D29 diem 4). */
+export const NON_IDEMPOTENT_ACTIONS: ReadonlySet<string> = new Set(['create_poll', 'create_reminder', 'create_note', 'update_group_settings']);
+/** Action can the duyet (BB-06): worker la lop chan cuoi (D29 diem 1). */
+const APPROVAL_GATED = new Set(['remove_member', 'block_member']);
 
 export interface PacerDeps {
   now?: () => number;
@@ -41,7 +45,7 @@ export class AccountPacer {
   readonly policy: PacerPolicy;
   private pending: { rowId: number; readyAt: number } | null = null;
   private readonly now: () => number;
-  private readonly budgetCache = new Map<string, { value: number | null; at: number }>();
+  private readonly gateCache = new Map<string, { value: store.GroupGate | null; at: number }>();
 
   constructor(
     private readonly account: AccountId,
@@ -81,6 +85,16 @@ export class AccountPacer {
         await store.cancelRow(row.id, 'staff_takeover');
         result.cancelled++;
         continue;
+      }
+      if (row.thread_type === 'group' && this.needsGroupGate(row)) {
+        const g = await this.gateOf(row.thread_id);
+        const why = g === null ? 'group_unknown' : g.enabled ? null : 'group_disabled';
+        if (why) {
+          await store.cancelRow(row.id, why);
+          await store.auditPacer(`pacer.${why}`, row.thread_id, { outbox_id: row.id, kind: row.kind });
+          result.cancelled++;
+          continue;
+        }
       }
       if (row.kind === 'action' || row.kind === 'react') {
         actions.push(row);
@@ -138,17 +152,24 @@ export class AccountPacer {
 
   // ------------------------------------------------------------ nhom: ngan sach
 
-  private async budgetOf(threadId: string): Promise<number | null> {
+  private async gateOf(threadId: string): Promise<store.GroupGate | null> {
     const now = this.now();
-    const hit = this.budgetCache.get(threadId);
+    const hit = this.gateCache.get(threadId);
     if (hit && now - hit.at < BUDGET_CACHE_MS) return hit.value;
-    const value = await store.groupBudget(this.account, threadId);
-    this.budgetCache.set(threadId, { value, at: now });
+    const value = await store.groupGate(this.account, threadId);
+    this.gateCache.set(threadId, { value, at: now });
     return value;
   }
 
-  /** Loc tin text nhom (BB-08, §5): nhom khong co dong `zalo_groups` ⇒ `cancelled('group_unknown')`;
-   * het ngan sach gio ⇒ giu `queued`, qua `groupTextTtlMin` ⇒ `cancelled('budget_expired')`. */
+  /** Hang nhom nao phai qua cong "nhom da khai + enabled" (D29 diem 2, SPEC-P02 §9): moi `text`/`action`/`react`
+   * TRU `sync_group_info` (de dashboard thay nhom la; dong tao ra `enabled=false`). */
+  private needsGroupGate(row: store.OutboxRow): boolean {
+    if (row.kind === 'action') return row.body.action !== 'sync_group_info';
+    return row.kind === 'text' || row.kind === 'react';
+  }
+
+  /** Ngan sach gio (BB-08, §5): het ngan sach ⇒ giu `queued`, qua `groupTextTtlMin` ⇒ `cancelled('budget_expired')`.
+   * Nhom chua khai / tat da bi huy o `tick` (cong chung cho text + action). */
   private async gateGroupTexts(
     texts: store.OutboxRow[]
   ): Promise<{ eligible: store.OutboxRow[]; budgetBlocked: number; cancelled: number }> {
@@ -161,16 +182,10 @@ export class AccountPacer {
         eligible.push(row);
         continue;
       }
-      const budget = await this.budgetOf(row.thread_id);
-      if (budget === null) {
-        await store.cancelRow(row.id, 'group_unknown');
-        await store.auditPacer('pacer.group_unknown', row.thread_id, { outbox_id: row.id });
-        cancelled++;
-        continue;
-      }
+      const budget = (await this.gateOf(row.thread_id))?.budget ?? 0;
       let used = usedBy.get(row.thread_id);
       if (used === undefined) {
-        used = await store.groupTextSentLastHour(this.account, row.thread_id, this.now());
+        used = await store.groupTextSentLastHour(this.account, row.thread_id);
         usedBy.set(row.thread_id, used);
       }
       if (used < budget) {
@@ -330,12 +345,31 @@ export class AccountPacer {
       if (approvalId) await store.completeApproval(approvalId, out.ok, out.ok ? out.result : { error: { name: errName ?? 'ActionFailed', code } });
       return out.ok;
     };
+    // BB-06: kick/block CHI khi the duyet hop le — kiem + nhan the (CAS) TRUOC khi cham Zalo.
+    let claimed: string | null = null;
+    if (APPROVAL_GATED.has(name)) {
+      const target = typeof row.body.uid === 'string' ? row.body.uid : '';
+      const ok =
+        approvalId !== null &&
+        target.length > 0 &&
+        (await store.claimApproval(approvalId, this.account, row.thread_id, name as 'remove_member' | 'block_member', target));
+      if (!ok) {
+        await store.markFailed(row.id, 'approval_invalid', { error: { name: 'ApprovalInvalid', code: null } });
+        await store.auditAction('zalo.action_blocked', { action: name, thread: row.thread_id, ok: false, code: 'approval_invalid' });
+        return false;
+      }
+      claimed = approvalId;
+    }
+    const unclaim = async (): Promise<void> => {
+      if (claimed) await store.releaseApproval(claimed);
+    };
     try {
       const out = await executeAction(this.account, session, row);
       this.policy.recordAction(now, row.thread_id);
       return await finish(out, null);
     } catch (err) {
       if (err instanceof ZaloRateLimitError) {
+        await unclaim();
         await store.requeue(row.id, new Date(now));
         await this.enterBackoff('rate_limit_error');
         return false;
@@ -356,10 +390,16 @@ export class AccountPacer {
           err.name
         );
       }
-      // Loi mang/khong xac dinh: thu lai nhu text (30 s, qua 5 lan ⇒ failed).
+      // Loi mang/khong xac dinh. Action khong idempotent: Zalo CO THE da thi hanh ⇒ khong thu lai.
+      if (NON_IDEMPOTENT_ACTIONS.has(name)) {
+        this.policy.recordAction(now, row.thread_id);
+        return finish({ ok: false, result: {}, failReason: 'outcome_unknown' }, err instanceof Error ? err.name : 'Error');
+      }
+      // Action idempotent: thu lai nhu text (30 s, qua 5 lan ⇒ failed).
       if (row.attempts + 1 >= MAX_ATTEMPTS) {
         return finish({ ok: false, result: {}, failReason: errSummary(err) }, err instanceof Error ? err.name : 'Error');
       }
+      await unclaim();
       await store.requeue(row.id, new Date(now + RETRY_DELAY_MS));
       logEvent('pacer.action_error', { account: this.account, outbox_id: row.id, error: errSummary(err) });
       return false;

@@ -25,7 +25,7 @@ export class PacerPolicy {
   private backoffUntil = 0;
 
   /** `budgetPerHour` (tuy chon): neu dat, chinh sach TU DEM ngan sach text nhom trong bo nho
-   * (dung cho mo phong `simulatePacer`); pacer that doc ngan sach tu DB (store.groupBudget). */
+   * (dung cho mo phong `simulatePacer`); pacer that doc ngan sach tu DB (store.groupGate). */
   constructor(
     private readonly cfg: PacerConfig,
     private readonly rng: () => number = Math.random,

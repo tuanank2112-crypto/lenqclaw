@@ -266,8 +266,8 @@ describe('text nhom: sent_at, link msgId that, ngan sach (§4.3, §5, §10 hang 
     }
     await sql(`update outbox set status='sent', sent_at = now() - (id % 50 || ' seconds')::interval where id = any($1) and id <> $2`, [ids, ids[20]]);
     await sql(`update outbox set status='sent', sent_at = now() - interval '2 hours' where id = $1`, [ids[20]]);
-    expect(await store.groupTextSentLastHour(ACCOUNT, group, Date.now())).toBe(20);
-    expect(await store.groupTextSentLastHour(ACCOUNT, uid('khac'), Date.now())).toBe(0);
+    expect(await store.groupTextSentLastHour(ACCOUNT, group)).toBe(20);
+    expect(await store.groupTextSentLastHour(ACCOUNT, uid('khac'))).toBe(0);
     await sql(`update outbox set status='cancelled' where id = any($1)`, [ids]);
   });
 

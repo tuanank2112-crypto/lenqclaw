@@ -49,13 +49,16 @@ async function applyAction(row: ClaimedRow): Promise<ActionOutcome> {
     case 'delete_message': {
       const msgId = str(b.msgId);
       const uidFrom = str(b.uidFrom);
-      if (!msgId || !uidFrom || !str(b.cliMsgId)) return fail('cli_msg_id_missing');
-      const found = await sql<{ sender_uid: string }>(
-        `select sender_uid from group_messages where zalo_account_id=$1 and thread_id=$2 and zalo_msg_id=$3`,
+      const cliMsgId = str(b.cliMsgId);
+      if (!msgId || !uidFrom || !cliMsgId) return fail('cli_msg_id_missing');
+      if (cliMsgId === msgId) return fail('cli_msg_id_suspect'); // doan bang msgId (zaloclaw tool.ts:743)
+      const found = await sql<{ sender_uid: string; cli_msg_id: string | null }>(
+        `select sender_uid, cli_msg_id from group_messages where zalo_account_id=$1 and thread_id=$2 and zalo_msg_id=$3`,
         [account, thread, msgId]
       );
       if (found.length === 0) return fail('message_not_found');
       if (found[0]!.sender_uid !== uidFrom) return fail('uidFrom_mismatch');
+      if (found[0]!.cli_msg_id !== cliMsgId) return fail('cli_msg_id_mismatch'); // Zalo that tu choi cliMsgId sai
       await sql(
         `update group_messages set deleted_at = coalesce(deleted_at, now())
          where zalo_account_id=$1 and thread_id=$2 and zalo_msg_id=$3`,
@@ -164,15 +167,20 @@ async function completeApproval(approvalId: string, ok: boolean, result: Record<
   }
 }
 
-/** Giao het (toi da `limit`) hang `queued`, theo thu tu id. Moi hang duoc "nhan" (`sending`) bang
+/** Giao het (toi da `limit`) hang `queued` cua thread `sim-*` da den han (`not_before <= now()`), theo thu tu id —
+ * KHONG cham hang thread that khi `DATA_MODE=sim` chay chung worker that (D29 diem 6). Ngoai le CO CHU Y:
+ * `extraThreadIds` — `runScenario` truyen dung cac thread cua kich ban dang phat lai (vd `u-101` o `echo.jsonl`). Moi hang duoc "nhan" (`sending`) bang
  * `for update skip locked` nen hai lan goi dong thoi khong giao trung. */
-export async function applySimOutbox(opts: { limit?: number } = {}): Promise<ApplySimResult> {
+export async function applySimOutbox(opts: { limit?: number; extraThreadIds?: string[] } = {}): Promise<ApplySimResult> {
   const limit = opts.limit ?? 100;
   const claimed = await sql<ClaimedRow>(
     `update outbox set status = 'sending', attempts = coalesce(attempts, 0) + 1
-     where id in (select id from outbox where status = 'queued' order by id limit $1 for update skip locked)
+     where id in (
+       select id from outbox
+       where status = 'queued' and (thread_id like 'sim-%' or thread_id = any($2::text[])) and not_before <= now()
+       order by id limit $1 for update skip locked)
      returning id::int as id, zalo_account_id, thread_id, thread_type, kind, body`,
-    [limit]
+    [limit, opts.extraThreadIds ?? []]
   );
   claimed.sort((a, b) => a.id - b.id);
 

@@ -5,7 +5,7 @@
 //
 // VUNG CAM (SPEC-P02 §8): khong co nhanh cho hanh dong nguy hiem (giai tan
 // nhom, doi chu nhom, pho nhom, roi nhom, gui tep…) — `default` ⇒ `unknown_action`.
-// Thieu `cliMsgId`/`uidFrom` khi xoa tin ⇒ `cli_msg_id_missing`, KHONG doan.
+// Thieu `cliMsgId`/`uidFrom` khi xoa tin ⇒ `cli_msg_id_missing`; `cliMsgId === msgId` ⇒ `cli_msg_id_suspect`; KHONG doan.
 
 import type { AccountId } from './config.js';
 import type { OutboxRow } from './store.js';
@@ -78,6 +78,8 @@ export async function executeAction(
       const msgId = reqStr(body.msgId, BAD);
       const cliMsgId = reqStr(body.cliMsgId, 'cli_msg_id_missing');
       const uidFrom = reqStr(body.uidFrom, 'cli_msg_id_missing');
+      // cliMsgId == msgId la dau hieu core doan (zaloclaw tool.ts:743 `cliMsgId ?? msgId`) ⇒ khong thu (D29 diem 5).
+      if (cliMsgId === msgId) throw new InvalidActionError('cli_msg_id_suspect');
       const r = await session.deleteMessage({ data: { msgId, cliMsgId, uidFrom }, threadId: groupId, type: 'group' }, false);
       return r.status === 0
         ? { ok: true, result: { status: r.status } }

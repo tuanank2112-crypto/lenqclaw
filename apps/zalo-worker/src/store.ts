@@ -326,25 +326,31 @@ export async function recentSent(
 
 // ---------------------------------------------------------------- nhom (SPEC-P02 §4–§5)
 
-/** So tin text da gui (hoac dang gui) vao mot nhom trong 1 gio den `nowMs` — cau SQL
- * 01-CONTRACTS §8.4 (da do `evidence/ARCH/db-checks.txt` (c)). */
-export async function groupTextSentLastHour(account: AccountId, threadId: string, nowMs: number): Promise<number> {
+/** So tin text da gui (hoac dang gui) vao mot nhom trong 1 gio gan nhat — cau SQL 01-CONTRACTS §8.4
+ * (da do `evidence/ARCH/db-checks.txt` (c)). Cua so tinh bang `now()` cua DB (D29 diem 3): `sent_at`
+ * cung do `now()` cua DB ghi, nen lech dong ho worker khong the nho/gian ngan sach. */
+export async function groupTextSentLastHour(account: AccountId, threadId: string): Promise<number> {
   const rows = await sql<{ c: number }>(
     `select count(*)::int as c from outbox
      where zalo_account_id = $1 and thread_id = $2 and kind = 'text' and status in ('sent','sending')
-       and coalesce(sent_at, created_at) > $3::timestamptz - interval '1 hour'`,
-    [account, threadId, new Date(nowMs)]
+       and coalesce(sent_at, created_at) > now() - interval '1 hour'`,
+    [account, threadId]
   );
   return rows[0]?.c ?? 0;
 }
 
-/** `zalo_groups.budget_per_hour`; `null` khi nhom khong co dong (⇒ pacer khong gui, `group_unknown`). */
-export async function groupBudget(account: AccountId, threadId: string): Promise<number | null> {
-  const rows = await sql<{ budget_per_hour: number }>(
-    `select budget_per_hour from zalo_groups where zalo_account_id = $1 and thread_id = $2`,
+export interface GroupGate {
+  budget: number;
+  enabled: boolean;
+}
+
+/** `zalo_groups.budget_per_hour` + `enabled`; `null` khi nhom khong co dong (⇒ pacer huy `group_unknown`). */
+export async function groupGate(account: AccountId, threadId: string): Promise<GroupGate | null> {
+  const rows = await sql<{ budget_per_hour: number; enabled: boolean }>(
+    `select budget_per_hour, enabled from zalo_groups where zalo_account_id = $1 and thread_id = $2`,
     [account, threadId]
   );
-  return rows[0] ? rows[0].budget_per_hour : null;
+  return rows[0] ? { budget: rows[0].budget_per_hour, enabled: rows[0].enabled } : null;
 }
 
 /** Sau khi gui text nhom thanh cong: dong dem do core chen truoc (`zalo_msg_id='out-<outbox_id>'`)
@@ -368,6 +374,37 @@ export async function markBotNotAdmin(account: AccountId, threadId: string): Pro
     `update zalo_groups set bot_is_admin = false, updated_at = now() where zalo_account_id = $1 and thread_id = $2`,
     [account, threadId]
   );
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Lop chan cuoi BB-06 (D29 diem 1): nhan the duyet cho MOT lan thi hanh kick/block. Mot cau lenh co dieu kien
+ * (CAS): the PHAI `approved`, chua nhan (`executed_at is null`), cung tai khoan/thread/uid dich, dung `kind`
+ * (`kick_member`↔`remove_member`, `block_member`↔`block_member`). Nhan = dat `executed_at` TRUOC khi goi Zalo
+ * nen hai tick cung the chi mot tick qua. Khong khop ⇒ `false` (caller KHONG goi Zalo). */
+export async function claimApproval(
+  approvalId: string,
+  account: AccountId,
+  threadId: string,
+  action: 'remove_member' | 'block_member',
+  targetUid: string
+): Promise<boolean> {
+  if (!UUID_RE.test(approvalId)) return false;
+  const kind = action === 'remove_member' ? 'kick_member' : 'block_member';
+  const rows = await sql<{ id: string }>(
+    `update approvals set executed_at = now()
+     where id = $1::uuid and zalo_account_id = $2 and thread_id = $3 and kind = $4 and target_uid = $5
+       and status = 'approved' and executed_at is null
+     returning id`,
+    [approvalId, account, threadId, kind, targetUid]
+  );
+  return rows.length > 0;
+}
+
+/** Tra the da nhan khi Zalo CHUA thi hanh (rate-limit / hang doi lai) de lan sau van chay duoc. */
+export async function releaseApproval(approvalId: string): Promise<void> {
+  if (!UUID_RE.test(approvalId)) return;
+  await sql(`update approvals set executed_at = null where id = $1::uuid and status = 'approved'`, [approvalId]);
 }
 
 /** `approvals` approved ⇒ executed | failed (01-CONTRACTS §5.1). Chuyen trang thai co dieu kien
@@ -441,7 +478,7 @@ export async function applyGroupSync(
 
 /** Audit hanh dong quan tri (BB-09): KHONG ghi noi dung — chi ten hanh dong, thread, ket qua, ma. */
 export async function auditAction(
-  action: 'zalo.action' | 'zalo.action_failed',
+  action: 'zalo.action' | 'zalo.action_failed' | 'zalo.action_blocked',
   data: { action: string; thread: string; ok: boolean; code: number | string | null }
 ): Promise<void> {
   await audit(sql, { actorType: 'system', actorId: 'zalo-worker', action, target: data.thread, data });

@@ -181,3 +181,19 @@ describe('vung cam §8', () => {
     }
   });
 });
+
+describe('D29.5 — cliMsgId doan bang msgId', () => {
+  it('cliMsgId === msgId ⇒ cli_msg_id_suspect, KHONG goi Zalo (zaloclaw tool.ts:743 `cliMsgId ?? msgId`)', async () => {
+    const s = session();
+    await expect(
+      executeAction('community', s, row({ action: 'delete_message', msgId: '777', cliMsgId: '777', uidFrom: 'u', onlyMe: false }))
+    ).rejects.toMatchObject({ reason: 'cli_msg_id_suspect' });
+    expect(s.actions).toEqual([]);
+  });
+  it('cliMsgId khac msgId ⇒ van goi binh thuong', async () => {
+    const s = session();
+    const out = await executeAction('community', s, row({ action: 'delete_message', msgId: '777', cliMsgId: '778', uidFrom: 'u', onlyMe: false }));
+    expect(out.ok).toBe(true);
+    expect(s.actions.length).toBe(1);
+  });
+});

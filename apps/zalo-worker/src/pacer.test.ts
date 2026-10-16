@@ -25,6 +25,8 @@ const st = vi.hoisted(() => ({
   rows: [] as Row[],
   log: [] as Array<[string, ...unknown[]]>,
   budget: new Map<string, number | null>(),
+  disabled: new Set<string>(),
+  claimOk: true,
   used: new Map<string, number>(),
   nextId: 1,
 }));
@@ -75,7 +77,14 @@ vi.mock('./store.js', async () => {
     alert: async (_acc: string, kind: string, data: unknown) => {
       st.log.push(['alert', kind, data]);
     },
-    groupBudget: async (_acc: string, thread: string) => (st.budget.has(thread) ? st.budget.get(thread)! : null),
+    groupGate: async (_acc: string, thread: string) =>
+      st.budget.has(thread) && st.budget.get(thread) !== null
+        ? { budget: st.budget.get(thread)!, enabled: !st.disabled.has(thread) }
+        : null,
+    claimApproval: async () => st.claimOk,
+    releaseApproval: async () => {
+      st.log.push(['releaseApproval']);
+    },
     groupTextSentLastHour: async (_acc: string, thread: string) => st.used.get(thread) ?? 0,
     linkSentGroupMessage: async (outboxId: number, msgId: string) => {
       st.log.push(['link', outboxId, msgId]);
@@ -131,6 +140,8 @@ beforeEach(() => {
   st.rows = [];
   st.log = [];
   st.budget = new Map([['g1', 20]]);
+  st.disabled = new Set();
+  st.claimOk = true;
   st.used = new Map();
   st.nextId = 1;
 });
@@ -334,5 +345,59 @@ describe('action trong pacer (§4.1, §4.2, §9)', () => {
     expect(row.status).toBe('failed');
     expect(names()).not.toContain('alert');
     expect(fake.actions[0]!.kind).toBe('addReaction');
+  });
+});
+
+describe('D29.1 — kick/block can the duyet hop le (lop chan cuoi; kiem CAS nam o store)', () => {
+  it('claimApproval tu choi (khong approvalId / the sai) ⇒ failed(approval_invalid), 0 lan goi Zalo, audit zalo.action_blocked', async () => {
+    const { fake, pacer } = setup();
+    st.claimOk = false;
+    const noId = add({ kind: 'action', body: { action: 'remove_member', uid: 'u9' } });
+    const bad = add({ kind: 'action', body: { action: 'block_member', uid: 'u9', approvalId: 'ap-sai' } });
+    await pacer.tick();
+    expect(noId.status).toBe('failed');
+    expect(noId.reason).toBe('approval_invalid');
+    expect(bad.status).toBe('failed');
+    expect(bad.reason).toBe('approval_invalid');
+    expect(fake.actions).toEqual([]);
+    expect(st.log.filter((l) => l[0] === 'auditAction' && l[1] === 'zalo.action_blocked').length).toBe(2);
+    expect(st.log.some((l) => l[0] === 'completeApproval')).toBe(false);
+  });
+});
+
+describe('D29.8 — gap nhom tren DUONG GUI THAT (pacer.sendText ghi record(isGroup=true))', () => {
+  it('2 text cung nhom: tick +4 s ⇒ chua gui tin 2 (gap nhom 8 s); +12 s ⇒ gui', async () => {
+    const { fake, pacer, advance } = setup();
+    add({ kind: 'text', body: { text: 'một' } });
+    expect((await pacer.tick()).sentText).toBe(1);
+    const second = add({ kind: 'text', body: { text: 'hai' } });
+    advance(4_000);
+    const r = await pacer.tick();
+    expect(r.sentText).toBe(0);
+    expect(second.status).toBe('queued');
+    advance(8_000);
+    expect((await pacer.tick()).sentText).toBe(1);
+    expect(fake.sent.filter((x) => x.kind === 'text').length).toBe(2);
+  });
+});
+
+describe('D29.8 — log khong chua noi dung tin', () => {
+  it('gui text + chay action ⇒ KHONG dong log nao (stdout) chua noi dung', async () => {
+    const secret = 'NOI-DUNG-TIN-BI-MAT-98765';
+    const chunks: string[] = [];
+    const spy = vi.spyOn(process.stdout, 'write').mockImplementation(((c: string | Uint8Array) => {
+      chunks.push(String(c));
+      return true;
+    }) as typeof process.stdout.write);
+    try {
+      const { pacer } = setup();
+      add({ kind: 'text', body: { text: secret } });
+      add({ kind: 'action', body: { action: 'create_note', title: secret } });
+      await pacer.tick();
+    } finally {
+      spy.mockRestore();
+    }
+    expect(chunks.length).toBeGreaterThan(0); // co log thi moi co y nghia
+    expect(chunks.join('')).not.toContain(secret);
   });
 });

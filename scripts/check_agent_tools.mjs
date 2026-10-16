@@ -78,15 +78,30 @@ async function checkForbiddenTools() {
   return hits;
 }
 
+/** Cac dang viet mot hanh dong cam: `action: 'x'` (khoa co nhay), `case 'x':` (nhanh switch),
+ * `action === 'x'` / `!== 'x'` (so sanh). Tra [{ action, line }]. */
+export function findForbiddenActionHits(content, actions = FORBIDDEN_ACTIONS) {
+  const hits = [];
+  for (const action of actions) {
+    const q = `['"\`]${action}['"\`]`;
+    const patterns = [
+      new RegExp(`\\baction\\b['"]?\\s*:\\s*${q}`, 'g'),
+      new RegExp(`\\bcase\\s+${q}\\s*:`, 'g'),
+      new RegExp(`\\baction\\b['"]?\\s*[!=]==?\\s*${q}`, 'g'),
+    ];
+    for (const re of patterns) {
+      for (const m of content.matchAll(re)) hits.push({ action, line: lineOf(content, m.index ?? 0) });
+    }
+  }
+  return hits;
+}
+
 async function checkForbiddenActions() {
   const hits = [];
   for (const dir of ACTION_SCAN_DIRS) {
     for (const file of await walk(dir)) {
       const content = await readFile(file, 'utf8');
-      for (const action of FORBIDDEN_ACTIONS) {
-        const re = new RegExp(`\\baction\\b['"]?\\s*:\\s*['"\`]${action}['"\`]`, 'g');
-        for (const m of content.matchAll(re)) hits.push(`${rel(file)}:${lineOf(content, m.index ?? 0)}: action "${action}"`);
-      }
+      for (const h of findForbiddenActionHits(content)) hits.push(`${rel(file)}:${h.line}: action "${h.action}"`);
     }
   }
   return hits;
@@ -127,7 +142,9 @@ async function main() {
   process.exit(tools.length + actions.length + unlisted.length > 0 ? 1 : 0);
 }
 
-main().catch((err) => {
-  console.error(`CHECK_AGENT_TOOLS_ERROR: ${err instanceof Error ? err.message : String(err)}`);
-  process.exit(1);
-});
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((err) => {
+    console.error(`CHECK_AGENT_TOOLS_ERROR: ${err instanceof Error ? err.message : String(err)}`);
+    process.exit(1);
+  });
+}

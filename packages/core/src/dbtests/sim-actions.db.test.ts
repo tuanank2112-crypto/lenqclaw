@@ -51,6 +51,8 @@ async function addMessage(group: string, msgId: string, sender: string): Promise
 
 beforeEach(async () => {
   await sql(`update outbox set status = 'cancelled' where status in ('queued','sending')`);
+  // Tu chua (G29): file nay dung msg_id co dinh ('m-1'…); lan chay truoc do giua chung de lai dong ⇒ don truoc.
+  await sql(`delete from group_messages where zalo_account_id = $1 and thread_id like 'sim-act-%'`, [ACCOUNT]);
 });
 
 afterAll(async () => {
@@ -348,5 +350,88 @@ describe('simInbound mo rong — payload §8.2 (§7.1)', () => {
     await expect(
       simInbound({ account: ACCOUNT, threadId: tid(), threadType: 'group', senderUid: 'system', text: 'x' })
     ).rejects.toThrow(/system/);
+  });
+});
+
+describe('D29.5 — delete_message: cliMsgId phai la cli_msg_id that cua tin (sim tai hien loi zaloclaw tool.ts:743)', () => {
+  it('cliMsgId === msgId (doan bang msgId) ⇒ failed(cli_msg_id_suspect), tin KHONG bi xoa', async () => {
+    const g = tid();
+    await makeGroup(g);
+    await sql(
+      `insert into group_messages (zalo_account_id, thread_id, zalo_msg_id, cli_msg_id, sender_uid, text)
+       values ($1,$2,'888','real-cli','sim-mem-1','x')`,
+      [ACCOUNT, g]
+    );
+    const id = await act(g, { action: 'delete_message', msgId: '888', cliMsgId: '888', uidFrom: 'sim-mem-1', onlyMe: false });
+    await applySimOutbox();
+    const o = await row(id);
+    expect(o.status).toBe('failed');
+    expect(o.result).toEqual({ error: 'cli_msg_id_suspect' });
+    const m = await sql<{ deleted_at: string | null }>(`select deleted_at::text from group_messages where thread_id=$1`, [g]);
+    expect(m[0]!.deleted_at).toBeNull();
+    await dropGroup(g);
+  });
+
+  it('cliMsgId khac group_messages.cli_msg_id (khong bang msgId) ⇒ failed(cli_msg_id_mismatch), tin KHONG bi xoa', async () => {
+    const g = tid();
+    await makeGroup(g);
+    await sql(
+      `insert into group_messages (zalo_account_id, thread_id, zalo_msg_id, cli_msg_id, sender_uid, text)
+       values ($1,$2,'889','real-cli','sim-mem-1','x')`,
+      [ACCOUNT, g]
+    );
+    const id = await act(g, { action: 'delete_message', msgId: '889', cliMsgId: 'cli-doan-mo', uidFrom: 'sim-mem-1', onlyMe: false });
+    await applySimOutbox();
+    const o = await row(id);
+    expect(o.status).toBe('failed');
+    expect(o.result).toEqual({ error: 'cli_msg_id_mismatch' });
+    const m = await sql<{ deleted_at: string | null }>(`select deleted_at::text from group_messages where thread_id=$1`, [g]);
+    expect(m[0]!.deleted_at).toBeNull();
+    await dropGroup(g);
+  });
+});
+
+describe('D29.6 — applySimOutbox chi xu ly hang thread "sim-" da den han', () => {
+  it('hang thread that (khong "sim-") va hang not_before tuong lai ⇒ van queued; hang sim- den han ⇒ giao', async () => {
+    const real = `zreal-${randomUUID().slice(0, 8)}`;
+    const g = tid();
+    await makeGroup(g);
+    const realId = Number(
+      await enqueue({ zaloAccountId: ACCOUNT, threadId: real, threadType: 'group', kind: 'action', body: { action: 'create_note', title: 't' } })
+    );
+    const futureId = Number(
+      await enqueue({
+        zaloAccountId: ACCOUNT,
+        threadId: g,
+        threadType: 'group',
+        kind: 'action',
+        body: { action: 'create_note', title: 't' },
+        notBefore: new Date(Date.now() + 3_600_000),
+      })
+    );
+    const dueId = await act(g, { action: 'create_note', title: 't' });
+    await applySimOutbox();
+    expect((await row(realId)).status).toBe('queued');
+    expect((await row(futureId)).status).toBe('queued');
+    expect((await row(dueId)).status).toBe('sent');
+    await sql(`update outbox set status = 'cancelled' where id = any($1)`, [[realId, futureId]]);
+    await dropGroup(g);
+  });
+
+  it('approval cua thread that KHONG bi dong boi sim', async () => {
+    const real = `zreal-${randomUUID().slice(0, 8)}`;
+    const ap = (
+      await sql<{ id: string }>(
+        `insert into approvals (zalo_account_id, kind, thread_id, target_uid, reason, requested_by, status, expires_at)
+         values ($1,'kick_member',$2,'u-x','thử','agent','approved', now() + interval '1 hour') returning id`,
+        [ACCOUNT, real]
+      )
+    )[0]!.id;
+    const id = await act(real, { action: 'remove_member', uid: 'u-x', approvalId: ap });
+    await applySimOutbox();
+    expect((await row(id)).status).toBe('queued');
+    expect((await sql<{ status: string }>(`select status from approvals where id=$1::uuid`, [ap]))[0]!.status).toBe('approved');
+    await sql(`update outbox set status = 'cancelled' where id = $1`, [id]);
+    await sql(`delete from approvals where id=$1::uuid`, [ap]);
   });
 });
