@@ -220,7 +220,7 @@ Thứ tự bắt buộc: `P01 → P02 → P03 → (P04 ∥ P05 ∥ P06 ∥ P07) 
 | Q6 | `/mute` cần cột `mute_until` thật? | không; `/mute` = chuyển `ambient→mention`, `/unmute` ngược lại | 01-CONTRACTS §7.1 |
 | Q7 | Nhặt câu hỏi ở nhóm `mention` có tắt kiểm duyệt (không triage)? | không nhặt | SPEC-P04 §5 |
 | Q8 | Nhặt câu hỏi bỏ trống chỉ ở nhóm `ambient`? | đúng | SPEC-P04 §5 |
-| Q9 | `agent_review` vào nhóm: model im ⇒ cho vào hay từ chối? | CHO VÀO | SPEC-P05 §6, D19 |
+| Q9 | `agent_review` vào nhóm: model im ⇒ cho vào hay từ chối? | ✅ CHỐT (người dùng 2026-10-16): CHO VÀO — kể cả khi model sập/refusal/chạm trần; KHÔNG tạo thẻ duyệt: agent duyệt, hoặc owner (là admin nhóm) tự duyệt thẳng trên Zalo | SPEC-P05 §6, D19, 01-CONTRACTS §12.5 D3 |
 | Q10 | Đệm nhóm giữ bao nhiêu ngày; ai đăng thông báo dữ liệu | 7 ngày; chủ đăng trong nhóm | BB-11, OPERATIONS §3 |
 | Q11 | Provider chạy dev là `vyce/deepseek` (Đ28 cũ) — có đổi về Gemini sớm không? | dev giữ `.env` hiện tại; mọi gate chấm bằng Gemini | TESTING §3 |
 | Q12 | Moderator (không phải owner) có được duyệt kick/block qua lệnh nhóm? | CÓ, chỉ thẻ của nhóm mình | SPEC-P05 §5.3 |
