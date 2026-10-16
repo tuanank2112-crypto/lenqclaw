@@ -99,6 +99,9 @@ Người dùng: "nếu không quan trọng thì di chuyển nó một cách an t
 ### D27 — 2026-10-16 · Nghiệm thu P01 (SO đo lại, ✅) + chỉnh 2 kỳ vọng SPEC-P01 §10 theo thực đo
 SO đo lại độc lập trên `f164f23`: `gate` exit 0 (core 82 · web 31 · worker 37), `test:db` exit 0 hai lần liên tiếp (16 · 14 · 27, 0 skip), `pivot_hits: 0` + bằng chứng ĐỎ mới (file thử chứa từ khoá ⇒ `pivot_hits: 1`, exit 1), hàng 7 = 0, hàng 8 = 11, tag `d7f50eb`. Hai chỉnh: (1) hàng 6 = **95** file xoá — thừa đúng `agent/tools/tool-kit.test.ts` vì §2 bắt chuyển sang `agent/community/tools/` VÀ viết lại ⇒ git thấy xoá + thêm; (2) hàng 4 `applied: 9` chỉ in khi migrate từ DB rỗng ⇒ đo trên DB tạm `TEST_DB_RESET=1` (`evidence/P01/p01-reset-probe.txt`); DB dev in `applied: 0`. Chấp nhận máy quét viết từ khoá `'b' + 'ql'`, `'mark' + 'et'` và miễn trừ `/^007_drop_/` (hàng 7 grep thô bắt chính chuỗi trong script, kể cả `marketplace` của tên file). Cổng DB dev đổi `127.0.0.1:15432` (G31, `a589539`). Phán quyết: [R01](reports/R01_thi-cong_P01.md). **Lật:** không cần.
 
+### D28 — 2026-10-16 · Runtime agent dựng trên LangGraph (LangGraph.js), pipeline là ĐỒ THỊ tường minh — nền cho mọi phát triển sau (người dùng chốt)
+Người dùng: "bảo sử dụng nó và pipeline nữa mà? sau đó nó sẽ là cơ sở phát triển repo". Chỉ đạo này có từ trước nhưng KHÔNG được ghi vào repo ⇒ bộ SPEC 2026-10-09 thiết kế vòng tool tự viết (SPEC-P03 §6, port `resident-agent.ts`). Từ nay: toàn bộ xử lý một sự kiện vào (đệm → kiểm duyệt → cổng → lượt agent model⇄tool → outbox) là một đồ thị LangGraph với state có kiểu; kế hoạch 03 (Skill · Voice · Constraint) và các giai đoạn doanh nghiệp dựng tiếp trên đồ thị này (node/subgraph). GIỮ: P01, P02 (transport/outbox — framework nào cũng cần), mọi BB trừ khi SPEC mới ghi rõ thay thế + lý do. Trình tự: architect 🔴 sửa bộ SPEC (H04) ⇒ **người dùng duyệt sơ đồ pipeline** ⇒ mới thi công P03. **Lật:** đắt (đổi nền runtime) — chỉ khi người dùng đổi ý.
+
 ### Quyết định bị thay thế
 | Mốc cũ | Phát biểu cũ | Thay bằng | Lý do |
 | :-- | :-- | :-- | :-- |
@@ -114,6 +117,7 @@ SO đo lại độc lập trên `f164f23`: `gate` exit 0 (core 82 · web 31 · w
 | SPEC-P01 §1 bước 1 (bản duyệt 2026-10-09) | worker tự đánh tag `eada365`, "KHÔNG push" | D26 | SO đã đánh tag `d7f50eb` + push để lưu trữ an toàn |
 | SPEC-P01 §10 hàng 4, 6 (bản duyệt 2026-10-09) | `applied: 9` trên DB dev · `94 files changed` | D27 | DB dev đã migrate in 0; `tool-kit.test.ts` dời + viết lại tính là xoá |
 | SPEC-P01 §1 bước 4, H01 §1 (cổng `55432`) | DB dev `127.0.0.1:55432` | D27 / G31 | Windows giữ dải cổng động ⇒ `15432` |
+| SPEC-P03 §6 (bản duyệt 2026-10-09) · 00-ARCH §4 "router.ts" tuần tự | Vòng lượt tự viết `turn.ts::runCommunityTurn` (port `resident-agent.ts`) | D28 | người dùng chốt LangGraph + pipeline đồ thị làm nền |
 | zaloclaw injection-guard | regex chặn/kick | D05(c) | báo nhầm trong cộng đồng AI; bảo mật bằng policy tool theo vai |
 | SPEC-P03 §5.1 bước 5 (bản duyệt 2026-10-09) | DM nạp "lịch sử 20 tin" | D22 | ≤ 5 lượt (10 tin) + ghi chú thành viên; chi phí |
 | 01-CONTRACTS §7.1 (bản duyệt 2026-10-09) | tool `recall_member_profile` (D) | D22 | ghi chú nạp sẵn mỗi lượt DM — tool thừa tốn token định nghĩa |
@@ -149,7 +153,9 @@ Thứ tự bắt buộc: `P01 → P02 → P03 → (P04 ∥ P05 ∥ P06 ∥ P07) 
 - [x] 🖐 Người dùng xác nhận gỡ 94 file ("di chuyển an toàn") — 2026-10-14; SO: tag `archive/plan-01-marketplace` = `d7f50eb` đã push, 94/94 file trong tag ([evidence](evidence/P01/archive-tag.txt)) — D26
 - [x] P01 — gỡ sàn thợ (G01–G03 local ✅) — handoff [H01](handoffs/H01_thi-cong_P01.md) ↔ [R01](reports/R01_thi-cong_P01.md) ✅ DUYỆT 2026-10-16 (SO đo lại; D27) — WIP `601aac7` + `f164f23`, Base `b356f07`
 - [ ] P02 — transport nhóm (G04–G06 local) + thẩm định 🔴
-- [ ] P03 — runtime agent (G07, G08, G14, G15 local)
+- [ ] D28 — architect 🔴 sửa SPEC theo LangGraph + sơ đồ pipeline (handoff [H04](handoffs/H04_kien-truc_LangGraph.md))
+- [ ] 🖐 Người dùng duyệt sơ đồ pipeline LangGraph — CHẶN P03
+- [ ] P03 — runtime agent trên LangGraph (G07, G08, G14, G15 local)
 - [ ] P04 — tri thức (G12 local sau golden)
 - [ ] P05 — kiểm duyệt (G13, G16)
 - [ ] P06 — lead & trí nhớ
