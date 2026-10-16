@@ -63,7 +63,7 @@ project-root/
 ├── db/migrations/                    # 001_init.sql (DDL sàn thợ) · 002_search.sql (unaccent + tsv) · 003_kb_building.sql (quy chế theo tòa, Đ20) · 004_zalo_login.sql (QR qua DB, Đ22) · 005_zalo_ui.sql (`logout_requested_at`, `qr_state`) · 006_dispatch_slots.sql (sàn thợ) · [007/008 = THIẾT KẾ ở kế hoạch 02 01-CONTRACTS §4, thêm ở P01, CHƯA có trong repo]
 ├── scripts/                          # check_adapter_boundary.mjs · check_agent_tools.mjs · gate.mjs · eval_golden.mjs + eval/{score,red-fake-model}.mjs (máy chấm vòng agent thật; exit 0 đạt / 1 trượt / 3 blocked) · seed-sim-for-test.mjs
 ├── evals/                            # [golden sàn thợ — gỡ/thay ở P01; 4 golden cộng đồng ở P09] scenarios/echo.jsonl · golden/{emergency(100),consent(44),diagnosis,responsibility}.jsonl
-├── compose.yaml · compose.dev.yaml   # Postgres pgvector:pg16; dev publish 127.0.0.1:55432
+├── compose.yaml · compose.dev.yaml   # Postgres pgvector:pg16; dev publish 127.0.0.1:15432
 └── package.json                      # npm workspaces (apps/*, packages/*), v0.0.1
 ```
 

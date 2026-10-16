@@ -38,7 +38,7 @@ Migration (`db/migrations/`): 001–006 giữ nguyên (append-only); `007_drop_m
 
 | Lệnh | Việc |
 | :-- | :-- |
-| `docker compose -f compose.yaml -f compose.dev.yaml up -d db` | Postgres dev `127.0.0.1:55432` (user/db `lenqclaw`) |
+| `docker compose -f compose.yaml -f compose.dev.yaml up -d db` | Postgres dev `127.0.0.1:15432` (user/db `lenqclaw`) |
 | `npm run db:migrate` · `npm run db:seed` | Áp migration (`applied: N`) · seed nền |
 | `npm run create-admin -- --email <e> --role admin` | Tạo admin, gõ mật khẩu qua stdin |
 | `npm run db:seed:sim` | Dữ liệu mô phỏng — từ chối (exit 1) nếu env `DATA_MODE≠sim`; `test:db` seed qua `scripts/seed-sim-for-test.mjs` |
