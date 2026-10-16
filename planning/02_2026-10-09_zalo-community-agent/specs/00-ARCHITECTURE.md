@@ -57,6 +57,11 @@ Số đo thành công vòng 0.1 (TESTING §4): golden thật với model thật 
 > Sơ đồ này là HỢP ĐỒNG: tên node/cạnh khớp 1-1 với [01-CONTRACTS §12.4](01-CONTRACTS.md) và được test `graph-shape.test.ts` so với `getGraph()` của mã thật (BB-16). Đổi sơ đồ ⇒ D mới + người dùng duyệt lại.
 > Hai đồ thị, KHÔNG lồng state: `pipelineGraph` xử lý MỘT `inbound_events` (một `invoke`, rồi state bị bỏ — BB-17); node `turn` của nó gọi `runTurn()` ⇒ `turnGraph` chạy MỘT lượt agent. Cạnh nét đứt = cạnh điều kiện (hàm THUẦN của state, `graph/edges.ts`). Hình trụ = bảng Postgres.
 
+### §4.0 Hình cho người duyệt (D28)
+![Pipeline LangGraph](../../../docs/images/12-pipeline-langgraph.png)
+
+Bản cho người đọc: CÙNG node và cạnh với §4.1, gộp các điểm END, tô màu theo vai (cam = gọi model · xanh lá = ghi outbox · tím = hàm thuần · xanh dương = vào/ra). Nguồn: [`docs/images/12-pipeline-langgraph.mmd`](../../../docs/images/12-pipeline-langgraph.mmd). Bản render nguyên văn §4.1: [`13-pipeline-langgraph-contract.png`](../../../docs/images/13-pipeline-langgraph-contract.png). Hợp đồng test (`PIPELINE_SHAPE`) bám §4.1, không bám hình này.
+
 ### §4.1 Mermaid
 
 ```mermaid
