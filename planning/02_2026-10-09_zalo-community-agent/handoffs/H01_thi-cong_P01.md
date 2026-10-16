@@ -43,3 +43,10 @@ Không `git add -A`/`git add .` (stage TƯỜNG MINH từng đường — cây c
 Mẫu `docs/HANDOFF_PROTOCOL.md` §7 của hub (`../brain4agent.release/docs/HANDOFF_PROTOCOL.md`): dòng 1 khai vai (vai · thi công · họ/model · Bước 0 exit · hiểu việc), dòng 2 `Handoff: handoffs/H01_thi-cong_P01.md`, dòng 3 `Base:`, dòng 4 `Head:` (commit CÔNG VIỆC cuối, không phải commit chứa report); 7 mục; khối mã ≤ 30 dòng, trỏ evidence bằng link `../evidence/P01/<ten>.txt`. Report commit RIÊNG sau commit công việc. Dòng không rỗng cuối cùng: `⏳ Chờ phán quyết.` — CẤM tự ghi phán quyết, CẤM để trống.
 
 Report: `planning/02_2026-10-09_zalo-community-agent/reports/R01_thi-cong_P01.md` · Evidence: `planning/02_2026-10-09_zalo-community-agent/evidence/P01/gate.txt`
+
+## 7. PHỤ LỤC 2026-10-16 (SO) — TIẾP PHẦN DỞ
+- Phần dở đã commit WIP `601aac7` trên `main`; HEAD lúc giao = `a589539`. **Base GIỮ `b356f07`** (mọi đo `<Base>..HEAD` tính từ đây). Bước a–d ĐÃ XONG (evidence có sẵn: `archive-tag.txt`, `backup.txt`, `red-pivot-before.txt`, `migration-009-probe.txt`, `red-check-agent-tools.txt`, `tag-check.txt`) — KHÔNG làm lại, KHÔNG sao lưu lại. `evidence/P01/test-db.txt` là số DỞ ⇒ ghi đè bằng lần chạy cuối.
+- SO đo 2026-10-16: `npm run gate` exit 0 `GATE_OK` (core 82 · web 31 · worker 37), `pivot_hits: 0`. `npm run test:db` exit 1: `p01.db.test.ts` ca 4 (`duplicates` 6≠1 — DB dev còn dòng của lần chạy trước) và ca 5 (outbox 8≠12 — tin nhóm không sinh outbox vì router khung). Các file test DB của web/worker CHƯA chạy tới (dừng ở core).
+- DB dev nay ở **`127.0.0.1:15432`** (G31). Repo KHÔNG tự nạp `.env` ⇒ mọi lệnh DB chạy sau `set -a; . ./.env; set +a`. CẤM in/ghi giá trị `.env` vào evidence.
+- Việc còn lại = bước e (phần chưa xong) + f đủ 8 hàng §10. Sửa test cho đúng SPEC (ca 4: test phải tự cô lập dữ liệu — xem gotcha G29 trong `brain4agent/-known-gotchas.md`; ca 5: kỳ vọng theo hành vi router khung SPEC-P01 §3), KHÔNG nới kỳ vọng tuỳ tiện. Kiểm cả kỳ vọng §10 hàng 7 (`grep bql|market` = 0).
+- Commit công việc tách theo nhóm hợp lý (stage tường minh), rồi commit RIÊNG report. KHÔNG push. Được phép đọc `brain4agent/-known-gotchas.md` (chỉ đọc).
