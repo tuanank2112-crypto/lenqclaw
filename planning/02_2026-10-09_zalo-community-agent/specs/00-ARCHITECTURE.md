@@ -60,7 +60,7 @@ Số đo thành công vòng 0.1 (TESTING §4): golden thật với model thật 
 ### §4.0 Hình cho người duyệt (D28)
 ![Pipeline LangGraph](../../../docs/images/12-pipeline-langgraph.png)
 
-Bản cho người đọc: CÙNG node và cạnh với §4.1, gộp các điểm END, tô màu theo vai (cam = gọi model · xanh lá = ghi outbox · tím = hàm thuần · xanh dương = vào/ra). Nguồn: [`docs/images/12-pipeline-langgraph.mmd`](../../../docs/images/12-pipeline-langgraph.mmd). Bản render nguyên văn §4.1: [`13-pipeline-langgraph-contract.png`](../../../docs/images/13-pipeline-langgraph-contract.png). Hợp đồng test (`PIPELINE_SHAPE`) bám §4.1, không bám hình này.
+Bản TÓM TẮT cho người duyệt (kiểu làn như ảnh 08 kế hoạch 01): 4 làn THÀNH VIÊN · AGENT · CHỦ · HỆ THỐNG, 8 bước = ingest → triage → moderate → gate → turnGraph (agent⇄tools) → deliver → outbox/pacer → trace. Nguồn: [`docs/images/12-pipeline-langgraph.html`](../../../docs/images/12-pipeline-langgraph.html) (chụp bằng Chrome headless). Bản render nguyên văn §4.1: [`13-pipeline-langgraph-contract.png`](../../../docs/images/13-pipeline-langgraph-contract.png). Hợp đồng test (`PIPELINE_SHAPE`) bám §4.1, không bám hình này.
 
 ### §4.1 Mermaid
 
