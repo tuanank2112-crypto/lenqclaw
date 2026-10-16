@@ -55,16 +55,16 @@ project-root/
 ├── planning/                         # [QUẢN LÝ KẾ HOẠCH NÂNG CẤP] Chứa các bản kế hoạch RFCs
 ├── .agents/skills/                   # [WORKSPACE SKILLS] Kỹ năng chuyên dụng cục bộ dự án
 ├── docs/                             # core.md · web.md · zalo-worker.md (module 1-1), SYSTEM-MAP.md, DESIGN.md (v0.1 cũ), images/01…10 (đều mô tả sàn thợ = lịch sử)
-│                                     # ⚠ DƯỚI ĐÂY LÀ MÃ HIỆN CÓ = SÀN THỢ (kế hoạch 01, dừng). P01 (chờ người xác nhận) gỡ 94 file; danh sách: SPEC-P01 §2. Đích: 00-ARCHITECTURE §5.
-├── apps/web/                         # Next.js 15: auth 3 vai (cookie HMAC) → đích admin/operator, /dev/sim, /zalo (QR), trang tạm /tickets /gate (sàn thợ, sẽ gỡ ở P01)
-├── apps/zalo-worker/                 # P02 gđ1: zca-js 2.2.0 (giữ ở kế hoạch 02, đổi tài khoản bql→community), phiên mã hoá AES-GCM, QR, luồng vào, pacer, watchdog
-├── packages/core/src/                # adapters/{db,model,transport} (giữ) · domain/{types,errors,password} · services/{job-state,audit} · sim/ · db/{migrate,seed,seed-sim}
-│                                     # agent/{resident-agent,emergency,triage,pii,job-code,tool-context,prompts/{resident,triage}.ts,tools/*} [sàn thợ — gỡ ở P01; triage/vòng lượt được port sang agent/community/*] · retrieval/search-regulations.ts (P03) · runner/inbound-runner.ts · dev/link-zalo.ts (P02)
-├── db/migrations/                    # 001_init.sql (DDL sàn thợ) · 002_search.sql (unaccent + tsv) · 003_kb_building.sql (quy chế theo tòa, Đ20) · 004_zalo_login.sql (QR qua DB, Đ22) · 005_zalo_ui.sql (`logout_requested_at`, `qr_state`) · 006_dispatch_slots.sql (sàn thợ) · [007/008 = THIẾT KẾ ở kế hoạch 02 01-CONTRACTS §4, thêm ở P01, CHƯA có trong repo]
-├── scripts/                          # check_adapter_boundary.mjs · check_agent_tools.mjs · gate.mjs · eval_golden.mjs + eval/{score,red-fake-model}.mjs (máy chấm vòng agent thật; exit 0 đạt / 1 trượt / 3 blocked) · seed-sim-for-test.mjs
-├── evals/                            # [golden sàn thợ — gỡ/thay ở P01; 4 golden cộng đồng ở P09] scenarios/echo.jsonl · golden/{emergency(100),consent(44),diagnosis,responsibility}.jsonl
+│                                     # Mã hiện có = NỀN CỘNG ĐỒNG sau P01 (2026-10-16, D27). Mã sàn thợ chỉ còn trong tag `archive/plan-01-marketplace` (`git show archive/plan-01-marketplace:<đường>`).
+├── apps/web/                         # Next.js 15: auth 2 vai admin/operator (cookie HMAC, policy SPEC-P01 §3.1) · /login · /zalo (QR, tài khoản community) · /dev/sim (khung DM + nhóm sim-group-1) · trang dashboard ở P08
+├── apps/zalo-worker/                 # zca-js 2.2.0, MỘT tài khoản `community`, phiên mã hoá AES-GCM, QR, luồng vào, pacer, watchdog; nhóm ở P02
+├── packages/core/src/                # adapters/{db,model,transport} · domain/{types,errors,password} · services/{audit,community-config,system-events,timers(khung),vn-time} · sim/ · db/{migrate,seed,seed-sim}
+│                                     # agent/conversation.ts · agent/community/{router.ts (khung: DM ⇒ STUB_DM_REPLY, nhóm ⇒ audit stub), redact.ts, tools/tool-kit.ts} · retrieval/search-knowledge.ts · runner/inbound-runner.ts · dev/link-zalo.ts (--owner)
+├── db/migrations/                    # 001–006 (lịch sử, CẤM sửa) · 007_drop_marketplace.sql · 008_community.sql · 009_tenant_trace.sql (tenants + turn_traces) — 01-CONTRACTS §4
+├── scripts/                          # gate.mjs (typecheck→build→test→check_adapter_boundary→check_agent_tools→check_pivot_cleanup) · seed-sim-for-test.mjs
+├── evals/                            # scenarios/echo.jsonl (community); 4 golden cộng đồng thêm ở P09
 ├── compose.yaml · compose.dev.yaml   # Postgres pgvector:pg16; dev publish 127.0.0.1:15432
 └── package.json                      # npm workspaces (apps/*, packages/*), v0.0.1
 ```
 
-Layout mã nguồn ĐÍCH (sau P01): `planning/02_2026-10-09_zalo-community-agent/specs/01-CONTRACTS.md` §1 (mới: `agent/community/*`, `services/community-config.ts`, `retrieval/*`).
+Layout mã nguồn ĐÍCH (đầy đủ sau P09): `planning/02_2026-10-09_zalo-community-agent/specs/01-CONTRACTS.md` §1 (mới: `agent/community/*`, `services/community-config.ts`, `retrieval/*`).

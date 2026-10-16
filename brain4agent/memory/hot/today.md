@@ -13,10 +13,11 @@ Người dùng: dựng hệ thống trước, test Zalo thật để sau (P09); 
 - Bước 0 `--check` exit 0. SO đo `main` (`cdb0b3d`): `npm run gate` exit 0 `GATE_OK` (core 82 · web 31 · worker 37), `pivot_hits: 0` ⇒ phần WIP P01 biên dịch được.
 - `test:db` không chạy được: Windows giữ dải cổng 55386–55485 ⇒ Docker không publish 55432 (G31). Đổi cổng dev sang `127.0.0.1:15432`, dựng lại container trên volume cũ (DB còn 9 migration) — `a589539`. `.env` local: cổng 15432, `ZALO_ACCOUNTS=community`.
 - `test:db` sau sửa cổng: exit 1, `p01.db.test.ts` ca 4 (duplicates 6≠1, dữ liệu sót) + ca 5 (outbox 8≠12, tin nhóm không có outbox).
-- Phụ lục H01 §7 (`d05279f`), phóng worker 🟠 làm nốt P01 ⇒ R01.
+- Phụ lục H01 §7 (`d05279f`), phóng worker 🟠 làm nốt P01 ⇒ R01 (`f164f23` công việc: cô lập dữ liệu ca 4 theo G29, máy quét tách chuỗi từ khoá; `f0585fd` report).
+- SO đo lại độc lập: gate exit 0 (82/31/37), test:db exit 0 ×2 (16/14/27, 0 skip), pivot 0 + đỏ mới (file thử ⇒ 1, exit 1), hàng 7 = 0, hàng 8 = 11, tag `d7f50eb`, diff worker trong phạm vi ⇒ **R01 ✅ DUYỆT**, D27 (SPEC §10 hàng 4 đo trên DB tạm, hàng 6 = 95 vì `tool-kit.test.ts` dời + viết lại). G01–G03 ✅ local. Não đồng bộ 6 điểm.
 
 ### ⏭ Treo
-- Chờ R01 ⇒ SO đo lại + phán ⇒ đồng bộ não ⇒ P02.
+- P02 transport nhóm (🟠 thi công · 🔴 thẩm định) — kế tiếp.
 - `repomix-output.xml` (root, chưa theo dõi, 1,7 MB, 2026-10-14 10:01) — chưa rõ ai tạo; chờ người quyết giữ/xoá.
 
 ---

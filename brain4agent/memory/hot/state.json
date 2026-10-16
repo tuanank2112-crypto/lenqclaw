@@ -73,7 +73,7 @@
     },
     "eval_next": "gemini --set diagnosis,responsibility (D29) after quota reset ~14:00 ICT"
   },
-  "next": "R01 -> SO re-measure + verdict -> brain sync -> P02 -> P03 -> (P04||P05||P06||P07) -> P08 -> P09",
+  "next": "P02 transport nhom -> P03 -> (P04||P05||P06||P07) -> P08 -> P09",
   "approved": [
     "P01",
     "P03-code",
@@ -89,20 +89,30 @@
     "D31-model-down"
   ],
   "llm_provider": "vyce (deepseek-v4-flash, temporary D28; gate provider gemini D26)",
-  "decisions_latest": "D32 (plan 01 stop) / D21 (plan 02)",
-  "in_progress": "P01 (plan 02) - worker finishing per H01 appendix 2026-10-16; gate green, test:db red (2 tests)",
+  "decisions_latest": "D27 (plan 02)",
+  "in_progress": null,
   "pushed": "origin/main = cdb0b3d (2026-10-14)",
   "tests_now": {
     "unit": 150,
-    "db": "red (p01 tests 4,5)",
+    "db": 57,
     "skip": 0,
     "measured": "2026-10-16"
   },
   "active_plan": "planning/02_2026-10-09_zalo-community-agent",
-  "plan_status": "SPEC approved (7a58d6d, f6a4465); P01 WIP 601aac7, resuming 2026-10-16",
+  "plan_status": "SPEC approved; P01 accepted 2026-10-16 (R01, D27); next P02",
   "stopped_plans": [
     "planning/01_2026-09-24_san-viec-tho-mvp (D32, 2026-10-09)"
   ],
   "open_questions": "Q1-Q12 plan 02 section 6 kept at temporary values",
-  "dev_db": "127.0.0.1:15432 (G31)"
+  "dev_db": "127.0.0.1:15432 (G31)",
+  "approved_plan02": [
+    "P01"
+  ],
+  "last_milestone_plan02": {
+    "id": "R01-P01",
+    "verdict": "approved",
+    "approved_at": "2026-10-16",
+    "head": "f164f23",
+    "gates": "G01-G03 local"
+  }
 }

@@ -2,6 +2,13 @@
 
 Tất cả các quyết định kiến trúc và lịch sử nâng cấp phiên bản của dự án.
 
+## [Unreleased] - 2026-10-16: P01 kế hoạch 02 nghiệm thu — repo không còn mã sàn thợ
+### Changed
+- Gỡ 95 file sàn thợ (agent cư dân/thợ, dispatch, slot, access, ticket, golden cũ); migration `007_drop_marketplace`, `008_community`, `009_tenant_trace`; tài khoản Zalo `community`; vai web `admin`/`operator`; seed persona/skill/nhóm mô phỏng; khung `agent/community/router.ts`; máy đo `check_pivot_cleanup` vào `gate`. Không bump version (D11: `0.1.0` khi đóng kế hoạch 02).
+- Cổng Postgres dev `55432` → `15432` (Windows giữ dải cổng động — G31).
+### Decided
+- **D27** nghiệm thu P01 (SO đo lại độc lập); SPEC-P01 §10 hàng 4 (`applied: 9` đo trên DB tạm) và hàng 6 (95 file) chỉnh theo thực đo.
+
 ## [Unreleased] - 2026-10-14: Bổ sung D22–D25 vào hồ sơ 02 (SPEC, mã CHƯA đổi)
 ### Decided
 - **D22** ngữ cảnh DM có trần: ≤ `DM_HISTORY_TURNS` (5) lượt + ghi chú thành viên + lead mở; KHÔNG nén/tóm tắt bằng model; `messages` giữ 30 ngày; bỏ tool `recall_member_profile` (BB-13).
