@@ -1,0 +1,93 @@
+ ✓ src/config.test.ts > readPacerConfig > mac dinh = bang §5
+ ✓ src/config.test.ts > readPacerConfig > env ghi de
+ ✓ src/config.test.ts > readPacerConfig > gia tri sai ⇒ ConfigError
+ ✓ src/config.test.ts > readAccounts > mac dinh community
+ ✓ src/config.test.ts > readAccounts > ten khac community (ke ca danh sach nhieu tai khoan) ⇒ loi
+ ✓ src/config.test.ts > readPacerConfig — nhom (ke hoach 02, 01-CONTRACTS §10) > mac dinh nhom: gap 8000, jitter 3000, TTL 30 phut, 3 action/tick
+ ✓ src/config.test.ts > readPacerConfig — nhom (ke hoach 02, 01-CONTRACTS §10) > env PACER_GROUP_GAP_MS / PACER_GROUP_JITTER_MS / GROUP_TEXT_TTL_MIN / PACER_ACTIONS_PER_TICK ghi de; 0 action/tick ⇒ loi
+ ✓ src/zca-normalize.test.ts > normalizeGroupEvent > JOIN: uids/names tu data.updateMembers[].id/dName, sourceId, groupName, time
+ ✓ src/zca-normalize.test.ts > normalizeGroupEvent > JOIN_REQUEST: uids tu data.uids, names rong
+ ✓ src/zca-normalize.test.ts > normalizeGroupEvent > thieu data.time ⇒ dung dong ho truyen vao; sourceId rong ⇒ null
+ ✓ src/crypto.test.ts > parseSessionKey > thieu ⇒ SessionKeyError
+ ✓ src/crypto.test.ts > parseSessionKey > hex 64 ky tu ⇒ 32 byte
+ ✓ src/crypto.test.ts > parseSessionKey > base64 cua 32 byte ⇒ 32 byte
+ ✓ src/crypto.test.ts > parseSessionKey > sai do dai ⇒ SessionKeyError, thong diep KHONG chua gia tri khoa
+ ✓ src/crypto.test.ts > encryptSession / decryptSession (AES-256-GCM) > vong di-ve dung
+ ✓ src/crypto.test.ts > encryptSession / decryptSession (AES-256-GCM) > ban ma KHONG chua ban ro; hai lan ma hoa khac nhau (IV ngau nhien)
+ ✓ src/crypto.test.ts > encryptSession / decryptSession (AES-256-GCM) > sai khoa ⇒ SessionDecryptError, thong diep khong ro ban ro
+ ✓ src/crypto.test.ts > encryptSession / decryptSession (AES-256-GCM) > sai tai khoan (AAD) ⇒ SessionDecryptError
+ ✓ src/crypto.test.ts > encryptSession / decryptSession (AES-256-GCM) > du lieu bi sua 1 byte ⇒ SessionDecryptError
+ ✓ src/watchdog.test.ts > watchdog > 3000/3003 ⇒ kicked (ke ca khi dang dung); 1006 ⇒ reconnect; 1000 do minh dong ⇒ ignore
+ ✓ src/watchdog.test.ts > watchdog > lui 5 s → 5 phut, qua 10 lan ⇒ het
+ ✓ src/watchdog.test.ts > watchdog > probe khi im 20 phut, chi trong 7–22h gio Viet Nam
+ ✓ src/pacer.test.ts > text nhom (§4.3, §5) > "dang go" (typing) di TRUOC text nhom, text gui vao thread nhom
+ ✓ src/pacer.test.ts > text nhom (§4.3, §5) > gui xong ⇒ linkSentGroupMessage(outboxId, msgId that) de doi "out-<id>"
+ ✓ src/pacer.test.ts > text nhom (§4.3, §5) > tin dai 2 phan: CHI part 0 co quote; mention chi o phan chua no
+ ✓ src/pacer.test.ts > text nhom (§4.3, §5) > buildSplitBodies + buildOutboundText: part>0 khong mang quote du body co
+ ✓ src/pacer.test.ts > text nhom (§4.3, §5) > nhom khong co dong zalo_groups ⇒ cancelled(group_unknown) + audit, KHONG gui
+ ✓ src/pacer.test.ts > text nhom (§4.3, §5) > het ngan sach gio ⇒ giu queued, note group_budget; qua TTL ⇒ cancelled(budget_expired) + audit
+ ✓ src/pacer.test.ts > text nhom (§4.3, §5) > con ngan sach (used < budget) ⇒ gui
+ ✓ src/pacer.test.ts > text nhom (§4.3, §5) > nhom KHONG gui "da xem": hang seen nhom bi huy; DM van gui
+ ✓ src/pacer.test.ts > action trong pacer (§4.1, §4.2, §9) > delete_message: gui, markSent+result, audit zalo.action (ok, khong noi dung), approvalId ⇒ completeApproval(true)
+ ✓ src/pacer.test.ts > action trong pacer (§4.1, §4.2, §9) > thieu cliMsgId ⇒ failed(cli_msg_id_missing), 0 lan goi Zalo, audit zalo.action_failed
+ ✓ src/pacer.test.ts > action trong pacer (§4.1, §4.2, §9) > ZaloActionError 166 ⇒ failed, bot_is_admin=false, alert deputy_missing, result.error.code=166, approval failed
+ ✓ src/pacer.test.ts > action trong pacer (§4.1, §4.2, §9) > review_join tra 166 cho uid ⇒ failed + bot_is_admin=false; 170/178 ⇒ sent
+ ✓ src/pacer.test.ts > action trong pacer (§4.1, §4.2, §9) > ma 221 khi thi hanh ⇒ requeue + backoff tai khoan (khong failed)
+ ✓ src/pacer.test.ts > action trong pacer (§4.1, §4.2, §9) > thu tu tick: action TRUOC text; toi da actionsPerTick (3) action/tick
+ ✓ src/pacer.test.ts > action trong pacer (§4.1, §4.2, §9) > action tinh maxPerMinute: maxPerMinute=2 ⇒ chi 2 action/phut, note per_minute
+ ✓ src/pacer.test.ts > action trong pacer (§4.1, §4.2, §9) > hanh dong cam / la ⇒ failed(unknown_action), khong goi Zalo
+ ✓ src/pacer.test.ts > action trong pacer (§4.1, §4.2, §9) > react: thi hanh qua addReaction; that bai ⇒ failed im lang (khong alert)
+ ✓ src/pacer-policy.test.ts > pacer — gia lap 50 tin / 20 nguoi (§8) > seed 1: gui het 50 tin, 0 vi pham
+ ✓ src/pacer-policy.test.ts > pacer — gia lap 50 tin / 20 nguoi (§8) > seed 2: gui het 50 tin, 0 vi pham
+ ✓ src/pacer-policy.test.ts > pacer — gia lap 50 tin / 20 nguoi (§8) > seed 3: gui het 50 tin, 0 vi pham
+ ✓ src/pacer-policy.test.ts > pacer — gia lap 50 tin / 20 nguoi (§8) > seed 42: gui het 50 tin, 0 vi pham
+ ✓ src/pacer-policy.test.ts > pacer — gia lap 50 tin / 20 nguoi (§8) > seed 2026: gui het 50 tin, 0 vi pham
+ ✓ src/pacer-policy.test.ts > pacer — gia lap 50 tin / 20 nguoi (§8) > bo kiem DO khi pacer khong gioi han (ca 3 luat)
+ ✓ src/pacer-policy.test.ts > PacerPolicy > cung thread: >= 3 s + jitter
+ ✓ src/pacer-policy.test.ts > PacerPolicy > <= 10 tin/phut toan tai khoan
+ ✓ src/pacer-policy.test.ts > PacerPolicy > <= 15 nguoi nhan / 10 phut; nguoi cu van nhan duoc
+ ✓ src/pacer-policy.test.ts > PacerPolicy > backoff 30 phut chan moi tin
+ ✓ src/pacer-policy.test.ts > PacerPolicy > pickNext chi xet tin dau moi thread (giu thu tu)
+ ✓ src/pacer-policy.test.ts > PacerPolicy > seedHistory: khoi dong lai van ton trong gioi han/phut
+ ✓ src/pacer-policy.test.ts > tach tin / tre > tin dai tach thanh doan <= 1800 ky tu, ghep lai du noi dung
+ ✓ src/pacer-policy.test.ts > tach tin / tre > dang go 1–3 s ti le do dai; da xem 2–6 s
+ ✓ src/pacer-policy.test.ts > tach tin / tre > verifySendLog bat khoang cach cung thread
+ ✓ src/pacer-policy.test.ts > pacer nhom + ngan sach (BB-08) > seed 1: 100 tin / 1 nhom, ngan sach 20/gio ⇒ first_hour=20, min_gap >= 8000, 0 vi pham
+ ✓ src/pacer-policy.test.ts > pacer nhom + ngan sach (BB-08) > seed 2: 100 tin / 1 nhom, ngan sach 20/gio ⇒ first_hour=20, min_gap >= 8000, 0 vi pham
+ ✓ src/pacer-policy.test.ts > pacer nhom + ngan sach (BB-08) > seed 7: 100 tin / 1 nhom, ngan sach 20/gio ⇒ first_hour=20, min_gap >= 8000, 0 vi pham
+ ✓ src/pacer-policy.test.ts > pacer nhom + ngan sach (BB-08) > seed 2026: 100 tin / 1 nhom, ngan sach 20/gio ⇒ first_hour=20, min_gap >= 8000, 0 vi pham
+ ✓ src/pacer-policy.test.ts > pacer nhom + ngan sach (BB-08) > bo kiem DO khi khong gioi han: group_gap va group_budget
+ ✓ src/pacer-policy.test.ts > pacer nhom + ngan sach (BB-08) > khoang cach nhom = groupGapMs + jitter [0, groupJitterMs]; DM giu 3 s
+ ✓ src/pacer-policy.test.ts > pacer nhom + ngan sach (BB-08) > nhom KHONG tinh vao recipients (15 nguoi nhan DM van con cho)
+ ✓ src/pacer-policy.test.ts > pacer nhom + ngan sach (BB-08) > action tinh maxPerMinute nhung khong tinh recipients / gian cach
+ ✓ src/pacer-policy.test.ts > pacer nhom + ngan sach (BB-08) > mentionsForFirstChunk: chi giu mention nam tron trong doan dau, doi pos
+ ✓ src/inbound.test.ts > buildPayload > text DM giu nguyen, du truong §8.2 (mentions rong, quote null)
+ ✓ src/inbound.test.ts > buildPayload > anh / sticker / tep / loai la ⇒ "[thành viên gửi <loại> — chưa hỗ trợ]"
+ ✓ src/inbound.test.ts > buildPayload > tin nhom text ⇒ payload kind=text voi mentions + quote + cli_msg_id + d_name dung §8.2
+ ✓ src/inbound.test.ts > buildPayload > sticker nhom ⇒ kind=unsupported, nhan "thành viên", giu cli_msg_id
+ ✓ src/inbound.test.ts > su kien nhom (§2.2) > join ⇒ payload.event="join", zalo_msg_id dang gev-<nhom>-join-<time>
+ ✓ src/inbound.test.ts > su kien nhom (§2.2) > join_request ⇒ payload.event="join_request", zalo_msg_id dang gev-<nhom>-join_request-<time>
+ ✓ src/inbound.test.ts > su kien nhom (§2.2) > leave ⇒ payload.event="leave", zalo_msg_id dang gev-<nhom>-leave-<time>
+ ✓ src/inbound.test.ts > su kien nhom (§2.2) > remove_member ⇒ payload.event="remove_member", zalo_msg_id dang gev-<nhom>-remove_member-<time>
+ ✓ src/inbound.test.ts > su kien nhom (§2.2) > add_admin ⇒ payload.event="add_admin", zalo_msg_id dang gev-<nhom>-add_admin-<time>
+ ✓ src/inbound.test.ts > su kien nhom (§2.2) > remove_admin ⇒ payload.event="remove_admin", zalo_msg_id dang gev-<nhom>-remove_admin-<time>
+ ✓ src/inbound.test.ts > su kien nhom (§2.2) > update_setting ⇒ payload.event="update_setting", zalo_msg_id dang gev-<nhom>-update_setting-<time>
+ ✓ src/inbound.test.ts > su kien nhom (§2.2) > update ⇒ payload.event="update", zalo_msg_id dang gev-<nhom>-update-<time>
+ ✓ src/inbound.test.ts > su kien nhom (§2.2) > khong co sourceId ⇒ sender_uid="zalo" (khong bao gio "system")
+ ✓ src/inbound.test.ts > su kien nhom (§2.2) > NEW_LINK / pin / board / remind / avatar / block_member / unknown ⇒ KHONG ghi
+ ✓ src/inbound.test.ts > su kien nhom (§2.2) > is_self giu nguyen; cung (nhom, loai, time) ⇒ cung zalo_msg_id (chong trung khi reconnect)
+ ✓ src/actions.test.ts > delete_message > goi deleteMessage voi uidFrom = NGUOI GUI GOC trong body (khong phai uid bot), type=group, onlyMe=false
+ ✓ src/actions.test.ts > delete_message > thieu cliMsgId hoac uidFrom ⇒ cli_msg_id_missing, KHONG goi Zalo, KHONG doan bang msgId
+ ✓ src/actions.test.ts > delete_message > status != 0 ⇒ ok=false (failed), ghi status
+ ✓ src/actions.test.ts > review_join > ma 166 ⇒ failed + botNotAdmin (bot_is_admin=false)
+ ✓ src/actions.test.ts > review_join > 170 (khong con trong danh sach) / 178 (da vao) ⇒ coi la XONG, khong botNotAdmin
+ ✓ src/actions.test.ts > remove_member / block / poll / reminder / note / settings > remove_member: errorMembers chua uid ⇒ failed; rong ⇒ ok
+ ✓ src/actions.test.ts > remove_member / block / poll / reminder / note / settings > block/unblock/lock_poll/remove_reminder/update_group_settings ⇒ result {} va dung ham
+ ✓ src/actions.test.ts > remove_member / block / poll / reminder / note / settings > create_poll / create_reminder / create_note ⇒ tra poll_id / id
+ ✓ src/actions.test.ts > remove_member / block / poll / reminder / note / settings > body sai (thieu truong / sai kieu) ⇒ invalid_action_body, khong goi Zalo
+ ✓ src/actions.test.ts > sync_group_info > memberIds=[] ⇒ lay uid tu memVerList ("<uid>_<phien ban>"), goi getMembersInfo voi dung uid
+ ✓ src/actions.test.ts > sync_group_info > memberIds co san ⇒ dung memberIds, bo qua memVerList
+ ✓ src/actions.test.ts > vung cam §8 > hanh dong cam / la ⇒ unknown_action, 0 lan goi Zalo
+ ✓ src/main.test.ts > zalo-worker main — khoa phien > thieu ZALO_SESSION_KEY ⇒ exit 1
+ ✓ src/main.test.ts > zalo-worker main — khoa phien > khoa sai do dai ⇒ exit 1, khong in lai gia tri
+ ✓ src/main.test.ts > zalo-worker main — khoa phien > khoa dung nhung ZALO_ACCOUNTS khac community ⇒ exit 1

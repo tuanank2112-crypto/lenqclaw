@@ -1,0 +1,67 @@
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mE:/vọc vạch/lenqclaw/apps/zalo-worker[39m
+
+{"t":"2026-10-16T03:27:00.728Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-16T03:27:00.730Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-16T03:27:00.731Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-16T03:27:00.731Z","event":"pacer.sent","account":"community","outbox_id":2}
+{"t":"2026-10-16T03:27:00.739Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-16T03:27:00.741Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-16T03:27:00.745Z","event":"pacer.backoff","account":"community","reason":"rate_limit_error","backoff_ms":1800000}
+{"t":"2026-10-16T03:27:00.746Z","event":"pacer.sent","account":"community","outbox_id":1}
+ [31m❯[39m src/pacer.test.ts [2m([22m[2m17 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[90m 22[2mms[22m[39m
+[31m   [31m×[31m text nhom (§4.3, §5)[2m > [22mbuildSplitBodies + buildOutboundText: part>0 khong mang quote du body co[90m 6[2mms[22m[31m[39m
+[31m     → expected { msgId: 'q', cliMsgId: 'c', …(5) } to be undefined[39m
+[31m   [31m×[31m text nhom (§4.3, §5)[2m > [22mhet ngan sach gio ⇒ giu queued, note group_budget; qua TTL ⇒ cancelled(budget_expired) + audit[90m 2[2mms[22m[31m[39m
+[31m     → expected 'sent' to be 'queued' // Object.is equality[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 2 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/pacer.test.ts[2m > [22mtext nhom (§4.3, §5)[2m > [22mbuildSplitBodies + buildOutboundText: part>0 khong mang quote du body co
+[31m[1mAssertionError[22m: expected { msgId: 'q', cliMsgId: 'c', …(5) } to be undefined[39m
+
+[32m- Expected:[39m 
+undefined
+
+[31m+ Received:[39m 
+Object {
+  "cliMsgId": "c",
+  "content": "x",
+  "msgId": "q",
+  "msgType": "webchat",
+  "ts": "1",
+  "ttl": 0,
+  "uidFrom": "u",
+}
+
+[36m [2m❯[22m src/pacer.test.ts:[2m183:53[22m[39m
+    [90m181| [39m    [35mconst[39m mk [33m=[39m (b[33m:[39m [33mRecord[39m[33m<[39mstring[33m,[39m unknown[33m>[39m) [33m=>[39m ({ [33m...[39m[34madd[39m({ kind[33m:[39m [32m'text[39m…
+    [90m182| [39m    [34mexpect[39m([34mbuildOutboundText[39m([34mmk[39m(bodies[[34m0[39m][33m![39m))[33m.[39mquote[33m?.[39mmsgId)[33m.[39m[34mtoBe[39m([32m'q'[39m)[33m;[39m
+    [90m183| [39m    [34mexpect[39m([34mbuildOutboundText[39m([34mmk[39m(bodies[[34m1[39m][33m![39m))[33m.[39mquote)[33m.[39m[34mtoBeUndefined[39m()[33m;[39m
+    [90m   | [39m                                                    [31m^[39m
+    [90m184| [39m  })[33m;[39m
+    [90m185| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m src/pacer.test.ts[2m > [22mtext nhom (§4.3, §5)[2m > [22mhet ngan sach gio ⇒ giu queued, note group_budget; qua TTL ⇒ cancelled(budget_expired) + audit
+[31m[1mAssertionError[22m: expected 'sent' to be 'queued' // Object.is equality[39m
+
+Expected: [32m"queued"[39m
+Received: [31m"sent"[39m
+
+[36m [2m❯[22m src/pacer.test.ts:[2m204:24[22m[39m
+    [90m202| [39m    [35mconst[39m row [33m=[39m [34madd[39m({ kind[33m:[39m [32m'text'[39m[33m,[39m body[33m:[39m { text[33m:[39m [32m'cho ngân sách'[39m } })[33m;[39m
+    [90m203| [39m    [35mconst[39m r1 [33m=[39m [35mawait[39m pacer[33m.[39m[34mtick[39m()[33m;[39m
+    [90m204| [39m    [34mexpect[39m(row[33m.[39mstatus)[33m.[39m[34mtoBe[39m([32m'queued'[39m)[33m;[39m
+    [90m   | [39m                       [31m^[39m
+    [90m205| [39m    [34mexpect[39m(r1[33m.[39mnote)[33m.[39m[34mtoBe[39m([32m'group_budget'[39m)[33m;[39m
+    [90m206| [39m    [34mexpect[39m(fake[33m.[39msent)[33m.[39m[34mtoEqual[39m([])[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m15 passed[39m[22m[90m (17)[39m
+[2m   Start at [22m 10:26:59
+[2m   Duration [22m 766ms[2m (transform 146ms, setup 0ms, collect 257ms, tests 22ms, environment 0ms, prepare 197ms)[22m
+
