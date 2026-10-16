@@ -105,4 +105,7 @@ Tổng: 22 đột biến — 16 bị test bắt (M8 chỉ bị test runtime bắ
 ⭐ Nên làm trước: mục 1 — đây là đường duy nhất tìm được để bot kick/chặn thành viên khi owner chưa duyệt.
 ⏸ Chưa làm: kiểm Zalo thật (§10 hàng 6), vì cần người và P03.
 
-⏳ Chờ phán quyết.
+## Phán quyết SO (2026-10-16, Claude Opus 5.5)
+Mục 1 (CHẶN) SO xác minh lại trong mã — đúng. Câu hỏi mục 1: CÓ — worker phải tự kiểm `approvals` trước khi gọi Zalo (D29 điểm 1). Câu hỏi mục 14: HOÃN tới P09 (D29 điểm 9). Thẩm định đạt yêu cầu (≥ 6 cách phá, đủ nhóm a–f, ca tái hiện chạy được).
+
+✅ DUYỆT

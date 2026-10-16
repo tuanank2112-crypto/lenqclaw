@@ -70,4 +70,7 @@ Ca mới (đối chiếu SPEC-P02 §10):
 ## 7. Tiếp theo
 🖐 Cần tay người: duyệt R02 theo bảng cổng (đo lại gate / `npm test` / `test:db` ×2 / `pacer-sim --group`); trả lời 4 câu hỏi mục 6 (nhất là 1, 2, 4) · 🤖 Agent làm được ngay: sửa theo phán quyết, hoặc nhận handoff P03 (runtime agent: cổng nhận tin, chèn đệm `group_messages` + dòng `out-<id>`, `completeApproval` phía core) · ⭐ Nên làm trước: phóng thẩm định đối kháng cho P02 (🔴 bảo mật + rủi ro khoá tài khoản: thử phá `uidFrom`, ngân sách trượt, `maxPerMinute` với action, vùng cấm) trước khi P03 dựa vào đường ống này · ⏸ Chưa làm: §10 hàng 6 (Zalo thật, tới P09), enqueue `react` (Q5), ghi `group_messages` phía core (P03).
 
-⏳ Chờ phán quyết.
+## Phán quyết SO (2026-10-16, Claude Opus 5.5)
+SO đo lại trên `d2b385b`: gate exit 0 (31/93/85), test:db exit 0 ×2 (29/21/44), `pacer-sim --group` `first_hour: 20`, `min_gap_ms: 9000`, `violations: 0`, diff ⊆ phạm vi — KHỚP report. Nhưng thẩm định đối kháng [R03](R03_tham-dinh_P02.md) tìm mục CHẶN (kick/block không cần thẻ duyệt hợp lệ — SO xác minh tại `apps/zalo-worker/src/actions.ts:86-96`) + 6 bộ đo lọt đột biến. 4 điểm lệch worker tự nêu ở mục 6: chấp nhận (SO đồng bộ SPEC sau). Cách sửa: plan D29 ⇒ [H05](../handoffs/H05_thi-cong_P02-fix.md).
+
+🔁 SỬA: D29 điểm 1–8 (R03 mục 1–7, 8, 11, 12, 13, 15)

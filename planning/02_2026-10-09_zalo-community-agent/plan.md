@@ -102,6 +102,19 @@ SO đo lại độc lập trên `f164f23`: `gate` exit 0 (core 82 · web 31 · w
 ### D28 — 2026-10-16 · Runtime agent dựng trên LangGraph (LangGraph.js), pipeline là ĐỒ THỊ tường minh — nền cho mọi phát triển sau (người dùng chốt)
 Người dùng: "bảo sử dụng nó và pipeline nữa mà? sau đó nó sẽ là cơ sở phát triển repo". Chỉ đạo này có từ trước nhưng KHÔNG được ghi vào repo ⇒ bộ SPEC 2026-10-09 thiết kế vòng tool tự viết (SPEC-P03 §6, port `resident-agent.ts`). Từ nay: toàn bộ xử lý một sự kiện vào (đệm → kiểm duyệt → cổng → lượt agent model⇄tool → outbox) là một đồ thị LangGraph với state có kiểu; kế hoạch 03 (Skill · Voice · Constraint) và các giai đoạn doanh nghiệp dựng tiếp trên đồ thị này (node/subgraph). GIỮ: P01, P02 (transport/outbox — framework nào cũng cần), mọi BB trừ khi SPEC mới ghi rõ thay thế + lý do. Trình tự: architect 🔴 sửa bộ SPEC (H04) ⇒ **người dùng duyệt sơ đồ pipeline** ⇒ mới thi công P03. **Lật:** đắt (đổi nền runtime) — chỉ khi người dùng đổi ý.
 
+### D29 — 2026-10-16 · Phán R02 = 🔁 SỬA theo thẩm định R03; SO chốt cách sửa P02 (SO)
+SO xác minh mục CHẶN R03 §1 trong mã (`actions.ts:86-96` gọi Zalo không kiểm thẻ duyệt). Chốt, thi công ở [H05](handoffs/H05_thi-cong_P02-fix.md):
+1. **Worker là lớp chặn cuối của BB-06:** `remove_member`/`block_member` CHỈ gọi Zalo khi `approvalId` trỏ tới `approvals` có `status='approved'`, `kind` khớp (`kick_member`↔`remove_member`, `block_member`↔`block_member`), cùng `thread_id` và cùng uid đích; kiểm + chuyển trạng thái TRƯỚC khi gọi Zalo trong cùng một câu lệnh có điều kiện (CAS) để hai tick không cùng chạy. Thiếu/sai ⇒ `failed('approval_invalid')` + audit `zalo.action_blocked`, KHÔNG gọi Zalo.
+2. **Nhóm chưa khai HOẶC `enabled=false`:** mọi `text`/`action` (trừ `sync_group_info`) ⇒ `cancelled('group_unknown' | 'group_disabled')` + audit (SPEC-P02 §9). `sync_group_info` vẫn được tạo dòng `enabled=false` (giữ, để dashboard thấy nhóm lạ).
+3. **Đồng hồ ngân sách:** đếm cửa sổ 1 giờ bằng `now()` của DB, không truyền đồng hồ worker.
+4. **Action không idempotent** (`create_poll`, `create_reminder`, `create_note`, `update_group_settings`): lỗi mạng/không rõ kết quả ⇒ `failed('outcome_unknown')`, KHÔNG thử lại; chỉ `ZaloRateLimitError` (chưa thi hành) mới `requeue`.
+5. `delete_message` có `cliMsgId === msgId` ⇒ `failed('cli_msg_id_suspect')` (worker + sim); sim so `cliMsgId` với `group_messages.cli_msg_id`.
+6. `applySimOutbox` chỉ xử lý hàng có `thread_id` bắt đầu `sim-` và `not_before <= now()`.
+7. `check_agent_tools` `forbidden_actions` bắt thêm dạng `case '<x>'`.
+8. Bộ đo thiếu (R03 §2, §3, §7, §12): gap nhóm trên đường gửi thật; ngân sách phân biệt cửa sổ (hàng 30–59 phút trước VẪN tính, hàng 61 phút KHÔNG tính) + đếm cả hàng `sending`; `/api/dev/sim/thread` 403 cho operator / 404 khi `DATA_MODE≠sim`; log không chứa nội dung tin. Mỗi bộ đo mới phải ĐỎ trên đột biến tương ứng của R03 (M21, M7, M22, M18, M19, M15).
+9. **Hoãn (Idea Vault, không chặn):** xoá tin của chính bot (R03 §14 — cần `cliMsgId` của tin bot từ kết quả `sendMessage`; kiểm ở Zalo thật P09). `review_join` trả `{}` giữ coi là xong (R03 §10) tới khi đo trên Zalo thật. `msg_type` (R03 §16) giữ.
+**Lật:** không.
+
 ### Quyết định bị thay thế
 | Mốc cũ | Phát biểu cũ | Thay bằng | Lý do |
 | :-- | :-- | :-- | :-- |
