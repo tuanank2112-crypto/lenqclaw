@@ -1,0 +1,40 @@
+$ git show --stat --format="%H %an %ad %s" 88e3a52
+88e3a52b343375249098bd71ec72fedc4fabe270 LeNhuY Fri Oct 16 11:05:43 2026 +0700 docs(plan-02): add R05 report and P02-fix evidence for D29 rework
+
+ .../evidence/ARCH-D28/spike.txt                    | 148 ++++++++++++++
+ .../evidence/ARCH-D28/versions.txt                 | 193 ++++++++++++++++++
+ .../specs/00-ARCHITECTURE.md                       | 181 +++++++++++++----
+ .../specs/01-CONTRACTS.md                          | 224 ++++++++++++++++++++-
+ .../specs/OPERATIONS.md                            |   5 +
+ .../specs/SPEC-P03-Runtime-Agent.md                | 120 +++++++----
+ .../specs/SPEC-P04-Tri-Thuc.md                     |   3 +-
+ .../specs/SPEC-P05-Kiem-Duyet.md                   |   9 +-
+ .../specs/SPEC-P06-Lead-Tri-Nho.md                 |   3 +-
+ .../specs/SPEC-P07-Lich-Van-Hanh.md                |   4 +-
+ .../specs/TESTING-ACCEPTANCE.md                    |  10 +-
+ 11 files changed, 799 insertions(+), 101 deletions(-)
+exit=0
+
+$ git diff --stat e53133d..88e3a52 -- planning/02_2026-10-09_zalo-community-agent/specs planning/02_2026-10-09_zalo-community-agent/evidence/ARCH-D28
+ .../evidence/ARCH-D28/spike.txt                    | 148 ++++++++++++++
+ .../evidence/ARCH-D28/versions.txt                 | 193 ++++++++++++++++++
+ .../specs/00-ARCHITECTURE.md                       | 181 +++++++++++++----
+ .../specs/01-CONTRACTS.md                          | 224 ++++++++++++++++++++-
+ .../specs/OPERATIONS.md                            |   5 +
+ .../specs/SPEC-P03-Runtime-Agent.md                | 120 +++++++----
+ .../specs/SPEC-P04-Tri-Thuc.md                     |   3 +-
+ .../specs/SPEC-P05-Kiem-Duyet.md                   |   9 +-
+ .../specs/SPEC-P06-Lead-Tri-Nho.md                 |   3 +-
+ .../specs/SPEC-P07-Lich-Van-Hanh.md                |   4 +-
+ .../specs/TESTING-ACCEPTANCE.md                    |  10 +-
+ 11 files changed, 799 insertions(+), 101 deletions(-)
+exit=0
+
+$ git log --oneline e53133d..HEAD
+a4c6dd4 docs(plan-02): add R05 report and P02-fix evidence for D29 rework
+88e3a52 docs(plan-02): add R05 report and P02-fix evidence for D29 rework
+2723955 fix(zalo-worker): enforce approval gate and close P02 review findings (D29)
+529ef72 docs(plan-02): correct D28 provenance to a decision made this session
+831dca9 docs(plan-02): rule R02 rework (D29), accept R03 review, add H05 fix handoff
+9fdd6b4 docs(plan-02): add R03 adversarial review report for P02
+exit=0
