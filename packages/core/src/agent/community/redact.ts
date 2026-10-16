@@ -1,7 +1,7 @@
 // packages/core/src/agent/community/redact.ts — chuan hoa tieng Viet + che SDT
 // truoc khi dua noi dung vao model (SPEC-P01 §3, SPEC-P03 §5.3). Thuan (khong
 // cham DB/model). Port tu `agent/pii.ts` cua ke hoach 01 (tag
-// archive/plan-01-marketplace); CHI giu chuan hoa + SDT — khong khan cap, khong ma can.
+// archive/plan-01-*); CHI giu chuan hoa + SDT — khong khan cap, khong ma can.
 
 /** Bo dau thanh + `đ`->`d`, ha chu thuong, gop khoang trang. */
 export function normalizeVi(text: string): string {

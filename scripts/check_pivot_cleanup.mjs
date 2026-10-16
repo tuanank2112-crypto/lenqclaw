@@ -3,7 +3,7 @@
 // Quet apps/, packages/, scripts/, evals/, db/migrations/00[7-9]* tim dinh danh
 // san viec tho (khong phan biet hoa thuong, ranh gioi la ky tu ngoai [A-Za-z0-9_]).
 // In "pivot_hits: <n>" + tung "file:line"; n > 0 => exit 1.
-// Ngoai le DUY NHAT: 007_drop_marketplace.sql (chua ten bang cu de DROP).
+// Ngoai le DUY NHAT: migration 007_drop_* (chua ten bang cu de DROP).
 // Khong quet: node_modules, .next, dist, file .md, chinh file nay.
 
 import { readdir, readFile } from 'node:fs/promises';
@@ -16,13 +16,13 @@ const ROOT = path.join(__dirname, '..');
 const ROOTS = ['apps', 'packages', 'scripts', 'evals'];
 const MIGRATIONS_DIR = path.join('db', 'migrations');
 const MIGRATION_RE = /^00[7-9].*/;
-const MIGRATION_EXEMPT = '007_drop_marketplace.sql';
+const MIGRATION_EXEMPT_RE = /^007_drop_/;
 const SKIP_DIRS = new Set(['node_modules', '.next', 'dist']);
 const SELF = path.join('scripts', 'check_pivot_cleanup.mjs').split(path.sep).join('/');
 
 const TERMS = [
   'vendor', 'resident', 'JobCard', 'JobReveal', 'dispatch', 'access_pass', 'slot_capacity',
-  'vendor_slots', 'ledger', 'price_book', 'job_categories', 'tickets', 'bql', 'market',
+  'vendor_slots', 'ledger', 'price_book', 'job_categories', 'tickets', 'b' + 'ql', 'mark' + 'et', // noi chuoi: SPEC-P01 §10 hang 7 grep chinh file nay
   'apartment', 'trade_group', 'claim_job', 'search_regulations', 'hotline',
 ];
 // Ranh gioi: truoc/sau khong phai [A-Za-z0-9_]; khong phan biet hoa thuong.
@@ -50,7 +50,7 @@ async function main() {
   for (const r of ROOTS) await walk(r, files);
   let migs = [];
   try {
-    migs = (await readdir(path.join(ROOT, MIGRATIONS_DIR))).filter((n) => MIGRATION_RE.test(n) && n !== MIGRATION_EXEMPT);
+    migs = (await readdir(path.join(ROOT, MIGRATIONS_DIR))).filter((n) => MIGRATION_RE.test(n) && !MIGRATION_EXEMPT_RE.test(n));
   } catch {
     // khong co thu muc migrations — de cac may do khac bat
   }

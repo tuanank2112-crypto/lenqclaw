@@ -1,0 +1,2 @@
+[22m[39mapplied: 9 (files: 9, reset: true)
+[2m      Tests [22m [1m[32m9 passed[39m[22m[90m (9)[39m

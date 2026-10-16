@@ -169,6 +169,11 @@ describe('3) audit() va enqueue() tren DB that (SPEC-P01 §3)', () => {
 
 describe('4) runScenario(echo.jsonl) — SimTransport (SPEC-P01 §3)', () => {
   it('duplicates=1, outbound=inbound, moi outbox sent', async () => {
+    // Tu co lap du lieu (G29): hang doi inbound_events la toan cuc, msg_id kich ban
+    // (echo-*) con sot tu lan chay truoc se bi tinh la trung => don truoc khi chay.
+    await sql(`update inbound_events set processed_at = now() where processed_at is null`);
+    await sql(`update outbox set status = 'cancelled' where status = 'queued'`);
+    await sql(`delete from inbound_events where zalo_account_id = 'community' and zalo_msg_id like 'echo-%'`);
     const result = await runScenario(SCENARIO_PATH);
 
     expect(result.duplicates).toBe(1);
