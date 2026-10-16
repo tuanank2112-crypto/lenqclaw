@@ -1,0 +1,122 @@
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/apps/zalo-worker
+
+{"t":"2026-10-16T03:52:49.685Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T03:52:49.733Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T03:52:49.764Z","event":"pacer.sent","account":"community","outbox_id":3563}
+{"t":"2026-10-16T03:52:49.775Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T03:52:49.816Z","event":"pacer.sent","account":"community","outbox_id":3566}
+ ❯ src/dbtests/p02-fix.db.test.ts (28 tests | 3 failed | 25 skipped) 207ms
+   × D29.2 — nhom chua khai / enabled=false ⇒ huy moi text/action (tru sync_group_info) > nhom CHUA khai: delete_message + create_poll ⇒ cancelled(group_unknown) + audit, KHONG goi Zalo 95ms
+     → expected [ …(2) ] to deeply equal []
+   × D29.2 — nhom chua khai / enabled=false ⇒ huy moi text/action (tru sync_group_info) > nhom enabled=false: text + action ⇒ cancelled(group_disabled) + audit, KHONG goi Zalo 43ms
+     → expected [ { kind: 'createNote', …(2) } ] to deeply equal []
+   × D29.2 — nhom chua khai / enabled=false ⇒ huy moi text/action (tru sync_group_info) > sync_group_info tren nhom chua khai VAN chay (tao dong enabled=false); text sau do van bi huy (group_disabled) 56ms
+     → expected undefined to be 'group_disabled' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p02-fix.db.test.ts > D29.2 — nhom chua khai / enabled=false ⇒ huy moi text/action (tru sync_group_info) > nhom CHUA khai: delete_message + create_poll ⇒ cancelled(group_unknown) + audit, KHONG goi Zalo
+AssertionError: expected [ …(2) ] to deeply equal []
+
+- Expected
++ Received
+
+- Array []
++ Array [
++   Object {
++     "args": Object {
++       "dest": Object {
++         "data": Object {
++           "cliMsgId": "c1",
++           "msgId": "m1",
++           "uidFrom": "u",
++         },
++         "threadId": "g-ee7dbbf7",
++         "type": "group",
++       },
++       "onlyMe": false,
++     },
++     "at": 1792122769700,
++     "kind": "deleteMessage",
++   },
++   Object {
++     "args": Object {
++       "groupId": "g-ee7dbbf7",
++       "o": Object {
++         "options": Array [
++           "a",
++           "b",
++         ],
++         "question": "q",
++       },
++     },
++     "at": 1792122769708,
++     "kind": "createPoll",
++   },
++ ]
+
+ ❯ src/dbtests/p02-fix.db.test.ts:182:26
+    180|     const b = await act(group, { action: 'create_poll', question: 'q',…
+    181|     await pacerFor(s).tick();
+    182|     expect(fake.actions).toEqual([]);
+       |                          ^
+    183|     for (const id of [a, b]) {
+    184|       const row = await outboxRow(id);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/dbtests/p02-fix.db.test.ts > D29.2 — nhom chua khai / enabled=false ⇒ huy moi text/action (tru sync_group_info) > nhom enabled=false: text + action ⇒ cancelled(group_disabled) + audit, KHONG goi Zalo
+AssertionError: expected [ { kind: 'createNote', …(2) } ] to deeply equal []
+
+- Expected
++ Received
+
+- Array []
++ Array [
++   Object {
++     "args": Object {
++       "groupId": "g-a50fccd2",
++       "o": Object {
++         "title": "t",
++       },
++     },
++     "at": 1792122769747,
++     "kind": "createNote",
++   },
++ ]
+
+ ❯ src/dbtests/p02-fix.db.test.ts:200:26
+    198|     const a = await act(group, { action: 'create_note', title: 't' });
+    199|     await pacerFor(s).tick();
+    200|     expect(fake.actions).toEqual([]);
+       |                          ^
+    201|     expect(fake.sent).toEqual([]);
+    202|     for (const id of [t, a]) {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/dbtests/p02-fix.db.test.ts > D29.2 — nhom chua khai / enabled=false ⇒ huy moi text/action (tru sync_group_info) > sync_group_info tren nhom chua khai VAN chay (tao dong enabled=false); text sau do van bi huy (group_disabled)
+AssertionError: expected undefined to be 'group_disabled' // Object.is equality
+
+- Expected: 
+"group_disabled"
+
++ Received: 
+undefined
+
+ ❯ src/dbtests/p02-fix.db.test.ts:224:53
+    222|     const t = await enqueueId({ zaloAccountId: ACCOUNT, threadId: grou…
+    223|     await pacerFor(s).tick();
+    224|     expect((await outboxRow(t)).body.cancel_reason).toBe('group_disabl…
+       |                                                     ^
+    225|     expect(fake.sent.filter((x) => x.kind === 'text')).toEqual([]);
+    226|     await dropGroup(group);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 25 skipped (28)
+   Start at  10:52:48
+   Duration  1.16s (transform 211ms, setup 0ms, collect 655ms, tests 207ms, environment 0ms, prepare 120ms)
+

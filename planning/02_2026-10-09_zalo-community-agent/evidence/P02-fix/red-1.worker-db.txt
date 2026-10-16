@@ -1,0 +1,172 @@
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/apps/zalo-worker
+
+{"t":"2026-10-16T03:52:46.414Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T03:52:46.451Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T03:52:46.476Z","event":"pacer.action_error","account":"community","outbox_id":3545,"error":"error: invalid input syntax for type uuid: \"khong-phai-uuid\""}
+{"t":"2026-10-16T03:52:46.488Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T03:52:46.515Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T03:52:46.544Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T03:52:46.572Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T03:52:46.609Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T03:52:46.652Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T03:52:46.678Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T03:52:46.702Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T03:52:46.733Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T03:52:46.766Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T03:52:46.799Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T03:52:46.833Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T03:52:46.844Z","event":"pacer.backoff","account":"community","reason":"rate_limit_error","backoff_ms":1800000}
+ ❯ src/dbtests/p02-fix.db.test.ts (28 tests | 12 failed | 14 skipped) 541ms
+   × D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi) > khong approvalId (remove_member) ⇒ failed(approval_invalid), KHONG goi Zalo, audit zalo.action_blocked, the khong bi dong 97ms
+     → expected [ { kind: 'removeMember', …(2) } ] to deeply equal []
+   × D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi) > approvalId khong phai uuid ⇒ failed(approval_invalid), KHONG goi Zalo, audit zalo.action_blocked, the khong bi dong 36ms
+     → expected [ { kind: 'removeMember', …(2) } ] to deeply equal []
+   × D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi) > approvalId khong ton tai ⇒ failed(approval_invalid), KHONG goi Zalo, audit zalo.action_blocked, the khong bi dong 28ms
+     → expected [ { kind: 'removeMember', …(2) } ] to deeply equal []
+   × D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi) > approval pending (remove_member) ⇒ failed(approval_invalid), KHONG goi Zalo, audit zalo.action_blocked, the khong bi dong 29ms
+     → expected [ { kind: 'removeMember', …(2) } ] to deeply equal []
+   × D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi) > approval rejected (block_member) ⇒ failed(approval_invalid), KHONG goi Zalo, audit zalo.action_blocked, the khong bi dong 27ms
+     → expected [ { kind: 'blockMember', …(2) } ] to deeply equal []
+   × D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi) > approval da executed (dung lai the cu) ⇒ failed(approval_invalid), KHONG goi Zalo, audit zalo.action_blocked, the khong bi dong 28ms
+     → expected [ { kind: 'removeMember', …(2) } ] to deeply equal []
+   × D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi) > uid dich lech target_uid cua the ⇒ failed(approval_invalid), KHONG goi Zalo, audit zalo.action_blocked, the khong bi dong 54ms
+     → expected [ { kind: 'removeMember', …(2) } ] to deeply equal []
+   × D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi) > the khac thread ⇒ failed(approval_invalid), KHONG goi Zalo, audit zalo.action_blocked, the khong bi dong 26ms
+     → expected [ { kind: 'removeMember', …(2) } ] to deeply equal []
+   × D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi) > the kind kick_member dung cho block_member ⇒ failed(approval_invalid), KHONG goi Zalo, audit zalo.action_blocked, the khong bi dong 23ms
+     → expected [ { kind: 'blockMember', …(2) } ] to deeply equal []
+   × D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi) > hai hang outbox CUNG approval ⇒ chi MOT lan goi Zalo; hang con lai failed(approval_invalid) 33ms
+     → expected 2 to be 1 // Object.is equality
+   × D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi) > hai pacer (hai tick dong thoi) cung approval ⇒ chi MOT lan goi Zalo (CAS trong DB) 34ms
+     → expected 2 to be 1 // Object.is equality
+   × D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi) > loi Zalo ro rang (ZaloActionError) ⇒ approval failed; the do KHONG dung lai duoc 33ms
+     → expected 2 to be 1 // Object.is equality
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 12 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p02-fix.db.test.ts > D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi) > khong approvalId (remove_member) ⇒ failed(approval_invalid), KHONG goi Zalo, audit zalo.action_blocked, the khong bi dong
+ FAIL  src/dbtests/p02-fix.db.test.ts > D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi) > approvalId khong phai uuid ⇒ failed(approval_invalid), KHONG goi Zalo, audit zalo.action_blocked, the khong bi dong
+ FAIL  src/dbtests/p02-fix.db.test.ts > D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi) > approvalId khong ton tai ⇒ failed(approval_invalid), KHONG goi Zalo, audit zalo.action_blocked, the khong bi dong
+ FAIL  src/dbtests/p02-fix.db.test.ts > D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi) > approval pending (remove_member) ⇒ failed(approval_invalid), KHONG goi Zalo, audit zalo.action_blocked, the khong bi dong
+ FAIL  src/dbtests/p02-fix.db.test.ts > D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi) > approval da executed (dung lai the cu) ⇒ failed(approval_invalid), KHONG goi Zalo, audit zalo.action_blocked, the khong bi dong
+ FAIL  src/dbtests/p02-fix.db.test.ts > D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi) > uid dich lech target_uid cua the ⇒ failed(approval_invalid), KHONG goi Zalo, audit zalo.action_blocked, the khong bi dong
+ FAIL  src/dbtests/p02-fix.db.test.ts > D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi) > the khac thread ⇒ failed(approval_invalid), KHONG goi Zalo, audit zalo.action_blocked, the khong bi dong
+AssertionError: expected [ { kind: 'removeMember', …(2) } ] to deeply equal []
+
+- Expected
++ Received
+
+- Array []
++ Array [
++   Object {
++     "args": Object {
++       "groupId": "g-12e215b8",
++       "uid": "u-bad",
++     },
++     "at": 1792122766427,
++     "kind": "removeMember",
++   },
++ ]
+
+ ❯ src/dbtests/p02-fix.db.test.ts:78:64
+     76|       const id = await act(group, { action: c.action, uid: 'u-bad', ..…
+     77|       await pacerFor(s).tick();
+     78|       expect(zaloCalls(fake, ['removeMember', 'blockMember'])).toEqual…
+       |                                                                ^
+     79|       const row = await outboxRow(id);
+     80|       expect(row.status).toBe('failed');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/12]⎯
+
+ FAIL  src/dbtests/p02-fix.db.test.ts > D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi) > approval rejected (block_member) ⇒ failed(approval_invalid), KHONG goi Zalo, audit zalo.action_blocked, the khong bi dong
+ FAIL  src/dbtests/p02-fix.db.test.ts > D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi) > the kind kick_member dung cho block_member ⇒ failed(approval_invalid), KHONG goi Zalo, audit zalo.action_blocked, the khong bi dong
+AssertionError: expected [ { kind: 'blockMember', …(2) } ] to deeply equal []
+
+- Expected
++ Received
+
+- Array []
++ Array [
++   Object {
++     "args": Object {
++       "groupId": "g-8cff50bd",
++       "uid": "u-bad",
++     },
++     "at": 1792122766554,
++     "kind": "blockMember",
++   },
++ ]
+
+ ❯ src/dbtests/p02-fix.db.test.ts:78:64
+     76|       const id = await act(group, { action: c.action, uid: 'u-bad', ..…
+     77|       await pacerFor(s).tick();
+     78|       expect(zaloCalls(fake, ['removeMember', 'blockMember'])).toEqual…
+       |                                                                ^
+     79|       const row = await outboxRow(id);
+     80|       expect(row.status).toBe('failed');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/12]⎯
+
+ FAIL  src/dbtests/p02-fix.db.test.ts > D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi) > hai hang outbox CUNG approval ⇒ chi MOT lan goi Zalo; hang con lai failed(approval_invalid)
+AssertionError: expected 2 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 2
+
+ ❯ src/dbtests/p02-fix.db.test.ts:118:54
+    116|     await pacerFor(s).tick();
+    117|     await pacerFor(s).tick();
+    118|     expect(zaloCalls(fake, ['removeMember']).length).toBe(1);
+       |                                                      ^
+    119|     const statuses = [(await outboxRow(a)).status, (await outboxRow(b)…
+    120|     expect(statuses).toEqual(['failed', 'sent']);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/12]⎯
+
+ FAIL  src/dbtests/p02-fix.db.test.ts > D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi) > hai pacer (hai tick dong thoi) cung approval ⇒ chi MOT lan goi Zalo (CAS trong DB)
+AssertionError: expected 2 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 2
+
+ ❯ src/dbtests/p02-fix.db.test.ts:135:54
+    133|     await act(group, { action: 'remove_member', uid: 'u-bad', approval…
+    134|     await Promise.all([pacerFor(s).tick(), pacerFor(s).tick()]);
+    135|     expect(zaloCalls(fake, ['removeMember']).length).toBe(1);
+       |                                                      ^
+    136|     await sql(`delete from approvals where id=$1::uuid`, [ap]);
+    137|     await dropGroup(group);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/12]⎯
+
+ FAIL  src/dbtests/p02-fix.db.test.ts > D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi) > loi Zalo ro rang (ZaloActionError) ⇒ approval failed; the do KHONG dung lai duoc
+AssertionError: expected 2 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 2
+
+ ❯ src/dbtests/p02-fix.db.test.ts:152:54
+    150|     await act(group, { action: 'remove_member', uid: 'u-bad', approval…
+    151|     await pacerFor(s).tick();
+    152|     expect(zaloCalls(fake, ['removeMember']).length).toBe(1);
+       |                                                      ^
+    153|     await sql(`delete from approvals where id=$1::uuid`, [ap]);
+    154|     await dropGroup(group);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/12]⎯
+
+ Test Files  1 failed (1)
+      Tests  12 failed | 2 passed | 14 skipped (28)
+   Start at  10:52:45
+   Duration  1.53s (transform 223ms, setup 0ms, collect 682ms, tests 541ms, environment 0ms, prepare 142ms)
+

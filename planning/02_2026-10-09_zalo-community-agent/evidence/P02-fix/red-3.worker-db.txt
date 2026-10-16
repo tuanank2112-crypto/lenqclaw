@@ -1,0 +1,56 @@
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/apps/zalo-worker
+
+{"t":"2026-10-16T03:52:52.761Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T03:52:52.788Z","event":"pacer.sent","account":"community","outbox_id":3570}
+ ❯ src/dbtests/p02-fix.db.test.ts (28 tests | 2 failed | 26 skipped) 71ms
+   × D29.3 — ngan sach dem bang dong ho DB, khong phai dong ho worker > dong ho worker lech +20 phut: 3 tin gui 50 phut truoc (ngan sach 3) VAN tinh ⇒ tin thu 4 giu queued, note group_budget 61ms
+     → expected undefined to be 'group_budget' // Object.is equality
+   × D29.3 — ngan sach dem bang dong ho DB, khong phai dong ho worker > groupTextSentLastHour khong con tham so dong ho (chi account + thread) 5ms
+     → expected 3 to be 2 // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p02-fix.db.test.ts > D29.3 — ngan sach dem bang dong ho DB, khong phai dong ho worker > dong ho worker lech +20 phut: 3 tin gui 50 phut truoc (ngan sach 3) VAN tinh ⇒ tin thu 4 giu queued, note group_budget
+AssertionError: expected undefined to be 'group_budget' // Object.is equality
+
+- Expected: 
+"group_budget"
+
++ Received: 
+undefined
+
+ ❯ src/dbtests/p02-fix.db.test.ts:244:20
+    242|     const skewed = () => Date.now() + 20 * 60_000;
+    243|     const r = await pacerFor(s, skewed).tick();
+    244|     expect(r.note).toBe('group_budget');
+       |                    ^
+    245|     expect((await outboxRow(id)).status).toBe('queued');
+    246|     expect(fake.sent.filter((x) => x.kind === 'text')).toEqual([]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/dbtests/p02-fix.db.test.ts > D29.3 — ngan sach dem bang dong ho DB, khong phai dong ho worker > groupTextSentLastHour khong con tham so dong ho (chi account + thread)
+AssertionError: expected 3 to be 2 // Object.is equality
+
+- Expected
++ Received
+
+- 2
++ 3
+
+ ❯ src/dbtests/p02-fix.db.test.ts:252:48
+    250| 
+    251|   it('groupTextSentLastHour khong con tham so dong ho (chi account + t…
+    252|     expect(store.groupTextSentLastHour.length).toBe(2);
+       |                                                ^
+    253|   });
+    254| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 26 skipped (28)
+   Start at  10:52:51
+   Duration  1.02s (transform 208ms, setup 0ms, collect 607ms, tests 71ms, environment 0ms, prepare 97ms)
+

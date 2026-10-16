@@ -1,0 +1,48 @@
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/sim-actions.db.test.ts (17 tests | 2 failed | 15 skipped) 127ms
+   × D29.6 — applySimOutbox chi xu ly hang thread "sim-" da den han > hang thread that (khong "sim-") va hang not_before tuong lai ⇒ van queued; hang sim- den han ⇒ giao 94ms
+     → expected 'sent' to be 'queued' // Object.is equality
+   × D29.6 — applySimOutbox chi xu ly hang thread "sim-" da den han > approval cua thread that KHONG bi dong boi sim 28ms
+     → expected 'sent' to be 'queued' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/sim-actions.db.test.ts > D29.6 — applySimOutbox chi xu ly hang thread "sim-" da den han > hang thread that (khong "sim-") va hang not_before tuong lai ⇒ van queued; hang sim- den han ⇒ giao
+AssertionError: expected 'sent' to be 'queued' // Object.is equality
+
+Expected: "queued"
+Received: "sent"
+
+ ❯ src/dbtests/sim-actions.db.test.ts:412:40
+    410|     const dueId = await act(g, { action: 'create_note', title: 't' });
+    411|     await applySimOutbox();
+    412|     expect((await row(realId)).status).toBe('queued');
+       |                                        ^
+    413|     expect((await row(futureId)).status).toBe('queued');
+    414|     expect((await row(dueId)).status).toBe('sent');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/dbtests/sim-actions.db.test.ts > D29.6 — applySimOutbox chi xu ly hang thread "sim-" da den han > approval cua thread that KHONG bi dong boi sim
+AssertionError: expected 'sent' to be 'queued' // Object.is equality
+
+Expected: "queued"
+Received: "sent"
+
+ ❯ src/dbtests/sim-actions.db.test.ts:430:36
+    428|     const id = await act(real, { action: 'remove_member', uid: 'u-x', …
+    429|     await applySimOutbox();
+    430|     expect((await row(id)).status).toBe('queued');
+       |                                    ^
+    431|     expect((await sql<{ status: string }>(`select status from approval…
+    432|     await sql(`update outbox set status = 'cancelled' where id = $1`, …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 15 skipped (17)
+   Start at  10:53:11
+   Duration  742ms (transform 125ms, setup 0ms, collect 251ms, tests 127ms, environment 0ms, prepare 113ms)
+

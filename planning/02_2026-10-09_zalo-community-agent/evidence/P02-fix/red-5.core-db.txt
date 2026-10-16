@@ -1,0 +1,48 @@
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/sim-actions.db.test.ts (17 tests | 2 failed | 15 skipped) 103ms
+   × D29.5 — delete_message: cliMsgId phai la cli_msg_id that cua tin (sim tai hien loi zaloclaw tool.ts:743) > cliMsgId === msgId (doan bang msgId) ⇒ failed(cli_msg_id_suspect), tin KHONG bi xoa 75ms
+     → expected 'sent' to be 'failed' // Object.is equality
+   × D29.5 — delete_message: cliMsgId phai la cli_msg_id that cua tin (sim tai hien loi zaloclaw tool.ts:743) > cliMsgId khac group_messages.cli_msg_id (khong bang msgId) ⇒ failed(cli_msg_id_mismatch), tin KHONG bi xoa 25ms
+     → expected 'sent' to be 'failed' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/sim-actions.db.test.ts > D29.5 — delete_message: cliMsgId phai la cli_msg_id that cua tin (sim tai hien loi zaloclaw tool.ts:743) > cliMsgId === msgId (doan bang msgId) ⇒ failed(cli_msg_id_suspect), tin KHONG bi xoa
+AssertionError: expected 'sent' to be 'failed' // Object.is equality
+
+Expected: "failed"
+Received: "sent"
+
+ ❯ src/dbtests/sim-actions.db.test.ts:366:22
+    364|     await applySimOutbox();
+    365|     const o = await row(id);
+    366|     expect(o.status).toBe('failed');
+       |                      ^
+    367|     expect(o.result).toEqual({ error: 'cli_msg_id_suspect' });
+    368|     const m = await sql<{ deleted_at: string | null }>(`select deleted…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/dbtests/sim-actions.db.test.ts > D29.5 — delete_message: cliMsgId phai la cli_msg_id that cua tin (sim tai hien loi zaloclaw tool.ts:743) > cliMsgId khac group_messages.cli_msg_id (khong bang msgId) ⇒ failed(cli_msg_id_mismatch), tin KHONG bi xoa
+AssertionError: expected 'sent' to be 'failed' // Object.is equality
+
+Expected: "failed"
+Received: "sent"
+
+ ❯ src/dbtests/sim-actions.db.test.ts:384:22
+    382|     await applySimOutbox();
+    383|     const o = await row(id);
+    384|     expect(o.status).toBe('failed');
+       |                      ^
+    385|     expect(o.result).toEqual({ error: 'cli_msg_id_mismatch' });
+    386|     const m = await sql<{ deleted_at: string | null }>(`select deleted…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 15 skipped (17)
+   Start at  10:53:08
+   Duration  648ms (transform 114ms, setup 0ms, collect 196ms, tests 103ms, environment 0ms, prepare 146ms)
+

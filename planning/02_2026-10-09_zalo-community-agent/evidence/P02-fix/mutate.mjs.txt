@@ -1,0 +1,72 @@
+// Mutation runner (tham dinh P02): ap MOT dot bien, chay lenh test, tra file ve git checkout.
+// Dung: node mutate.mjs <id>   (cwd = repo root)
+import { readFileSync, writeFileSync } from 'node:fs';
+import { execSync, spawnSync } from 'node:child_process';
+
+const W = 'apps/zalo-worker';
+const UNIT_W = { cwd: W, cmd: 'npx vitest run --exclude "**/*.db.test.ts"' };
+const DB_W = { cwd: W, cmd: 'npx vitest run --config vitest.db.config.ts' };
+const DB_CORE = { cwd: 'packages/core', cmd: 'npx vitest run --config vitest.db.config.ts src/dbtests/sim-actions.db.test.ts' };
+const DB_WEB = { cwd: 'apps/web', cmd: 'npx vitest run --config vitest.db.config.ts tests/sim-thread.db.test.ts' };
+const GATE_TOOLS = { cwd: '.', cmd: 'node scripts/check_agent_tools.mjs' };
+
+const M = {
+  M1: { file: `${W}/src/actions.ts`, from: 'const uidFrom = reqStr(body.uidFrom, \'cli_msg_id_missing\');', to: 'const uidFrom = session.ownUid; void body.uidFrom;', runs: [UNIT_W, DB_W] },
+  M2: { file: `${W}/src/actions.ts`, from: "const cliMsgId = reqStr(body.cliMsgId, 'cli_msg_id_missing');", to: "const cliMsgId = reqStr(body.cliMsgId ?? body.msgId, 'cli_msg_id_missing');", runs: [UNIT_W, DB_W] },
+  M3: { file: `${W}/src/pacer.ts`, from: 'if (used < budget) {', to: 'if (true) {', runs: [UNIT_W, DB_W] },
+  M4: { file: `${W}/src/pacer-policy.ts`, from: 'const gap = isGroup ? this.cfg.groupGapMs : this.cfg.threadGapMs;', to: 'const gap = this.cfg.threadGapMs;', runs: [UNIT_W] },
+  M6: { file: `${W}/src/pacer-policy.ts`, from: "if (this.perMinuteBlocked(now)) return { ok: false, reason: 'per_minute' };\n    return { ok: true };\n  }\n\n  /** Ghi", to: "return { ok: true };\n  }\n\n  /** Ghi", runs: [UNIT_W] },
+  M7: { file: `${W}/src/store.ts`, from: "and coalesce(sent_at, created_at) > now() - interval '1 hour'", to: "and coalesce(sent_at, created_at) > now() - interval '10 minutes'", runs: [DB_W] },
+  M8: { file: `${W}/src/actions.ts`, from: '    default:\n      throw new InvalidActionError', to: "    case 'leave_group':\n      return { ok: true, result: {} };\n    default:\n      throw new InvalidActionError", runs: [UNIT_W, GATE_TOOLS] },
+  M9: { file: `${W}/src/pacer.ts`, from: "if (row.kind === 'seen' && row.thread_type === 'group') {", to: "if (false) {", runs: [UNIT_W] },
+  M10: { file: `${W}/src/store.ts`, from: "role = case when excluded.role = 'moderator' then 'moderator' else group_members.role end", to: 'role = excluded.role', runs: [DB_W] },
+  M11: { file: `${W}/src/actions.ts`, from: 'const REVIEW_DONE = new Set([0, 170, 178]);', to: 'const REVIEW_DONE = new Set([0, 170]);', runs: [UNIT_W, DB_W] },
+  M12: { file: `${W}/src/inbound.ts`, from: "  'update',\n]);", to: "  'update',\n  'new_link',\n]);", runs: [UNIT_W] },
+  M13: { file: `${W}/src/pacer.ts`, from: 'if (part === 0 && row.body.quote', to: 'if (row.body.quote', runs: [UNIT_W] },
+  M14: { file: `${W}/src/pacer.ts`, from: 'if (this.now() - row.created_ms > this.cfg.groupTextTtlMin * 60_000) {', to: 'if (false) {', runs: [UNIT_W, DB_W] },
+  M15: { file: `${W}/src/pacer.ts`, from: "logEvent('pacer.sent', { account: this.account, outbox_id: row.id });", to: "logEvent('pacer.sent', { account: this.account, outbox_id: row.id, text: String(row.body.text) });", runs: [UNIT_W, DB_W] },
+  M16: { file: `${W}/src/pacer.ts`, from: '        thread: row.thread_id,\n        ok: out.ok,', to: '        thread: row.thread_id + \'|\' + JSON.stringify(row.body),\n        ok: out.ok,', runs: [UNIT_W, DB_W] },
+  M17: { file: `${W}/src/pacer.ts`, from: 'if (isGroup) await store.linkSentGroupMessage(row.id, msgId);', to: '', runs: [UNIT_W, DB_W] },
+  M18: { file: 'apps/web/app/api/dev/sim/thread/route.ts', from: "if (!session || session.role !== 'admin') {", to: 'if (false) {', runs: [DB_WEB] },
+  M19: { file: 'apps/web/app/api/dev/sim/thread/route.ts', from: "if (process.env.DATA_MODE !== 'sim') {", to: 'if (false) {', runs: [DB_WEB] },
+  M20: { file: 'packages/core/src/sim/sim-actions.ts', from: "if (found[0]!.sender_uid !== uidFrom) return fail('uidFrom_mismatch');", to: '', runs: [DB_CORE] },
+  M21: { file: `${W}/src/pacer.ts`, from: 'this.policy.record(now, row.thread_id, isGroup);', to: 'this.policy.record(now, row.thread_id, false);', runs: [UNIT_W, DB_W] },
+  M22: { file: `${W}/src/store.ts`, from: "kind = 'text' and status in ('sent','sending')", to: "kind = 'text' and status in ('sent')", runs: [DB_W] },
+
+  N1: { file: "apps/zalo-worker/src/pacer.ts", from: "if (!ok) {\n        await store.markFailed(row.id, 'approval_invalid'", to: "if (false) {\n        await store.markFailed(row.id, 'approval_invalid'", runs: [UNIT_W, DB_W] },
+  N2: { file: "apps/zalo-worker/src/store.ts", from: "and status = 'approved' and executed_at is null\n     returning id", to: "and executed_at is null\n     returning id", runs: [DB_W] },
+  N3: { file: "apps/zalo-worker/src/store.ts", from: "and status = 'approved' and executed_at is null\n     returning id", to: "and status = 'approved'\n     returning id", runs: [DB_W] },
+  N4: { file: "apps/zalo-worker/src/store.ts", from: "and kind = $4 and target_uid = $5", to: "and kind = $4 and $5::text is not null", runs: [DB_W] },
+  N5: { file: "apps/zalo-worker/src/store.ts", from: "and thread_id = $3 and kind = $4", to: "and thread_id = $3 and $4::text is not null", runs: [DB_W] },
+  N6: { file: "apps/zalo-worker/src/pacer.ts", from: "        if (why) {", to: "        if (false) {", runs: [DB_W] },
+  N7: { file: "apps/zalo-worker/src/pacer.ts", from: "if (NON_IDEMPOTENT_ACTIONS.has(name)) {", to: "if (false) {", runs: [DB_W] },
+  N8: { file: "packages/core/src/sim/sim-actions.ts", from: "if (cliMsgId === msgId) return fail('cli_msg_id_suspect');", to: "", runs: [DB_CORE] },
+  N9: { file: "packages/core/src/sim/sim-actions.ts", from: "thread_id like 'sim-%' or ", to: "", runs: [DB_CORE] },
+  N10: { file: "packages/core/src/sim/sim-actions.ts", from: " and not_before <= now()", to: "", runs: [DB_CORE] },
+  N11: { file: "packages/core/src/sim/sim-actions.ts", from: "if (found[0]!.cli_msg_id !== cliMsgId) return fail('cli_msg_id_mismatch');", to: "", runs: [DB_CORE] },
+  N12: { file: "apps/zalo-worker/src/actions.ts", from: "if (cliMsgId === msgId) throw new InvalidActionError('cli_msg_id_suspect');", to: "", runs: [UNIT_W] },
+  N13: { file: "scripts/check_agent_tools.mjs", from: "new RegExp(`\\\\bcase\\\\s+${q}\\\\s*:`, 'g'),", to: "", runs: [UNIT_W] },
+};
+
+const id = process.argv[2];
+const m = M[id];
+if (!m) { console.error('unknown mutation', id); process.exit(2); }
+const src = readFileSync(m.file, 'utf8');
+const ORIGINAL = src;
+const n = src.split(m.from).length - 1;
+if (n !== 1) { console.log(`${id}: APPLY_FAILED (matches=${n})`); process.exit(3); }
+writeFileSync(m.file, src.replace(m.from, m.to));
+const lines = [`${id}: ${m.file}`, `  - ${JSON.stringify(m.from)}`, `  + ${JSON.stringify(m.to)}`];
+try {
+  for (const r of m.runs) {
+    const p = spawnSync(r.cmd, { cwd: r.cwd, shell: true, encoding: 'utf8', env: process.env, maxBuffer: 64 * 1024 * 1024 });
+    const out = (p.stdout + p.stderr).replace(/\x1b\[[0-9;]*m/g, '');
+    const summary = out.split('\n').filter((l) => /Tests\s+\d|FAIL |forbidden_|unlisted_|AssertionError|expected/.test(l)).slice(0, 12);
+    lines.push(`  [${r.cwd}] ${r.cmd} ⇒ exit ${p.status}`);
+    for (const s of summary) lines.push(`      ${s.trim().slice(0, 220)}`);
+  }
+} finally {
+  writeFileSync(m.file, ORIGINAL);
+  lines.push(`  restored: original content rewritten (${m.file})`);
+}
+console.log(lines.join('\n'));

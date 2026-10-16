@@ -1,0 +1,45 @@
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/apps/zalo-worker
+
+{"t":"2026-10-16T03:52:58.553Z","event":"zalo.state","account":"community","state":"connected"}
+ ❯ src/dbtests/p02-fix.db.test.ts (28 tests | 2 failed | 25 skipped) 179ms
+   × D29.8 — ngan sach phan biet cua so 1 gio va dem ca hang sending > hang gui 30 va 59 phut truoc VAN tinh; hang 61 phut truoc KHONG tinh 73ms
+     → invalid input syntax for type timestamp with time zone: "0NaN-NaN-NaNTNaN:NaN:NaN.NaN+NaN:NaN"
+   × D29.8 — ngan sach phan biet cua so 1 gio va dem ca hang sending > hang dang gui (sending) tinh vao ngan sach; queued thi khong 35ms
+     → invalid input syntax for type timestamp with time zone: "0NaN-NaN-NaNTNaN:NaN:NaN.NaN+NaN:NaN"
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p02-fix.db.test.ts > D29.8 — ngan sach phan biet cua so 1 gio va dem ca hang sending > hang gui 30 va 59 phut truoc VAN tinh; hang 61 phut truoc KHONG tinh
+error: invalid input syntax for type timestamp with time zone: "0NaN-NaN-NaNTNaN:NaN:NaN.NaN+NaN:NaN"
+ ❯ ../../node_modules/pg-pool/index.js:45:11
+ ❯ Module.groupTextSentLastHour src/store.ts:332:16
+    330|  * 01-CONTRACTS §8.4 (da do `evidence/ARCH/db-checks.txt` (c)). */
+    331| export async function groupTextSentLastHour(account: AccountId, thread…
+    332|   const rows = await sql<{ c: number }>(
+       |                ^
+    333|     `select count(*)::int as c from outbox
+    334|      where zalo_account_id = $1 and thread_id = $2 and kind = 'text' a…
+ ❯ src/dbtests/p02-fix.db.test.ts:318:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/dbtests/p02-fix.db.test.ts > D29.8 — ngan sach phan biet cua so 1 gio va dem ca hang sending > hang dang gui (sending) tinh vao ngan sach; queued thi khong
+error: invalid input syntax for type timestamp with time zone: "0NaN-NaN-NaNTNaN:NaN:NaN.NaN+NaN:NaN"
+ ❯ ../../node_modules/pg-pool/index.js:45:11
+ ❯ Module.groupTextSentLastHour src/store.ts:332:16
+    330|  * 01-CONTRACTS §8.4 (da do `evidence/ARCH/db-checks.txt` (c)). */
+    331| export async function groupTextSentLastHour(account: AccountId, thread…
+    332|   const rows = await sql<{ c: number }>(
+       |                ^
+    333|     `select count(*)::int as c from outbox
+    334|      where zalo_account_id = $1 and thread_id = $2 and kind = 'text' a…
+ ❯ src/dbtests/p02-fix.db.test.ts:325:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed | 25 skipped (28)
+   Start at  10:52:57
+   Duration  1.17s (transform 199ms, setup 0ms, collect 648ms, tests 179ms, environment 0ms, prepare 137ms)
+

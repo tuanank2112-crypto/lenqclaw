@@ -1,0 +1,51 @@
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/apps/zalo-worker
+
+{"t":"2026-10-16T03:52:55.434Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T03:52:55.450Z","event":"pacer.action_error","account":"community","outbox_id":3571,"error":"Error: ECONNRESET"}
+{"t":"2026-10-16T03:52:55.469Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T03:52:55.477Z","event":"pacer.action_error","account":"community","outbox_id":3572,"error":"Error: ECONNRESET"}
+{"t":"2026-10-16T03:52:55.488Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T03:52:55.496Z","event":"pacer.action_error","account":"community","outbox_id":3573,"error":"Error: ECONNRESET"}
+{"t":"2026-10-16T03:52:55.508Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T03:52:55.517Z","event":"pacer.action_error","account":"community","outbox_id":3574,"error":"Error: ECONNRESET"}
+{"t":"2026-10-16T03:52:55.529Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T03:52:55.542Z","event":"pacer.backoff","account":"community","reason":"rate_limit_error","backoff_ms":1800000}
+{"t":"2026-10-16T03:52:55.559Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T03:52:55.571Z","event":"pacer.action_error","account":"community","outbox_id":3576,"error":"Error: ECONNRESET"}
+ ❯ src/dbtests/p02-fix.db.test.ts (28 tests | 4 failed | 22 skipped) 206ms
+   × D29.4 — action khong idempotent: loi mo ho ⇒ failed(outcome_unknown), KHONG thu lai > create_poll: loi mang ⇒ failed(outcome_unknown), goi Zalo dung 1 lan du tick lai 79ms
+     → expected 'queued' to be 'failed' // Object.is equality
+   × D29.4 — action khong idempotent: loi mo ho ⇒ failed(outcome_unknown), KHONG thu lai > create_reminder: loi mang ⇒ failed(outcome_unknown), goi Zalo dung 1 lan du tick lai 19ms
+     → expected 'queued' to be 'failed' // Object.is equality
+   × D29.4 — action khong idempotent: loi mo ho ⇒ failed(outcome_unknown), KHONG thu lai > create_note: loi mang ⇒ failed(outcome_unknown), goi Zalo dung 1 lan du tick lai 20ms
+     → expected 'queued' to be 'failed' // Object.is equality
+   × D29.4 — action khong idempotent: loi mo ho ⇒ failed(outcome_unknown), KHONG thu lai > update_group_settings: loi mang ⇒ failed(outcome_unknown), goi Zalo dung 1 lan du tick lai 21ms
+     → expected 'queued' to be 'failed' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p02-fix.db.test.ts > D29.4 — action khong idempotent: loi mo ho ⇒ failed(outcome_unknown), KHONG thu lai > create_poll: loi mang ⇒ failed(outcome_unknown), goi Zalo dung 1 lan du tick lai
+ FAIL  src/dbtests/p02-fix.db.test.ts > D29.4 — action khong idempotent: loi mo ho ⇒ failed(outcome_unknown), KHONG thu lai > create_reminder: loi mang ⇒ failed(outcome_unknown), goi Zalo dung 1 lan du tick lai
+ FAIL  src/dbtests/p02-fix.db.test.ts > D29.4 — action khong idempotent: loi mo ho ⇒ failed(outcome_unknown), KHONG thu lai > create_note: loi mang ⇒ failed(outcome_unknown), goi Zalo dung 1 lan du tick lai
+ FAIL  src/dbtests/p02-fix.db.test.ts > D29.4 — action khong idempotent: loi mo ho ⇒ failed(outcome_unknown), KHONG thu lai > update_group_settings: loi mang ⇒ failed(outcome_unknown), goi Zalo dung 1 lan du tick lai
+AssertionError: expected 'queued' to be 'failed' // Object.is equality
+
+Expected: "failed"
+Received: "queued"
+
+ ❯ src/dbtests/p02-fix.db.test.ts:275:26
+    273|       expect(fake.actions.length).toBe(1);
+    274|       const row = await outboxRow(id);
+    275|       expect(row.status).toBe('failed');
+       |                          ^
+    276|       expect(row.body.fail_reason).toBe('outcome_unknown');
+    277|       await dropGroup(group);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 2 passed | 22 skipped (28)
+   Start at  10:52:54
+   Duration  1.08s (transform 185ms, setup 0ms, collect 609ms, tests 206ms, environment 0ms, prepare 89ms)
+

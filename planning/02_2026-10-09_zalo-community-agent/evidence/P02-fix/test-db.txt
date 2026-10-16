@@ -1,0 +1,264 @@
+
+> lenqclaw@0.0.1 test:db
+> npm run db:migrate && npm run db:seed && node --import tsx scripts/seed-sim-for-test.mjs && npm run test:db -w @lenqclaw/core && npm run test:db -w @lenqclaw/web && npm run test:db -w @lenqclaw/zalo-worker --if-present
+
+
+> lenqclaw@0.0.1 db:migrate
+> tsx packages/core/src/db/migrate.ts
+
+applied: 0
+
+> lenqclaw@0.0.1 db:seed
+> tsx packages/core/src/db/seed.ts
+
+seed: persona_docs=4 skills=2
+seed-sim(test:db): groups=3 members=13 kb_sections=10
+
+> @lenqclaw/core@0.0.1 test:db
+> tsx scripts/require-database-url.ts && vitest run --config vitest.db.config.ts
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mE:/vọc vạch/lenqclaw/packages/core[39m
+
+ [32m✓[39m src/dbtests/sim-actions.db.test.ts [2m([22m[2m17 tests[22m[2m)[22m[33m 528[2mms[22m[39m
+[90mstdout[2m | src/dbtests/p01.db.test.ts[2m > [22m[2m1) runMigrations — schema day du tren 001..009 (SPEC-P01 §3)[2m > [22m[2mlan dau: applied = so file db/migrations/*.sql (reset) hoac schema da du; moi bang ton tai
+[22m[39mapplied: 0 (files: 9, reset: false)
+
+ [32m✓[39m src/dbtests/p01.db.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 311[2mms[22m[39m
+ [32m✓[39m src/dbtests/p02-link-zalo.db.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 903[2mms[22m[39m
+   [33m[2m✓[22m[39m dev:link-zalo --owner[2m > [22mDATA_MODE≠sim => ham tu choi; lenh CLI exit 1 [33m672[2mms[22m[39m
+ [32m✓[39m src/dbtests/p02-runner.db.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 146[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[32m33 passed[39m[22m[90m (33)[39m
+[2m   Start at [22m 11:01:28
+[2m   Duration [22m 3.61s[2m (transform 167ms, setup 0ms, collect 621ms, tests 1.89s, environment 1ms, prepare 423ms)[22m
+
+
+> @lenqclaw/web@0.0.1 test:db
+> tsx ../../packages/core/scripts/require-database-url.ts && vitest run --config vitest.db.config.ts
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mE:/vọc vạch/lenqclaw/apps/web[39m
+
+ [32m✓[39m tests/sim-send.db.test.ts [2m([22m[2m7 tests[22m[2m)[22m[90m 238[2mms[22m[39m
+ [32m✓[39m tests/zalo-login.db.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 85[2mms[22m[39m
+ [32m✓[39m tests/zalo-logout.db.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 48[2mms[22m[39m
+ [32m✓[39m tests/sim-tick.db.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 68[2mms[22m[39m
+ [32m✓[39m tests/sim-thread.db.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 64[2mms[22m[39m
+ [32m✓[39m tests/00-login.db.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 192[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m6 passed[39m[22m[90m (6)[39m
+[2m      Tests [22m [1m[32m24 passed[39m[22m[90m (24)[39m
+[2m   Start at [22m 11:01:33
+[2m   Duration [22m 4.58s[2m (transform 234ms, setup 0ms, collect 1.79s, tests 695ms, environment 2ms, prepare 832ms)[22m
+
+
+> @lenqclaw/zalo-worker@0.0.1 test:db
+> tsx ../../packages/core/scripts/require-database-url.ts && vitest run --config vitest.db.config.ts
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mE:/vọc vạch/lenqclaw/apps/zalo-worker[39m
+
+{"t":"2026-10-16T04:01:40.943Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:40.957Z","event":"zalo.inbound","account":"community","outcome":"inserted","msg_type":"webchat"}
+{"t":"2026-10-16T04:01:40.969Z","event":"zalo.inbound","account":"community","outcome":"duplicate","msg_type":"webchat"}
+{"t":"2026-10-16T04:01:40.970Z","event":"zalo.inbound","account":"community","outcome":"duplicate","msg_type":"webchat"}
+{"t":"2026-10-16T04:01:40.996Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:41.007Z","event":"zalo.inbound","account":"community","outcome":"inserted","msg_type":"chat.photo"}
+{"t":"2026-10-16T04:01:41.021Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:41.030Z","event":"zalo.inbound","account":"community","outcome":"group_inserted","msg_type":"webchat"}
+{"t":"2026-10-16T04:01:41.046Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:41.061Z","event":"zalo.inbound","account":"community","outcome":"inserted","msg_type":"webchat"}
+{"t":"2026-10-16T04:01:41.062Z","event":"zalo.inbound","account":"community","outcome":"inserted","msg_type":"webchat"}
+{"t":"2026-10-16T04:01:41.088Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:41.110Z","event":"zalo.inbound","account":"community","outcome":"self_staff_takeover","msg_type":"webchat"}
+{"t":"2026-10-16T04:01:41.165Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:41.186Z","event":"zalo.inbound","account":"community","outcome":"self_bot_echo","msg_type":"webchat"}
+{"t":"2026-10-16T04:01:41.215Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:41.233Z","event":"pacer.sent","account":"community","outbox_id":5912}
+{"t":"2026-10-16T04:01:41.267Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:41.270Z","event":"zalo.closed","account":"community","code":3003,"decision":"kicked"}
+{"t":"2026-10-16T04:01:41.273Z","event":"zalo.state","account":"community","state":"kicked"}
+{"t":"2026-10-16T04:01:41.296Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:41.296Z","event":"zalo.closed","account":"community","code":3000,"decision":"kicked"}
+{"t":"2026-10-16T04:01:41.298Z","event":"zalo.state","account":"community","state":"kicked"}
+{"t":"2026-10-16T04:01:41.356Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:41.356Z","event":"zalo.closed","account":"community","code":1006,"decision":"reconnect"}
+{"t":"2026-10-16T04:01:41.361Z","event":"zalo.state","account":"community","state":"reconnecting"}
+{"t":"2026-10-16T04:01:41.361Z","event":"zalo.reconnect_failed","account":"community","attempt":1,"error":"Error: mang"}
+{"t":"2026-10-16T04:01:41.364Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:41.389Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:41.389Z","event":"zalo.closed","account":"community","code":1006,"decision":"reconnect"}
+{"t":"2026-10-16T04:01:41.394Z","event":"zalo.state","account":"community","state":"reconnecting"}
+{"t":"2026-10-16T04:01:41.394Z","event":"zalo.reconnect_failed","account":"community","attempt":1,"error":"Error: mang"}
+{"t":"2026-10-16T04:01:41.394Z","event":"zalo.reconnect_failed","account":"community","attempt":2,"error":"Error: mang"}
+{"t":"2026-10-16T04:01:41.394Z","event":"zalo.reconnect_failed","account":"community","attempt":3,"error":"Error: mang"}
+{"t":"2026-10-16T04:01:41.394Z","event":"zalo.reconnect_failed","account":"community","attempt":4,"error":"Error: mang"}
+{"t":"2026-10-16T04:01:41.394Z","event":"zalo.reconnect_failed","account":"community","attempt":5,"error":"Error: mang"}
+{"t":"2026-10-16T04:01:41.394Z","event":"zalo.reconnect_failed","account":"community","attempt":6,"error":"Error: mang"}
+{"t":"2026-10-16T04:01:41.394Z","event":"zalo.reconnect_failed","account":"community","attempt":7,"error":"Error: mang"}
+{"t":"2026-10-16T04:01:41.394Z","event":"zalo.reconnect_failed","account":"community","attempt":8,"error":"Error: mang"}
+{"t":"2026-10-16T04:01:41.394Z","event":"zalo.reconnect_failed","account":"community","attempt":9,"error":"Error: mang"}
+{"t":"2026-10-16T04:01:41.394Z","event":"zalo.reconnect_failed","account":"community","attempt":10,"error":"Error: mang"}
+{"t":"2026-10-16T04:01:41.398Z","event":"zalo.state","account":"community","state":"dead"}
+{"t":"2026-10-16T04:01:41.456Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:41.457Z","event":"zalo.closed","account":"community","code":1006,"decision":"reconnect"}
+{"t":"2026-10-16T04:01:41.459Z","event":"zalo.state","account":"community","state":"reconnecting"}
+{"t":"2026-10-16T04:01:41.466Z","event":"zalo.state","account":"community","state":"logged_out"}
+{"t":"2026-10-16T04:01:41.485Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:41.506Z","event":"zalo.probe_failed","account":"community","error":"Error: probe"}
+{"t":"2026-10-16T04:01:41.506Z","event":"zalo.closed","account":"community","code":1006,"decision":"reconnect"}
+{"t":"2026-10-16T04:01:41.509Z","event":"zalo.state","account":"community","state":"reconnecting"}
+{"t":"2026-10-16T04:01:41.511Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:41.526Z","event":"zalo.state","account":"community","state":"logged_out"}
+{"t":"2026-10-16T04:01:41.539Z","event":"zalo.qr_start","account":"community"}
+{"t":"2026-10-16T04:01:41.541Z","event":"zalo.qr_event","account":"community","type":"qr"}
+{"t":"2026-10-16T04:01:41.551Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:41.565Z","event":"zalo.qr_start","account":"community"}
+{"t":"2026-10-16T04:01:41.567Z","event":"zalo.qr_event","account":"community","type":"qr"}
+{"t":"2026-10-16T04:01:41.570Z","event":"zalo.qr_event","account":"community","type":"scanned"}
+{"t":"2026-10-16T04:01:41.575Z","event":"zalo.state","account":"community","state":"logged_out"}
+{"t":"2026-10-16T04:01:41.593Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:41.621Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:41.816Z","event":"pacer.sent","account":"community","outbox_id":5914}
+{"t":"2026-10-16T04:01:41.860Z","event":"pacer.sent","account":"community","outbox_id":5915}
+{"t":"2026-10-16T04:01:41.906Z","event":"pacer.sent","account":"community","outbox_id":5916}
+{"t":"2026-10-16T04:01:41.949Z","event":"pacer.sent","account":"community","outbox_id":5917}
+{"t":"2026-10-16T04:01:41.986Z","event":"pacer.sent","account":"community","outbox_id":5918}
+{"t":"2026-10-16T04:01:42.030Z","event":"pacer.sent","account":"community","outbox_id":5919}
+{"t":"2026-10-16T04:01:42.101Z","event":"pacer.sent","account":"community","outbox_id":5920}
+{"t":"2026-10-16T04:01:42.153Z","event":"pacer.sent","account":"community","outbox_id":5921}
+{"t":"2026-10-16T04:01:42.271Z","event":"pacer.sent","account":"community","outbox_id":5922}
+{"t":"2026-10-16T04:01:42.333Z","event":"pacer.sent","account":"community","outbox_id":5923}
+{"t":"2026-10-16T04:01:42.780Z","event":"pacer.sent","account":"community","outbox_id":5924}
+{"t":"2026-10-16T04:01:42.817Z","event":"pacer.sent","account":"community","outbox_id":5925}
+{"t":"2026-10-16T04:01:42.854Z","event":"pacer.sent","account":"community","outbox_id":5926}
+{"t":"2026-10-16T04:01:42.883Z","event":"pacer.sent","account":"community","outbox_id":5927}
+{"t":"2026-10-16T04:01:42.919Z","event":"pacer.sent","account":"community","outbox_id":5928}
+{"t":"2026-10-16T04:01:42.947Z","event":"pacer.sent","account":"community","outbox_id":5934}
+{"t":"2026-10-16T04:01:42.978Z","event":"pacer.sent","account":"community","outbox_id":5935}
+{"t":"2026-10-16T04:01:43.007Z","event":"pacer.sent","account":"community","outbox_id":5937}
+{"t":"2026-10-16T04:01:43.049Z","event":"pacer.sent","account":"community","outbox_id":5938}
+{"t":"2026-10-16T04:01:43.078Z","event":"pacer.sent","account":"community","outbox_id":5939}
+{"t":"2026-10-16T04:01:43.342Z","event":"pacer.sent","account":"community","outbox_id":5940}
+{"t":"2026-10-16T04:01:43.373Z","event":"pacer.sent","account":"community","outbox_id":5941}
+{"t":"2026-10-16T04:01:43.402Z","event":"pacer.sent","account":"community","outbox_id":5942}
+{"t":"2026-10-16T04:01:43.430Z","event":"pacer.sent","account":"community","outbox_id":5943}
+{"t":"2026-10-16T04:01:43.455Z","event":"pacer.sent","account":"community","outbox_id":5944}
+{"t":"2026-10-16T04:01:43.479Z","event":"pacer.sent","account":"community","outbox_id":5945}
+{"t":"2026-10-16T04:01:43.505Z","event":"pacer.sent","account":"community","outbox_id":5947}
+{"t":"2026-10-16T04:01:43.532Z","event":"pacer.sent","account":"community","outbox_id":5949}
+{"t":"2026-10-16T04:01:43.557Z","event":"pacer.sent","account":"community","outbox_id":5948}
+{"t":"2026-10-16T04:01:43.580Z","event":"pacer.sent","account":"community","outbox_id":5950}
+{"t":"2026-10-16T04:01:43.813Z","event":"pacer.sent","account":"community","outbox_id":5951}
+{"t":"2026-10-16T04:01:43.835Z","event":"pacer.sent","account":"community","outbox_id":5952}
+{"t":"2026-10-16T04:01:43.862Z","event":"pacer.sent","account":"community","outbox_id":5954}
+{"t":"2026-10-16T04:01:43.885Z","event":"pacer.sent","account":"community","outbox_id":5956}
+{"t":"2026-10-16T04:01:43.916Z","event":"pacer.sent","account":"community","outbox_id":5957}
+{"t":"2026-10-16T04:01:43.943Z","event":"pacer.sent","account":"community","outbox_id":5959}
+{"t":"2026-10-16T04:01:43.972Z","event":"pacer.sent","account":"community","outbox_id":5958}
+{"t":"2026-10-16T04:01:43.990Z","event":"pacer.sent","account":"community","outbox_id":5960}
+{"t":"2026-10-16T04:01:44.009Z","event":"pacer.sent","account":"community","outbox_id":5962}
+{"t":"2026-10-16T04:01:45.743Z","event":"pacer.sent","account":"community","outbox_id":5929}
+{"t":"2026-10-16T04:01:45.771Z","event":"pacer.sent","account":"community","outbox_id":5946}
+{"t":"2026-10-16T04:01:45.795Z","event":"pacer.sent","account":"community","outbox_id":5961}
+{"t":"2026-10-16T04:01:45.916Z","event":"pacer.sent","account":"community","outbox_id":5930}
+{"t":"2026-10-16T04:01:45.947Z","event":"pacer.sent","account":"community","outbox_id":5931}
+{"t":"2026-10-16T04:01:45.971Z","event":"pacer.sent","account":"community","outbox_id":5932}
+{"t":"2026-10-16T04:01:45.984Z","event":"pacer.sent","account":"community","outbox_id":5955}
+{"t":"2026-10-16T04:01:45.999Z","event":"pacer.sent","account":"community","outbox_id":5933}
+{"t":"2026-10-16T04:01:46.011Z","event":"pacer.sent","account":"community","outbox_id":5963}
+{"t":"2026-10-16T04:01:46.024Z","event":"pacer.sent","account":"community","outbox_id":5936}
+{"t":"2026-10-16T04:01:46.041Z","event":"pacer.sent","account":"community","outbox_id":5953}
+{"t":"2026-10-16T04:01:46.056Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:46.089Z","event":"pacer.sent","account":"community","outbox_id":5964}
+{"t":"2026-10-16T04:01:46.111Z","event":"pacer.sent","account":"community","outbox_id":5965}
+{"t":"2026-10-16T04:01:46.128Z","event":"pacer.sent","account":"community","outbox_id":5966}
+{"t":"2026-10-16T04:01:46.367Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:46.391Z","event":"pacer.backoff","account":"community","reason":"no_msg_id","backoff_ms":1800000}
+{"t":"2026-10-16T04:01:46.413Z","event":"pacer.sent","account":"community","outbox_id":5967}
+{"t":"2026-10-16T04:01:46.439Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:46.457Z","event":"pacer.backoff","account":"community","reason":"rate_limit_error","backoff_ms":1800000}
+{"t":"2026-10-16T04:01:46.472Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:46.522Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:46.534Z","event":"zalo.state","account":"community","state":"logged_out"}
+{"t":"2026-10-16T04:01:46.558Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:46.572Z","event":"zalo.qr_start","account":"community"}
+{"t":"2026-10-16T04:01:46.575Z","event":"zalo.qr_event","account":"community","type":"qr"}
+{"t":"2026-10-16T04:01:46.579Z","event":"zalo.qr_event","account":"community","type":"scanned"}
+{"t":"2026-10-16T04:01:46.583Z","event":"zalo.qr_event","account":"community","type":"expired"}
+{"t":"2026-10-16T04:01:46.590Z","event":"zalo.state","account":"community","state":"logged_out"}
+{"t":"2026-10-16T04:01:46.609Z","event":"zalo.qr_start","account":"community"}
+{"t":"2026-10-16T04:01:46.614Z","event":"zalo.qr_event","account":"community","type":"qr"}
+{"t":"2026-10-16T04:01:46.616Z","event":"zalo.qr_event","account":"community","type":"declined"}
+{"t":"2026-10-16T04:01:46.622Z","event":"zalo.state","account":"community","state":"logged_out"}
+{"t":"2026-10-16T04:01:46.636Z","event":"zalo.qr_start","account":"community"}
+{"t":"2026-10-16T04:01:46.638Z","event":"zalo.qr_event","account":"community","type":"qr"}
+{"t":"2026-10-16T04:01:46.640Z","event":"zalo.qr_event","account":"community","type":"scanned"}
+{"t":"2026-10-16T04:01:46.650Z","event":"zalo.state","account":"community","state":"connected"}
+ [32m✓[39m src/dbtests/p02-worker.db.test.ts [2m([22m[2m27 tests[22m[2m)[22m[33m 5763[2mms[22m[39m
+   [33m[2m✓[22m[39m pacer tren DB (§5, §8)[2m > [22mgia lap 50 tin / 20 nguoi qua outbox that + dong ho ao ⇒ gui het, 0 vi pham bang §5 [33m4432[2mms[22m[39m
+   [33m[2m✓[22m[39m pacer tren DB (§5, §8)[2m > [22mtin dai ⇒ tach <= 1800 ky tu, moi doan mot dong outbox, gui dung thu tu [33m307[2mms[22m[39m
+{"t":"2026-10-16T04:01:47.255Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:47.315Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:47.348Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:47.401Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:47.436Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:47.536Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:47.744Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:47.769Z","event":"pacer.sent","account":"community","outbox_id":6001}
+{"t":"2026-10-16T04:01:47.795Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:47.834Z","event":"pacer.sent","account":"community","outbox_id":6004}
+{"t":"2026-10-16T04:01:47.850Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:47.893Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:47.922Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:47.934Z","event":"zalo.inbound","account":"community","outcome":"group_inserted","msg_type":"webchat"}
+{"t":"2026-10-16T04:01:47.947Z","event":"zalo.inbound","account":"community","outcome":"duplicate","msg_type":"webchat"}
+{"t":"2026-10-16T04:01:47.973Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:47.981Z","event":"zalo.inbound","account":"community","outcome":"group_inserted","msg_type":"webchat"}
+{"t":"2026-10-16T04:01:47.999Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:48.007Z","event":"join","account":"community","outcome":"group_event_inserted"}
+{"t":"2026-10-16T04:01:48.008Z","event":"join_request","account":"community","outcome":"group_event_inserted"}
+{"t":"2026-10-16T04:01:48.022Z","event":"leave","account":"community","outcome":"group_event_inserted"}
+{"t":"2026-10-16T04:01:48.023Z","event":"join","account":"community","outcome":"duplicate"}
+{"t":"2026-10-16T04:01:48.023Z","event":"add_admin","account":"community","outcome":"group_event_inserted"}
+{"t":"2026-10-16T04:01:48.023Z","event":"new_link","account":"community","outcome":"ignored_event"}
+{"t":"2026-10-16T04:01:48.037Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:48.042Z","event":"zalo.inbound","account":"community","outcome":"group_inserted","msg_type":"webchat"}
+ [32m✓[39m src/dbtests/p02-group.db.test.ts [2m([22m[2m17 tests[22m[2m)[22m[33m 848[2mms[22m[39m
+{"t":"2026-10-16T04:01:48.618Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:48.713Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:48.772Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:48.836Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:48.899Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:48.956Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:49.011Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:49.060Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:49.110Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:49.159Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:49.200Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:49.252Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:49.316Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:49.366Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:49.384Z","event":"pacer.backoff","account":"community","reason":"rate_limit_error","backoff_ms":1800000}
+{"t":"2026-10-16T04:01:49.408Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:49.436Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:49.469Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:49.510Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:49.550Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:49.591Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:49.627Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:49.661Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:49.699Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:49.716Z","event":"pacer.backoff","account":"community","reason":"rate_limit_error","backoff_ms":1800000}
+{"t":"2026-10-16T04:01:49.739Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-16T04:01:49.755Z","event":"pacer.action_error","account":"community","outbox_id":6040,"error":"Error: ECONNRESET"}
+{"t":"2026-10-16T04:01:49.829Z","event":"zalo.state","account":"community","state":"connected"}
+ [32m✓[39m src/dbtests/p02-fix.db.test.ts [2m([22m[2m29 tests[22m[2m)[22m[33m 1317[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m      Tests [22m [1m[32m73 passed[39m[22m[90m (73)[39m
+[2m   Start at [22m 11:01:39
+[2m   Duration [22m 10.26s[2m (transform 347ms, setup 0ms, collect 1.25s, tests 7.93s, environment 1ms, prepare 403ms)[22m
+

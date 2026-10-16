@@ -1,0 +1,186 @@
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/apps/zalo-worker
+
+file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/apps/zalo-worker/[eval1]:1
+const m = await import(process.argv[1]); console.log(JSON.stringify(m.findForbiddenActionHits(process.argv[2])));
+                                                                      ^
+
+TypeError: m.findForbiddenActionHits is not a function
+    at file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/apps/zalo-worker/[eval1]:1:71
+
+Node.js v24.12.0
+file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/apps/zalo-worker/[eval1]:1
+const m = await import(process.argv[1]); console.log(JSON.stringify(m.findForbiddenActionHits(process.argv[2])));
+                                                                      ^
+
+TypeError: m.findForbiddenActionHits is not a function
+    at file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/apps/zalo-worker/[eval1]:1:71
+
+Node.js v24.12.0
+file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/apps/zalo-worker/[eval1]:1
+const m = await import(process.argv[1]); console.log(JSON.stringify(m.findForbiddenActionHits(process.argv[2])));
+                                                                      ^
+
+TypeError: m.findForbiddenActionHits is not a function
+    at file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/apps/zalo-worker/[eval1]:1:71
+
+Node.js v24.12.0
+file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/apps/zalo-worker/[eval1]:1
+const m = await import(process.argv[1]); console.log(JSON.stringify(m.findForbiddenActionHits(process.argv[2])));
+                                                                      ^
+
+TypeError: m.findForbiddenActionHits is not a function
+    at file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/apps/zalo-worker/[eval1]:1:71
+
+Node.js v24.12.0
+ ❯ src/check-agent-tools.test.ts (4 tests | 4 failed) 333ms
+   × check_agent_tools — forbidden_actions > bat `action: 'x'` (dang cu) 92ms
+     → Command failed: E:\nodejs\node.exe --input-type=module -e const m = await import(process.argv[1]); console.log(JSON.stringify(m.findForbiddenActionHits(process.argv[2]))); file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/scripts/check_agent_tools.mjs const a = { action: 'leave_group' };
+file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/apps/zalo-worker/[eval1]:1
+const m = await import(process.argv[1]); console.log(JSON.stringify(m.findForbiddenActionHits(process.argv[2])));
+                                                                      ^
+
+TypeError: m.findForbiddenActionHits is not a function
+    at file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/apps/zalo-worker/[eval1]:1:71
+
+Node.js v24.12.0
+
+   × check_agent_tools — forbidden_actions > bat `case 'x':` trong switch 80ms
+     → Command failed: E:\nodejs\node.exe --input-type=module -e const m = await import(process.argv[1]); console.log(JSON.stringify(m.findForbiddenActionHits(process.argv[2]))); file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/scripts/check_agent_tools.mjs switch (b.action) {
+  case 'disperse_group':
+    return 1;
+}
+file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/apps/zalo-worker/[eval1]:1
+const m = await import(process.argv[1]); console.log(JSON.stringify(m.findForbiddenActionHits(process.argv[2])));
+                                                                      ^
+
+TypeError: m.findForbiddenActionHits is not a function
+    at file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/apps/zalo-worker/[eval1]:1:71
+
+Node.js v24.12.0
+
+   × check_agent_tools — forbidden_actions > bat `body.action === 'x'` va `!==` 78ms
+     → Command failed: E:\nodejs\node.exe --input-type=module -e const m = await import(process.argv[1]); console.log(JSON.stringify(m.findForbiddenActionHits(process.argv[2]))); file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/scripts/check_agent_tools.mjs if (body.action === "send_file") run(); if (x.action !== 'restart') y();
+file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/apps/zalo-worker/[eval1]:1
+const m = await import(process.argv[1]); console.log(JSON.stringify(m.findForbiddenActionHits(process.argv[2])));
+                                                                      ^
+
+TypeError: m.findForbiddenActionHits is not a function
+    at file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/apps/zalo-worker/[eval1]:1:71
+
+Node.js v24.12.0
+
+   × check_agent_tools — forbidden_actions > khong bat hanh dong hop le / ten chi nam trong chuoi khac 81ms
+     → Command failed: E:\nodejs\node.exe --input-type=module -e const m = await import(process.argv[1]); console.log(JSON.stringify(m.findForbiddenActionHits(process.argv[2]))); file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/scripts/check_agent_tools.mjs case 'delete_message': break; const s = 'leave_group_notice'; const t = { action: 'create_poll' };
+file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/apps/zalo-worker/[eval1]:1
+const m = await import(process.argv[1]); console.log(JSON.stringify(m.findForbiddenActionHits(process.argv[2])));
+                                                                      ^
+
+TypeError: m.findForbiddenActionHits is not a function
+    at file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/apps/zalo-worker/[eval1]:1:71
+
+Node.js v24.12.0
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/check-agent-tools.test.ts > check_agent_tools — forbidden_actions > bat `action: 'x'` (dang cu)
+Error: Command failed: E:\nodejs\node.exe --input-type=module -e const m = await import(process.argv[1]); console.log(JSON.stringify(m.findForbiddenActionHits(process.argv[2]))); file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/scripts/check_agent_tools.mjs const a = { action: 'leave_group' };
+file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/apps/zalo-worker/[eval1]:1
+const m = await import(process.argv[1]); console.log(JSON.stringify(m.findForbiddenActionHits(process.argv[2])));
+                                                                      ^
+
+TypeError: m.findForbiddenActionHits is not a function
+    at file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/apps/zalo-worker/[eval1]:1:71
+
+Node.js v24.12.0
+
+ ❯ ../../../../v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/apps/zalo-worker/[eval1]:1:71
+ ❯ hits src/check-agent-tools.test.ts:13:15
+     11| async function hits(src: string): Promise<Hit[]> {
+     12|   const code = 'const m = await import(process.argv[1]); console.log(J…
+     13|   const out = execFileSync(process.execPath, ['--input-type=module', '…
+       |               ^
+     14|   return JSON.parse(out) as Hit[];
+     15| }
+ ❯ src/check-agent-tools.test.ts:25:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/check-agent-tools.test.ts > check_agent_tools — forbidden_actions > bat `case 'x':` trong switch
+Error: Command failed: E:\nodejs\node.exe --input-type=module -e const m = await import(process.argv[1]); console.log(JSON.stringify(m.findForbiddenActionHits(process.argv[2]))); file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/scripts/check_agent_tools.mjs switch (b.action) {
+  case 'disperse_group':
+    return 1;
+}
+file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/apps/zalo-worker/[eval1]:1
+const m = await import(process.argv[1]); console.log(JSON.stringify(m.findForbiddenActionHits(process.argv[2])));
+                                                                      ^
+
+TypeError: m.findForbiddenActionHits is not a function
+    at file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/apps/zalo-worker/[eval1]:1:71
+
+Node.js v24.12.0
+
+ ❯ ../../../../v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/apps/zalo-worker/[eval1]:1:71
+ ❯ hits src/check-agent-tools.test.ts:13:15
+     11| async function hits(src: string): Promise<Hit[]> {
+     12|   const code = 'const m = await import(process.argv[1]); console.log(J…
+     13|   const out = execFileSync(process.execPath, ['--input-type=module', '…
+       |               ^
+     14|   return JSON.parse(out) as Hit[];
+     15| }
+ ❯ src/check-agent-tools.test.ts:28:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/check-agent-tools.test.ts > check_agent_tools — forbidden_actions > bat `body.action === 'x'` va `!==`
+Error: Command failed: E:\nodejs\node.exe --input-type=module -e const m = await import(process.argv[1]); console.log(JSON.stringify(m.findForbiddenActionHits(process.argv[2]))); file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/scripts/check_agent_tools.mjs if (body.action === "send_file") run(); if (x.action !== 'restart') y();
+file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/apps/zalo-worker/[eval1]:1
+const m = await import(process.argv[1]); console.log(JSON.stringify(m.findForbiddenActionHits(process.argv[2])));
+                                                                      ^
+
+TypeError: m.findForbiddenActionHits is not a function
+    at file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/apps/zalo-worker/[eval1]:1:71
+
+Node.js v24.12.0
+
+ ❯ ../../../../v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/apps/zalo-worker/[eval1]:1:71
+ ❯ hits src/check-agent-tools.test.ts:13:15
+     11| async function hits(src: string): Promise<Hit[]> {
+     12|   const code = 'const m = await import(process.argv[1]); console.log(J…
+     13|   const out = execFileSync(process.execPath, ['--input-type=module', '…
+       |               ^
+     14|   return JSON.parse(out) as Hit[];
+     15| }
+ ❯ src/check-agent-tools.test.ts:34:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/check-agent-tools.test.ts > check_agent_tools — forbidden_actions > khong bat hanh dong hop le / ten chi nam trong chuoi khac
+Error: Command failed: E:\nodejs\node.exe --input-type=module -e const m = await import(process.argv[1]); console.log(JSON.stringify(m.findForbiddenActionHits(process.argv[2]))); file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/scripts/check_agent_tools.mjs case 'delete_message': break; const s = 'leave_group_notice'; const t = { action: 'create_poll' };
+file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/apps/zalo-worker/[eval1]:1
+const m = await import(process.argv[1]); console.log(JSON.stringify(m.findForbiddenActionHits(process.argv[2])));
+                                                                      ^
+
+TypeError: m.findForbiddenActionHits is not a function
+    at file:///E:/v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/apps/zalo-worker/[eval1]:1:71
+
+Node.js v24.12.0
+
+ ❯ ../../../../v%E1%BB%8Dc%20v%E1%BA%A1ch/lenqclaw/apps/zalo-worker/[eval1]:1:71
+ ❯ hits src/check-agent-tools.test.ts:13:15
+     11| async function hits(src: string): Promise<Hit[]> {
+     12|   const code = 'const m = await import(process.argv[1]); console.log(J…
+     13|   const out = execFileSync(process.execPath, ['--input-type=module', '…
+       |               ^
+     14|   return JSON.parse(out) as Hit[];
+     15| }
+ ❯ src/check-agent-tools.test.ts:37:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  10:59:47
+   Duration  1.03s (transform 53ms, setup 0ms, collect 71ms, tests 333ms, environment 0ms, prepare 153ms)
+

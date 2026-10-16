@@ -1,0 +1,17 @@
+ apps/web/tests/sim-thread.db.test.ts              |  64 ++++
+ apps/zalo-worker/src/actions.test.ts              |  16 +
+ apps/zalo-worker/src/actions.ts                   |   4 +-
+ apps/zalo-worker/src/check-agent-tools.test.ts    |  39 +++
+ apps/zalo-worker/src/dbtests/p02-fix.db.test.ts   | 355 ++++++++++++++++++++++
+ apps/zalo-worker/src/dbtests/p02-group.db.test.ts |   4 +-
+ apps/zalo-worker/src/pacer-policy.ts              |   2 +-
+ apps/zalo-worker/src/pacer.test.ts                |  67 +++-
+ apps/zalo-worker/src/pacer.ts                     |  72 ++++-
+ apps/zalo-worker/src/store.ts                     |  59 +++-
+ docs/web.md                                       |   2 +-
+ docs/zalo-worker.md                               |   6 +-
+ packages/core/src/dbtests/sim-actions.db.test.ts  |  85 ++++++
+ packages/core/src/sim/sim-actions.ts              |  22 +-
+ packages/core/src/sim/sim-transport.ts            |   4 +-
+ scripts/check_agent_tools.mjs                     |  33 +-
+ 16 files changed, 781 insertions(+), 53 deletions(-)

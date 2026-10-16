@@ -1,0 +1,30 @@
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/apps/zalo-worker
+
+ ❯ src/pacer.test.ts (20 tests | 1 failed | 19 skipped) 11ms
+   × D29.1 — kick/block can the duyet hop le (lop chan cuoi; kiem CAS nam o store) > claimApproval tu choi (khong approvalId / the sai) ⇒ failed(approval_invalid), 0 lan goi Zalo, audit zalo.action_blocked 10ms
+     → expected 'sent' to be 'failed' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/pacer.test.ts > D29.1 — kick/block can the duyet hop le (lop chan cuoi; kiem CAS nam o store) > claimApproval tu choi (khong approvalId / the sai) ⇒ failed(approval_invalid), 0 lan goi Zalo, audit zalo.action_blocked
+AssertionError: expected 'sent' to be 'failed' // Object.is equality
+
+Expected: "failed"
+Received: "sent"
+
+ ❯ src/pacer.test.ts:358:25
+    356|     const bad = add({ kind: 'action', body: { action: 'block_member', …
+    357|     await pacer.tick();
+    358|     expect(noId.status).toBe('failed');
+       |                         ^
+    359|     expect(noId.reason).toBe('approval_invalid');
+    360|     expect(bad.status).toBe('failed');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 19 skipped (20)
+   Start at  10:53:06
+   Duration  741ms (transform 128ms, setup 0ms, collect 242ms, tests 11ms, environment 0ms, prepare 179ms)
+
