@@ -40,3 +40,16 @@ describe('readAccounts', () => {
     expect(() => readAccounts({ ZALO_ACCOUNTS: 'abc' })).toThrow(ConfigError);
   });
 });
+
+describe('readPacerConfig — nhom (ke hoach 02, 01-CONTRACTS §10)', () => {
+  it('mac dinh nhom: gap 8000, jitter 3000, TTL 30 phut, 3 action/tick', () => {
+    const c = readPacerConfig({});
+    expect([c.groupGapMs, c.groupJitterMs, c.groupTextTtlMin, c.actionsPerTick]).toEqual([8000, 3000, 30, 3]);
+  });
+  it('env PACER_GROUP_GAP_MS / PACER_GROUP_JITTER_MS / GROUP_TEXT_TTL_MIN / PACER_ACTIONS_PER_TICK ghi de; 0 action/tick ⇒ loi', () => {
+    expect(
+      readPacerConfig({ PACER_GROUP_GAP_MS: '9000', PACER_GROUP_JITTER_MS: '1000', GROUP_TEXT_TTL_MIN: '10', PACER_ACTIONS_PER_TICK: '5' })
+    ).toMatchObject({ groupGapMs: 9000, groupJitterMs: 1000, groupTextTtlMin: 10, actionsPerTick: 5 });
+    expect(() => readPacerConfig({ PACER_ACTIONS_PER_TICK: '0' })).toThrow(ConfigError);
+  });
+});

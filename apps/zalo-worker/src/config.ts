@@ -24,6 +24,13 @@ export interface PacerConfig {
   backoffMs: number;
   /** Chu ky pacer. */
   tickMs: number;
+  /** Nhom (BB-08, SPEC-P02 §5): giua 2 tin cung nhom >= groupGapMs + jitter [0, groupJitterMs]. */
+  groupGapMs: number;
+  groupJitterMs: number;
+  /** Tin text nhom cho ngan sach qua ngan nay (phut) ⇒ cancelled('budget_expired'). */
+  groupTextTtlMin: number;
+  /** SPEC-P02 §4.1: toi da bay nhieu hang `action` moi tick. */
+  actionsPerTick: number;
 }
 
 export const PACER_DEFAULTS: PacerConfig = {
@@ -39,6 +46,10 @@ export const PACER_DEFAULTS: PacerConfig = {
   seenMaxMs: 6000,
   backoffMs: 30 * 60 * 1000,
   tickMs: 1000,
+  groupGapMs: 8000,
+  groupJitterMs: 3000,
+  groupTextTtlMin: 30,
+  actionsPerTick: 3,
 };
 
 const PACER_ENV: Record<keyof PacerConfig, string> = {
@@ -54,6 +65,10 @@ const PACER_ENV: Record<keyof PacerConfig, string> = {
   seenMaxMs: 'PACER_SEEN_MAX_MS',
   backoffMs: 'PACER_BACKOFF_MS',
   tickMs: 'PACER_TICK_MS',
+  groupGapMs: 'PACER_GROUP_GAP_MS',
+  groupJitterMs: 'PACER_GROUP_JITTER_MS',
+  groupTextTtlMin: 'GROUP_TEXT_TTL_MIN',
+  actionsPerTick: 'PACER_ACTIONS_PER_TICK',
 };
 
 export class ConfigError extends Error {
@@ -72,8 +87,10 @@ export function readPacerConfig(env: NodeJS.ProcessEnv = process.env): PacerConf
     }
     out[key] = n;
   }
-  if (out.maxPerMinute < 1 || out.maxRecipients < 1 || out.maxChars < 1 || out.tickMs < 1) {
-    throw new ConfigError('PACER_MAX_PER_MINUTE/PACER_MAX_RECIPIENTS/PACER_MAX_CHARS/PACER_TICK_MS phai >= 1.');
+  if (out.maxPerMinute < 1 || out.maxRecipients < 1 || out.maxChars < 1 || out.tickMs < 1 || out.actionsPerTick < 1) {
+    throw new ConfigError(
+      'PACER_MAX_PER_MINUTE/PACER_MAX_RECIPIENTS/PACER_MAX_CHARS/PACER_TICK_MS/PACER_ACTIONS_PER_TICK phai >= 1.'
+    );
   }
   return out;
 }

@@ -2,8 +2,9 @@
 // `sql` cua @lenqclaw/core (BB-07). Worker KHONG tu chen dong outbox: tin moi
 // (doan tach, "da xem") di qua `enqueue` cua core (BB-04).
 
-import { audit, enqueue, sql, type SessionState } from '@lenqclaw/core';
+import { audit, enqueue, sql, tx, type SessionState } from '@lenqclaw/core';
 import type { AccountId } from './config.js';
+import { buildSplitBodies } from './pacer-policy.js';
 
 export interface AccountRow {
   id: AccountId;
@@ -111,7 +112,8 @@ export type AlertKind =
   | 'qr_failed'
   | 'qr_probe_failed'
   | 'rate_limited'
-  | 'session_cas_conflict';
+  | 'session_cas_conflict'
+  | 'deputy_missing';
 
 /** Bao dong giai doan 1 = session_state + banner /zalo + audit 'zalo.alert' (§9.1). */
 export async function alert(id: AccountId, kind: AlertKind, data: Record<string, unknown> = {}): Promise<void> {
@@ -213,10 +215,12 @@ export interface OutboxRow {
   id: number;
   thread_id: string;
   thread_type: 'user' | 'group';
-  kind: 'text' | 'image' | 'typing' | 'seen';
+  kind: 'text' | 'image' | 'typing' | 'seen' | 'action' | 'react';
   body: Record<string, unknown>;
   attempts: number;
   staff_takeover: boolean;
+  /** `outbox.created_at` (epoch ms) — doi han `GROUP_TEXT_TTL_MIN`. */
+  created_ms: number;
 }
 
 /** Tin `queued` den han cua tai khoan, theo thu tu gui (doan tach giu dung
@@ -225,7 +229,8 @@ export interface OutboxRow {
 export async function fetchDue(account: AccountId, limit = 200): Promise<OutboxRow[]> {
   return sql<OutboxRow>(
     `select o.id::int as id, o.thread_id, o.thread_type, o.kind, o.body, o.attempts,
-            exists (
+            (extract(epoch from o.created_at) * 1000)::float8 as created_ms,
+            (o.thread_type = 'user' and exists (
               select 1 from conversations c
               where c.zalo_account_id = o.zalo_account_id and c.thread_id = o.thread_id
                 and c.human_takeover_until > now()
@@ -235,7 +240,7 @@ export async function fetchDue(account: AccountId, limit = 200): Promise<OutboxR
                     and ie.is_self and (ie.payload->>'staff_manual') = 'true'
                     and ie.received_at > now() - ($2 || ' minutes')::interval
                 )
-            ) as staff_takeover
+            )) as staff_takeover
      from outbox o
      where o.zalo_account_id = $1 and o.status = 'queued' and o.not_before <= now()
      order by coalesce((o.body->>'split_of')::bigint, o.id), coalesce((o.body->>'part')::int, 0), o.id
@@ -261,8 +266,13 @@ export async function markSending(id: number): Promise<boolean> {
   return rows.length > 0;
 }
 
-export async function markSent(id: number, msgId: string | null): Promise<void> {
-  await sql(`update outbox set status = 'sent', zalo_msg_id = $2, sent_at = now() where id = $1`, [id, msgId]);
+/** `result` (jsonb) chi co voi `action` (SPEC-P02 §4.2): ket qua rut gon, KHONG chua noi dung tin. */
+export async function markSent(id: number, msgId: string | null, result?: Record<string, unknown>): Promise<void> {
+  await sql(
+    `update outbox set status = 'sent', zalo_msg_id = $2, sent_at = now(),
+       result = coalesce($3::jsonb, result) where id = $1`,
+    [id, msgId, result === undefined ? null : JSON.stringify(result)]
+  );
 }
 
 /** Tra tin ve `queued` (giu nguyen, lui toi `notBefore`). */
@@ -270,42 +280,174 @@ export async function requeue(id: number, notBefore: Date): Promise<void> {
   await sql(`update outbox set status = 'queued', not_before = $2 where id = $1 and status = 'sending'`, [id, notBefore]);
 }
 
-export async function markFailed(id: number, reason: string): Promise<void> {
+export async function markFailed(id: number, reason: string, result?: Record<string, unknown>): Promise<void> {
   await sql(
-    `update outbox set status = 'failed', body = body || jsonb_build_object('fail_reason', $2::text) where id = $1`,
-    [id, reason]
+    `update outbox set status = 'failed', body = body || jsonb_build_object('fail_reason', $2::text),
+       result = coalesce($3::jsonb, result) where id = $1`,
+    [id, reason, result === undefined ? null : JSON.stringify(result)]
   );
 }
 
 /** Tach tin dai (§5): dong goc giu doan 1; doan 2..n thanh dong outbox moi
  * qua `enqueue` cua core, danh dau `split_of` + `part` de giu thu tu. */
 export async function splitRow(row: OutboxRow, parts: string[], account: AccountId): Promise<void> {
+  const bodies = buildSplitBodies(row.id, row.body, parts);
   const updated = await sql<{ id: number }>(
-    `update outbox set body = body || jsonb_build_object('text', $2::text, 'split_of', id, 'part', 0)
-     where id = $1 and status = 'queued' returning id`,
-    [row.id, parts[0]]
+    `update outbox set body = $2::jsonb where id = $1 and status = 'queued' returning id`,
+    [row.id, JSON.stringify(bodies[0])]
   );
   if (updated.length === 0) return;
-  for (let i = 1; i < parts.length; i++) {
+  for (let i = 1; i < bodies.length; i++) {
     await enqueue({
       zaloAccountId: account,
       threadId: row.thread_id,
       threadType: row.thread_type,
       kind: 'text',
-      body: { ...row.body, text: parts[i], split_of: row.id, part: i },
+      body: bodies[i]!,
     });
   }
 }
 
-/** Lich su gui gan day de pacer khoi dong lai khong "quen" gioi han. outbox
- * khong co cot `sent_at` ⇒ dung `created_at` (xap xi). */
-export async function recentSent(account: AccountId, windowMs: number): Promise<Array<{ at: number; threadId: string }>> {
-  const rows = await sql<{ at: string; thread_id: string }>(
-    `select created_at::text as at, thread_id from outbox
+/** Lich su gui gan day de pacer khoi dong lai khong "quen" gioi han. Dung `sent_at`
+ * (co tu 007), roi ve `created_at` cho dong cu. */
+export async function recentSent(
+  account: AccountId,
+  windowMs: number
+): Promise<Array<{ at: number; threadId: string; isGroup: boolean }>> {
+  const rows = await sql<{ at: string; thread_id: string; thread_type: string }>(
+    `select coalesce(sent_at, created_at)::text as at, thread_id, thread_type from outbox
      where zalo_account_id = $1 and status = 'sent' and kind = 'text'
-       and created_at > now() - ($2 || ' milliseconds')::interval
-     order by created_at`,
+       and coalesce(sent_at, created_at) > now() - ($2 || ' milliseconds')::interval
+     order by coalesce(sent_at, created_at)`,
     [account, String(windowMs)]
   );
-  return rows.map((r) => ({ at: new Date(r.at).getTime(), threadId: r.thread_id }));
+  return rows.map((r) => ({ at: new Date(r.at).getTime(), threadId: r.thread_id, isGroup: r.thread_type === 'group' }));
+}
+
+// ---------------------------------------------------------------- nhom (SPEC-P02 §4–§5)
+
+/** So tin text da gui (hoac dang gui) vao mot nhom trong 1 gio den `nowMs` — cau SQL
+ * 01-CONTRACTS §8.4 (da do `evidence/ARCH/db-checks.txt` (c)). */
+export async function groupTextSentLastHour(account: AccountId, threadId: string, nowMs: number): Promise<number> {
+  const rows = await sql<{ c: number }>(
+    `select count(*)::int as c from outbox
+     where zalo_account_id = $1 and thread_id = $2 and kind = 'text' and status in ('sent','sending')
+       and coalesce(sent_at, created_at) > $3::timestamptz - interval '1 hour'`,
+    [account, threadId, new Date(nowMs)]
+  );
+  return rows[0]?.c ?? 0;
+}
+
+/** `zalo_groups.budget_per_hour`; `null` khi nhom khong co dong (⇒ pacer khong gui, `group_unknown`). */
+export async function groupBudget(account: AccountId, threadId: string): Promise<number | null> {
+  const rows = await sql<{ budget_per_hour: number }>(
+    `select budget_per_hour from zalo_groups where zalo_account_id = $1 and thread_id = $2`,
+    [account, threadId]
+  );
+  return rows[0] ? rows[0].budget_per_hour : null;
+}
+
+/** Sau khi gui text nhom thanh cong: dong dem do core chen truoc (`zalo_msg_id='out-<outbox_id>'`)
+ * nhan msgId that — de xoa/quote tin cua chinh bot (SPEC-P02 §4.3). Khong co dong ⇒ 0 (khong sao). */
+export async function linkSentGroupMessage(outboxId: number, msgId: string): Promise<number> {
+  const rows = await sql<{ id: number }>(
+    `update group_messages g set zalo_msg_id = $2
+     where g.zalo_msg_id = 'out-' || $1::text
+       and not exists (
+         select 1 from group_messages x where x.zalo_account_id = g.zalo_account_id and x.zalo_msg_id = $2
+       )
+     returning g.id`,
+    [outboxId, msgId]
+  );
+  return rows.length;
+}
+
+/** Zalo tra 166 (thieu quyen): dat `bot_is_admin=false` cho nhom (SPEC-P02 §4.2). */
+export async function markBotNotAdmin(account: AccountId, threadId: string): Promise<void> {
+  await sql(
+    `update zalo_groups set bot_is_admin = false, updated_at = now() where zalo_account_id = $1 and thread_id = $2`,
+    [account, threadId]
+  );
+}
+
+/** `approvals` approved ⇒ executed | failed (01-CONTRACTS §5.1). Chuyen trang thai co dieu kien
+ * `status='approved'`: khong khop ⇒ tra false (khong ghi de). Audit `approval.<to>`. */
+export async function completeApproval(approvalId: string, ok: boolean, result: Record<string, unknown>): Promise<boolean> {
+  const to = ok ? 'executed' : 'failed';
+  const rows = await sql<{ id: string }>(
+    `update approvals set status = $2, executed_at = now(), result = $3::jsonb
+     where id = $1::uuid and status = 'approved' returning id`,
+    [approvalId, to, JSON.stringify(result)]
+  );
+  if (rows.length === 0) return false;
+  await audit(sql, {
+    actorType: 'system',
+    actorId: 'zalo-worker',
+    action: `approval.${to}`,
+    target: approvalId,
+    data: { ok },
+  });
+  return true;
+}
+
+export interface GroupSyncResult {
+  name: string;
+  adminIds: string[];
+  creatorId: string;
+  members: Array<{ uid: string; displayName: string }>;
+  total: number;
+}
+
+/** Ket qua `sync_group_info` ⇒ DB (SPEC-P02 §4.2): upsert `zalo_groups` (ten, `bot_is_admin`,
+ * `last_synced_at`), upsert `group_members` (con trong danh sach ⇒ `left_at=null`; admin ⇒
+ * `moderator`, KHONG ha vai), thanh vien khong con trong danh sach ⇒ `left_at=now()`. */
+export async function applyGroupSync(
+  account: AccountId,
+  groupId: string,
+  result: GroupSyncResult,
+  ownUid: string
+): Promise<{ botIsAdmin: boolean }> {
+  const botIsAdmin = result.adminIds.includes(ownUid) || result.creatorId === ownUid;
+  await tx(async (q) => {
+    await q(
+      `insert into zalo_groups (zalo_account_id, thread_id, name, bot_is_admin, last_synced_at)
+       values ($1, $2, $3, $4, now())
+       on conflict (zalo_account_id, thread_id) do update
+         set name = coalesce(nullif(excluded.name, ''), zalo_groups.name),
+             bot_is_admin = excluded.bot_is_admin, last_synced_at = now(), updated_at = now()`,
+      [account, groupId, result.name, botIsAdmin]
+    );
+    if (result.members.length === 0) return;
+    const uids = result.members.map((m) => m.uid);
+    const roles = result.members.map((m) => (result.adminIds.includes(m.uid) ? 'moderator' : 'member'));
+    const names = result.members.map((m) => m.displayName);
+    await q(
+      `insert into group_members (zalo_account_id, thread_id, zalo_uid, role, display_name)
+       select $1, $2, t.u, t.r, nullif(t.n, '') from unnest($3::text[], $4::text[], $5::text[]) as t(u, r, n)
+       on conflict (zalo_account_id, thread_id, zalo_uid) do update
+         set left_at = null,
+             display_name = coalesce(excluded.display_name, group_members.display_name),
+             role = case when excluded.role = 'moderator' then 'moderator' else group_members.role end`,
+      [account, groupId, uids, roles, names]
+    );
+    await q(
+      `update group_members set left_at = now()
+       where zalo_account_id = $1 and thread_id = $2 and left_at is null and zalo_uid <> all($3::text[])`,
+      [account, groupId, uids]
+    );
+  });
+  return { botIsAdmin };
+}
+
+/** Audit hanh dong quan tri (BB-09): KHONG ghi noi dung — chi ten hanh dong, thread, ket qua, ma. */
+export async function auditAction(
+  action: 'zalo.action' | 'zalo.action_failed',
+  data: { action: string; thread: string; ok: boolean; code: number | string | null }
+): Promise<void> {
+  await audit(sql, { actorType: 'system', actorId: 'zalo-worker', action, target: data.thread, data });
+}
+
+/** Audit su kien pacer (huy vi ngan sach/nhom la): khong ghi noi dung. */
+export async function auditPacer(action: string, threadId: string, data: Record<string, unknown> = {}): Promise<void> {
+  await audit(sql, { actorType: 'system', actorId: 'zalo-worker', action, target: threadId, data });
 }

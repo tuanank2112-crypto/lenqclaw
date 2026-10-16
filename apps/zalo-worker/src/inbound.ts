@@ -1,13 +1,15 @@
-// apps/zalo-worker/src/inbound.ts — luong vao (SPEC-P02 §3, §9.1). Worker
+// apps/zalo-worker/src/inbound.ts — luong vao (SPEC-P02 ke hoach 02 §2). Worker
 // KHONG co logic nghiep vu: chi chuan hoa ⇒ ghi inbound_events (chong trung),
-// danh dau tiep quan khi nhan vien gui tay, hen "da xem" SAU buoc nhan dien.
+// danh dau tiep quan khi nhan vien gui tay (CHI DM), hen "da xem" SAU buoc nhan
+// dien (CHI thread user). Tin nhom + su kien nhom ghi nguyen ven cho core (cong
+// nhan tin o core, KHONG o day).
 
 import type { AccountId, PacerConfig } from './config.js';
-import type { ZaloInboundMessage, ZaloUndoEvent } from './client.js';
+import type { ZaloGroupEvent, ZaloInboundMessage, ZaloUndoEvent } from './client.js';
 import { seenDelayMs } from './pacer-policy.js';
 import * as store from './store.js';
 
-/** Ten loai tin (tieng Viet co dau) cho noi dung thay the §9.1. */
+/** Ten loai tin (tieng Viet co dau) cho noi dung thay the §2.1. */
 const TYPE_LABELS: Record<string, string> = {
   'chat.photo': 'ảnh',
   'chat.gif': 'ảnh GIF',
@@ -25,32 +27,40 @@ export function unsupportedLabel(msgType: string): string {
   return TYPE_LABELS[msgType] ?? 'tin nhắn loại khác';
 }
 
-/** Noi dung core nhan cho tin khong phai text (§9.1). */
+/** Noi dung core nhan cho tin khong phai text (§2.1): `<ai>` = "thành viên". */
 export function unsupportedText(msgType: string): string {
-  return `[cư dân gửi ${unsupportedLabel(msgType)} — chưa hỗ trợ]`;
+  return `[thành viên gửi ${unsupportedLabel(msgType)} — chưa hỗ trợ]`;
 }
 
-/** Tin text = `content` la chuoi (msgType 'webchat'); con lai ⇒ thay the. */
+/** Payload `inbound_events` theo 01-CONTRACTS §8.2. Tin text = `content` la chuoi;
+ * con lai ⇒ `unsupported`. `mentions` luon la mang (rong khi khong co). */
 export function buildPayload(m: ZaloInboundMessage): Record<string, unknown> {
   if (typeof m.content === 'string') {
-    return { text: m.content, kind: 'text', msg_type: m.msgType, ts: m.ts, raw: m.raw };
+    return {
+      kind: 'text',
+      text: m.content,
+      msg_type: m.msgType,
+      ts: m.ts,
+      cli_msg_id: m.cliMsgId,
+      d_name: m.dName,
+      mentions: m.mentions ?? [],
+      quote: m.quote ? { owner_id: String(m.quote.ownerId), global_msg_id: String(m.quote.globalMsgId), msg: m.quote.msg } : null,
+      raw: m.raw,
+    };
   }
   return {
+    kind: 'unsupported',
     text: unsupportedText(m.msgType),
-    kind: unsupportedLabel(m.msgType),
     unsupported: true,
     msg_type: m.msgType,
     ts: m.ts,
+    cli_msg_id: m.cliMsgId,
+    d_name: m.dName,
     raw: m.raw,
   };
 }
 
-export type InboundOutcome =
-  | 'inserted'
-  | 'duplicate'
-  | 'self_bot_echo'
-  | 'self_staff_takeover'
-  | 'ignored_group';
+export type InboundOutcome = 'inserted' | 'duplicate' | 'self_bot_echo' | 'self_staff_takeover' | 'group_inserted';
 
 export interface InboundDeps {
   now?: () => number;
@@ -65,9 +75,7 @@ export async function handleInbound(
   deps: InboundDeps = {}
 ): Promise<InboundOutcome> {
   const now = deps.now ?? Date.now;
-  // P01: worker chi nhan thread `user`; tin nhom do P02 (SPEC-P02) lam ⇒ chua luu.
-  if (m.threadType === 'group') return 'ignored_group';
-
+  const isGroup = m.threadType === 'group';
   const payload = buildPayload(m);
 
   if (m.isSelf) {
@@ -85,6 +93,8 @@ export async function handleInbound(
     });
     if (id === null) return 'duplicate';
     if (fromBot) return 'self_bot_echo';
+    // Nhom la khong gian chung: chu go tay trong nhom KHONG lam bot im (SPEC-P02 §2.1, Q4 tam).
+    if (isGroup) return 'group_inserted';
     await store.setStaffTakeover(account, m.threadId);
     return 'self_staff_takeover';
   }
@@ -100,8 +110,9 @@ export async function handleInbound(
     markProcessed: false,
   });
   if (id === null) return 'duplicate';
+  if (isGroup) return 'group_inserted'; // nhom KHONG gui "da xem" (vung cam §8)
 
-  // "Da xem" CHI cho nguoi da nhan dien (§3.6, §5) — tre seenMin..seenMax.
+  // "Da xem" CHI cho nguoi da nhan dien — thread user, tre seenMin..seenMax.
   if (await store.isIdentified(account, m.senderUid)) {
     const at = new Date(now() + seenDelayMs(cfg, deps.rng));
     await store.enqueueSeen(account, m.threadId, m.seen as unknown as Record<string, unknown>, at);
@@ -111,4 +122,69 @@ export async function handleInbound(
 
 export async function handleUndo(account: AccountId, u: ZaloUndoEvent): Promise<number> {
   return store.markUndone(account, u.undoneMsgId);
+}
+
+/** Loai su kien nhom DUOC GHI (§2.2). Loai khac (new_link, *_pin_topic, *_board, *_remind*,
+ * update_avatar, block_member, unknown) ⇒ khong ghi. */
+export const RECORDED_GROUP_EVENTS: ReadonlySet<string> = new Set([
+  'join',
+  'join_request',
+  'leave',
+  'remove_member',
+  'add_admin',
+  'remove_admin',
+  'update_setting',
+  'update',
+]);
+
+export type GroupEventOutcome = 'group_event_inserted' | 'duplicate' | 'ignored_event';
+
+/** `zalo_msg_id` cua su kien nhom: chong trung khi reconnect phat lai (§2.2). */
+export function groupEventMsgId(ev: ZaloGroupEvent): string {
+  return `gev-${ev.groupId}-${ev.event}-${ev.time}`;
+}
+
+/** Dong `inbound_events` cho su kien nhom (01-CONTRACTS §8.2 `group_event`), hoac `null`
+ * khi loai su kien khong duoc ghi. THUAN — test khong can DB. */
+export function buildGroupEventRecord(ev: ZaloGroupEvent): {
+  msgId: string;
+  threadId: string;
+  senderUid: string;
+  isSelf: boolean;
+  payload: Record<string, unknown>;
+} | null {
+  if (!RECORDED_GROUP_EVENTS.has(ev.event)) return null;
+  return {
+    msgId: groupEventMsgId(ev),
+    threadId: ev.groupId,
+    senderUid: ev.sourceUid ?? 'zalo',
+    isSelf: ev.isSelf,
+    payload: {
+      kind: 'group_event',
+      event: ev.event,
+      uids: ev.uids,
+      names: ev.names,
+      source_uid: ev.sourceUid,
+      group_name: ev.groupName,
+      time: ev.time,
+      raw: ev.raw,
+    },
+  };
+}
+
+/** Su kien nhom ⇒ `inbound_events` (`ON CONFLICT DO NOTHING` — reconnect phat lai khong tao dong thua). */
+export async function handleGroupEvent(account: AccountId, ev: ZaloGroupEvent): Promise<GroupEventOutcome> {
+  const rec = buildGroupEventRecord(ev);
+  if (rec === null) return 'ignored_event';
+  const id = await store.insertInbound({
+    account,
+    msgId: rec.msgId,
+    threadId: rec.threadId,
+    threadType: 'group',
+    senderUid: rec.senderUid,
+    isSelf: rec.isSelf,
+    payload: rec.payload,
+    markProcessed: false,
+  });
+  return id === null ? 'duplicate' : 'group_event_inserted';
 }

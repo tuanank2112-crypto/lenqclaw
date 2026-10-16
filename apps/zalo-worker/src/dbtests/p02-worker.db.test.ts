@@ -97,20 +97,20 @@ describe('luong vao (§3, §8, §9.1)', () => {
       `select payload, processed_at, is_self from inbound_events where zalo_account_id='community' and zalo_msg_id=$1`,
       [m.msgId]
     );
-    expect(r[0]!.payload.text).toBe('[cư dân gửi ảnh — chưa hỗ trợ]');
+    expect(r[0]!.payload.text).toBe('[thành viên gửi ảnh — chưa hỗ trợ]');
     expect((r[0]!.payload.raw as Record<string, unknown>).msgType).toBe('chat.photo');
     expect(r[0]!.processed_at).toBeNull();
     expect(r[0]!.is_self).toBe(false);
     await s.stop();
   });
 
-  it('tin nhom ⇒ chua luu (nhom do P02 lam)', async () => {
+  it('tin nhom ⇒ luu inbound_events (thread_type=group), khong hen "da xem" (P02 ke hoach 02)', async () => {
     const { s, fake } = await connectedSession();
     const m = fakeMessage({ threadId: uid('g'), threadType: 'group' });
     fake.emitMessage(m);
     await s.idle();
-    const r = await sql(`select 1 from inbound_events where zalo_msg_id=$1`, [m.msgId]);
-    expect(r.length).toBe(0);
+    const r = await sql<{ thread_type: string }>(`select thread_type from inbound_events where zalo_msg_id=$1`, [m.msgId]);
+    expect(r.map((x) => x.thread_type)).toEqual(['group']);
     await s.stop();
   });
 
@@ -459,12 +459,14 @@ describe('pacer tren DB (§5, §8)', () => {
     await s.stop();
   });
 
-  it('tin vao nhom ⇒ cancelled (CAM gui vao nhom, §9.6)', async () => {
-    const { s } = await connectedSession();
+  it('tin vao nhom chua khai trong zalo_groups ⇒ cancelled (group_unknown), KHONG gui (P02 ke hoach 02 §5)', async () => {
+    const { s, fake } = await connectedSession();
     const id = await enqueueId({ zaloAccountId: 'community', threadId: uid('g'), threadType: 'group', kind: 'text', body: { text: 'A' } });
     const pacer = new AccountPacer('community', FAST, () => s.getSession());
     await pacer.tick();
-    expect((await sql<{ status: string }>(`select status from outbox where id=$1`, [id]))[0]!.status).toBe('cancelled');
+    const row = await sql<{ status: string; reason: string }>(`select status, body->>'cancel_reason' as reason from outbox where id=$1`, [id]);
+    expect(row[0]).toEqual({ status: 'cancelled', reason: 'group_unknown' });
+    expect(fake.sent.filter((x) => x.kind === 'text')).toEqual([]);
     await s.stop();
   });
 });

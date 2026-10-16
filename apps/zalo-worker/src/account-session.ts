@@ -11,9 +11,10 @@ import {
   type ZaloClientLike,
   type ZaloInboundMessage,
   type ZaloSessionLike,
+  type ZaloGroupEvent,
   type ZaloUndoEvent,
 } from './client.js';
-import { handleInbound, handleUndo } from './inbound.js';
+import { handleGroupEvent, handleInbound, handleUndo } from './inbound.js';
 import { errSummary, logEvent } from './log.js';
 import * as store from './store.js';
 import {
@@ -118,6 +119,9 @@ export class AccountSession {
       message: (m) => {
         if (myEpoch === this.epoch) this.track(this.onMessage(m));
       },
+      groupEvent: (ev) => {
+        if (myEpoch === this.epoch) this.track(this.onGroupEvent(ev));
+      },
       undo: (u) => {
         if (myEpoch === this.epoch) this.track(this.onUndo(u));
       },
@@ -157,6 +161,13 @@ export class AccountSession {
     await store.touchEvent(this.account);
     const outcome = await handleInbound(this.account, m, this.cfg, { now: this.now, rng: this.rng });
     logEvent('zalo.inbound', { account: this.account, outcome, msg_type: m.msgType });
+  }
+
+  private async onGroupEvent(ev: ZaloGroupEvent): Promise<void> {
+    this.lastEventAt = this.now();
+    await store.touchEvent(this.account);
+    const outcome = await handleGroupEvent(this.account, ev);
+    logEvent('zalo.group_event', { account: this.account, outcome, event: ev.event });
   }
 
   private async onUndo(u: ZaloUndoEvent): Promise<void> {

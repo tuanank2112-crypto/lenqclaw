@@ -3,6 +3,8 @@
 import { describe, expect, it } from 'vitest';
 import { PACER_DEFAULTS } from './config.js';
 import {
+  BUDGET_WINDOW_MS,
+  mentionsForFirstChunk,
   PacerPolicy,
   pickNext,
   seededRng,
@@ -114,5 +116,68 @@ describe('tach tin / tre', () => {
         PACER_DEFAULTS
       ).map((v) => v.rule)
     ).toEqual(['thread_gap']);
+  });
+});
+
+// ---- ca moi P02 (ke hoach 02, SPEC-P02 §5, §10 hang 1) ----
+
+describe('pacer nhom + ngan sach (BB-08)', () => {
+  const hundred = Array.from({ length: 100 }, () => 'sim-group-1');
+  for (const seed of [1, 2, 7, 2026]) {
+    it(`seed ${seed}: 100 tin / 1 nhom, ngan sach 20/gio ⇒ first_hour=20, min_gap >= 8000, 0 vi pham`, () => {
+      const r = simulatePacer(hundred, PACER_DEFAULTS, seededRng(seed), undefined, { budgetPerHour: 20 });
+      expect(r.log.length).toBe(100);
+      expect(r.log.filter((e) => e.at < BUDGET_WINDOW_MS).length).toBe(20);
+      let minGap = Infinity;
+      for (let i = 1; i < r.log.length; i++) minGap = Math.min(minGap, r.log[i]!.at - r.log[i - 1]!.at);
+      expect(minGap).toBeGreaterThanOrEqual(8000);
+      expect(r.violations).toEqual([]);
+      expect(verifySendLog(r.log, PACER_DEFAULTS, { budgetPerHour: 20 })).toEqual([]);
+    });
+  }
+
+  it('bo kiem DO khi khong gioi han: group_gap va group_budget', () => {
+    const naive = () => ({ pick: (_now: number, q: { id: number; threadId: string }[]) => q[0] ?? null, record: () => {} });
+    const r = simulatePacer(hundred.slice(0, 40), PACER_DEFAULTS, seededRng(1), naive, { budgetPerHour: 20 });
+    const rules = new Set(r.violations.map((v) => v.rule));
+    expect(rules.has('group_gap')).toBe(true);
+    expect(rules.has('group_budget')).toBe(true);
+  });
+
+  it('khoang cach nhom = groupGapMs + jitter [0, groupJitterMs]; DM giu 3 s', () => {
+    const p = new PacerPolicy(PACER_DEFAULTS, () => 0.5);
+    p.record(0, 'g', true);
+    p.record(0, 'u', false);
+    expect(p.check(8000, 'g', true)).toEqual({ ok: false, reason: 'group_gap' }); // 8000 + 1500
+    expect(p.check(9499, 'g', true)).toEqual({ ok: false, reason: 'group_gap' });
+    expect(p.check(9500, 'g', true).ok).toBe(true);
+    expect(p.check(4000, 'u', false).ok).toBe(true); // 3000 + 1000
+  });
+
+  it('nhom KHONG tinh vao recipients (15 nguoi nhan DM van con cho)', () => {
+    const p = new PacerPolicy({ ...PACER_DEFAULTS, maxPerMinute: 99 }, () => 0);
+    for (let i = 0; i < 20; i++) p.record(i * 100, `sim-group-${i}`, true);
+    expect(p.check(5000, 'u-new', false).ok).toBe(true);
+  });
+
+  it('action tinh maxPerMinute nhung khong tinh recipients / gian cach', () => {
+    const p = new PacerPolicy({ ...PACER_DEFAULTS, maxPerMinute: 2 }, () => 0);
+    p.recordAction(0, 'g');
+    p.recordAction(1000, 'g');
+    expect(p.checkAction(2000)).toEqual({ ok: false, reason: 'per_minute' });
+    expect(p.check(2000, 'g', true)).toEqual({ ok: false, reason: 'per_minute' });
+    expect(p.checkAction(61_000).ok).toBe(true);
+    expect(p.check(61_000, 'g', true).ok).toBe(true); // action khong dat gian cach
+  });
+
+  it('mentionsForFirstChunk: chi giu mention nam tron trong doan dau, doi pos', () => {
+    const text = '  @An xin chào cả nhà @Bích';
+    const chunk0 = '@An xin chào'; // sau khi cat + trim
+    const m = [
+      { uid: 'an', pos: 2, len: 3 },
+      { uid: 'bich', pos: 21, len: 5 },
+    ];
+    expect(mentionsForFirstChunk(text, chunk0, m)).toEqual([{ uid: 'an', pos: 0, len: 3 }]);
+    expect(mentionsForFirstChunk(text, 'khong co trong text', m)).toEqual([]);
   });
 });
