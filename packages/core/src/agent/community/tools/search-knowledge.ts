@@ -2,10 +2,9 @@
 // len truy hoi lai). `extendsDeadline`: goi tool nay nang luot tuong tac tu lan fast len rag (D31).
 
 import { sql } from '../../../adapters/db.js';
-import { searchKnowledge } from '../../../retrieval/search-knowledge.js';
+import { buildQueryTokens, searchKnowledgeDetailed } from '../../../retrieval/search-knowledge.js';
 import { audit } from '../../../services/audit.js';
 import { readCommunityConfig } from '../../../services/community-config.js';
-import { buildQueryTokens } from '../../../retrieval/search-knowledge.js';
 import type { AgentTool, ToolDefinition } from './tool-kit.js';
 
 const MAX_TOP_K = 12;
@@ -46,18 +45,12 @@ export const searchKnowledgeTool: AgentTool<{ query: string; top_k?: number }> =
   async run(ctx, input) {
     const cfg = readCommunityConfig();
     const topK = Math.max(1, Math.min(input.top_k ?? cfg.kbTopK, MAX_TOP_K));
-    const hits = await searchKnowledge(input.query, topK);
-    const titles = new Map<string, string>();
-    if (hits.length > 0) {
-      const ids = [...new Set(hits.map((h) => h.documentId))];
-      const rows = await sql<{ id: string; title: string }>(`select id, title from kb_documents where id = any($1::text[])`, [ids]);
-      for (const r of rows) titles.set(r.id, r.title);
-    }
-    await audit(sql, { actorType: 'agent', actorId: ctx.requester?.uid ?? null, action: 'kb.search', target: ctx.threadId, data: { hits: hits.length, vector: false } });
+    const { hits, vectorUsed } = await searchKnowledgeDetailed(input.query, { topK, deadlineAt: ctx.deadlineAt });
+    await audit(sql, { actorType: 'agent', actorId: ctx.requester?.uid ?? null, action: 'kb.search', target: ctx.threadId, data: { hits: hits.length, vector: vectorUsed } });
     return {
       hits: hits.map((h) => ({
         document_id: h.documentId,
-        title: titles.get(h.documentId) ?? null,
+        title: h.title,
         section_id: h.sectionId,
         heading: h.heading,
         quote: excerptAround(h.body, input.query),

@@ -54,15 +54,20 @@ describe('/api/dev/sim/tick (db)', () => {
     expect((await simTick(await req('http://localhost/api/dev/sim/tick', 'operator', {}))).status).toBe(403);
   });
 
-  it('admin ⇒ 200, timers tra steps (flushAmbient, pruneBuffers) + delivered la so; now sai dinh dang ⇒ 400', async () => {
+  it('admin ⇒ 200, timers tra steps (flushAmbient, pickUnanswered, pruneBuffers, embedPending) + delivered la so; now sai dinh dang ⇒ 400', async () => {
     process.env.DATA_MODE = 'sim';
     const res = await simTick(
       await req('http://localhost/api/dev/sim/tick', 'admin', { now: new Date().toISOString() })
     );
     expect(res.status).toBe(200);
     const body = await res.json();
-    // P03: runTimers co 2 buoc thuc (flushAmbient, pruneBuffers) — moi buoc tra so muc da xu ly.
-    expect(body.steps).toEqual({ flushAmbient: expect.any(Number), pruneBuffers: expect.any(Number) });
+    // P03 + P04: runTimers co 4 buoc thuc (flushAmbient, pickUnanswered, pruneBuffers, embedPending) — moi buoc tra so muc da xu ly.
+    expect(body.steps).toEqual({
+      flushAmbient: expect.any(Number),
+      pickUnanswered: expect.any(Number),
+      pruneBuffers: expect.any(Number),
+      embedPending: expect.any(Number),
+    });
     expect(typeof body.delivered).toBe('number');
 
     const bad = await simTick(await req('http://localhost/api/dev/sim/tick', 'admin', { now: 'khong-phai-ngay' }));

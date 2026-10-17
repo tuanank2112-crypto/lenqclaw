@@ -4,8 +4,8 @@
 // dang Anthropic o dau vao (§2 giu nguyen chu ky).
 import type { ContentBlockParam, MessageParam, Tool } from '@anthropic-ai/sdk/resources/messages';
 import { afterEach, describe, expect, it } from 'vitest';
-import { ModelUnavailableError } from '../domain/errors.js';
-import { callModel, setGeminiFetchForTest } from './model.js';
+import { EmbeddingUnavailableError, ModelUnavailableError } from '../domain/errors.js';
+import { callModel, embedTexts, setEmbedFetchForTest, setEmbedRetryDelaysForTest, setGeminiFetchForTest } from './model.js';
 
 function jsonResponse(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -216,5 +216,162 @@ describe('callModel — nhanh gemini (01-CONTRACTS §2b)', () => {
 
     const result = await callModel({ route: 'community', system: 'he thong', messages: [{ role: 'user', content: 'hi' }] });
     expect(result.model).toBe('gemini-default-check');
+  });
+});
+
+describe('embedTexts (SPEC-P04 §8 hang 2, 01-CONTRACTS §2.2)', () => {
+  const vec = (n: number): number[] => Array.from({ length: 1024 }, (_, i) => (i === n ? 1 : 0));
+  const ok = (count: number): Response => jsonResponse(200, { embeddings: Array.from({ length: count }, (_, i) => ({ values: vec(i) })) });
+
+  afterEach(() => {
+    setEmbedFetchForTest(null);
+    setEmbedRetryDelaysForTest(null);
+    delete process.env.GEMINI_API_KEY;
+    delete process.env.EMBED_PROVIDER;
+  });
+
+  it('dich body batchEmbedContents dung: model, content, taskType, outputDimensionality 1024; key o header', async () => {
+    process.env.GEMINI_API_KEY = 'embed-key-1';
+    const calls: Array<{ url: string; headers: Record<string, string>; body: { requests: Array<Record<string, unknown>> } }> = [];
+    setEmbedFetchForTest(async (input, init) => {
+      calls.push({ url: String(input), headers: init?.headers as Record<string, string>, body: JSON.parse(String(init?.body)) });
+      return ok(2);
+    });
+    const r = await embedTexts(['xin chao', 'tam biet'], { taskType: 'RETRIEVAL_QUERY' });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]!.url).toMatch(/^https:\/\/[^/]+\/v1beta\/models\/gemini-embedding-001:batchEmbedContents$/);
+    expect(calls[0]!.url).not.toContain('embed-key-1');
+    expect(calls[0]!.headers['x-goog-api-key']).toBe('embed-key-1');
+    expect(calls[0]!.body.requests).toEqual([
+      { model: 'models/gemini-embedding-001', content: { parts: [{ text: 'xin chao' }] }, taskType: 'RETRIEVAL_QUERY', outputDimensionality: 1024 },
+      { model: 'models/gemini-embedding-001', content: { parts: [{ text: 'tam biet' }] }, taskType: 'RETRIEVAL_QUERY', outputDimensionality: 1024 },
+    ]);
+    expect(r.vectors).toHaveLength(2);
+    expect(r.dim).toBe(1024);
+    expect(r.model).toBe('gemini-embedding-001');
+  });
+
+  it('taskType mac dinh RETRIEVAL_DOCUMENT; 0 text ⇒ 0 fetch', async () => {
+    process.env.GEMINI_API_KEY = 'k';
+    let n = 0;
+    let task: unknown;
+    setEmbedFetchForTest(async (_u, init) => {
+      n++;
+      task = (JSON.parse(String(init?.body)) as { requests: Array<{ taskType: string }> }).requests[0]!.taskType;
+      return ok(1);
+    });
+    expect((await embedTexts([])).vectors).toEqual([]);
+    expect(n).toBe(0);
+    await embedTexts(['a']);
+    expect(task).toBe('RETRIEVAL_DOCUMENT');
+  });
+
+  it('chia batch 100: 230 text ⇒ 3 lan goi (100/100/30), giu thu tu vector', async () => {
+    process.env.GEMINI_API_KEY = 'k';
+    const sizes: number[] = [];
+    setEmbedFetchForTest(async (_u, init) => {
+      const n = (JSON.parse(String(init?.body)) as { requests: unknown[] }).requests.length;
+      sizes.push(n);
+      return ok(n);
+    });
+    const r = await embedTexts(Array.from({ length: 230 }, (_, i) => `t${i}`));
+    expect(sizes).toEqual([100, 100, 30]);
+    expect(r.vectors).toHaveLength(230);
+  });
+
+  it('503 ⇒ retry 2 lan (tong 3 lan goi) ⇒ EmbeddingUnavailableError; message khong chua key', async () => {
+    process.env.GEMINI_API_KEY = 'secret-embed-key';
+    setEmbedRetryDelaysForTest([1, 1]);
+    let n = 0;
+    setEmbedFetchForTest(async () => {
+      n++;
+      return new Response('boom', { status: 503 });
+    });
+    const err = await embedTexts(['a']).then(
+      () => null,
+      (e: unknown) => e
+    );
+    expect(err).toBeInstanceOf(EmbeddingUnavailableError);
+    expect((err as Error).message).not.toContain('secret-embed-key');
+    expect(n).toBe(3);
+  });
+
+  it('429 roi 200 ⇒ thanh cong sau 1 retry; 400 KHONG retry', async () => {
+    process.env.GEMINI_API_KEY = 'k';
+    setEmbedRetryDelaysForTest([1, 1]);
+    let n = 0;
+    setEmbedFetchForTest(async () => (++n === 1 ? new Response('x', { status: 429 }) : ok(1)));
+    expect((await embedTexts(['a'])).vectors).toHaveLength(1);
+    expect(n).toBe(2);
+    n = 0;
+    setEmbedFetchForTest(async () => {
+      n++;
+      return new Response('bad', { status: 400 });
+    });
+    await expect(embedTexts(['a'])).rejects.toBeInstanceOf(EmbeddingUnavailableError);
+    expect(n).toBe(1);
+  });
+
+  it('nhanh khong phai Gemini (openrouter / anthropic / vyce / none) ⇒ nem ngay, 0 fetch', async () => {
+    process.env.GEMINI_API_KEY = 'k';
+    let n = 0;
+    setEmbedFetchForTest(async () => {
+      n++;
+      return ok(1);
+    });
+    for (const p of ['openrouter', 'anthropic', 'vyce', 'none']) {
+      process.env.EMBED_PROVIDER = p;
+      await expect(embedTexts(['a'])).rejects.toBeInstanceOf(EmbeddingUnavailableError);
+    }
+    expect(n).toBe(0);
+  });
+
+  it('thieu GEMINI_API_KEY ⇒ nem ngay, 0 fetch', async () => {
+    let n = 0;
+    setEmbedFetchForTest(async () => {
+      n++;
+      return ok(1);
+    });
+    await expect(embedTexts(['a'])).rejects.toBeInstanceOf(EmbeddingUnavailableError);
+    expect(n).toBe(0);
+  });
+
+  it('deadlineAt da qua ⇒ nem, 0 fetch; con it gio ⇒ huy fetch bang AbortSignal (EmbeddingUnavailableError)', async () => {
+    process.env.GEMINI_API_KEY = 'k';
+    let n = 0;
+    setEmbedFetchForTest(
+      (_u, init) =>
+        new Promise<Response>((_res, rej) => {
+          n++;
+          init?.signal?.addEventListener('abort', () => rej(new Error('aborted')), { once: true });
+        })
+    );
+    await expect(embedTexts(['a'], { deadlineAt: Date.now() - 5 })).rejects.toBeInstanceOf(EmbeddingUnavailableError);
+    expect(n).toBe(0);
+    const t0 = Date.now();
+    await expect(embedTexts(['a'], { deadlineAt: Date.now() + 120 })).rejects.toBeInstanceOf(EmbeddingUnavailableError);
+    expect(Date.now() - t0).toBeLessThan(1000);
+    expect(n).toBe(1); // het gio ⇒ khong lui roi thu lai
+  });
+
+  it('vector sai so chieu (Q3) ⇒ EmbeddingUnavailableError, khong tra vector sai', async () => {
+    process.env.GEMINI_API_KEY = 'k';
+    setEmbedFetchForTest(async () => jsonResponse(200, { embeddings: [{ values: [0.1, 0.2] }] }));
+    await expect(embedTexts(['a'])).rejects.toBeInstanceOf(EmbeddingUnavailableError);
+  });
+
+  it('chong mang that: co fake model gemini ma chua cai fake embed ⇒ nem, 0 fetch', async () => {
+    process.env.GEMINI_API_KEY = 'k';
+    let n = 0;
+    setGeminiFetchForTest(async () => {
+      n++;
+      return ok(1);
+    });
+    try {
+      await expect(embedTexts(['a'])).rejects.toBeInstanceOf(EmbeddingUnavailableError);
+    } finally {
+      setGeminiFetchForTest(null);
+    }
+    expect(n).toBe(0);
   });
 });

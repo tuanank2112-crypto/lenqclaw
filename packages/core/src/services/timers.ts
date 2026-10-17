@@ -8,6 +8,7 @@ import { audit } from './audit.js';
 import { readCommunityConfig, type CommunityConfig } from './community-config.js';
 import { enqueueSystemEvent } from './system-events.js';
 import { checkOps } from './ops-watch.js';
+import { embedPending, pickUnanswered } from './knowledge.js';
 
 export interface TimerReport {
   /** Ten buoc → so muc da xu ly. */
@@ -139,10 +140,23 @@ export async function opsWatch(now: Date, cfg: CommunityConfig, ctx: TimerContex
   return rep.sent;
 }
 
+/** P07 §2: loi mot buoc ⇒ audit `timer.error {step}` + tiep buoc sau (ap cho cac buoc P04; buoc cu giu hanh vi cu). */
+async function safeStep(step: string, fn: () => Promise<number>): Promise<number> {
+  try {
+    return await fn();
+  } catch (err) {
+    await audit(sql, { actorType: 'system', actorId: null, action: 'timer.error', target: step, data: { step, error: err instanceof Error ? err.name : 'unknown' } }).catch(() => undefined);
+    return 0;
+  }
+}
+
+/** Thu tu theo SPEC-P07 §2: #2 flushAmbient · #4 pickUnanswered (P04 §5) · #8 pruneBuffers · #9 embedPending (P04 §1, <= 50 muc) · #13 opsWatch. */
 export async function runTimers(now: Date, cfg: CommunityConfig = readCommunityConfig(), ctx: TimerContext = {}): Promise<TimerReport> {
   const steps: Record<string, number> = {};
   steps.flushAmbient = await flushAmbient(now, cfg, ctx);
+  steps.pickUnanswered = await safeStep('pickUnanswered', () => pickUnanswered(now, cfg, ctx.busyThreads));
   steps.pruneBuffers = await pruneBuffers(now, cfg);
+  steps.embedPending = await safeStep('embedPending', () => embedPending(50, now));
   if (ctx.opsWatch) steps.opsWatch = await opsWatch(now, cfg, ctx);
   return { steps };
 }

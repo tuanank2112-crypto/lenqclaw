@@ -27,7 +27,7 @@ import type {
   Usage,
 } from '@anthropic-ai/sdk/resources/messages';
 import { sql } from './db.js';
-import { ModelDeadlineError, ModelUnavailableError } from '../domain/errors.js';
+import { EmbeddingUnavailableError, ModelDeadlineError, ModelUnavailableError } from '../domain/errors.js';
 import { readCommunityConfig } from '../services/community-config.js';
 
 // Re-export de noi khac (vd test) khong phai tu import "@anthropic-ai/sdk"
@@ -1206,3 +1206,125 @@ export async function callTriageModel(c: TriageModelCall): Promise<CallModelResu
 }
 
 export { DEFAULT_TRIAGE_TIMEOUT_MS };
+
+// ---------------------------------------------------------------------------
+// Embedding (SPEC-P04 §2, 01-CONTRACTS §2.2) — chi nhanh Gemini `batchEmbedContents`.
+// ---------------------------------------------------------------------------
+
+export interface EmbedResult {
+  vectors: number[][];
+  model: string;
+  dim: number;
+}
+
+export interface EmbedOpts {
+  taskType?: 'RETRIEVAL_DOCUMENT' | 'RETRIEVAL_QUERY';
+  /** D31: han chot (epoch ms). Moi lan thu: timeout = min(EMBED_TIMEOUT_MS, deadlineAt - now); het gio ⇒ EmbeddingUnavailableError. */
+  deadlineAt?: number;
+  /** Tran thoi gian MOI lan thu khi KHONG co `deadlineAt` (nhung tai lieu hang loat); mac dinh EMBED_TIMEOUT_MS. */
+  timeoutMs?: number;
+}
+
+const EMBED_BATCH = 100;
+let embedRetryDelaysMs: number[] = [1000, 3000];
+let testFetchEmbed: typeof fetch | null = null;
+
+/** Chi dung trong test: thay `fetch` that cua `embedTexts` bang fake (0 mang). `null` ⇒ go. */
+export function setEmbedFetchForTest(fake: typeof fetch | null): void {
+  testFetchEmbed = fake;
+}
+
+/** Chi dung trong test: doi bang lui retry (mac dinh 1 s, 3 s). */
+export function setEmbedRetryDelaysForTest(delays: number[] | null): void {
+  embedRetryDelaysMs = delays ?? [1000, 3000];
+}
+
+async function embedBatchOnce(url: string, apiKey: string, body: unknown, signal: AbortSignal): Promise<{ retryable: boolean; values?: number[][]; error?: string }> {
+  const fetchImpl = testFetchEmbed ?? fetch;
+  let res: Response;
+  try {
+    res = await fetchImpl(url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-goog-api-key': apiKey },
+      body: JSON.stringify(body),
+      signal,
+    });
+  } catch (err) {
+    return { retryable: true, error: `loi mang/timeout (${err instanceof Error ? err.name : 'unknown'})` };
+  }
+  if (!res.ok) {
+    return { retryable: res.status === 429 || res.status >= 500, error: `HTTP ${res.status}` };
+  }
+  try {
+    const json = (await res.json()) as { embeddings?: Array<{ values?: unknown }> };
+    const values = (json.embeddings ?? []).map((e) => e.values);
+    if (!values.every((v): v is number[] => Array.isArray(v) && v.every((x) => typeof x === 'number'))) {
+      return { retryable: false, error: 'phan hoi khong co embeddings[].values hop le' };
+    }
+    return { retryable: false, values };
+  } catch (err) {
+    return { retryable: true, error: `loi doc than phan hoi (${err instanceof Error ? err.name : 'unknown'})` };
+  }
+}
+
+/**
+ * `embedTexts(texts, opts)`: Gemini `batchEmbedContents`, `outputDimensionality = EMBED_DIM`, chia batch 100, retry 2 lan
+ * (429/5xx/mang/timeout; lui 1 s, 3 s). Moi that bai ⇒ `EmbeddingUnavailableError` (message KHONG chua key/noi dung).
+ * Nhanh khac Gemini (`EMBED_PROVIDER` ≠ 'gemini') hoac thieu `GEMINI_API_KEY` ⇒ nem NGAY, 0 fetch.
+ */
+export async function embedTexts(texts: string[], opts: EmbedOpts = {}): Promise<EmbedResult> {
+  const cfg = readCommunityConfig();
+  if (cfg.embedProvider !== 'gemini') {
+    throw new EmbeddingUnavailableError(`EMBED_PROVIDER='${cfg.embedProvider}' khong ho tro embedding.`);
+  }
+  const apiKey = process.env.GEMINI_API_KEY?.trim();
+  if (!apiKey) throw new EmbeddingUnavailableError('Thieu GEMINI_API_KEY cho embedding.');
+  // Chong goi mang that trong test: dang chay vitest, hoac da cai fake cho model (vd latency_slo) ma chua cai fake embed ⇒ khong fetch.
+  if (!testFetchEmbed && (process.env.VITEST || testFetch || triageTestFetch)) {
+    throw new EmbeddingUnavailableError('Moi truong test: chua cau hinh setEmbedFetchForTest — khong goi mang.');
+  }
+  if (texts.length === 0) return { vectors: [], model: cfg.embedModel, dim: cfg.embedDim };
+
+  const taskType = opts.taskType ?? 'RETRIEVAL_DOCUMENT';
+  const url = `${GEMINI_ENDPOINT_HOST}${encodeURIComponent(cfg.embedModel)}:batchEmbedContents`;
+  const attemptTimeout = (): number => {
+    let t = opts.timeoutMs ?? cfg.embedTimeoutMs;
+    if (opts.deadlineAt !== undefined) t = Math.min(opts.timeoutMs ?? cfg.embedTimeoutMs, opts.deadlineAt - Date.now());
+    return t;
+  };
+  const vectors: number[][] = [];
+  for (let i = 0; i < texts.length; i += EMBED_BATCH) {
+    const chunk = texts.slice(i, i + EMBED_BATCH);
+    const body = {
+      requests: chunk.map((t) => ({
+        model: `models/${cfg.embedModel}`,
+        content: { parts: [{ text: t }] },
+        taskType,
+        outputDimensionality: cfg.embedDim,
+      })),
+    };
+    let got: number[][] | null = null;
+    let lastErr = 'khong ro';
+    for (let attempt = 0; attempt <= embedRetryDelaysMs.length; attempt++) {
+      const timeout = attemptTimeout();
+      if (timeout <= 0) throw new EmbeddingUnavailableError('Het han chot, bo qua embedding.');
+      const r = await embedBatchOnce(url, apiKey, body, AbortSignal.timeout(timeout));
+      if (r.values) {
+        got = r.values;
+        break;
+      }
+      lastErr = r.error ?? lastErr;
+      if (!r.retryable || attempt === embedRetryDelaysMs.length) break;
+      const delay = embedRetryDelaysMs[attempt]!;
+      if (opts.deadlineAt !== undefined && opts.deadlineAt - (Date.now() + delay) <= 0) break;
+      await sleep(delay);
+    }
+    if (!got) throw new EmbeddingUnavailableError(`Embedding that bai: ${lastErr}.`);
+    if (got.length !== chunk.length) throw new EmbeddingUnavailableError('Embedding tra so vector khong khop so text.');
+    for (const v of got) {
+      if (v.length !== cfg.embedDim) throw new EmbeddingUnavailableError(`Vector ${v.length} chieu, cot can ${cfg.embedDim} (Q3 — dung, khong doi DDL).`);
+      vectors.push(v);
+    }
+  }
+  return { vectors, model: cfg.embedModel, dim: cfg.embedDim };
+}
