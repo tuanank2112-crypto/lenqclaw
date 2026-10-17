@@ -1,0 +1,66 @@
+=== M5 [nhom b] packages/core/src/agent/community/group-post.ts: host post cung bi chan ngan sach ⇒ mention het ngan sach 0 tin
+$ (packages/core) npx vitest run --config vitest.db.config.ts src/dbtests/p03-group-turn.db.test.ts
+exit=0
+      Tests  38 passed (38)
+restore: git checkout exit=0; status=""
+VERDICT M5: LOT (xanh)
+=== M8 [nhom c] packages/core/src/agent/community/graph/nodes/tools.ts: bo phong thu lop 2 trong node tools
+$ (packages/core) npx vitest run --config vitest.db.config.ts src/dbtests/p03-group-turn.db.test.ts
+exit=1
+   × P03 — luat trong tool / chinh sach > model goi tool bi cam (member doi mode) ⇒ is_error ToolNotAllowedError, mode khong doi, audit tool.denied 71ms
+     → expected 'ambient' to be 'mention' // Object.is equality
+      Tests  1 failed | 37 passed (38)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/dbtests/p03-group-turn.db.test.ts > P03 — luat trong tool / chinh sach > model goi tool bi cam (member doi mode) ⇒ is_error ToolNotAllowedError, mode khong doi, audit tool.denied
+AssertionError: expected 'ambient' to be 'mention' // Object.is equality
+restore: git checkout exit=0; status=""
+VERDICT M8: BAT DUOC (do)
+=== M9 [nhom c] packages/core/src/agent/community/graph/nodes/prepare.ts: BB-07: nap member_profiles.notes vao luot nhom
+$ (packages/core) npx vitest run --config vitest.db.config.ts src/dbtests/p03-group-turn.db.test.ts
+exit=1
+   × P03 — luat trong tool / chinh sach > BB-07: luot nhom khong nap ghi chu thanh vien (body fetch giu chuoi ghi chu ra ngoai) 73ms
+     → expected '{"systemInstruction":{"parts":[{"text…' not to contain 'BIMAT-x-38417a04'
+      Tests  1 failed | 37 passed (38)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/dbtests/p03-group-turn.db.test.ts > P03 — luat trong tool / chinh sach > BB-07: luot nhom khong nap ghi chu thanh vien (body fetch giu chuoi ghi chu ra ngoai)
+AssertionError: expected '{"systemInstruction":{"parts":[{"text…' not to contain 'BIMAT-x-38417a04'
+restore: git checkout exit=0; status=""
+VERDICT M9: BAT DUOC (do)
+=== M16 [nhom e] packages/core/src/runner/inbound-runner.ts: dispatcher khong loai thread dang chay
+$ (packages/core) npx vitest run --config vitest.db.config.ts src/dbtests/runner.db.test.ts
+exit=1
+   × runner song song theo thread (BB-19) > A1, A2 cung thread chay DUNG thu tu va KHONG chong nhau (du con o trong) 359ms
+     → expected 1792218387539 to be greater than or equal to 1792218387837
+   × runner song song theo thread (BB-19) > RUNNER_CONCURRENCY=1: thread khac phai cho (dieu kien nen cua ca do G23 serial) 8093ms
+   × runner song song theo thread (BB-19) > claimNextInbound(exclude): bo qua thread dang chay; thread co tin cu hon chua xu ly thi tin sau khong duoc nhan 25ms
+   × runner song song theo thread (BB-19) > dung em: abort cho luot dang chay xong (toi da RUNNER_DRAIN_MS) 131ms
+     → expected false to be true // Object.is equality
+      Tests  4 failed | 5 passed (9)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/dbtests/runner.db.test.ts > runner song song theo thread (BB-19) > A1, A2 cung thread chay DUNG thu tu va KHONG chong nhau (du con o trong)
+AssertionError: expected 1792218387539 to be greater than or equal to 1792218387837
+ FAIL  src/dbtests/runner.db.test.ts > runner song song theo thread (BB-19) > RUNNER_CONCURRENCY=1: thread khac phai cho (dieu kien nen cua ca do G23 serial)
+Error: until: het thoi gian cho
+restore: git checkout exit=0; status=""
+VERDICT M16: BAT DUOC (do)
+=== M17 [nhom e] packages/core/src/agent/community/graph/nodes/prepare.ts: han chot fast tinh tu luc bat dau luot thay vi received_at (SLO lech)
+$ (packages/core) npx vitest run --config vitest.db.config.ts src/dbtests/p03-group-turn.db.test.ts
+exit=0
+      Tests  38 passed (38)
+restore: git checkout exit=0; status=""
+VERDICT M17: LOT (xanh)
+=== M19 [nhom e] packages/core/src/agent/community/graph/nodes/triage.ts: tin goi bot van bi triage (D31 T3)
+$ (packages/core) npx vitest run --config vitest.db.config.ts src/dbtests/p03-group-turn.db.test.ts
+exit=1
+   × P03 — luot nhom > (b) tin GOI bot khong qua triage (D31 T3) 88ms
+     → expected 224 to be 223 // Object.is equality
+   × P03 — D31 toc do (BB-18): han chot, lan, typing som > (u) mention ⇒ search_knowledge ⇒ tra loi: lane=rag; typing TRUOC agent_runs dau tien; 0 triage cho tin do; outbox text mang inbound_event_id 96ms
+     → expected 4 to be null
+      Tests  2 failed | 36 passed (38)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/dbtests/p03-group-turn.db.test.ts > P03 — luot nhom > (b) tin GOI bot khong qua triage (D31 T3)
+AssertionError: expected 224 to be 223 // Object.is equality
+ FAIL  src/dbtests/p03-group-turn.db.test.ts > P03 — D31 toc do (BB-18): han chot, lan, typing som > (u) mention ⇒ search_knowledge ⇒ tra loi: lane=rag; typing TRUOC agent_runs dau tien; 0 triage cho tin do; outbox text mang inbound_event_id
+AssertionError: expected 4 to be null
+restore: git checkout exit=0; status=""
+VERDICT M19: BAT DUOC (do)

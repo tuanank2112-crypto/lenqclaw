@@ -1,0 +1,64 @@
+// node mutate.mjs <id> — ap dot bien <id> (thay chuoi CHINH XAC, phai khop dung 1 lan), chay lenh do, in exit code,
+// roi `git checkout -- <file>` va kiem file sach. Chay tu root repo.
+import { readFileSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+
+const CORE = 'packages/core';
+const unit = (f) => ({ cwd: CORE, cmd: `npx vitest run ${f}` });
+const db = (f) => ({ cwd: CORE, cmd: `npx vitest run --config vitest.db.config.ts ${f}` });
+const boundary = { cwd: '.', cmd: 'node scripts/check_adapter_boundary.mjs' };
+const tsc = { cwd: CORE, cmd: 'npx tsc --noEmit -p tsconfig.json' };
+
+const M = {
+  M1: { group: 'a', file: `${CORE}/src/agent/community/gate.ts`, from: "if (i.hasControlCommand && (i.role === 'owner' || i.role === 'moderator')) return 'owner_command';", to: "if (i.hasControlCommand) return 'owner_command';", why: 'lenh / khong kiem vai (member /mode ambient duoc nhan)', run: [unit('src/agent/community/gate.test.ts src/agent/community/graph/edges.test.ts')] },
+  M2: { group: 'a', file: `${CORE}/src/agent/community/persona.ts`, from: "return s.replace(/</g, '‹').replace(/>/g, '›');", to: 'return s;', why: 'bo thoat < > ⇒ pha khung <<<untrusted>>>', run: [unit('src/agent/community/persona.test.ts')] },
+  M4: { group: 'b', file: `${CORE}/src/agent/community/graph/edges.ts`, from: "  if (!t.request.mustReply) return { delivery: 'none', outcome: 'silent' }; // D9\n", to: '', why: 'bo D9 ⇒ text cuoi luot ambient bi dang', run: [unit('src/agent/community/graph/edges.test.ts')] },
+  M5: { group: 'b', file: `${CORE}/src/agent/community/group-post.ts`, from: "if (a.by === 'tool' && (await recentBotTextCount", to: 'if ((await recentBotTextCount', why: 'host post cung bi chan ngan sach ⇒ mention het ngan sach 0 tin', run: [db('src/dbtests/p03-group-turn.db.test.ts')] },
+  M7: { group: 'c', file: `${CORE}/src/agent/community/policy.ts`, from: "{ name: 'set_group_mode', surfaces: ['G', 'O'], roles: OWNER_MOD },", to: "{ name: 'set_group_mode', surfaces: ['G', 'O'], roles: 'any' },", why: 'member thay tool set_group_mode', run: [unit('src/agent/community/policy.test.ts')] },
+  M8: { group: 'c', file: `${CORE}/src/agent/community/graph/nodes/tools.ts`, from: '      assertToolAllowed(s.request.kind, role, use.name);\n', to: '', why: 'bo phong thu lop 2 trong node tools', run: [db('src/dbtests/p03-group-turn.db.test.ts')] },
+  M9: { group: 'c', file: `${CORE}/src/agent/community/graph/nodes/prepare.ts`, from: '  let extra: string | undefined;\n', to: "  let extra: string | undefined = req.requester ? ((await loadMemberContext(req.account, req.requester.uid)).notes ?? undefined) : undefined;\n", why: 'BB-07: nap member_profiles.notes vao luot nhom', run: [db('src/dbtests/p03-group-turn.db.test.ts')] },
+  M10: { group: 'd', file: `${CORE}/src/agent/community/graph/nodes/agent.ts`, from: "import { callModel } from '../../../../adapters/model.js';\n", to: "import { callModel } from '../../../../adapters/model.js';\nimport { postGroupText } from '../../group-post.js';\nvoid postGroupText;\n", why: 'node agent (outbox ✗) nap gian tiep ham ghi outbox', run: [boundary] },
+  M11: { group: 'd', file: `${CORE}/src/agent/community/graph/state.ts`, from: "import { Annotation } from '@langchain/langgraph';\n", to: "import { Annotation, messagesStateReducer } from '@langchain/langgraph';\nvoid messagesStateReducer;\n", why: 'import ten ngoai danh sach cho phep (§12.1) tu @langchain/langgraph', run: [boundary] },
+  M12: { group: 'd', file: `${CORE}/src/agent/community/graph/pipeline.ts`, from: 'export const PIPELINE_RECURSION_LIMIT = 10;\n', to: "export const PIPELINE_RECURSION_LIMIT = 10;\nconst CP = ['@langchain', 'langgraph-checkpoint'].join('/');\nvoid import(CP).catch(() => undefined);\n", why: 'import dong specifier khong phai literal (checkpoint)', run: [boundary] },
+  M13: { group: 'd', file: `${CORE}/src/agent/community/graph/turn.ts`, from: "    .addEdge('nudge', 'agent')\n", to: "    .addConditionalEdges('nudge', () => 'agent' as const, ['agent'])\n", why: 'doi canh co dinh nudge→agent thanh canh dieu kien', run: [unit('src/agent/community/graph/graph-shape.test.ts')] },
+  M14: { group: 'd', file: `${CORE}/src/agent/community/graph/edges.ts`, from: '    !t.nudged &&\n', to: '    !t.nudged &&\n    Date.now() > 0 &&\n', why: 'canh khong THUAN (Date.now trong needsNudge)', run: [unit('src/agent/community/graph/edges.test.ts'), boundary] },
+  M15: { group: 'e', file: `${CORE}/src/adapters/model.ts`, from: "      body: JSON.stringify(body),\n      ...(signal ? { signal } : {}),\n    });\n  } catch (err) {\n    throw new GeminiRetryableError", to: "      body: JSON.stringify(body),\n    });\n  } catch (err) {\n    throw new GeminiRetryableError", why: 'han chot KHONG huy fetch Gemini', run: [unit('src/adapters/model.deadline.test.ts')] },
+  M16: { group: 'e', file: `${CORE}/src/runner/inbound-runner.ts`, from: 'const e = await claimNextInbound([...inflight.keys()]);', to: 'const e = await claimNextInbound([]);', why: 'dispatcher khong loai thread dang chay', run: [db('src/dbtests/runner.db.test.ts')] },
+  M17: { group: 'e', file: `${CORE}/src/agent/community/graph/nodes/prepare.ts`, from: '  const { lane, deadlineAt } = initialDeadline(req, startedAt, {', to: '  const { lane, deadlineAt } = initialDeadline({ ...req, receivedAt: startedAt }, startedAt, {', why: 'han chot fast tinh tu luc bat dau luot thay vi received_at (SLO lech)', run: [db('src/dbtests/p03-group-turn.db.test.ts')] },
+  M19: { group: 'e', file: `${CORE}/src/agent/community/graph/nodes/triage.ts`, from: 'if (!needsTriage({ threadType: e.threadType, msgType, text, group: s.group, addressed })) {', to: 'if (!needsTriage({ threadType: e.threadType, msgType, text, group: s.group, addressed: false })) {', why: 'tin goi bot van bi triage (D31 T3)', run: [db('src/dbtests/p03-group-turn.db.test.ts')] },
+};
+
+const id = process.argv[2];
+const m = M[id];
+if (!m) {
+  console.error('unknown', id);
+  process.exit(2);
+}
+const src = readFileSync(m.file, 'utf8').replace(/\r\n/g, '\n');
+const n = src.split(m.from).length - 1;
+if (n !== 1) {
+  console.error(`MUTATION_NOT_APPLIED ${id}: khop ${n} lan`);
+  process.exit(2);
+}
+writeFileSync(m.file, src.replace(m.from, m.to));
+console.log(`=== ${id} [nhom ${m.group}] ${m.file}: ${m.why}`);
+const results = [];
+try {
+  for (const r of m.run) {
+    const p = spawnSync(r.cmd, { cwd: r.cwd, shell: true, encoding: 'utf8' });
+    const out = (p.stdout + p.stderr).replace(/\x1b\[[0-9;]*m/g, '');
+    const tail = out
+      .split('\n')
+      .filter((l) => /violations:|Tests |FAIL|✗|×|AssertionError|expected|Error:|node "|bi cam/.test(l))
+      .slice(0, 12)
+      .join('\n');
+    console.log(`$ (${r.cwd}) ${r.cmd}\nexit=${p.status}\n${tail}`);
+    results.push(p.status);
+  }
+} finally {
+  const co = spawnSync(`git checkout -- "${m.file}"`, { shell: true, encoding: 'utf8' });
+  const st = spawnSync(`git status --short -- "${m.file}"`, { shell: true, encoding: 'utf8' });
+  console.log(`restore: git checkout exit=${co.status}; status="${st.stdout.trim()}"`);
+}
+const caught = results.some((c) => c !== 0);
+console.log(`VERDICT ${id}: ${caught ? 'BAT DUOC (do)' : 'LOT (xanh)'}`);

@@ -1,0 +1,111 @@
+=== M1 [nhom a] packages/core/src/agent/community/gate.ts: lenh / khong kiem vai (member /mode ambient duoc nhan)
+$ (packages/core) npx vitest run src/agent/community/gate.test.ts src/agent/community/graph/edges.test.ts
+exit=1
+   × decideGroupInbound — 28 ca G01–G28 > G16 lenh / cua member (khong quyen) 8ms
+     → expected { admitted: true, …(4) } to deeply equal { admitted: false, …(4) }
+   × isAddressedToBot (D31; G24/G25 gia mao khong tinh) > lenh cua member 7ms
+     → expected true to be false // Object.is equality
+      Tests  2 failed | 145 passed (147)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/agent/community/gate.test.ts > decideGroupInbound — 28 ca G01–G28 > G16 lenh / cua member (khong quyen)
+AssertionError: expected { admitted: true, …(4) } to deeply equal { admitted: false, …(4) }
+ FAIL  src/agent/community/graph/edges.test.ts > isAddressedToBot (D31; G24/G25 gia mao khong tinh) > lenh cua member
+AssertionError: expected true to be false // Object.is equality
+restore: git checkout exit=0; status=""
+VERDICT M1: BAT DUOC (do)
+=== M2 [nhom a] packages/core/src/agent/community/persona.ts: bo thoat < > ⇒ pha khung <<<untrusted>>>
+$ (packages/core) npx vitest run src/agent/community/persona.test.ts
+exit=1
+   × khung untrusted (BB-10) > < > trong ten/text thanh ‹ › 7ms
+     → expected '<script>a</script>' to be '‹script›a‹/script›' // Object.is equality
+   × khung untrusted (BB-10) > khoi tri nho DM chi hien khi co du lieu; ghi chu cung la untrusted 3ms
+     → expected '<<<untrusted member_notes>>>\n[2026-1…' to contain 'shop ‹my pham›'
+      Tests  2 failed | 8 passed (10)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/agent/community/persona.test.ts > khung untrusted (BB-10) > < > trong ten/text thanh ‹ ›
+AssertionError: expected '<script>a</script>' to be '‹script›a‹/script›' // Object.is equality
+ FAIL  src/agent/community/persona.test.ts > khung untrusted (BB-10) > khoi tri nho DM chi hien khi co du lieu; ghi chu cung la untrusted
+AssertionError: expected '<<<untrusted member_notes>>>\n[2026-1…' to contain 'shop ‹my pham›'
+restore: git checkout exit=0; status=""
+VERDICT M2: BAT DUOC (do)
+=== M4 [nhom b] packages/core/src/agent/community/graph/edges.ts: bo D9 ⇒ text cuoi luot ambient bi dang
+$ (packages/core) npx vitest run src/agent/community/graph/edges.test.ts
+exit=1
+   × decideDelivery — 12 dong D1–D12 (01-CONTRACTS §12.5) > D9 ambient im 7ms
+     → expected { delivery: 'auto_post', …(1) } to deeply equal { delivery: 'none', outcome: 'silent' }
+   × decideDelivery — 12 dong D1–D12 (01-CONTRACTS §12.5) > D9 unanswered im 1ms
+     → expected { delivery: 'fallback', …(1) } to deeply equal { delivery: 'none', outcome: 'silent' }
+      Tests  2 failed | 107 passed (109)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/agent/community/graph/edges.test.ts > decideDelivery — 12 dong D1–D12 (01-CONTRACTS §12.5) > D9 ambient im
+AssertionError: expected { delivery: 'auto_post', …(1) } to deeply equal { delivery: 'none', outcome: 'silent' }
+ FAIL  src/agent/community/graph/edges.test.ts > decideDelivery — 12 dong D1–D12 (01-CONTRACTS §12.5) > D9 unanswered im
+AssertionError: expected { delivery: 'fallback', …(1) } to deeply equal { delivery: 'none', outcome: 'silent' }
+restore: git checkout exit=0; status=""
+VERDICT M4: BAT DUOC (do)
+=== M7 [nhom c] packages/core/src/agent/community/policy.ts: member thay tool set_group_mode
+$ (packages/core) npx vitest run src/agent/community/policy.test.ts
+exit=1
+   × allowedToolNames — moi tool × be mat > group_mention/member set_group_mode => false (member khong doi mode) 6ms
+     → expected true to be false // Object.is equality
+      Tests  1 failed | 81 passed (82)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/agent/community/policy.test.ts > allowedToolNames — moi tool × be mat > group_mention/member set_group_mode => false (member khong doi mode)
+AssertionError: expected true to be false // Object.is equality
+restore: git checkout exit=0; status=""
+VERDICT M7: BAT DUOC (do)
+=== M10 [nhom d] packages/core/src/agent/community/graph/nodes/agent.ts: node agent (outbox ✗) nap gian tiep ham ghi outbox
+$ (.) node scripts/check_adapter_boundary.mjs
+exit=0
+violations: 0
+restore: git checkout exit=0; status=""
+VERDICT M10: LOT (xanh)
+=== M11 [nhom d] packages/core/src/agent/community/graph/state.ts: import ten ngoai danh sach cho phep (§12.1) tu @langchain/langgraph
+$ (.) node scripts/check_adapter_boundary.mjs
+exit=0
+violations: 0
+restore: git checkout exit=0; status=""
+VERDICT M11: LOT (xanh)
+=== M12 [nhom d] packages/core/src/agent/community/graph/pipeline.ts: import dong specifier khong phai literal (checkpoint)
+$ (.) node scripts/check_adapter_boundary.mjs
+exit=0
+violations: 0
+restore: git checkout exit=0; status=""
+VERDICT M12: LOT (xanh)
+=== M13 [nhom d] packages/core/src/agent/community/graph/turn.ts: doi canh co dinh nudge→agent thanh canh dieu kien
+$ (packages/core) npx vitest run src/agent/community/graph/graph-shape.test.ts
+exit=1
+   × hinh do thi == hang SHAPE (so do da duyet) > turnGraph: 6 node, 10 canh 7ms
+     → expected { nodes: [ 'agent', …(5) ], …(1) } to deeply equal { nodes: [ 'agent', …(5) ], …(1) }
+      Tests  1 failed | 4 passed (5)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/agent/community/graph/graph-shape.test.ts > hinh do thi == hang SHAPE (so do da duyet) > turnGraph: 6 node, 10 canh
+AssertionError: expected { nodes: [ 'agent', …(5) ], …(1) } to deeply equal { nodes: [ 'agent', …(5) ], …(1) }
+restore: git checkout exit=0; status=""
+VERDICT M13: BAT DUOC (do)
+=== M14 [nhom d] packages/core/src/agent/community/graph/edges.ts: canh khong THUAN (Date.now trong needsNudge)
+$ (packages/core) npx vitest run src/agent/community/graph/edges.test.ts
+exit=0
+      Tests  109 passed (109)
+$ (.) node scripts/check_adapter_boundary.mjs
+exit=0
+violations: 0
+restore: git checkout exit=0; status=""
+VERDICT M14: LOT (xanh)
+=== M15 [nhom e] packages/core/src/adapters/model.ts: han chot KHONG huy fetch Gemini
+$ (packages/core) npx vitest run src/adapters/model.deadline.test.ts
+exit=1
+   × callModel — han chot (deadlineAt) > fetch tre 5000 ms, han chot +1500 ms ⇒ ModelDeadlineError trong <= 1700 ms, signal da huy 5028ms
+   × callModel — han chot (deadlineAt) > ModelDeadlineError la con cua ModelUnavailableError va KHONG thu MODEL_FALLBACKS 5010ms
+     → expected { message: { …(8) }, …(2) } to be an instance of ModelUnavailableError
+   × callModel — han chot (deadlineAt) > khong co deadlineAt ⇒ chay binh thuong (chi MODEL_CALL_TIMEOUT_MS), signal co gan 16ms
+     → expected [] to have a length of 1 but got +0
+   × callTriageModel — timeoutMs bang AbortSignal (thay Promise.race) > fetch tre 5000, timeoutMs 200 ⇒ reject trong < 1000 ms va signal da huy (fetch khong chay tiep ngam) 5005ms
+      Tests  4 failed | 9 passed (13)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/adapters/model.deadline.test.ts > callModel — han chot (deadlineAt) > fetch tre 5000 ms, han chot +1500 ms ⇒ ModelDeadlineError trong <= 1700 ms, signal da huy
+AssertionError: promise resolved "{ message: { …(8) }, …(2) }" instead of rejecting
+- [Error: rejected promise]
+ FAIL  src/adapters/model.deadline.test.ts > callModel — han chot (deadlineAt) > ModelDeadlineError la con cua ModelUnavailableError va KHONG thu MODEL_FALLBACKS
+restore: git checkout exit=0; status=""
+VERDICT M15: BAT DUOC (do)
