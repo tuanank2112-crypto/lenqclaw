@@ -564,7 +564,7 @@ select t.id as turn_id, t.zalo_account_id, t.thread_id, t.kind, t.lane, t.outcom
 ```sql
 alter table zalo_accounts add column own_uid text;
 ```
-Ghi: worker (`session.ownUid` khi phiên `connected`, `update zalo_accounts set own_uid = $2 where id = $1 and own_uid is distinct from $2`). Đọc: `agent/community/bot.ts::botUid(account)` (cache 60 s) ⇒ null ⇒ env `BOT_ZALO_UID` ⇒ chỉ `DATA_MODE=sim`: `BOT_UID_SIM`. Không xoá khi đăng xuất (uid tài khoản không đổi).
+Ghi: worker (`session.ownUid` khi phiên `connected`, `update zalo_accounts set own_uid = $2 where id = $1 and own_uid is distinct from $2`). Đọc: `agent/community/bot.ts::botUid(account)` (cache 60 s) ⇒ null ⇒ env `BOT_ZALO_UID` ⇒ chỉ `DATA_MODE=sim`: `BOT_UID_SIM`. Không xoá khi đăng xuất (uid tài khoản không đổi). (D38) Bản đồng bộ `resolveBotUid()` cho node đồ thị trả hằng `BOT_UID_UNKNOWN` khi không có nguồn ⇒ cổng không coi tin nào là mention bot.
 
 ## §5. Máy trạng thái
 

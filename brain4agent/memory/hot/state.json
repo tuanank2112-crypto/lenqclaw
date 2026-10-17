@@ -73,7 +73,7 @@
     },
     "eval_next": "gemini --set diagnosis,responsibility (D29) after quota reset ~14:00 ICT"
   },
-  "next": "P03b (worker D31, Telegram alerts, retention) -> (P04||P05||P06||P07) -> P08 -> P09",
+  "next": "(P04||P05||P06||P07) -> P08 -> P09",
   "approved": [
     "P01",
     "P03-code",
@@ -89,17 +89,17 @@
     "D31-model-down"
   ],
   "llm_provider": "vyce (deepseek-v4-flash, temporary D28; gate provider gemini D26)",
-  "decisions_latest": "D36 (plan 02)",
+  "decisions_latest": "D38 (plan 02)",
   "in_progress": null,
   "pushed": "origin/main = cdb0b3d (2026-10-14)",
   "tests_now": {
-    "unit": 549,
-    "db": 209,
+    "unit": 585,
+    "db": 238,
     "skip": 0,
     "measured": "2026-10-17"
   },
   "active_plan": "planning/02_2026-10-09_zalo-community-agent",
-  "plan_status": "P01, P02, P03 accepted (P03 2026-10-17, D36); G23 real-model run blocked on Gemini billing",
+  "plan_status": "P01, P02, P03, P03b accepted (2026-10-17, D38); G23 real-model run blocked on Gemini billing; G24 real Telegram bot pending P09",
   "stopped_plans": [
     "planning/01_2026-09-24_san-viec-tho-mvp (D32, 2026-10-09)"
   ],
@@ -109,14 +109,15 @@
     "P01",
     "P02",
     "D28-spec",
-    "P03"
+    "P03",
+    "P03b"
   ],
   "last_milestone_plan02": {
-    "id": "R09-P03-fix",
+    "id": "R10-P03b",
     "verdict": "approved",
     "approved_at": "2026-10-17",
-    "head": "c39e0c9",
-    "gates": "G07 G08 G14 G15 local"
+    "head": "8f8c5d1",
+    "gates": "G24 local"
   },
   "agent_runtime": "LangGraph.js @langchain/langgraph 1.4.18 (D28)"
 }

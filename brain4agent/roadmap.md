@@ -20,7 +20,7 @@ Pivot 2026-10-09 (D01): agent chăm sóc cộng đồng Zalo. Bộ SPEC ĐÃ DUY
 - [x] D31–D34 — SPEC tốc độ (làn fast/rag, hạn chót, runner song song) + báo động Telegram (R06 ✅ kỹ thuật)
 - [ ] 🖐 Q-D31-1 flash-lite · Q-D31-2 gap nhóm · Q-D31-3 billing Gemini (chặn số đo thật G23)
 - [x] P03 — runtime agent trên LangGraph + runtime D31 — ✅ 2026-10-17 (D36; G07/G08/G14/G15 local, G23 chờ model thật)
-- [ ] P03b — worker D31 (tick 250, advisory lock, heartbeat) + báo động Telegram + dọn dữ liệu (🟠, sau P03)
+- [x] P03b — worker D31 + báo động Telegram + heartbeat/healthz + dọn dữ liệu + `own_uid` — ✅ 2026-10-17 (D38; G24 local)
 - [ ] P02 — transport nhóm: worker + action outbox + pacer nhóm + sim nhóm (🟠 thi công · 🔴 thẩm định, G04–G06)
 - [ ] P03 — runtime agent: cổng nhận tin, đệm, ambient, persona, policy tool, host ép trả lời (🔴/🟠, G07, G08, G14, G15)
 - [ ] P04 — tri thức: kho, embedding, truy hồi lai RRF, câu hỏi bỏ trống (🟠, G12)
@@ -94,6 +94,8 @@ Việc lẻ chưa xếp giai đoạn: lịch `cron` (D16, `cron_expr` + `croner`
 - **Nhận tin nhắn thoại của thợ** (speech-to-text) — thợ quen gửi voice.
 
 ## Đã hoàn thành (Done)
+
+- [x] **2026-10-17 — P03b vận hành:** pacer ưu tiên tin trả lời + typing tươi + tick 250 ms, khoá chống 2 worker, heartbeat runner/worker + `/api/healthz`, báo động Telegram có chống lặp CAS (8 loại sự cố, runner và worker canh chéo), dọn vết 180/365 ngày, uid bot thật (`own_uid`, migration 011). `npm test` 585, `test:db` 238.
 
 - [x] **2026-10-17 — P03 runtime agent trên LangGraph + tốc độ D31:** hai đồ thị `pipelineGraph`/`turnGraph`, cổng nhận tin, đệm/phiên nhóm, persona, policy tool, host ép trả lời, làn fast/rag + hạn chót, runner song song theo thread + advisory lock, migration 010, `latency_slo.mjs`. Thẩm định đối kháng R08 tìm 3 CHẶN (tin trùng khi lời gọi chốt sập, lỗi đọc thân phản hồi, chủ bị im) ⇒ D35 ⇒ R09 ✅ (D36). Bỏ lời gọi chốt sau tool trả lời: mention 2→1 lời gọi model. `npm test` 549, `test:db` 209, 0 skip.
 

@@ -177,7 +177,7 @@ export function setAlertFetchForTest(f: typeof fetch | null): void;
    where not alert_state.open or alert_state.last_sent_at < now() - make_interval(mins => $3)
   returning kind
   ```
-  0 dòng ⇒ `'suppressed'` (`update … set suppressed = suppressed + 1`). Gửi thất bại ⇒ hoàn lại (`last_sent_at = null`) để lần sau gửi lại. `$3 = ALERT_REPEAT_MIN` (30): mỗi (kind, key) ≤ 1 tin / 30 phút khi còn mở. Trần toàn cục `ALERT_MAX_PER_HOUR` (20, đếm `audit_log action='alert.sent'` 60 phút) ⇒ `'suppressed'` + audit `alert.capped` (1 lần/giờ).
+  0 dòng ⇒ `'suppressed'` (`update … set suppressed = suppressed + 1`). Gửi thất bại ⇒ hoàn lại (D38: `last_sent_at` = mốc đã quá `ALERT_REPEAT_MIN`, giữ `open`, `sent_count − 1` — KHÔNG đặt `null`: CAS không thắng với null) để lần sau gửi lại. `$3 = ALERT_REPEAT_MIN` (30): mỗi (kind, key) ≤ 1 tin / 30 phút khi còn mở. Trần toàn cục `ALERT_MAX_PER_HOUR` (20, đếm `audit_log action='alert.sent'` 60 phút) ⇒ `'suppressed'` + audit `alert.capped` (1 lần/giờ).
 - `resolved: true` ⇒ `update alert_state set open=false where kind=$1 and key=$2 and open returning` — có dòng ⇒ gửi "✅ đã hồi phục: …" (không qua chống lặp); không ⇒ không gửi.
 - `localOnly` (DB không dùng được): chống lặp bằng `Map` trong tiến trình, cùng `ALERT_REPEAT_MIN`.
 - Nội dung: loại, khoá, số đo, giờ VN, đường dashboard (`/zalo`, `/agent`, `/groups`). CẤM nội dung tin, tên thành viên, uid người, prompt, token, `DATABASE_URL`.

@@ -2,6 +2,14 @@
 
 Tất cả các quyết định kiến trúc và lịch sử nâng cấp phiên bản của dự án.
 
+## [Unreleased] - 2026-10-17: P03b nghiệm thu — vận hành: báo động Telegram, heartbeat, healthz
+### Changed
+- Worker: pacer D31 (tick 250, ưu tiên tin trả lời, typing tươi, `picked_at`/`hold_reason`), advisory lock `lenqclaw:worker:community`, heartbeat, ghi `own_uid`.
+- Core: `adapters/alert.ts` (Telegram, chống lặp CAS `alert_state`, trần 20 tin/giờ), `services/ops-watch.ts` (8 loại sự cố), dọn `turn_traces`/`agent_runs` 180 ngày, `audit_log` 365 ngày; migration `011_bot_uid.sql`.
+- Web: `GET /api/healthz` (không đăng nhập, không lộ số liệu).
+### Decided
+- **D37/D38 (SO):** phạm vi P03b, nguồn `botUid` thật; nghiệm thu R10, sửa SPEC-D31 §10.1 (hoàn lại khi gửi lỗi không đặt `null`).
+
 ## [Unreleased] - 2026-10-17: P03 nghiệm thu — runtime agent trên LangGraph + tốc độ D31
 ### Changed
 - `agent/community/graph/*`: `pipelineGraph` + `turnGraph` (LangGraph.js 1.4.18, không checkpointer), cổng nhận tin thuần, đệm + phiên nhóm, persona/prompt, policy tool theo bề mặt × vai, host ép trả lời; tool nền (tra cứu lexical, gửi nhóm, ghi chú thành viên, chuyển chủ, quản lý nhóm).

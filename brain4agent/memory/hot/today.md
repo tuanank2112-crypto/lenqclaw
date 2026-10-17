@@ -19,9 +19,10 @@ Người dùng: "đến đâu rồi? tiếp tục đi".
 - SO xác minh 3 CHẶN trong mã ⇒ **D35**: R07 🔁, 13 điểm sửa (gồm bỏ lời gọi chốt sau tool `answers` ⇒ mention 1 / RAG 2, không đổi hình). SPEC 01-CONTRACTS §7.1/§12.2/§12.3/§12.5, SPEC-P03 §2/§6.2, SPEC-D31 §6 sửa theo. G33 (npm bỏ qua `overrides`). H09 vòng sửa ⇒ phóng worker 🟠.
 - R09 (worker 🟠, `4391902`/`c39e0c9`, report `806a6cd`): 18/18 đột biến đỏ, mention 1 / RAG 2 lời gọi model. SO đo lại: gate 0, `npm test` 549, test:db ×2 = 209, 0 skip; SO tự đột biến (tắt `skipFinalCall` ⇒ 5 đỏ; `owner_dm` takeover ⇒ 2 đỏ) ⇒ **R09 ✅, P03 ✅ (D36)**. G07/G08/G14/G15 ✅ local; G23 model thật còn chờ billing.
 - **D37**: phạm vi P03b (pacer D31, khoá worker, heartbeat worker + `/api/healthz` dời từ P08, báo động Telegram + `ops-watch`, dọn dữ liệu) + migration `011_bot_uid` (`zalo_accounts.own_uid`) cho `botUid` thật. H10 ⇒ phóng worker 🟠.
+- Worker P03b bị ngắt do giới hạn phiên (reset 16:00) ⇒ SendMessage cho chạy tiếp. R10 (`73a7ff0..8f8c5d1`, report `48d1349`). SO đo lại: gate 0, `npm test` 585, test:db ×2 = 238, pacer 20/0; đột biến SO (ngoại lệ healthz `/api/*` ⇒ 6 đỏ; token vào audit ⇒ 1 đỏ) ⇒ **R10 ✅, P03b ✅ (D38)**. G24 ✅ local. Gotcha G34.
 
 ### ⏭ Treo
-- Kế tiếp: P03b (worker D31 tick 250 + advisory lock + heartbeat, báo động Telegram, dọn dữ liệu, `botUid` thật).
+- Kế tiếp: P04 ∥ P05 ∥ P06 ∥ P07 (cùng cây git ⇒ tuần tự hoặc worktree — G32).
 - 🖐 Q-D31-1/2/3 (billing Gemini chặn số đo thật G23).
 - 🖐 Người dùng xem bóc tách luồng kỹ thuật (tốc độ · chất lượng · eval · status · sessions) — mục checklist plan 02 còn mở.
 - `lenqclaw_presentation_transcript.pdf` ở root vẫn chưa theo dõi (trùng bản `docs/`) — chờ người xoá.
