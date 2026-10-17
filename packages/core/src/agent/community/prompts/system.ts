@@ -31,6 +31,49 @@ export function APPROVAL_RESULT_DM(approvalId: string, kind: string, status: str
   return `Thẻ duyệt ${approvalId.slice(0, 6)} (${kind}) đã ${status === 'executed' ? 'thi hành xong' : 'thi hành thất bại'}.`;
 }
 
+// ---- P05 (SPEC-P05): kiem duyet, the duyet, vao nhom — moi cau la hang TS, khong model ----
+const VERDICT_VI: Record<string, string> = { spam: 'spam', ad: 'quảng cáo', scam: 'nghi lừa đảo', harass: 'quấy rối', unsure: 'đáng ngờ' };
+const verdictVi = (v: string): string => VERDICT_VI[v] ?? 'vi phạm';
+
+/** Canh cao cong khai (quote tin vi pham; KHONG mention, KHONG DM nguoi vi pham — SPEC-P05 §8). */
+export function WARN_GROUP_TEXT(verdict: string): string {
+  return `Tin này bị nhận diện là ${verdictVi(verdict)}. Vui lòng không đăng nội dung như vậy trong nhóm; nếu tiếp tục, tin sẽ bị xoá và người đăng có thể bị mời ra khỏi nhóm.`;
+}
+
+/** Canh cao thanh vien do agent de nghi (`warn_member`). */
+export function WARN_MEMBER_TEXT(reason: string): string {
+  return `Nhắc nhẹ: ${reason.trim().slice(0, 200)}. Mong bạn tuân thủ nội quy nhóm giúp mình nhé.`;
+}
+
+export function MOD_DELETE_DM(groupName: string | null, verdict: string): string {
+  return `Mình vừa xoá một tin ${verdictVi(verdict)} trong nhóm ${groupName ?? 'chưa đặt tên'}. Nếu xoá nhầm, bạn mở dashboard xem lịch sử kiểm duyệt nhé.`;
+}
+
+export function NEED_DEPUTY_DM(groupName: string | null): string {
+  return `Mình chưa có quyền phó nhóm ở ${groupName ?? 'nhóm này'} nên chưa xoá/mời ra được tin vi phạm, chỉ cảnh cáo. Bạn cấp quyền phó nhóm cho mình giúp nhé.`;
+}
+
+const APPROVAL_KIND_VI: Record<string, string> = {
+  kick_member: 'mời ra khỏi nhóm',
+  block_member: 'chặn khỏi nhóm',
+  approve_join: 'cho vào nhóm',
+  reject_join: 'từ chối vào nhóm',
+  announce: 'đăng thông báo',
+};
+export const approvalKindVi = (kind: string): string => APPROVAL_KIND_VI[kind] ?? kind;
+
+export function APPROVAL_DM(idShort: string, kind: string, groupName: string | null, targetName: string | null, reason: string): string {
+  return [
+    `Cần bạn duyệt: ${approvalKindVi(kind)} · nhóm ${groupName ?? 'chưa đặt tên'}${targetName ? ` · ${targetName}` : ''}.`,
+    `Lý do: ${reason.trim().slice(0, 300)}.`,
+    `Trả lời \`duyệt ${idShort}\` hoặc \`từ chối ${idShort}\` (thẻ sẽ tự hết hạn).`,
+  ].join('\n');
+}
+
+export function APPROVAL_EXPIRED_DM(idShort: string, kind: string): string {
+  return `Thẻ duyệt ${idShort} (${approvalKindVi(kind)}) đã hết hạn, mình không thi hành. Cần thì mình sẽ tạo thẻ mới.`;
+}
+
 /** Chi dan theo loai luot, cuoi message `user` dau tien cua luot nhom (SPEC-P03 §6.1). */
 export const KIND_INSTRUCTIONS: Partial<Record<TurnKind, string>> = {
   group_mention:
@@ -40,9 +83,9 @@ export const KIND_INSTRUCTIONS: Partial<Record<TurnKind, string>> = {
   group_unanswered:
     'Câu hỏi sau chưa ai trả lời sau N phút. Nếu bạn trả lời được CÓ căn cứ (search_knowledge) thì trả lời, trích dẫn tin đó; không thì im.',
   group_welcome:
-    'Thành viên mới vừa vào nhóm (xem khối focus). Chào ngắn (≤ 3 câu), gợi ý 1 việc họ có thể hỏi; mention họ.',
+    'Thành viên mới vừa vào nhóm (xem khối new_members). Chào ngắn (≤ 3 câu), gợi ý 1 việc họ có thể hỏi; mention họ bằng mention_uids (tối đa 5 người; nhiều hơn 5 thì nêu số người và chỉ mention 5 người đầu).',
   group_join_review:
-    'Có yêu cầu vào nhóm. Chỉ gọi review_join_request với quyết định và lý do ngắn.',
+    'Có yêu cầu vào nhóm (xem khối join_request). Chỉ gọi review_join_request với đúng uid trong khối đó, quyết định approve hoặc reject, và lý do ngắn (từ chối cần lý do ≥ 10 ký tự). Dùng tiêu chí trong chỉ dẫn riêng của nhóm nếu có; không đủ căn cứ để từ chối thì cho vào.',
   automation: 'Đây là tác vụ định kỳ do chủ cài. Làm đúng việc được giao qua tool; không có việc thì im.',
 };
 

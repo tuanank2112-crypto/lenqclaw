@@ -9,7 +9,7 @@
 // gui goc ⇒ `failed` (`result.error='uidFrom_mismatch'`), giong Zalo that tu choi.
 
 import { sql } from '../adapters/db.js';
-import { audit } from '../services/audit.js';
+import { completeApproval } from '../services/approvals.js';
 
 interface ClaimedRow {
   id: number;
@@ -31,6 +31,8 @@ export interface ApplySimResult {
   /** So hang `action` bi `failed` (vd uidFrom_mismatch). */
   failed: number;
 }
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function str(v: unknown): string | null {
   return typeof v === 'string' && v.length > 0 ? v : null;
@@ -70,6 +72,16 @@ async function applyAction(row: ClaimedRow): Promise<ActionOutcome> {
     case 'block_member': {
       const uid = str(b.uid);
       if (!uid) return fail('invalid_action_body');
+      // D30(3): sim kiem the NHU worker (BB-06) — kick/block CHI khi the `approved` khop nhom/uid/kind va chua nhan (CAS `executed_at`).
+      const approvalId = str(b.approvalId);
+      if (!approvalId || !UUID_RE.test(approvalId)) return fail('approval_invalid');
+      const claimed = await sql<{ id: string }>(
+        `update approvals set executed_at = now()
+          where id = $1::uuid and zalo_account_id = $2 and thread_id = $3 and kind = $4 and target_uid = $5
+            and status = 'approved' and executed_at is null returning id::text as id`,
+        [approvalId, account, thread, b.action === 'remove_member' ? 'kick_member' : 'block_member', uid]
+      );
+      if (claimed.length === 0) return fail('approval_invalid');
       await sql(
         `update group_members set left_at = coalesce(left_at, now())
          where zalo_account_id=$1 and thread_id=$2 and zalo_uid=$3`,
@@ -99,11 +111,14 @@ async function applyAction(row: ClaimedRow): Promise<ActionOutcome> {
       if (uids.length === 0 || typeof b.approve !== 'boolean') return fail('invalid_action_body');
       const result: Record<string, unknown> = {};
       for (const uid of uids) {
-        const pending = await sql<{ display_name: string | null }>(
+        await sql(
           `update join_requests set decision = $4, decided_by = 'sim', decided_at = now()
-           where zalo_account_id=$1 and thread_id=$2 and zalo_uid=$3 and decision = 'pending'
-           returning display_name`,
+           where zalo_account_id=$1 and thread_id=$2 and zalo_uid=$3 and decision = 'pending'`,
           [account, thread, uid, b.approve ? 'approved' : 'rejected']
+        );
+        const named = await sql<{ display_name: string | null }>(
+          `select display_name from join_requests where zalo_account_id=$1 and thread_id=$2 and zalo_uid=$3 order by id desc limit 1`,
+          [account, thread, uid]
         );
         if (b.approve) {
           await sql(
@@ -111,7 +126,7 @@ async function applyAction(row: ClaimedRow): Promise<ActionOutcome> {
              values ($1,$2,$3,'member',$4)
              on conflict (zalo_account_id, thread_id, zalo_uid)
              do update set left_at = null, display_name = coalesce(excluded.display_name, group_members.display_name)`,
-            [account, thread, uid, pending[0]?.display_name ?? null]
+            [account, thread, uid, named[0]?.display_name ?? null]
           );
         }
         result[uid] = 0;
@@ -154,19 +169,6 @@ async function applyAction(row: ClaimedRow): Promise<ActionOutcome> {
   }
 }
 
-/** `approvals` approved ⇒ executed | failed (01-CONTRACTS §5.1) cho hanh dong chay o kenh gia lap. */
-async function completeApproval(approvalId: string, ok: boolean, result: Record<string, unknown>): Promise<void> {
-  const to = ok ? 'executed' : 'failed';
-  const rows = await sql<{ id: string }>(
-    `update approvals set status = $2, executed_at = now(), result = $3::jsonb
-     where id = $1::uuid and status = 'approved' returning id`,
-    [approvalId, to, JSON.stringify(result)]
-  );
-  if (rows.length > 0) {
-    await audit(sql, { actorType: 'system', actorId: 'sim', action: `approval.${to}`, target: approvalId, data: { ok } });
-  }
-}
-
 /** Giao het (toi da `limit`) hang `queued` (typing/seen duoc danh dau `sent` nhung khong dem vao `delivered`) cua thread `sim-*` da den han (`not_before <= now()`), theo thu tu id —
  * KHONG cham hang thread that khi `DATA_MODE=sim` chay chung worker that (D29 diem 6). Ngoai le CO CHU Y:
  * `extraThreadIds` — `runScenario` truyen dung cac thread cua kich ban dang phat lai (vd `u-101` o `echo.jsonl`). Moi hang duoc "nhan" (`sending`) bang
@@ -205,7 +207,8 @@ export async function applySimOutbox(opts: { limit?: number; extraThreadIds?: st
           );
           failed++;
         }
-        if (approvalId) await completeApproval(approvalId, out.ok, out.result);
+        // the bi tu choi o cong kiem (approval_invalid) KHONG duoc dong lai thanh `failed` (nhu worker: tra ve truoc `finish`).
+        if (approvalId && out.result.error !== 'approval_invalid') await completeApproval(approvalId, out.ok, out.result);
         continue;
       }
       const msgId = `sim-out-${row.id}`;

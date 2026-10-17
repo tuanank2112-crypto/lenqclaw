@@ -31,6 +31,19 @@ describe('PERSONA_SEED.rules (SPEC-P03 §7.3)', () => {
   });
 });
 
+describe('PERSONA_SEED.rules — muc Kiem duyet (SPEC-P05 §3, D31)', () => {
+  const rules = PERSONA_SEED.rules;
+  it('tin goi bot co dau hieu scam/spam ⇒ flag_message roi tra loi tu choi ngan; chi de nghi kick qua request_member_removal; nam giua An toan va Ghi nho', () => {
+    expect(rules).toContain('## Kiểm duyệt');
+    expect(rules).toContain('`flag_message`');
+    expect(rules).toContain('`request_member_removal`');
+    expect(TOOL_NAMES).toContain('flag_message');
+    expect(TOOL_NAMES).toContain('request_member_removal');
+    expect(rules.indexOf('## Kiểm duyệt')).toBeGreaterThan(rules.indexOf('## An toàn'));
+    expect(rules.indexOf('## Kiểm duyệt')).toBeLessThan(rules.indexOf('## Ghi nhớ (chỉ khi nhắn riêng)'));
+  });
+});
+
 describe('PERSONA_SEED chung', () => {
   it('moi doc <= 8000 ky tu (persona_docs.body) va rules khong dung NO_REPLY (BB-05)', () => {
     for (const body of Object.values(PERSONA_SEED)) expect(body.length).toBeLessThanOrEqual(8000);

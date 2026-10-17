@@ -9,6 +9,10 @@ import { readCommunityConfig, type CommunityConfig } from './community-config.js
 import { enqueueSystemEvent } from './system-events.js';
 import { checkOps } from './ops-watch.js';
 import { embedPending, pickUnanswered } from './knowledge.js';
+import { expireApprovals } from './approvals.js';
+import { expireJoinRequests } from './join-requests.js';
+import { reconcileDeletes } from './moderation.js';
+import { flushWelcomes } from './welcome.js';
 
 export interface TimerReport {
   /** Ten buoc → so muc da xu ly. */
@@ -150,11 +154,16 @@ async function safeStep(step: string, fn: () => Promise<number>): Promise<number
   }
 }
 
-/** Thu tu theo SPEC-P07 §2: #2 flushAmbient · #4 pickUnanswered (P04 §5) · #8 pruneBuffers · #9 embedPending (P04 §1, <= 50 muc) · #13 opsWatch. */
+/** Thu tu theo SPEC-P07 §2: #2 flushAmbient · #4 pickUnanswered (P04 §5) · #6 expireApprovals (P05 §5.5) ·
+ * #7 reconcileDeletes (P05 §9) · #8 pruneBuffers · #9 embedPending (P04 §1, <= 50 muc) · #13 opsWatch. */
 export async function runTimers(now: Date, cfg: CommunityConfig = readCommunityConfig(), ctx: TimerContext = {}): Promise<TimerReport> {
   const steps: Record<string, number> = {};
   steps.flushAmbient = await flushAmbient(now, cfg, ctx);
+  steps.flushWelcomes = await safeStep('flushWelcomes', () => flushWelcomes(now, cfg, ctx.busyThreads ? { busyThreads: ctx.busyThreads } : {}));
   steps.pickUnanswered = await safeStep('pickUnanswered', () => pickUnanswered(now, cfg, ctx.busyThreads));
+  steps.expireApprovals = await safeStep('expireApprovals', () => expireApprovals(now));
+  steps.expireJoinRequests = await safeStep('expireJoinRequests', () => expireJoinRequests(now));
+  steps.reconcileDeletes = await safeStep('reconcileDeletes', () => reconcileDeletes(now));
   steps.pruneBuffers = await pruneBuffers(now, cfg);
   steps.embedPending = await safeStep('embedPending', () => embedPending(50, now));
   if (ctx.opsWatch) steps.opsWatch = await opsWatch(now, cfg, ctx);

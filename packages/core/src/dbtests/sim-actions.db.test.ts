@@ -139,8 +139,19 @@ describe('applySimOutbox — action tren DB gia lap (§7.2)', () => {
       `insert into group_members (zalo_account_id, thread_id, zalo_uid, role) values ($1,$2,'sim-a','member'), ($1,$2,'sim-b','member')`,
       [ACCOUNT, g]
     );
-    const rm = await act(g, { action: 'remove_member', uid: 'sim-a', approvalId: randomUUID() });
-    const bl = await act(g, { action: 'block_member', uid: 'sim-b', approvalId: randomUUID() });
+    // D30(3) (P05): sim kiem the NHU worker ⇒ kick/block phai co the `approved` khop nhom/uid/kind (truoc day approvalId ngau nhien van chay).
+    const mk = async (kind: string, target: string): Promise<string> =>
+      (
+        await sql<{ id: string }>(
+          `insert into approvals (zalo_account_id, kind, thread_id, target_uid, reason, requested_by, status, expires_at)
+           values ($1,$2,$3,$4,'thử','agent','approved', now() + interval '1 hour') returning id`,
+          [ACCOUNT, kind, g, target]
+        )
+      )[0]!.id;
+    const apRm = await mk('kick_member', 'sim-a');
+    const apBl = await mk('block_member', 'sim-b');
+    const rm = await act(g, { action: 'remove_member', uid: 'sim-a', approvalId: apRm });
+    const bl = await act(g, { action: 'block_member', uid: 'sim-b', approvalId: apBl });
     await applySimOutbox();
     expect((await row(rm)).result).toEqual({ errorMembers: [] });
     expect((await row(bl)).status).toBe('sent');
@@ -158,6 +169,47 @@ describe('applySimOutbox — action tren DB gia lap (§7.2)', () => {
     await act(g, { action: 'unblock_member', uid: 'sim-b' });
     await applySimOutbox();
     expect(await deny()).toEqual([]);
+    await sql(`delete from approvals where id = any($1::uuid[])`, [[apRm, apBl]]);
+    await dropGroup(g);
+  });
+
+  it('D30(3): remove_member/block_member KHONG the hop le (thieu, ngau nhien, pending, lech uid/kind/thread) ⇒ failed approval_invalid, thanh vien con nguyen, the khong bi dong', async () => {
+    const g = tid();
+    await makeGroup(g);
+    await sql(`insert into group_members (zalo_account_id, thread_id, zalo_uid, role) values ($1,$2,'sim-a','member')`, [ACCOUNT, g]);
+    const card = async (over: { kind?: string; target?: string; status?: string; thread?: string } = {}): Promise<string> =>
+      (
+        await sql<{ id: string }>(
+          `insert into approvals (zalo_account_id, kind, thread_id, target_uid, reason, requested_by, status, expires_at)
+           values ($1,$2,$3,$4,'thử','agent',$5, now() + interval '1 hour') returning id`,
+          [ACCOUNT, over.kind ?? 'kick_member', over.thread ?? g, over.target ?? 'sim-a', over.status ?? 'approved']
+        )
+      )[0]!.id;
+    const pending = await card({ status: 'pending' });
+    const wrongUid = await card({ target: 'sim-khac' });
+    const wrongKind = await card({ kind: 'block_member' });
+    const wrongThread = await card({ thread: tid() });
+    const bodies: Array<Record<string, unknown>> = [
+      { action: 'remove_member', uid: 'sim-a' },
+      { action: 'remove_member', uid: 'sim-a', approvalId: randomUUID() },
+      { action: 'remove_member', uid: 'sim-a', approvalId: pending },
+      { action: 'remove_member', uid: 'sim-a', approvalId: wrongUid },
+      { action: 'remove_member', uid: 'sim-a', approvalId: wrongKind },
+      { action: 'remove_member', uid: 'sim-a', approvalId: wrongThread },
+    ];
+    const ids: number[] = [];
+    for (const b of bodies) ids.push(await act(g, b));
+    await applySimOutbox();
+    for (const id of ids) {
+      const o = await row(id);
+      expect(o.status).toBe('failed');
+      expect(o.result).toEqual({ error: 'approval_invalid' });
+    }
+    expect((await sql<{ left_at: string | null }>(`select left_at from group_members where thread_id = $1 and zalo_uid = 'sim-a'`, [g]))[0]!.left_at).toBeNull();
+    const st = await sql<{ id: string; status: string }>(`select id::text as id, status from approvals where id = any($1::uuid[])`, [[pending, wrongUid, wrongKind, wrongThread]]);
+    expect(st.find((r) => r.id === pending)!.status).toBe('pending');
+    for (const r of st.filter((x) => x.id !== pending)) expect(r.status).toBe('approved'); // KHONG bi chuyen failed
+    await sql(`delete from approvals where id = any($1::uuid[])`, [[pending, wrongUid, wrongKind, wrongThread]]);
     await dropGroup(g);
   });
 
