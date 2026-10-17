@@ -73,7 +73,7 @@
     },
     "eval_next": "gemini --set diagnosis,responsibility (D29) after quota reset ~14:00 ICT"
   },
-  "next": "P03 on LangGraph + D31 runtime (H07, in progress) -> P03b -> (P04||P05||P06||P07) -> P08 -> P09",
+  "next": "P03b (worker D31, Telegram alerts, retention) -> (P04||P05||P06||P07) -> P08 -> P09",
   "approved": [
     "P01",
     "P03-code",
@@ -89,17 +89,17 @@
     "D31-model-down"
   ],
   "llm_provider": "vyce (deepseek-v4-flash, temporary D28; gate provider gemini D26)",
-  "decisions_latest": "D34 (plan 02)",
-  "in_progress": "H07 thi-cong P03 (worker, 2026-10-17)",
+  "decisions_latest": "D36 (plan 02)",
+  "in_progress": null,
   "pushed": "origin/main = cdb0b3d (2026-10-14)",
   "tests_now": {
-    "unit": 218,
-    "db": 130,
+    "unit": 549,
+    "db": 209,
     "skip": 0,
-    "measured": "2026-10-16"
+    "measured": "2026-10-17"
   },
   "active_plan": "planning/02_2026-10-09_zalo-community-agent",
-  "plan_status": "P01, P02 accepted; diagram approved 2026-10-16; D31-D34 specs accepted (R06); P03 in progress (H07)",
+  "plan_status": "P01, P02, P03 accepted (P03 2026-10-17, D36); G23 real-model run blocked on Gemini billing",
   "stopped_plans": [
     "planning/01_2026-09-24_san-viec-tho-mvp (D32, 2026-10-09)"
   ],
@@ -108,14 +108,15 @@
   "approved_plan02": [
     "P01",
     "P02",
-    "D28-spec"
+    "D28-spec",
+    "P03"
   ],
   "last_milestone_plan02": {
-    "id": "R01-P01",
+    "id": "R09-P03-fix",
     "verdict": "approved",
-    "approved_at": "2026-10-16",
-    "head": "f164f23",
-    "gates": "G01-G03 local"
+    "approved_at": "2026-10-17",
+    "head": "c39e0c9",
+    "gates": "G07 G08 G14 G15 local"
   },
   "agent_runtime": "LangGraph.js @langchain/langgraph 1.4.18 (D28)"
 }

@@ -1062,7 +1062,7 @@ export function hostText(req: TurnRequest, reason: 'fallback' | 'model_down', v:
 | D1 | `prepError === 'persona_invalid'` | `persona_invalid` | `error` |
 | D2 | `kind = group_join_review ∧ answered > 0` | `none` | `replied` |
 | D3 | `kind = group_join_review` (model im/sập/refusal/chạm trần) | `join_default` (Q9: CHO VÀO) | `model_down` nếu `stop=model_down`, `refusal` nếu `stop=refusal`, còn lại `fallback` |
-| D8 | `answered > 0` — (D35.1) xét NGAY SAU D3, trước D4 | `none` | `replied` |
+| D8 | `¬DM ∧ answered > 0` — (D35.1) xét NGAY SAU D3, trước D4 | `none` | `replied` |
 | D4 | `stop = model_down` | `model_down` | `model_down` |
 | D5 | DM ∧ `stop = refusal` | `dm_empty` | `refusal` |
 | D6 | DM ∧ `finalText ≠ ''` ∧ `!capped` | `dm_reply` | `replied` |

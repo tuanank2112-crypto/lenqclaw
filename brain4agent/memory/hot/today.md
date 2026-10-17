@@ -17,8 +17,10 @@ Người dùng: "đến đâu rồi? tiếp tục đi".
 - Phát hiện SO: nhóm chỉ nói qua `send_group_message` + cạnh `tools → agent` ⇒ lượt mention tốn 2 lời gọi model, ngân sách D31 §3 tính 1 ⇒ đưa vào vòng sửa.
 - H08 thẩm định đối kháng 🔴 (opus, không đọc R07) — R08 `493feb3`: 3 CHẶN (nhóm đã trả lời vẫn nhận thêm tin "trục trặc" do D4 trước D8; `res.json()` ngoài phân loại lỗi ⇒ mention 0 tin; `owner_dm` lỗi ⇒ bot im với chủ 60 phút), 8 NÊN SỬA, 8 GHI CHÚ, 6/16 đột biến LỌT; đo: mention 2 lời gọi model, RAG 3.
 - SO xác minh 3 CHẶN trong mã ⇒ **D35**: R07 🔁, 13 điểm sửa (gồm bỏ lời gọi chốt sau tool `answers` ⇒ mention 1 / RAG 2, không đổi hình). SPEC 01-CONTRACTS §7.1/§12.2/§12.3/§12.5, SPEC-P03 §2/§6.2, SPEC-D31 §6 sửa theo. G33 (npm bỏ qua `overrides`). H09 vòng sửa ⇒ phóng worker 🟠.
+- R09 (worker 🟠, `4391902`/`c39e0c9`, report `806a6cd`): 18/18 đột biến đỏ, mention 1 / RAG 2 lời gọi model. SO đo lại: gate 0, `npm test` 549, test:db ×2 = 209, 0 skip; SO tự đột biến (tắt `skipFinalCall` ⇒ 5 đỏ; `owner_dm` takeover ⇒ 2 đỏ) ⇒ **R09 ✅, P03 ✅ (D36)**. G07/G08/G14/G15 ✅ local; G23 model thật còn chờ billing.
 
 ### ⏭ Treo
+- Kế tiếp: P03b (worker D31 tick 250 + advisory lock + heartbeat, báo động Telegram, dọn dữ liệu, `botUid` thật).
 - 🖐 Q-D31-1/2/3 (billing Gemini chặn số đo thật G23).
 - 🖐 Người dùng xem bóc tách luồng kỹ thuật (tốc độ · chất lượng · eval · status · sessions) — mục checklist plan 02 còn mở.
 - `lenqclaw_presentation_transcript.pdf` ở root vẫn chưa theo dõi (trùng bản `docs/`) — chờ người xoá.

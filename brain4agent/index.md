@@ -60,7 +60,7 @@ project-root/
 ├── apps/web/                         # Next.js 15: auth 2 vai admin/operator (cookie HMAC, policy SPEC-P01 §3.1) · /login · /zalo (QR, tài khoản community) · /dev/sim (khung DM + nhóm sim-group-1) · trang dashboard ở P08
 ├── apps/zalo-worker/                 # zca-js 2.2.0, MỘT tài khoản `community`, phiên AES-GCM, QR, watchdog · P02: tin + sự kiện nhóm, actions.ts (10 action, kick/block chỉ khi thẻ duyệt approved), pacer + ngân sách theo nhóm
 ├── packages/core/src/                # adapters/{db,model,transport} · domain/{types,errors,password} · services/{audit,community-config,system-events,timers(khung),vn-time} · sim/{sim-transport,sim-actions} (nhóm giả lập, P02) · db/{migrate,seed,seed-sim}
-│                                     # ĐÍCH P03 (D28): agent/community/graph/* — LangGraph pipelineGraph + turnGraph (01-CONTRACTS §12)
+│                                     # P03 ✅ (D36): agent/community/graph/* — LangGraph pipelineGraph + turnGraph (01-CONTRACTS §12); runner/ dispatcher song song (SPEC-D31 §6)
 │                                     # agent/conversation.ts · agent/community/{router.ts (khung: DM ⇒ STUB_DM_REPLY, nhóm ⇒ audit stub), redact.ts, tools/tool-kit.ts} · retrieval/search-knowledge.ts · runner/inbound-runner.ts · dev/link-zalo.ts (--owner)
 ├── db/migrations/                    # 001–006 (lịch sử, CẤM sửa) · 007_drop_marketplace.sql · 008_community.sql · 009_tenant_trace.sql (tenants + turn_traces) — 01-CONTRACTS §4
 ├── scripts/                          # gate.mjs (typecheck→build→test→check_adapter_boundary→check_agent_tools→check_pivot_cleanup) · seed-sim-for-test.mjs

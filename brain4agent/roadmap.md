@@ -19,7 +19,7 @@ Pivot 2026-10-09 (D01): agent chăm sóc cộng đồng Zalo. Bộ SPEC ĐÃ DUY
 - [x] 🖐 Người dùng duyệt sơ đồ pipeline LangGraph (ảnh 12) — 2026-10-16
 - [x] D31–D34 — SPEC tốc độ (làn fast/rag, hạn chót, runner song song) + báo động Telegram (R06 ✅ kỹ thuật)
 - [ ] 🖐 Q-D31-1 flash-lite · Q-D31-2 gap nhóm · Q-D31-3 billing Gemini (chặn số đo thật G23)
-- [ ] P03 — runtime agent trên LangGraph + runtime D31 — ĐANG THI CÔNG (H07, 2026-10-17)
+- [x] P03 — runtime agent trên LangGraph + runtime D31 — ✅ 2026-10-17 (D36; G07/G08/G14/G15 local, G23 chờ model thật)
 - [ ] P03b — worker D31 (tick 250, advisory lock, heartbeat) + báo động Telegram + dọn dữ liệu (🟠, sau P03)
 - [ ] P02 — transport nhóm: worker + action outbox + pacer nhóm + sim nhóm (🟠 thi công · 🔴 thẩm định, G04–G06)
 - [ ] P03 — runtime agent: cổng nhận tin, đệm, ambient, persona, policy tool, host ép trả lời (🔴/🟠, G07, G08, G14, G15)
@@ -94,6 +94,8 @@ Việc lẻ chưa xếp giai đoạn: lịch `cron` (D16, `cron_expr` + `croner`
 - **Nhận tin nhắn thoại của thợ** (speech-to-text) — thợ quen gửi voice.
 
 ## Đã hoàn thành (Done)
+
+- [x] **2026-10-17 — P03 runtime agent trên LangGraph + tốc độ D31:** hai đồ thị `pipelineGraph`/`turnGraph`, cổng nhận tin, đệm/phiên nhóm, persona, policy tool, host ép trả lời, làn fast/rag + hạn chót, runner song song theo thread + advisory lock, migration 010, `latency_slo.mjs`. Thẩm định đối kháng R08 tìm 3 CHẶN (tin trùng khi lời gọi chốt sập, lỗi đọc thân phản hồi, chủ bị im) ⇒ D35 ⇒ R09 ✅ (D36). Bỏ lời gọi chốt sau tool trả lời: mention 2→1 lời gọi model. `npm test` 549, `test:db` 209, 0 skip.
 
 - [x] **2026-10-16 — P02 kế hoạch 02 (R05 ✅, D29/D30):** worker nhận tin/sự kiện nhóm, 10 action quản trị, kick/block chỉ khi thẻ duyệt `approved` (CAS), pacer 20 tin/giờ/nhóm cách ≥ 9 s, sim nhóm `/dev/sim`; thẩm định đối kháng 22 đột biến → sửa → 23/23 bắt.
 - [x] **2026-10-16 — D28 LangGraph:** người dùng chốt LangGraph + pipeline đồ thị làm nền; architect thiết kế lại SPEC (R04).

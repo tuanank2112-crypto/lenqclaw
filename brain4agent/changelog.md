@@ -2,6 +2,14 @@
 
 Tất cả các quyết định kiến trúc và lịch sử nâng cấp phiên bản của dự án.
 
+## [Unreleased] - 2026-10-17: P03 nghiệm thu — runtime agent trên LangGraph + tốc độ D31
+### Changed
+- `agent/community/graph/*`: `pipelineGraph` + `turnGraph` (LangGraph.js 1.4.18, không checkpointer), cổng nhận tin thuần, đệm + phiên nhóm, persona/prompt, policy tool theo bề mặt × vai, host ép trả lời; tool nền (tra cứu lexical, gửi nhóm, ghi chú thành viên, chuyển chủ, quản lý nhóm).
+- D31 runtime: làn `fast`/`rag`, hạn chót + `AbortSignal` + `ModelDeadlineError`, `MODEL_COMMUNITY_FAST`, `maxOutputTokens` 1024, runner song song theo thread + advisory lock + heartbeat runner, migration `010_ops_latency.sql`, `scripts/latency_slo.mjs` (G23).
+### Decided
+- **D35 (SO):** phán R07 🔁 theo thẩm định R08; 13 điểm sửa — `decideDelivery` xét D8 trước D4, adapter phân loại lỗi đọc thân, `owner_dm` không takeover, bỏ lời gọi chốt sau vòng tool `answers` (không đổi hình), rào dữ liệu không tin cậy chặt hơn, `remember_member_note` chỉ cho chính người nói.
+- **D36 (SO):** R09 ✅ — SO đo lại + tự đột biến; G07/G08/G14/G15 ✅ local.
+
 ## [Unreleased] - 2026-10-16: D31–D34 tốc độ trả lời + báo động Telegram (SPEC, mã CHƯA đổi)
 ### Decided
 - **D31 (người dùng):** tin ngoài công việc < 5 s, công việc/RAG < 15 s. Thiết kế SPEC-D31: làn `fast`/`rag`/`background`, hạn chót lượt + `AbortSignal` + `ModelDeadlineError` (BB-18), runner song song theo thread, tuần tự trong thread + advisory lock (BB-19), typing sớm, tin gọi bot không triage, `MODEL_COMMUNITY_FAST`, migration `010_ops_latency`, cổng G23.

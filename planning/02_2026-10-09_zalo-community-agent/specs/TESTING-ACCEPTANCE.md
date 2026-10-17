@@ -48,15 +48,15 @@ Bằng chứng đỏ bắt buộc cho máy chấm: `scripts/eval/community/red-f
 | G04 | Transport nhóm: tin/sự kiện nhóm ghi đúng payload; `delete_message` dùng `uidFrom` người gửi (ca đỏ: uid bot); 166 ⇒ `bot_is_admin=false` | ✅ 2026-10-16 (R05) | ⬜ (bot là phó nhóm thật, `sync_group_info` ⇒ `bot_is_admin=true`) | ⬜ |
 | G05 | Pacer: `simulatePacer` 100 tin/1 nhóm ⇒ `first_hour=20`, `min_gap≥8000`, `violations: 0`; DM 50 tin/20 người ⇒ 0 vi phạm (giữ) | ✅ 2026-10-16 (R05) | ⬜ (24 giờ chạy thật: 0 lần backoff 221/no-msgId) | ⬜ |
 | G06 | Watchdog 3003/1006/im 20 phút (giữ test cũ, tài khoản `community`) | ✅ 2026-10-16 | ⬜ | ⬜ |
-| G07 | Cổng nhận tin 28/28 + BB-04 giả mạo; 0 `agent_runs` cho 20 tin thường mode `mention` | ⬜ | ⬜ (nhóm thử: 1 ngày tin thường ⇒ 0 lượt model, đo `agent_runs`) | ⬜ |
-| G08 | Ambient: text cuối không đăng (BB-05), ngân sách 12 lượt/giờ, host ép trả lời khi mention (fallback 1 tin) | ⬜ | ⬜ | ⬜ |
+| G07 | Cổng nhận tin 28/28 + BB-04 giả mạo; 0 `agent_runs` cho 20 tin thường mode `mention` | ✅ 2026-10-17 (R09) | ⬜ (nhóm thử: 1 ngày tin thường ⇒ 0 lượt model, đo `agent_runs`) | ⬜ |
+| G08 | Ambient: text cuối không đăng (BB-05), ngân sách 12 lượt/giờ, host ép trả lời khi mention (fallback 1 tin) | ✅ 2026-10-17 (R09) | ⬜ | ⬜ |
 | G09 | Golden `activation` đạt (§3) bằng `gemini-3.6-flash` | ⬜ | — | ⬜ |
 | G10 | Golden `moderation` đạt | ⬜ | — | ⬜ |
 | G11 | Golden `lead_intent` đạt | ⬜ | — | ⬜ |
 | G12 | Golden `unanswered` đạt | ⬜ | — | ⬜ |
 | G13 | Kiểm duyệt DB 10 ca + thẻ duyệt: `select count(*)::int as violations from outbox o where o.kind='action' and (o.body->>'action') in ('remove_member','block_member') and not exists (select 1 from approvals a where a.id::text = o.body->>'approvalId' and a.status in ('approved','executed','failed'))` ⇒ `0` (chạy sau mọi test:db và sau demo); ca đỏ: chèn 1 hàng action tay ⇒ `1` | ⬜ | ⬜ (sau 7 ngày: `0`) | ⬜ |
-| G14 | BB-07: prompt lượt nhóm không chứa `member_profiles.notes` (test fetch giả) + `grep -c "member_profiles" packages/core/src/agent/community/persona.ts` = `0` | ⬜ | — | ⬜ |
-| G15 | Đệm: `select max(c) from (select count(*) c from group_messages group by zalo_account_id, thread_id) t` ≤ 200 và `min(received_at) > now() - interval '8 days'` sau `runTimers` | ⬜ | ⬜ | ⬜ |
+| G14 | BB-07: prompt lượt nhóm không chứa `member_profiles.notes` (test fetch giả) + `grep -c "member_profiles" packages/core/src/agent/community/persona.ts` = `0` | ✅ 2026-10-17 (R09) | — | ⬜ |
+| G15 | Đệm: `select max(c) from (select count(*) c from group_messages group by zalo_account_id, thread_id) t` ≤ 200 và `min(received_at) > now() - interval '8 days'` sau `runTimers` | ✅ 2026-10-17 (R09) | ⬜ | ⬜ |
 | G16 | Thẩm định đối kháng P05 (🔴, agent khác, ≥ 3 cách phá, 0 hành động trái phép) | ⬜ | — | — |
 | G17 | Timers idempotent + automations skip-locked + báo cáo ngày DM owner | ⬜ | ⬜ (nhận 1 báo cáo/ngày trong 3 ngày) | ⬜ |
 | G18 | Dashboard: 4 bộ DB web xanh 3 lần + `next build && next start` curl | ⬜ | — | ⬜ |
