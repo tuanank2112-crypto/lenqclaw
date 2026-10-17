@@ -16,8 +16,11 @@ Pivot 2026-10-09 (D01): agent chăm sóc cộng đồng Zalo. Bộ SPEC ĐÃ DUY
 - [x] P01 — gỡ sàn thợ, migration 007/008/009, tài khoản `community`, vai admin/operator, seed, `check_pivot_cleanup` (🟠, G01–G03 ✅ local) — R01 ✅ 2026-10-16 (D27)
 - [x] P02 — transport nhóm (G04–G06 ✅ local) — R02 🔁 → thẩm định R03 → R05 ✅ 2026-10-16 (D29, D30)
 - [x] D28 — SPEC runtime trên LangGraph (R04 ✅ kỹ thuật)
-- [ ] 🖐 Người dùng duyệt sơ đồ pipeline LangGraph — CHẶN P03
-- [ ] P03 — runtime agent trên LangGraph — KẾ TIẾP sau duyệt
+- [x] 🖐 Người dùng duyệt sơ đồ pipeline LangGraph (ảnh 12) — 2026-10-16
+- [x] D31–D34 — SPEC tốc độ (làn fast/rag, hạn chót, runner song song) + báo động Telegram (R06 ✅ kỹ thuật)
+- [ ] 🖐 Q-D31-1 flash-lite · Q-D31-2 gap nhóm · Q-D31-3 billing Gemini (chặn số đo thật G23)
+- [ ] P03 — runtime agent trên LangGraph + runtime D31 — ĐANG THI CÔNG (H07, 2026-10-17)
+- [ ] P03b — worker D31 (tick 250, advisory lock, heartbeat) + báo động Telegram + dọn dữ liệu (🟠, sau P03)
 - [ ] P02 — transport nhóm: worker + action outbox + pacer nhóm + sim nhóm (🟠 thi công · 🔴 thẩm định, G04–G06)
 - [ ] P03 — runtime agent: cổng nhận tin, đệm, ambient, persona, policy tool, host ép trả lời (🔴/🟠, G07, G08, G14, G15)
 - [ ] P04 — tri thức: kho, embedding, truy hồi lai RRF, câu hỏi bỏ trống (🟠, G12)

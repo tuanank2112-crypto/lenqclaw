@@ -1,6 +1,23 @@
 # 📅 Nhật Ký Làm Việc Ngày 2026-10-14 (Session Memory Log)
 
-> Cập nhật lúc: `2026-10-16` | Phiên bản: `v0.0.1` (hồ sơ 02 SPEC đã duyệt + D22–D25) · PHIÊN MỚI NHẤT Ở TRÊN CÙNG (script xoay giữ phần đầu file)
+> Cập nhật lúc: `2026-10-17` | Phiên bản: `v0.0.1` (hồ sơ 02 SPEC đã duyệt + D22–D25) · PHIÊN MỚI NHẤT Ở TRÊN CÙNG (script xoay giữ phần đầu file)
+
+---
+
+## 🏁 Phiên 2026-10-17 — Tiếp tục: đồng bộ não D31–D34, phóng P03
+
+### 🎯 Chỉ đạo
+Người dùng: "đến đâu rồi? tiếp tục đi".
+
+### ✅ Đã làm
+- Bước 0 `--check` exit 0. Trạng thái: P01 ✅, P02 ✅, sơ đồ LangGraph người dùng ĐÃ DUYỆT (2026-10-16), D31–D33 người dùng chốt (tốc độ < 5 s / RAG < 15 s, báo động Telegram, persona không qua eval), D34 SO duyệt R06 (`ba799dc`).
+- Não chưa ghi D31–D34 ⇒ đồng bộ kernel, roadmap, changelog, index.
+- Handoff H07 thi công P03 (SPEC-P03 + runtime D31; giá trị tạm Q-D31-1 CÓ / Q-D31-2 KHÔNG / Q-D31-3 chưa billing ⇒ G23 model thật có thể `blocked`). Phóng worker 🟠.
+
+### ⏭ Treo
+- 🖐 Q-D31-1/2/3 (billing Gemini chặn số đo thật G23).
+- 🖐 Người dùng xem bóc tách luồng kỹ thuật (tốc độ · chất lượng · eval · status · sessions) — mục checklist plan 02 còn mở.
+- `lenqclaw_presentation_transcript.pdf` ở root vẫn chưa theo dõi (trùng bản `docs/`) — chờ người xoá.
 
 ---
 

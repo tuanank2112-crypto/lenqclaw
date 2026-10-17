@@ -73,7 +73,7 @@
     },
     "eval_next": "gemini --set diagnosis,responsibility (D29) after quota reset ~14:00 ICT"
   },
-  "next": "User approves LangGraph pipeline diagram (00-ARCH §4) -> P03 on LangGraph -> (P04||P05||P06||P07) -> P08 -> P09",
+  "next": "P03 on LangGraph + D31 runtime (H07, in progress) -> P03b -> (P04||P05||P06||P07) -> P08 -> P09",
   "approved": [
     "P01",
     "P03-code",
@@ -89,8 +89,8 @@
     "D31-model-down"
   ],
   "llm_provider": "vyce (deepseek-v4-flash, temporary D28; gate provider gemini D26)",
-  "decisions_latest": "D30 (plan 02)",
-  "in_progress": null,
+  "decisions_latest": "D34 (plan 02)",
+  "in_progress": "H07 thi-cong P03 (worker, 2026-10-17)",
   "pushed": "origin/main = cdb0b3d (2026-10-14)",
   "tests_now": {
     "unit": 218,
@@ -99,11 +99,11 @@
     "measured": "2026-10-16"
   },
   "active_plan": "planning/02_2026-10-09_zalo-community-agent",
-  "plan_status": "P01, P02 accepted 2026-10-16; D28 LangGraph SPEC done (R04); waiting user diagram approval before P03",
+  "plan_status": "P01, P02 accepted; diagram approved 2026-10-16; D31-D34 specs accepted (R06); P03 in progress (H07)",
   "stopped_plans": [
     "planning/01_2026-09-24_san-viec-tho-mvp (D32, 2026-10-09)"
   ],
-  "open_questions": "Q1-Q12 plan 02 section 6 kept at temporary values",
+  "open_questions": "Q1-Q12 temporary; Q-D31-1 (flash-lite, temp yes), Q-D31-2 (group gap, temp no), Q-D31-3 (Gemini billing) pending user",
   "dev_db": "127.0.0.1:15432 (G31)",
   "approved_plan02": [
     "P01",

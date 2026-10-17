@@ -205,7 +205,7 @@ Thứ tự bắt buộc: `P01 → P02 → P03 → (P04 ∥ P05 ∥ P06 ∥ P07) 
 - [ ] 🖐 Người dùng xem bóc tách luồng kỹ thuật: tốc độ output · chất lượng · eval · status · sessions (yêu cầu 2026-10-16) — có thể bổ sung SPEC P03 trước khi thi công
 - [x] D31–D33 — SPEC tốc độ + giám sát Telegram — H06↔[R06](reports/R06_kien-truc_toc-do.md) ✅ kỹ thuật (D34)
 - [ ] 🖐 Người dùng: Q-D31-1 (model cho tin gọi bot) · Q-D31-2 (gap nhóm) · Q-D31-3 (billing Gemini, `.env`)
-- [ ] P03 — runtime agent trên LangGraph (G07, G08, G14, G15 local) + runtime D31
+- [ ] P03 — runtime agent trên LangGraph (G07, G08, G14, G15 local) + runtime D31 — handoff [H07](handoffs/H07_thi-cong_P03.md) phóng 2026-10-17
 - [ ] P03b — worker D31 + báo động Telegram + dọn dữ liệu (🟠, sau P03)
 - [ ] P04 — tri thức (G12 local sau golden)
 - [ ] P05 — kiểm duyệt (G13, G16)

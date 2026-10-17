@@ -2,6 +2,15 @@
 
 Tất cả các quyết định kiến trúc và lịch sử nâng cấp phiên bản của dự án.
 
+## [Unreleased] - 2026-10-16: D31–D34 tốc độ trả lời + báo động Telegram (SPEC, mã CHƯA đổi)
+### Decided
+- **D31 (người dùng):** tin ngoài công việc < 5 s, công việc/RAG < 15 s. Thiết kế SPEC-D31: làn `fast`/`rag`/`background`, hạn chót lượt + `AbortSignal` + `ModelDeadlineError` (BB-18), runner song song theo thread, tuần tự trong thread + advisory lock (BB-19), typing sớm, tin gọi bot không triage, `MODEL_COMMUNITY_FAST`, migration `010_ops_latency`, cổng G23.
+- **D32 (người dùng):** báo động vận hành qua Telegram (`adapters/alert.ts`, BB-20) + heartbeat tiến trình + `/api/healthz`; giữ `turn_traces`/`agent_runs` 180 ngày, `audit_log` 365 ngày; cổng G24.
+- **D33 (người dùng):** kích hoạt persona không bắt buộc qua eval.
+- **D34 (SO):** duyệt kỹ thuật R06; hình đồ thị không đổi (không cần duyệt lại ảnh 12); xếp runtime D31 vào P03, phần worker/Telegram/dọn dữ liệu thành gói P03b.
+### Superseded
+- Runner tuần tự toàn cục; lời gọi model không timeout; triage mọi tin DM; `max_tokens` 16000 — xem plan 02 §2 bảng thay thế.
+
 ## [Unreleased] - 2026-10-16: P02 nghiệm thu + D28 runtime LangGraph
 ### Changed
 - P02: transport nhóm (tin + sự kiện nhóm, action quản trị qua outbox, pacer + ngân sách theo nhóm, kênh giả lập nhóm). Thẩm định đối kháng tìm lỗi CHẶN kick/block không kiểm thẻ duyệt ⇒ sửa (D29): worker là lớp chặn cuối BB-06.
