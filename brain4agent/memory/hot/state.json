@@ -73,7 +73,7 @@
     },
     "eval_next": "gemini --set diagnosis,responsibility (D29) after quota reset ~14:00 ICT"
   },
-  "next": "P05 (H12) -> adversarial review -> P06 -> P07 -> P08 -> P09",
+  "next": "finish H12 'done when' runs -> R12 -> SO remeasure -> H13 adversarial review P05 -> P06 -> P07 -> P08 -> P09",
   "approved": [
     "P01",
     "P03-code",
@@ -90,7 +90,7 @@
   ],
   "llm_provider": "vyce (deepseek-v4-flash, temporary D28; gate provider gemini D26)",
   "decisions_latest": "D39 (plan 02)",
-  "in_progress": "H12 thi-cong P05 (2026-10-17)",
+  "in_progress": "P05 stopped by user 2026-10-17: code committed 68705f7..034a1ab, no R12, not remeasured",
   "pushed": "origin/main = cdb0b3d (2026-10-14)",
   "tests_now": {
     "unit": 602,
@@ -99,7 +99,7 @@
     "measured": "2026-10-17"
   },
   "active_plan": "planning/02_2026-10-09_zalo-community-agent",
-  "plan_status": "P01, P02, P03, P03b, P04 accepted (2026-10-17, D39); P05 in progress",
+  "plan_status": "P01, P02, P03, P03b, P04 accepted (2026-10-17, D39); P05 stopped mid-way (code committed, unverified)",
   "stopped_plans": [
     "planning/01_2026-09-24_san-viec-tho-mvp (D32, 2026-10-09)"
   ],

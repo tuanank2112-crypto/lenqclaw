@@ -1,0 +1,39 @@
+# red evidence: enqueueaction-no-guard
+# mutated file: src/services/outbox-actions.ts
+# mutation: replace  [      await assertApproved(account, threadId, action.action, action.uid, action.approvalId);]  with  []
+# command: bash -c set -a; . ../../.env; set +a; npx vitest run --config vitest.db.config.ts src/dbtests/p05-moderation.db.test.ts -t "BB-06"
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/p05-moderation.db.test.ts (18 tests | 1 failed | 16 skipped) 291ms
+   × P05-B — the duyet (f)–(j) > BB-06: enqueueAction remove_member/block_member khong co the approved (thieu / pending / sai uid / sai kind) ⇒ ApprovalRequiredError, 0 outbox 35ms
+     → promise resolved "21244" instead of rejecting
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p05-moderation.db.test.ts > P05-B — the duyet (f)–(j) > BB-06: enqueueAction remove_member/block_member khong co the approved (thieu / pending / sai uid / sai kind) ⇒ ApprovalRequiredError, 0 outbox
+AssertionError: promise resolved "21244" instead of rejecting
+
+- Expected: 
+[Error: rejected promise]
+
++ Received: 
+21244
+
+ ❯ src/dbtests/p05-moderation.db.test.ts:435:102
+    433|     const pending = await card(g, victim);
+    434|     const blk = await card(g, victim, 'block_member');
+    435|     await expect(enqueueAction({ threadId: g, action: 'remove_member',…
+       |                                                                                                      ^
+    436|     await expect(enqueueAction({ threadId: g, action: 'remove_member',…
+    437|     await expect(enqueueAction({ threadId: g, action: 'remove_member',…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed | 16 skipped (18)
+   Start at  18:35:49
+   Duration  2.54s (transform 468ms, setup 0ms, collect 1.99s, tests 291ms, environment 0ms, prepare 92ms)
+
+EXIT=1
+restored src/services/outbox-actions.ts (git diff empty)

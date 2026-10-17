@@ -242,7 +242,7 @@ Thứ tự bắt buộc: `P01 → P02 → P03 → (P04 ∥ P05 ∥ P06 ∥ P07) 
 - [x] P03 — runtime agent trên LangGraph (G07, G08, G14, G15 local) + runtime D31 — H07↔[R07](reports/R07_thi-cong_P03.md) 🔁 · H08↔[R08](reports/R08_tham-dinh_P03.md) thẩm định ✅ · H09↔[R09](reports/R09_thi-cong_P03-fix.md) ✅ 2026-10-17 (D36) — G07/G08/G14/G15 ✅ local; G23 chờ model thật
 - [x] P03b — worker D31 + báo động Telegram + heartbeat/healthz + dọn dữ liệu + `own_uid` (🟠, D37) — H10↔[R10](reports/R10_thi-cong_P03b.md) ✅ 2026-10-17 (D38); G24 ✅ local
 - [x] P04 — tri thức (G12 local sau golden) — H11↔[R11](reports/R11_thi-cong_P04.md) ✅ 2026-10-17 (D39); golden `unanswered` ở P09a (tuần tự P04 → P05 → P06 → P07: cùng chạm `policy.ts`/tools, tránh G32)
-- [ ] P05 — kiểm duyệt (G13, G16) — handoff [H12](handoffs/H12_thi-cong_P05.md) phóng 2026-10-17 (gồm 2 sửa D39) ⇒ thẩm định đối kháng 🔴 sau
+- [ ] P05 — kiểm duyệt (G13, G16) — handoff [H12](handoffs/H12_thi-cong_P05.md) phóng 2026-10-17 (gồm 2 sửa D39) ⇒ thẩm định đối kháng 🔴 sau · ⛔ DỪNG theo lệnh người dùng 2026-10-17 ~18:45: code đã commit `68705f7..034a1ab`, evidence dở, CHƯA có R12, SO CHƯA đo lại/phán
 - [ ] P06 — lead & trí nhớ
 - [ ] P07 — lịch & vận hành (G17 local)
 - [ ] P08 — dashboard (G18 local)

@@ -1,0 +1,42 @@
+# red evidence: evidence-id-only-db
+# mutated file: src/services/approvals.ts
+# mutation: replace  [  if (REJECT_WORDS.some((w) => hasPhrase(n, w))) return 'reject';]  with  [  return 'approve';]
+# command: bash -c set -a; . ../../.env; set +a; npx vitest run --config vitest.db.config.ts src/dbtests/p05-moderation.db.test.ts -t "i2"
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/p05-moderation.db.test.ts (18 tests | 1 failed | 17 skipped) 159ms
+   × P05-B — the duyet (f)–(j) > (i2) decide_approval tool: thieu ma / sai huong (tin noi "tu choi" nhung model goi approve) / member ⇒ loi; dung ma + tu ⇒ approved 87ms
+     → promise resolved "{ status: 'approved', outbox_id: 21190 }" instead of rejecting
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p05-moderation.db.test.ts > P05-B — the duyet (f)–(j) > (i2) decide_approval tool: thieu ma / sai huong (tin noi "tu choi" nhung model goi approve) / member ⇒ loi; dung ma + tu ⇒ approved
+AssertionError: promise resolved "{ status: 'approved', outbox_id: 21190 }" instead of rejecting
+
+- Expected
++ Received
+
+- [Error: rejected promise]
++ Object {
++   "outbox_id": 21190,
++   "status": "approved",
++ }
+
+ ❯ src/dbtests/p05-moderation.db.test.ts:395:132
+    393|       }) as unknown as ToolContext;
+    394|     await expect(decideApprovalTool.run(ctx('sim-owner', 'owner', 'duy…
+    395|     await expect(decideApprovalTool.run(ctx('sim-owner', 'owner', `từ …
+       |                                                                                                                                    ^
+    396|     await expect(decideApprovalTool.run(ctx(uniq('sim-mem'), 'member',…
+    397|     // tin cua NGUOI KHAC (khong phai requester) chua ma the cung khon…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 17 skipped (18)
+   Start at  18:34:50
+   Duration  3.54s (transform 716ms, setup 0ms, collect 2.92s, tests 159ms, environment 0ms, prepare 162ms)
+
+EXIT=1
+restored src/services/approvals.ts (git diff empty)

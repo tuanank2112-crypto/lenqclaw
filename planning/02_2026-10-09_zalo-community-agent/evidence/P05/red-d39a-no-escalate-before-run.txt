@@ -1,0 +1,36 @@
+# red evidence: d39a-no-escalate-before-run
+# mutated file: src/agent/community/graph/nodes/tools.ts
+# mutation: replace  [      if (tool.extendsDeadline) {]  with  [      if (false as boolean) {]
+# command: bash -c set -a; . ../../.env; set +a; npx vitest run --config vitest.db.config.ts src/dbtests/p05-d39.db.test.ts
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/p05-d39.db.test.ts (3 tests | 1 failed) 1063ms
+   × D39 (a): node tools nang lan TRUOC khi chay tool extendsDeadline > luot fast con 1000 ms (< 3500, > 300) goi search_knowledge ⇒ embed nhan han rag (khong roi ve lexical) 1021ms
+     → expected 'fast' to be 'rag' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p05-d39.db.test.ts > D39 (a): node tools nang lan TRUOC khi chay tool extendsDeadline > luot fast con 1000 ms (< 3500, > 300) goi search_knowledge ⇒ embed nhan han rag (khong roi ve lexical)
+AssertionError: expected 'fast' to be 'rag' // Object.is equality
+
+Expected: "rag"
+Received: "fast"
+
+ ❯ src/dbtests/p05-d39.db.test.ts:76:22
+     74|     setEmbedFetchForTest(slowEmbed(1200, log)); // 1200 ms > con lai c…
+     75|     const out = await toolsNode(toolsState(threadId, 1000));
+     76|     expect(out.lane).toBe('rag');
+       |                      ^
+     77|     expect(log.calls).toBe(1);
+     78|     const a = await sql<{ data: { vector: boolean } }>(`select data fr…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  18:35:40
+   Duration  3.66s (transform 452ms, setup 0ms, collect 2.28s, tests 1.06s, environment 0ms, prepare 138ms)
+
+EXIT=1
+restored src/agent/community/graph/nodes/tools.ts (git diff empty)

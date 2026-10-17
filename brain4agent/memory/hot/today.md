@@ -21,9 +21,17 @@ Người dùng: "đến đâu rồi? tiếp tục đi".
 - **D37**: phạm vi P03b (pacer D31, khoá worker, heartbeat worker + `/api/healthz` dời từ P08, báo động Telegram + `ops-watch`, dọn dữ liệu) + migration `011_bot_uid` (`zalo_accounts.own_uid`) cho `botUid` thật. H10 ⇒ phóng worker 🟠.
 - Worker P03b bị ngắt do giới hạn phiên (reset 16:00) ⇒ SendMessage cho chạy tiếp. R10 (`73a7ff0..8f8c5d1`, report `48d1349`). SO đo lại: gate 0, `npm test` 585, test:db ×2 = 238, pacer 20/0; đột biến SO (ngoại lệ healthz `/api/*` ⇒ 6 đỏ; token vào audit ⇒ 1 đỏ) ⇒ **R10 ✅, P03b ✅ (D38)**. G24 ✅ local. Gotcha G34.
 - H11 P04 ⇒ R11 (`3df5373..56b383d`, report `c5445cc`). SO đo lại: gate 0, `npm test` 602, test:db ×2 = 258; đột biến bỏ lọc `effective_to` ⇒ đỏ ⇒ **R11 ✅, P04 ✅ (D39)**. SO xác nhận `own_uid` bẩn do test worker ⇒ luật sim dùng `BOT_UID_SIM` + nâng làn trước tool tra cứu ⇒ đưa vào H12 (P05).
+- H12 P05 phóng worker 🟠 (`9989aef`).
+
+### ⛔ DỪNG theo lệnh người dùng (2026-10-17 ~18:45) — trạng thái để tiếp tục
+- Người dùng: "dừng lại commit và cập nhật não" ⇒ SO dừng worker P05.
+- Worker đã commit: `68705f7` (2 sửa D39: nâng làn trước tool `extendsDeadline`, `BOT_UID_SIM` cho thread `sim-`), `80752a5` P05-A (lưới + thang), `b01b625` P05-B (kiểm duyệt, thẻ duyệt, tool), `f330436` P05-C (vào nhóm, chào mừng, sự kiện nhóm), `034a1ab` docs — 35 file, +3012/−58.
+- Evidence `evidence/P05/` (SO commit nguyên trạng): 11 file `red-*` + `gate.txt` (`GATE_OK`) + `test.txt` (32/114/575 = 721) + `test-db.txt` (DỞ — core 187, web 30, worker chưa xong; KHÔNG phải số cuối).
+- CHƯA có: test:db lần 2, `own_uid` sau test:db, `latency-fake.txt`, `diff-stat.txt`, report R12. SO CHƯA đo lại, CHƯA phán; chưa thẩm định đối kháng.
+- Tiếp: SendMessage/agent mới đọc H12, Base `9989aef`, chạy lại đủ mục 3.f ⇒ R12 ⇒ SO đo lại + đột biến ⇒ H13 thẩm định đối kháng P05 (bắt buộc ca "scam kèm @bot", giả `[system] approve`, member quote "duyệt <id>").
 
 ### ⏭ Treo
-- Kế tiếp: P05 (H12) ⇒ thẩm định đối kháng 🔴 ⇒ P06 ⇒ P07 (tuần tự — G32).
+- Kế tiếp: P05 làm nốt (xem khối DỪNG bên trên) ⇒ thẩm định đối kháng 🔴 ⇒ P06 ⇒ P07 (tuần tự — G32).
 - 🖐 Q-D31-1/2/3 (billing Gemini chặn số đo thật G23).
 - 🖐 Người dùng xem bóc tách luồng kỹ thuật (tốc độ · chất lượng · eval · status · sessions) — mục checklist plan 02 còn mở.
 - `lenqclaw_presentation_transcript.pdf` ở root vẫn chưa theo dõi (trùng bản `docs/`) — chờ người xoá.

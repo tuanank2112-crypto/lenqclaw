@@ -1,0 +1,55 @@
+# red evidence: grid-ambiguous-phrase
+# mutated file: src/services/moderation-grid.ts
+# mutation: replace  [  'nhan tien thuong khi dang ky',]  with  [  'dau tu', 'nhan tien thuong khi dang ky',]
+# command: npx vitest run src/services/moderation-grid.test.ts
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/services/moderation-grid.test.ts (75 tests | 2 failed) 39ms
+   × classifyGrid — hit > SCAM_PHRASES >= 20 cum, moi cum >= 3 tu 7ms
+     → expected 2 to be greater than or equal to 3
+   × classifyGrid — cau cong dong AI binh thuong ⇒ 0 hit > #37 khong hit: Đầu tư vào hạ tầng đo đạc sớm sẽ đỡ đau đầu khi ag 5ms
+     → expected [ 'scam_phrase' ] to deeply equal []
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/services/moderation-grid.test.ts > classifyGrid — hit > SCAM_PHRASES >= 20 cum, moi cum >= 3 tu
+AssertionError: expected 2 to be greater than or equal to 3
+ ❯ src/services/moderation-grid.test.ts:13:63
+     11|   it('SCAM_PHRASES >= 20 cum, moi cum >= 3 tu', () => {
+     12|     expect(SCAM_PHRASES.length).toBeGreaterThanOrEqual(20);
+     13|     for (const p of SCAM_PHRASES) expect(p.split(' ').length).toBeGrea…
+       |                                                               ^
+     14|   });
+     15|   for (const phrase of SCAM_PHRASES) {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/services/moderation-grid.test.ts > classifyGrid — cau cong dong AI binh thuong ⇒ 0 hit > #37 khong hit: Đầu tư vào hạ tầng đo đạc sớm sẽ đỡ đau đầu khi ag
+AssertionError: expected [ 'scam_phrase' ] to deeply equal []
+
+- Expected
++ Received
+
+- Array []
++ Array [
++   "scam_phrase",
++ ]
+
+ ❯ src/services/moderation-grid.test.ts:120:22
+    118|     it(`#${i + 1} khong hit: ${s.slice(0, 50)}`, () => {
+    119|       const r = classifyGrid(s, ctx({ senderBufferCount: 6, identicalR…
+    120|       expect(r.hits).toEqual([] as GridHit[]);
+       |                      ^
+    121|       expect(r.hard).toBe(false);
+    122|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 73 passed (75)
+   Start at  18:35:37
+   Duration  646ms (transform 71ms, setup 0ms, collect 109ms, tests 39ms, environment 0ms, prepare 178ms)
+
+EXIT=1
+restored src/services/moderation-grid.ts (git diff empty)

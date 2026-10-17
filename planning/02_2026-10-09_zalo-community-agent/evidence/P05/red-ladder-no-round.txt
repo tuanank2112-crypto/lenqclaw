@@ -1,0 +1,66 @@
+# red evidence: ladder-no-round
+# mutated file: src/services/moderation-ladder.ts
+# mutation: replace  [const score = round1(decayScore(a.prevScore, a.lastUpdatedAt, a.now, a.halfLifeHours ?? LADDER.halfLifeHours) + inc);]  with  [const score = decayScore(a.prevScore, a.lastUpdatedAt, a.now, a.halfLifeHours ?? LADDER.halfLifeHours) + inc;]
+# command: npx vitest run src/services/moderation-ladder.test.ts
+     70|       if (c.expect.score !== undefined) expect(got.score).toBe(c.expec…
+     71|       if (c.expect.exempt !== undefined) expect(got.exempt).toBe(c.exp…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/services/moderation-ladder.test.ts > moderation-ladder — 14 ca nguyen van ladder-ref.txt > L03 spam lan 3 => kick_requested
+ FAIL  src/services/moderation-ladder.test.ts > moderation-ladder — 14 ca nguyen van ladder-ref.txt > L13 harass 1.5 => warn; lan 2 => kick
+AssertionError: expected 'delete' to be 'kick_requested' // Object.is equality
+
+Expected: "kick_requested"
+Received: "delete"
+
+ ❯ src/services/moderation-ladder.test.ts:69:26
+     67|     it(`${c.id} ${c.name}`, () => {
+     68|       const got = c.run();
+     69|       expect(got.action).toBe(c.expect.action);
+       |                          ^
+     70|       if (c.expect.score !== undefined) expect(got.score).toBe(c.expec…
+     71|       if (c.expect.exempt !== undefined) expect(got.exempt).toBe(c.exp…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  src/services/moderation-ladder.test.ts > moderation-ladder — 14 ca nguyen van ladder-ref.txt > L04 lan 4 => block_requested
+ FAIL  src/services/moderation-ladder.test.ts > moderation-ladder — 14 ca nguyen van ladder-ref.txt > L06 scam lan 2 => block_requested
+AssertionError: expected 'kick_requested' to be 'block_requested' // Object.is equality
+
+Expected: "block_requested"
+Received: "kick_requested"
+
+ ❯ src/services/moderation-ladder.test.ts:69:26
+     67|     it(`${c.id} ${c.name}`, () => {
+     68|       const got = c.run();
+     69|       expect(got.action).toBe(c.expect.action);
+       |                          ^
+     70|       if (c.expect.score !== undefined) expect(got.score).toBe(c.expec…
+     71|       if (c.expect.exempt !== undefined) expect(got.exempt).toBe(c.exp…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  src/services/moderation-ladder.test.ts > moderation-ladder — don vi > lam tron 1 chu so truoc khi so nguong: 1 + 1 sau 1 gio = 1,996 ⇒ 2,0 ⇒ delete (D17)
+AssertionError: expected 'warn' to be 'delete' // Object.is equality
+
+Expected: "delete"
+Received: "warn"
+
+ ❯ src/services/moderation-ladder.test.ts:85:42
+     83|     expect(1 * Math.pow(0.5, 1 / 168) + 1).toBeLessThan(2);
+     84|     expect(round1(1.996)).toBe(2);
+     85|     expect(step(1, 0, 1, 'spam').action).toBe('delete');
+       |                                          ^
+     86|   });
+     87|   it('decayScore: 1 tuan ⇒ nua; dong ho lui ⇒ khong tang', () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ Test Files  1 failed (1)
+      Tests  6 failed | 13 passed (19)
+   Start at  18:34:19
+   Duration  733ms (transform 74ms, setup 0ms, collect 107ms, tests 28ms, environment 0ms, prepare 228ms)
+
+EXIT=1
+restored src/services/moderation-ladder.ts (git diff empty)

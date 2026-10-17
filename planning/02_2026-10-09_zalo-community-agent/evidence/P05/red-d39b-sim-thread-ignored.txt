@@ -1,0 +1,36 @@
+# red evidence: d39b-sim-thread-ignored
+# mutated file: src/agent/community/bot.ts
+# mutation: replace  [  if (sim) return BOT_UID_SIM;]  with  []
+# command: npx vitest run src/agent/community/bot.test.ts
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/agent/community/bot.test.ts (13 tests | 1 failed) 26ms
+   × D39: DATA_MODE=sim + thread sim-% ⇒ BOT_UID_SIM bat ke cot own_uid > cot co uid that, thread sim-% trong DATA_MODE=sim ⇒ BOT_UID_SIM; resolveBotUid theo anh chup do 6ms
+     → expected '7001' to be 'sim-bot' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/agent/community/bot.test.ts > D39: DATA_MODE=sim + thread sim-% ⇒ BOT_UID_SIM bat ke cot own_uid > cot co uid that, thread sim-% trong DATA_MODE=sim ⇒ BOT_UID_SIM; resolveBotUid theo anh chup do
+AssertionError: expected '7001' to be 'sim-bot' // Object.is equality
+
+Expected: "sim-bot"
+Received: "7001"
+
+ ❯ src/agent/community/bot.test.ts:101:82
+     99|   it('cot co uid that, thread sim-% trong DATA_MODE=sim ⇒ BOT_UID_SIM;…
+    100|     db.own = '7001';
+    101|     expect(await botUid('community', { DATA_MODE: 'sim' }, Date.now, '…
+       |                                                                                  ^
+    102|     expect(resolveBotUid({ DATA_MODE: 'sim' })).toBe(BOT_UID_SIM);
+    103|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 12 passed (13)
+   Start at  18:35:46
+   Duration  731ms (transform 130ms, setup 0ms, collect 286ms, tests 26ms, environment 0ms, prepare 141ms)
+
+EXIT=1
+restored src/agent/community/bot.ts (git diff empty)

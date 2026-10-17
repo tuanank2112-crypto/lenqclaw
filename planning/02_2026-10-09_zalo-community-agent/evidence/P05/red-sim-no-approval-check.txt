@@ -1,0 +1,36 @@
+# red evidence: sim-no-approval-check
+# mutated file: src/sim/sim-actions.ts
+# mutation: replace  [      if (claimed.length === 0) return fail('approval_invalid');]  with  []
+# command: bash -c set -a; . ../../.env; set +a; npx vitest run --config vitest.db.config.ts src/dbtests/sim-actions.db.test.ts
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/sim-actions.db.test.ts (18 tests | 1 failed) 942ms
+   × applySimOutbox — action tren DB gia lap (§7.2) > D30(3): remove_member/block_member KHONG the hop le (thieu, ngau nhien, pending, lech uid/kind/thread) ⇒ failed approval_invalid, thanh vien con nguyen, the khong bi dong 130ms
+     → expected 'sent' to be 'failed' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/sim-actions.db.test.ts > applySimOutbox — action tren DB gia lap (§7.2) > D30(3): remove_member/block_member KHONG the hop le (thieu, ngau nhien, pending, lech uid/kind/thread) ⇒ failed approval_invalid, thanh vien con nguyen, the khong bi dong
+AssertionError: expected 'sent' to be 'failed' // Object.is equality
+
+Expected: "failed"
+Received: "sent"
+
+ ❯ src/dbtests/sim-actions.db.test.ts:205:24
+    203|     for (const id of ids) {
+    204|       const o = await row(id);
+    205|       expect(o.status).toBe('failed');
+       |                        ^
+    206|       expect(o.result).toEqual({ error: 'approval_invalid' });
+    207|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 17 passed (18)
+   Start at  18:35:02
+   Duration  1.82s (transform 209ms, setup 0ms, collect 452ms, tests 942ms, environment 0ms, prepare 180ms)
+
+EXIT=1
+restored src/sim/sim-actions.ts (git diff empty)

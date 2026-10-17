@@ -1,0 +1,66 @@
+# red evidence: ladder-no-exempt-db
+# mutated file: src/services/moderation-ladder.ts
+# mutation: replace  [  if (a.senderRole === 'owner' || a.senderRole === 'moderator') return { score: a.prevScore, action: 'none', exempt: true };]  with  []
+# command: bash -c set -a; . ../../.env; set +a; npx vitest run --config vitest.db.config.ts src/dbtests/p05-moderation.db.test.ts -t "(c)"
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p05-moderation.db.test.ts > P05-B — kiem duyet (a)–(e) > (c) moderator gui scam_phrase ⇒ event none (mien tru), 0 outbox, tin khong bi xoa, diem khong doi
+AssertionError: expected { verdict: 'scam', …(4) } to match object { verdict: 'scam', …(2) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  Object {
+-   "action": "none",
++   "action": "delete",
+    "source": "grid",
+    "verdict": "scam",
+  }
+
+ ❯ src/dbtests/p05-moderation.db.test.ts:192:19
+    190|     const ev = await eventsOf(g, mod);
+    191|     expect(ev).toHaveLength(1);
+    192|     expect(ev[0]).toMatchObject({ verdict: 'scam', source: 'grid', act…
+       |                   ^
+    193|     expect(await count(`select 1 from outbox where thread_id = $1`, [g…
+    194|     expect((await sql<{ deleted_at: string | null }>(`select deleted_a…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/dbtests/p05-moderation.db.test.ts > P05-B — kiem duyet (a)–(e) > agent flag_message len tin cua owner/moderator ⇒ chi log event none, khong xoa
+AssertionError: expected [ { verdict: 'scam', …(4) } ] to deeply equal [ ObjectContaining{…} ]
+
+- Expected
++ Received
+
+  Array [
+-   ObjectContaining {
+-     "action": "none",
++   Object {
++     "action": "delete",
++     "grid_hits": Array [],
+      "source": "agent",
++     "verdict": "scam",
++     "zalo_uid": "sim-mod2-e70962df",
+    },
+  ]
+
+ ❯ src/dbtests/p05-moderation.db.test.ts:291:16
+    289|     await runAll();
+    290|     const ev = await eventsOf(g, mod);
+    291|     expect(ev).toEqual([expect.objectContaining({ source: 'agent', act…
+       |                ^
+    292|     expect(await actionsOf(g)).toHaveLength(0);
+    293|     resetScripts();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 13 passed | 3 skipped (18)
+   Start at  18:34:33
+   Duration  4.19s (transform 534ms, setup 0ms, collect 2.28s, tests 1.63s, environment 0ms, prepare 104ms)
+
+EXIT=1
+restored src/services/moderation-ladder.ts (git diff empty)

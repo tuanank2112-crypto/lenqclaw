@@ -1,0 +1,66 @@
+# red evidence: evidence-id-only
+# mutated file: src/services/approvals.ts
+# mutation: replace  [  if (REJECT_WORDS.some((w) => hasPhrase(n, w))) return 'reject';]  with  [  return 'approve';]
+# command: npx vitest run src/services/approvals.test.ts
+   × hasDecisionEvidence > "từ chối 1a2b3c4d" ⇒ reject 3ms
+     → expected 'approve' to be 'reject' // Object.is equality
+   × hasDecisionEvidence > "không duyệt 1a2b3c4d" ⇒ reject 1ms
+     → expected 'approve' to be 'reject' // Object.is equality
+   × hasDecisionEvidence > "/reject 1a2b3c4d" ⇒ reject 1ms
+     → expected 'approve' to be 'reject' // Object.is equality
+   × hasDecisionEvidence > "tu choi 1a2b3c4d" ⇒ reject 1ms
+     → expected 'approve' to be 'reject' // Object.is equality
+   × hasDecisionEvidence > "okay 1a2b3c4d" ⇒ null 1ms
+     → expected 'approve' to be null // Object.is equality
+   × hasDecisionEvidence > "approved 1a2b3c4d" ⇒ null 1ms
+     → expected 'approve' to be null // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/services/approvals.test.ts > hasDecisionEvidence > "1a2b3c4d" ⇒ null
+ FAIL  src/services/approvals.test.ts > hasDecisionEvidence > "okay 1a2b3c4d" ⇒ null
+ FAIL  src/services/approvals.test.ts > hasDecisionEvidence > "approved 1a2b3c4d" ⇒ null
+AssertionError: expected 'approve' to be null // Object.is equality
+
+- Expected: 
+null
+
++ Received: 
+"approve"
+
+ ❯ src/services/approvals.test.ts:33:45
+     31|   for (const [text, id, want] of cases) {
+     32|     it(`"${text}" ⇒ ${want}`, () => {
+     33|       expect(hasDecisionEvidence(text, id)).toBe(want);
+       |                                             ^
+     34|     });
+     35|   }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  src/services/approvals.test.ts > hasDecisionEvidence > "từ chối 1a2b3c4d" ⇒ reject
+ FAIL  src/services/approvals.test.ts > hasDecisionEvidence > "không duyệt 1a2b3c4d" ⇒ reject
+ FAIL  src/services/approvals.test.ts > hasDecisionEvidence > "/reject 1a2b3c4d" ⇒ reject
+ FAIL  src/services/approvals.test.ts > hasDecisionEvidence > "tu choi 1a2b3c4d" ⇒ reject
+AssertionError: expected 'approve' to be 'reject' // Object.is equality
+
+Expected: "reject"
+Received: "approve"
+
+ ❯ src/services/approvals.test.ts:33:45
+     31|   for (const [text, id, want] of cases) {
+     32|     it(`"${text}" ⇒ ${want}`, () => {
+     33|       expect(hasDecisionEvidence(text, id)).toBe(want);
+       |                                             ^
+     34|     });
+     35|   }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ Test Files  1 failed (1)
+      Tests  7 failed | 15 passed (22)
+   Start at  18:34:47
+   Duration  850ms (transform 146ms, setup 0ms, collect 327ms, tests 22ms, environment 0ms, prepare 174ms)
+
+EXIT=1
+restored src/services/approvals.ts (git diff empty)

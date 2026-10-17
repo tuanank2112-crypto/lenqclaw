@@ -1,0 +1,45 @@
+# red evidence: welcomed-at-not-set
+# mutated file: src/services/welcome.ts
+# mutation: replace  [      `update group_members set welcomed_at = $3]  with  [      `update group_members set welcomed_at = welcomed_at]
+# command: bash -c set -a; . ../../.env; set +a; npx vitest run --config vitest.db.config.ts src/dbtests/p05-join-welcome.db.test.ts
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/p05-join-welcome.db.test.ts (15 tests | 1 failed) 10019ms
+   ✓ P05-C — duyet vao nhom (§6) > agent_review + model im (khong goi tool) ⇒ approve mac dinh; model sap (HTTP 500) ⇒ approve mac dinh; chi 1 action moi uid 4184ms
+   ✓ P05-C — chao thanh vien moi (§7) > join 3 nguoi trong 2 phut ⇒ sau runTimers(now+3 phut) dung 1 welcome_flush voi 3 uid ⇒ 1 outbox text co 3 mention; chay timer lai ⇒ khong them su kien 303ms
+   × P05-C — chao thanh vien moi (§7) > chao 2 lan: thanh vien da duoc chao KHONG bi chao lai o dot flush sau (welcomed_at dat truoc luot) 239ms
+     → expected [ 'sim-c1-3e51cac3', …(2) ] to deeply equal [ 'sim-c3-af09cc06' ]
+   ✓ P05-C — chao thanh vien moi (§7) > model sap ⇒ host gui WELCOME_TEMPLATE (ten that, ten nhom, ten bot) dung 1 tin 4184ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p05-join-welcome.db.test.ts > P05-C — chao thanh vien moi (§7) > chao 2 lan: thanh vien da duoc chao KHONG bi chao lai o dot flush sau (welcomed_at dat truoc luot)
+AssertionError: expected [ 'sim-c1-3e51cac3', …(2) ] to deeply equal [ 'sim-c3-af09cc06' ]
+
+- Expected
++ Received
+
+  Array [
++   "sim-c1-3e51cac3",
++   "sim-c2-288669d1",
+    "sim-c3-af09cc06",
+  ]
+
+ ❯ src/dbtests/p05-join-welcome.db.test.ts:296:38
+    294|     expect(ev).toHaveLength(2);
+    295|     expect([...ev[0]!.payload.data.uids!].sort()).toEqual([a, b].sort(…
+    296|     expect(ev[1]!.payload.data.uids).toEqual([c]);
+       |                                      ^
+    297|     await runAll();
+    298|     resetScripts();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 14 passed (15)
+   Start at  18:35:13
+   Duration  13.17s (transform 672ms, setup 0ms, collect 2.71s, tests 10.02s, environment 0ms, prepare 157ms)
+
+EXIT=1
+restored src/services/welcome.ts (git diff empty)

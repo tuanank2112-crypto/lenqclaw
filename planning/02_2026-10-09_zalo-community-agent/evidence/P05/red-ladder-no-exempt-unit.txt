@@ -1,0 +1,66 @@
+# red evidence: ladder-no-exempt-unit
+# mutated file: src/services/moderation-ladder.ts
+# mutation: replace  [  if (a.senderRole === 'owner' || a.senderRole === 'moderator') return { score: a.prevScore, action: 'none', exempt: true };]  with  []
+# command: npx vitest run src/services/moderation-ladder.test.ts
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/services/moderation-ladder.test.ts (19 tests | 3 failed) 15ms
+   × moderation-ladder — 14 ca nguyen van ladder-ref.txt > L11 moderator mien tru 5ms
+     → expected 'delete' to be 'none' // Object.is equality
+   × moderation-ladder — 14 ca nguyen van ladder-ref.txt > L12 owner mien tru 1ms
+     → expected 'delete' to be 'none' // Object.is equality
+   × moderation-ladder — don vi > ad = spam (1); exempt khong doi diem du co diem cu 3ms
+     → expected { score: 3.5, …(2) } to deeply equal { score: 2.5, action: 'none', …(1) }
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/services/moderation-ladder.test.ts > moderation-ladder — 14 ca nguyen van ladder-ref.txt > L11 moderator mien tru
+ FAIL  src/services/moderation-ladder.test.ts > moderation-ladder — 14 ca nguyen van ladder-ref.txt > L12 owner mien tru
+AssertionError: expected 'delete' to be 'none' // Object.is equality
+
+Expected: "none"
+Received: "delete"
+
+ ❯ src/services/moderation-ladder.test.ts:69:26
+     67|     it(`${c.id} ${c.name}`, () => {
+     68|       const got = c.run();
+     69|       expect(got.action).toBe(c.expect.action);
+       |                          ^
+     70|       if (c.expect.score !== undefined) expect(got.score).toBe(c.expec…
+     71|       if (c.expect.exempt !== undefined) expect(got.exempt).toBe(c.exp…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/services/moderation-ladder.test.ts > moderation-ladder — don vi > ad = spam (1); exempt khong doi diem du co diem cu
+AssertionError: expected { score: 3.5, …(2) } to deeply equal { score: 2.5, action: 'none', …(1) }
+
+- Expected
++ Received
+
+  Object {
+-   "action": "none",
+-   "exempt": true,
+-   "score": 2.5,
++   "action": "kick_requested",
++   "exempt": false,
++   "score": 3.5,
+  }
+
+ ❯ src/services/moderation-ladder.test.ts:93:50
+     91|   it('ad = spam (1); exempt khong doi diem du co diem cu', () => {
+     92|     expect(step(0, 0, 0, 'ad')).toMatchObject({ score: 1, action: 'war…
+     93|     expect(step(2.5, 0, 0, 'spam', 'moderator')).toEqual({ score: 2.5,…
+       |                                                  ^
+     94|   });
+     95| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 16 passed (19)
+   Start at  18:34:31
+   Duration  466ms (transform 40ms, setup 0ms, collect 66ms, tests 15ms, environment 0ms, prepare 125ms)
+
+EXIT=1
+restored src/services/moderation-ladder.ts (git diff empty)
