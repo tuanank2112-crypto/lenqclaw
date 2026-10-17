@@ -1,0 +1,38 @@
+# RED EVIDENCE: file=app/api/healthz/route.ts
+# mutation: "runner !== null && runner <= limit &&" => ""
+# cmd: npx vitest run --config vitest.db.config.ts tests/healthz.db.test.ts
+# exit: 1
+
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/apps/web
+
+ ❯ tests/healthz.db.test.ts (5 tests | 1 failed) 99ms
+   × /api/healthz (db) > heartbeat runner cu 120 s ⇒ 503 ok:false; body khong lo token / info / host / so lieu 18ms
+     → expected 200 to be 503 // Object.is equality
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  14:33:08
+   Duration  2.23s (transform 282ms, setup 0ms, collect 1.79s, tests 99ms, environment 0ms, prepare 106ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/healthz.db.test.ts > /api/healthz (db) > heartbeat runner cu 120 s ⇒ 503 ok:false; body khong lo token / info / host / so lieu
+AssertionError: expected 200 to be 503 // Object.is equality
+
+- Expected
++ Received
+
+- 503
++ 200
+
+ ❯ tests/healthz.db.test.ts:71:24
+     69|       await setBeat('worker', 1);
+     70|       const r = await call();
+     71|       expect(r.status).toBe(503);
+       |                        ^
+     72|       expect(r.body.ok).toBe(false);
+     73|       expect((r.body.runner as { age_s: number }).age_s).toBe(120);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+

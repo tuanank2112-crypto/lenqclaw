@@ -1,0 +1,71 @@
+# RED EVIDENCE: file=src/agent/community/bot.ts
+# mutation: "return cache.get(account)!.uid ?? fromEnv(env);" => "return fromEnv(env) ?? cache.get(account)!.uid;"
+# cmd: npx vitest run src/agent/community/bot.test.ts
+# exit: 1
+
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/agent/community/bot.test.ts (10 tests | 3 failed) 31ms
+   × botUid(account) — thu tu nguon > cot own_uid thang env va sim 7ms
+     → expected 'env-uid' to be '7001' // Object.is equality
+   × cache 60 s > trong 60 s chi doc DB 1 lan; qua 60 s doc lai va thay gia tri moi 1ms
+     → expected 'sim-bot' to be '7001' // Object.is equality
+   × cache 60 s > loi DB ⇒ giu gia tri cu, khong nem 1ms
+     → expected 'sim-bot' to be '7001' // Object.is equality
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 7 passed (10)
+   Start at  14:33:18
+   Duration  604ms (transform 93ms, setup 0ms, collect 175ms, tests 31ms, environment 0ms, prepare 123ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/agent/community/bot.test.ts > botUid(account) — thu tu nguon > cot own_uid thang env va sim
+AssertionError: expected 'env-uid' to be '7001' // Object.is equality
+
+Expected: "7001"
+Received: "env-uid"
+
+ ❯ src/agent/community/bot.test.ts:27:86
+     25|   it('cot own_uid thang env va sim', async () => {
+     26|     db.own = '7001';
+     27|     expect(await botUid('community', { BOT_ZALO_UID: 'env-uid', DATA_M…
+       |                                                                                      ^
+     28|   });
+     29|   it('own_uid null ⇒ env BOT_ZALO_UID (ke ca khi DATA_MODE khac sim)',…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/agent/community/bot.test.ts > cache 60 s > trong 60 s chi doc DB 1 lan; qua 60 s doc lai va thay gia tri moi
+AssertionError: expected 'sim-bot' to be '7001' // Object.is equality
+
+Expected: "7001"
+Received: "sim-bot"
+
+ ❯ src/agent/community/bot.test.ts:50:52
+     48|     let t = 1_000_000;
+     49|     db.own = '7001';
+     50|     expect(await botUid('community', {}, () => t)).toBe('7001');
+       |                                                    ^
+     51|     db.own = '7002';
+     52|     t += BOT_UID_CACHE_MS - 1;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/agent/community/bot.test.ts > cache 60 s > loi DB ⇒ giu gia tri cu, khong nem
+AssertionError: expected 'sim-bot' to be '7001' // Object.is equality
+
+Expected: "7001"
+Received: "sim-bot"
+
+ ❯ src/agent/community/bot.test.ts:65:52
+     63|     db.fail = true;
+     64|     t += BOT_UID_CACHE_MS;
+     65|     expect(await botUid('community', {}, () => t)).toBe('7001');
+       |                                                    ^
+     66|   });
+     67| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+

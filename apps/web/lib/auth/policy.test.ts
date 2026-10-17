@@ -9,6 +9,16 @@ describe('canAccess (SPEC-P01 §3.1)', () => {
     }
   });
 
+  it('/api/healthz (D37): GET/HEAD mo cho moi vai ke ca chua dang nhap; POST va duong con bi chan khi chua dang nhap', () => {
+    for (const role of [null, 'admin', 'operator'] as const) {
+      expect(canAccess(role, '/api/healthz', 'GET')).toBe(true);
+      expect(canAccess(role, '/api/healthz', 'HEAD')).toBe(true);
+    }
+    expect(canAccess(null, '/api/healthz', 'POST')).toBe(false);
+    expect(canAccess(null, '/api/healthz/x', 'GET')).toBe(false);
+    expect(canAccess(null, '/api/healthzz', 'GET')).toBe(false);
+  });
+
   it('chua dang nhap: chi /login va /api/auth/* duoc phep', () => {
     for (const p of ['/', '/groups', '/api/groups/1', '/approvals', '/zalo', '/admin', '/dev/sim', '/agent']) {
       expect(canAccess(null, p), p).toBe(false);

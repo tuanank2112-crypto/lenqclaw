@@ -1,0 +1,38 @@
+# RED EVIDENCE: file=lib/auth/policy.ts
+# mutation: "if (pathname === '/api/healthz' && (method.toUpperCase() === 'GET' || method.toUpperCase() === 'HEAD')) return true;" => ""
+# cmd: npx vitest run lib/auth/policy.test.ts
+# exit: 1
+
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/apps/web
+
+ ❯ lib/auth/policy.test.ts (16 tests | 1 failed) 15ms
+   × canAccess (SPEC-P01 §3.1) > /api/healthz (D37): GET/HEAD mo cho moi vai ke ca chua dang nhap; POST va duong con bi chan khi chua dang nhap 7ms
+     → expected false to be true // Object.is equality
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 15 passed (16)
+   Start at  14:33:16
+   Duration  570ms (transform 54ms, setup 0ms, collect 78ms, tests 15ms, environment 0ms, prepare 158ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  lib/auth/policy.test.ts > canAccess (SPEC-P01 §3.1) > /api/healthz (D37): GET/HEAD mo cho moi vai ke ca chua dang nhap; POST va duong con bi chan khi chua dang nhap
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ lib/auth/policy.test.ts:14:54
+     12|   it('/api/healthz (D37): GET/HEAD mo cho moi vai ke ca chua dang nhap…
+     13|     for (const role of [null, 'admin', 'operator'] as const) {
+     14|       expect(canAccess(role, '/api/healthz', 'GET')).toBe(true);
+       |                                                      ^
+     15|       expect(canAccess(role, '/api/healthz', 'HEAD')).toBe(true);
+     16|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+

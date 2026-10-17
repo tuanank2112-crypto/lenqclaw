@@ -9,6 +9,7 @@ import type { StaffRole } from '@lenqclaw/core';
  *
  * | Duong dan                                                                  | admin | operator            | chua dang nhap |
  * | /login, /api/auth/*                                                        | ok    | ok                  | ok             |
+ * | GET/HEAD /api/healthz (D32/D37: dich vu ping ngoai, khong dang nhap)        | ok    | ok                  | ok             |
  * | /                                                                          | ok    | ok                  | -> /login      |
  * | /groups, /persona, /knowledge, /automations (+ /api/<cung ten>)            | ok    | doc (GET); khac 403 | -> /login      |
  * | /approvals, /leads, /moderation (+ /api/<cung ten>), /agent                | ok    | ok                  | -> /login      |
@@ -55,6 +56,8 @@ export type HttpMethod = 'GET' | 'HEAD' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 
 
 export function canAccess(role: StaffRole | null, pathname: string, method: HttpMethod = 'GET'): boolean {
   if (matchesSegment(pathname, '/login') || matchesSegment(pathname, '/api/auth')) return true;
+  // D32/D37: /api/healthz KHONG can dang nhap (ping ngoai); chi doc, body khong co bi mat/so lieu (xem route).
+  if (pathname === '/api/healthz' && (method.toUpperCase() === 'GET' || method.toUpperCase() === 'HEAD')) return true;
   if (role === null) return false;
   if (pathname === '/') return true;
   if (matchesAny(pathname, ADMIN_ONLY)) return role === 'admin';

@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { closeDb, enqueue, holdAdvisoryLock, sql } from '@lenqclaw/core';
 import { AccountPacer } from '../pacer.js';
-import { fetchDue } from '../store.js';
+import { countQueuedDue, fetchDue, setOwnUid, writeWorkerHeartbeat } from '../store.js';
 import { FakeZaloClient } from '../testing/fake-client.js';
 import { connectedSession, dropGroup, FAST, makeGroup, resetAccount, uid } from './group-helpers.js';
 
@@ -108,4 +108,58 @@ describe('T6 — khoa mot ban cua worker (BB-19)', () => {
     expect(again).not.toBeNull();
     await again!.release();
   }, 40_000);
+});
+
+describe('P03b-B — own_uid (D37) va heartbeat worker (D32 §9)', () => {
+  it('phien connected ghi zalo_accounts.own_uid = session.ownUid; ghi lai cung gia tri ⇒ khong doi (idempotent); dang xuat khong xoa', async () => {
+    await sql(`update zalo_accounts set own_uid = null where id = 'community'`);
+    const client = new FakeZaloClient('7700123');
+    const { s } = await connectedSession(client);
+    try {
+      const r = await sql<{ own_uid: string | null }>(`select own_uid from zalo_accounts where id = 'community'`);
+      expect(r[0]!.own_uid).toBe('7700123');
+      expect(await setOwnUid('community', '7700123')).toBe(false);
+      expect(await setOwnUid('community', '7700999')).toBe(true);
+      await s.logout();
+      const after = await sql<{ own_uid: string | null }>(`select own_uid from zalo_accounts where id = 'community'`);
+      expect(after[0]!.own_uid).toBe('7700999');
+    } finally {
+      await s.stop();
+      await sql(`update zalo_accounts set own_uid = null where id = 'community'`);
+    }
+  });
+
+  it('writeWorkerHeartbeat upsert 1 dong name=worker (beat_at moi, info dung dang); countQueuedDue dem hang den han', async () => {
+    const saved = await sql<{ name: string; pid: number; host: string; started_at: string; beat_at: string; info: unknown }>(
+      `select name, pid, host, started_at::text as started_at, beat_at::text as beat_at, info from process_heartbeats where name = 'worker'`
+    );
+    const group = uid('g-hb');
+    await makeGroup(group);
+    try {
+      await sql(`update outbox set status = 'cancelled' where zalo_account_id = 'community' and status = 'queued'`);
+      await enqueue({ zaloAccountId: 'community', threadId: group, threadType: 'group', kind: 'text', body: { text: 'x' } });
+      expect(await countQueuedDue('community')).toBe(1);
+      const started = new Date(Date.now() - 60_000);
+      await writeWorkerHeartbeat(started, { session_state: 'connected', last_pacer_tick_at: new Date().toISOString(), queued_due: 1 });
+      await writeWorkerHeartbeat(started, { session_state: 'connected', last_pacer_tick_at: null, queued_due: 0 });
+      const rows = await sql<{ age_s: number; info: Record<string, unknown>; pid: number }>(
+        `select extract(epoch from (now() - beat_at))::float8 as age_s, info, pid from process_heartbeats where name = 'worker'`
+      );
+      expect(rows).toHaveLength(1);
+      expect(rows[0]!.age_s).toBeLessThan(5);
+      expect(rows[0]!.info).toEqual({ session_state: 'connected', last_pacer_tick_at: null, queued_due: 0 });
+      expect(rows[0]!.pid).toBe(process.pid);
+    } finally {
+      await dropGroup(group);
+      await sql(`update outbox set status = 'cancelled' where zalo_account_id = 'community' and status = 'queued'`);
+      if (saved[0]) {
+        await sql(
+          `update process_heartbeats set pid=$2, host=$3, started_at=$4::timestamptz, beat_at=$5::timestamptz, info=$6::jsonb where name=$1`,
+          [saved[0].name, saved[0].pid, saved[0].host, saved[0].started_at, saved[0].beat_at, JSON.stringify(saved[0].info)]
+        );
+      } else {
+        await sql(`delete from process_heartbeats where name = 'worker'`);
+      }
+    }
+  });
 });

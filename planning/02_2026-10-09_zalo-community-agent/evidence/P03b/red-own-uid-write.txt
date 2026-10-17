@@ -1,0 +1,43 @@
+# RED EVIDENCE: file=src/account-session.ts
+# mutation: "await store.setOwnUid(this.account, ownUid);" => ""
+# cmd: npx vitest run --config vitest.db.config.ts src/dbtests/p03b-worker.db.test.ts
+# exit: 1
+
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/apps/zalo-worker
+
+{"t":"2026-10-17T07:33:23.241Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T07:33:23.266Z","event":"pacer.sent","account":"community","outbox_id":15521}
+{"t":"2026-10-17T07:33:23.286Z","event":"pacer.sent","account":"community","outbox_id":15522}
+{"t":"2026-10-17T07:33:24.931Z","event":"zalo.state","account":"community","state":"connected"}
+ ❯ src/dbtests/p03b-worker.db.test.ts (4 tests | 1 failed) 1769ms
+   ✓ T6 — khoa mot ban cua worker (BB-19) > khoa dang bi giu ⇒ worker thoat 1, in WORKER_ALREADY_RUNNING, KHONG mo phien zca-js (khong log worker.started/zalo.state) 1625ms
+   × P03b-B — own_uid (D37) va heartbeat worker (D32 §9) > phien connected ghi zalo_accounts.own_uid = session.ownUid; ghi lai cung gia tri ⇒ khong doi (idempotent); dang xuat khong xoa 24ms
+     → expected null to be '7700123' // Object.is equality
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 passed (4)
+   Start at  14:33:20
+   Duration  4.11s (transform 340ms, setup 0ms, collect 2.07s, tests 1.77s, environment 0ms, prepare 95ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p03b-worker.db.test.ts > P03b-B — own_uid (D37) va heartbeat worker (D32 §9) > phien connected ghi zalo_accounts.own_uid = session.ownUid; ghi lai cung gia tri ⇒ khong doi (idempotent); dang xuat khong xoa
+AssertionError: expected null to be '7700123' // Object.is equality
+
+- Expected: 
+"7700123"
+
++ Received: 
+null
+
+ ❯ src/dbtests/p03b-worker.db.test.ts:120:29
+    118|     try {
+    119|       const r = await sql<{ own_uid: string | null }>(`select own_uid …
+    120|       expect(r[0]!.own_uid).toBe('7700123');
+       |                             ^
+    121|       expect(await setOwnUid('community', '7700123')).toBe(false);
+    122|       expect(await setOwnUid('community', '7700999')).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+

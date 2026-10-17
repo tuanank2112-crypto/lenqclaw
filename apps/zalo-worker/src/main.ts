@@ -10,6 +10,8 @@ import { createZcaClient } from './zca-client.js';
 import { AccountSession } from './account-session.js';
 import { AccountPacer } from './pacer.js';
 import { errSummary, logEvent } from './log.js';
+import * as store from './store.js';
+import { readCommunityConfig } from '@lenqclaw/core/services/community-config';
 
 const LOGIN_POLL_MS = 2_000;
 const LOGOUT_POLL_MS = 2_000;
@@ -31,11 +33,13 @@ async function main(): Promise<void> {
   }
   let accounts;
   let cfg;
+  let community;
   try {
     accounts = readAccounts();
     cfg = readPacerConfig();
+    community = readCommunityConfig(); // D32: HEARTBEAT_*, OPS_WATCH_INTERVAL_MS... sai ⇒ exit 1
   } catch (err) {
-    if (err instanceof ConfigError) fail(err.message);
+    if (err instanceof ConfigError || (err as { code?: string }).code === 'ConfigError') fail((err as Error).message);
     throw err;
   }
   if (!process.env.DATABASE_URL) fail('DATABASE_URL chua duoc cau hinh.');
@@ -52,6 +56,7 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
+  const startedAt = new Date();
   const client = createZcaClient();
   const sessions = accounts.map((a) => new AccountSession(a, client, key, cfg));
   const pacers = sessions.map((s) => new AccountPacer(s.account, cfg, () => s.getSession()));
@@ -81,6 +86,17 @@ async function main(): Promise<void> {
     every(`watchdog:${s.account}`, WATCHDOG_MS, () => s.watchdogTick());
     every(`cookies:${s.account}`, COOKIE_SYNC_MS, () => s.syncCookies());
     every(`pacer:${s.account}`, cfg.tickMs, () => pacers[i]!.tick());
+  });
+
+  // D32 §9: dau song worker moi HEARTBEAT_INTERVAL_MS (loi ghi ⇒ log trong `every`, khong dung tien trinh).
+  every('heartbeat', community.heartbeatIntervalMs, async () => {
+    const s0 = sessions[0]!;
+    const tickAt = pacers[0]!.lastTickAt;
+    await store.writeWorkerHeartbeat(startedAt, {
+      session_state: s0.getState(),
+      last_pacer_tick_at: tickAt === null ? null : new Date(tickAt).toISOString(),
+      queued_due: await store.countQueuedDue(s0.account),
+    });
   });
 
   const shutdown = async (signal: string) => {

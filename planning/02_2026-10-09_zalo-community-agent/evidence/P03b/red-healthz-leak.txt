@@ -1,0 +1,82 @@
+# RED EVIDENCE: file=app/api/healthz/route.ts
+# mutation: "{ ok, runner: { age_s: runner }" => "{ ok, host: beats, runner: { age_s: runner }"
+# cmd: npx vitest run --config vitest.db.config.ts tests/healthz.db.test.ts
+# exit: 1
+
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/apps/web
+
+ ❯ tests/healthz.db.test.ts (5 tests | 2 failed) 108ms
+   × /api/healthz (db) > hai heartbeat moi + phien connected ⇒ 200 {ok:true, runner:{age_s}, worker:{age_s}, zalo:"connected"} 26ms
+     → expected { ok: true, …(4) } to deeply equal { Object (ok, runner, ...) }
+   × /api/healthz (db) > heartbeat runner cu 120 s ⇒ 503 ok:false; body khong lo token / info / host / so lieu 15ms
+     → expected [ 'host', 'ok', 'runner', …(2) ] to deeply equal [ 'ok', 'runner', 'worker', 'zalo' ]
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 3 passed (5)
+   Start at  14:33:13
+   Duration  2.21s (transform 275ms, setup 0ms, collect 1.78s, tests 108ms, environment 0ms, prepare 101ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/healthz.db.test.ts > /api/healthz (db) > hai heartbeat moi + phien connected ⇒ 200 {ok:true, runner:{age_s}, worker:{age_s}, zalo:"connected"}
+AssertionError: expected { ok: true, …(4) } to deeply equal { Object (ok, runner, ...) }
+
+- Expected
++ Received
+
+  Object {
++   "host": Array [
++     Object {
++       "age_s": 2,
++       "name": "runner",
++     },
++     Object {
++       "age_s": 3,
++       "name": "worker",
++     },
++   ],
+    "ok": true,
+    "runner": Object {
+      "age_s": 2,
+    },
+    "worker": Object {
+      "age_s": 3,
+    },
+    "zalo": "connected",
+  }
+
+ ❯ tests/healthz.db.test.ts:61:20
+     59|     const r = await call();
+     60|     expect(r.status).toBe(200);
+     61|     expect(r.body).toEqual({ ok: true, runner: { age_s: 2 }, worker: {…
+       |                    ^
+     62|   });
+     63| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/healthz.db.test.ts > /api/healthz (db) > heartbeat runner cu 120 s ⇒ 503 ok:false; body khong lo token / info / host / so lieu
+AssertionError: expected [ 'host', 'ok', 'runner', …(2) ] to deeply equal [ 'ok', 'runner', 'worker', 'zalo' ]
+
+- Expected
++ Received
+
+  Array [
++   "host",
+    "ok",
+    "runner",
+    "worker",
+    "zalo",
+  ]
+
+ ❯ tests/healthz.db.test.ts:77:42
+     75|       expect(r.raw).not.toContain('info-khong-duoc-lo');
+     76|       expect(r.raw).not.toContain('test-host');
+     77|       expect(Object.keys(r.body).sort()).toEqual(['ok', 'runner', 'wor…
+       |                                          ^
+     78|     } finally {
+     79|       delete process.env.TELEGRAM_BOT_TOKEN;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+

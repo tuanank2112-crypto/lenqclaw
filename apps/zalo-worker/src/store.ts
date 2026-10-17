@@ -2,6 +2,7 @@
 // `sql` cua @lenqclaw/core (BB-07). Worker KHONG tu chen dong outbox: tin moi
 // (doan tach, "da xem") di qua `enqueue` cua core (BB-04).
 
+import { hostname } from 'node:os';
 import { audit, enqueue, sql, tx, type SessionState } from '@lenqclaw/core';
 import type { AccountId } from './config.js';
 import { buildSplitBodies } from './pacer-policy.js';
@@ -98,6 +99,15 @@ export async function clearSessionOnLogout(id: AccountId): Promise<void> {
      where id = $1`,
     [id]
   );
+}
+
+/** D37 / 01-CONTRACTS §4.11: ghi uid cua chinh tai khoan moi lan phien `connected` (core `botUid()` doc). Khong xoa khi dang xuat. */
+export async function setOwnUid(id: AccountId, ownUid: string): Promise<boolean> {
+  const rows = await sql<{ id: string }>(
+    `update zalo_accounts set own_uid = $2 where id = $1 and own_uid is distinct from $2 returning id`,
+    [id, ownUid]
+  );
+  return rows.length > 0;
 }
 
 export async function touchEvent(id: AccountId): Promise<void> {
@@ -493,4 +503,32 @@ export async function auditAction(
 /** Audit su kien pacer (huy vi ngan sach/nhom la): khong ghi noi dung. */
 export async function auditPacer(action: string, threadId: string, data: Record<string, unknown> = {}): Promise<void> {
   await audit(sql, { actorType: 'system', actorId: 'zalo-worker', action, target: threadId, data });
+}
+
+// ---------------------------------------------------------------- heartbeat (D32, SPEC-D31 §9)
+
+export interface WorkerHeartbeatInfo {
+  session_state: SessionState;
+  last_pacer_tick_at: string | null;
+  queued_due: number;
+}
+
+/** Dau song worker: upsert `process_heartbeats('worker')`. Khong gui gi cho ai (khac "heartbeat = bao cao ngay" cua P07). */
+export async function writeWorkerHeartbeat(startedAt: Date, info: WorkerHeartbeatInfo): Promise<void> {
+  await sql(
+    `insert into process_heartbeats (name, pid, host, started_at, beat_at, info)
+     values ('worker', $1, $2, $3, now(), $4::jsonb)
+     on conflict (name) do update set pid = excluded.pid, host = excluded.host, started_at = excluded.started_at,
+                                      beat_at = now(), info = excluded.info`,
+    [process.pid, hostname(), startedAt, JSON.stringify(info)]
+  );
+}
+
+/** So hang `queued` da den han cua tai khoan (heartbeat `queued_due`). */
+export async function countQueuedDue(account: AccountId): Promise<number> {
+  const r = await sql<{ c: number }>(
+    `select count(*)::int as c from outbox where zalo_account_id = $1 and status = 'queued' and not_before <= now()`,
+    [account]
+  );
+  return r[0]?.c ?? 0;
 }

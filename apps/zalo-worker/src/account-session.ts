@@ -133,6 +133,15 @@ export class AccountSession {
       },
     });
     await this.setState('connected');
+    // D37: core `botUid()` doc cot nay (nhan mention / reply-to-bot). Loi ghi khong lam hong ket noi.
+    const ownUid = s.ownUid?.trim();
+    if (ownUid) {
+      try {
+        await store.setOwnUid(this.account, ownUid);
+      } catch (err) {
+        logEvent('zalo.own_uid_error', { account: this.account, error: errSummary(err) });
+      }
+    }
   }
 
   private detach(): void {

@@ -13,6 +13,7 @@ import { claimNextInbound, handleClaimed, processInbound, type InboundHandler } 
 import { routeInboundEvent } from '../agent/community/router.js';
 import { runTimers, type TimerReport } from '../services/timers.js';
 import { readCommunityConfig } from '../services/community-config.js';
+import { botUid } from '../agent/community/bot.js';
 
 /** Mac dinh cu cua vong tuan tu (giu cho tuong thich); dispatcher dung `RUNNER_POLL_MS`. */
 export const RUNNER_INTERVAL_MS = 200;
@@ -98,7 +99,12 @@ async function writeHeartbeat(stats: RunnerStats, inflight: Map<string, { starte
  */
 export async function runDispatcher(opts: RunnerOptions = {}): Promise<void> {
   const cfg = readCommunityConfig();
-  const handler = opts.handler ?? routeInboundEvent;
+  const baseHandler = opts.handler ?? routeInboundEvent;
+  // D37: lam moi anh chup `botUid` (cache 60 s) truoc moi luot — node do thi doc dong bo `resolveBotUid()`.
+  const handler: InboundHandler = async (e) => {
+    await botUid().catch(() => null);
+    return baseHandler(e);
+  };
   const concurrency = opts.concurrency ?? cfg.runnerConcurrency;
   const pollMs = opts.intervalMs ?? cfg.runnerPollMs;
   const drainMs = opts.drainMs ?? cfg.runnerDrainMs;
