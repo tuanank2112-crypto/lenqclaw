@@ -276,6 +276,8 @@ const config = {
 console.log(JSON.stringify({ config, summary, error_rate: Number(errorRate.toFixed(3)) }, null, 2));
 
 await sql(`update inbound_events set processed_at = coalesce(processed_at, now()) where thread_id = any($1::text[])`, [[gA, gB]]);
+// dong dem `out-<outbox_id>` cua nhom do khong duoc de lai (test khac dung id co dinh `out-9001`)
+await sql(`delete from group_messages where thread_id = any($1::text[])`, [[gA, gB]]);
 await closeDb();
 
 if (realMode && errorRate > BLOCKED_ERROR_RATE) {

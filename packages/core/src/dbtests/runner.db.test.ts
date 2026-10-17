@@ -28,6 +28,7 @@ beforeAll(async () => {
   await skipStale();
 });
 afterAll(async () => {
+  await sql(`delete from group_messages where thread_id like 'p03g-%'`);
   await closeDb();
 });
 

@@ -53,6 +53,9 @@ afterEach(() => {
 
 afterAll(async () => {
   uninstallFakeModel();
+  // Don dep dong dem `out-<outbox_id>` cua nhom test: nhieu test (vd worker p02-group) dung id co dinh `out-9001`/`out-9002`;
+  // de lai dong dem that ⇒ dung unique khi sequence outbox di qua cac so do.
+  await sql(`delete from group_messages where thread_id like 'p03g-%'`);
   await closeDb();
 });
 
