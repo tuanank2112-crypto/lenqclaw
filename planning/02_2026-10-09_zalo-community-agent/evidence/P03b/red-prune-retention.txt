@@ -1,0 +1,41 @@
+# RED EVIDENCE: file=src/services/timers.ts
+# mutation: "pruneOld('audit_log', now, cfg.auditRetentionDays)" => "pruneOld('audit_log', now, cfg.traceRetentionDays)"
+# cmd: npx vitest run --config vitest.db.config.ts src/dbtests/p03b-prune.db.test.ts
+# exit: 1
+
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/p03b-prune.db.test.ts (3 tests | 1 failed) 196ms
+   × pruneBuffers — giu du lieu van hanh (§11) > turn_traces + agent_runs > 180 ngay bi xoa, <= 180 ngay giu; audit_log 365: 300 ngay giu, 400 ngay xoa 88ms
+     → expected [ 10 ] to deeply equal [ 10, 300, 364 ]
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  16:17:30
+   Duration  828ms (transform 123ms, setup 0ms, collect 332ms, tests 196ms, environment 0ms, prepare 109ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p03b-prune.db.test.ts > pruneBuffers — giu du lieu van hanh (§11) > turn_traces + agent_runs > 180 ngay bi xoa, <= 180 ngay giu; audit_log 365: 300 ngay giu, 400 ngay xoa
+AssertionError: expected [ 10 ] to deeply equal [ 10, 300, 364 ]
+
+- Expected
++ Received
+
+  Array [
+    10,
+-   300,
+-   364,
+  ]
+
+ ❯ src/dbtests/p03b-prune.db.test.ts:47:34
+     45|     expect(await count(`select count(*)::int as c from agent_runs wher…
+     46|     const left = await sql<{ d: number }>(`select round(extract(epoch …
+     47|     expect(left.map((r) => r.d)).toEqual([10, 300, 364]);
+       |                                  ^
+     48|   });
+     49| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+

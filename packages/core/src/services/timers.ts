@@ -23,6 +23,8 @@ export interface TimerContext {
   startedAt?: Date;
 }
 
+/** Hang so §11: toi da bao nhieu dong xoa / tick / bang vet van hanh. */
+export const PRUNE_BATCH = 5000;
 
 /**
  * `flushAmbient`: phien `pending_since <= now - AMBIENT_DEBOUNCE_SEC` cua nhom dang bat, mode ambient:
@@ -87,7 +89,23 @@ export async function flushAmbient(now: Date, cfg: CommunityConfig, ctx: TimerCo
   return n;
 }
 
-/** BB-11: giu <= GROUP_BUFFER_MAX tin/nhom va <= GROUP_BUFFER_RETENTION_DAYS ngay. Tra so dong da xoa. */
+/** Xoa toi da `PRUNE_BATCH` dong cu cua mot bang vet (SPEC-D31 §11). `table`/`col` la hang so noi bo, khong tu nguoi dung. */
+async function pruneOld(table: 'turn_traces' | 'agent_runs' | 'audit_log', now: Date, days: number): Promise<number> {
+  const rows = await sql<{ c: number }>(
+    `with del as (
+       delete from ${table}
+        where id in (select id from ${table} where created_at < $1::timestamptz - make_interval(days => $2)
+                      order by created_at limit ${PRUNE_BATCH})
+        returning 1)
+     select count(*)::int as c from del`,
+    [now, days]
+  );
+  return rows[0]?.c ?? 0;
+}
+
+/** BB-11: giu <= GROUP_BUFFER_MAX tin/nhom va <= GROUP_BUFFER_RETENTION_DAYS ngay. D32 e4 (SPEC-D31 §11): them
+ * `turn_traces`/`agent_runs` > TRACE_RETENTION_DAYS (180) va `audit_log` > AUDIT_RETENTION_DAYS (365), <= 5000 dong/tick/bang.
+ * Tra tong so dong da xoa. */
 export async function pruneBuffers(now: Date, cfg: CommunityConfig): Promise<number> {
   const old = await sql<{ id: number }>(
     `delete from group_messages where received_at < $1::timestamptz - make_interval(days => $2) returning id::int as id`,
@@ -100,7 +118,10 @@ export async function pruneBuffers(now: Date, cfg: CommunityConfig): Promise<num
       returning id::int as id`,
     [cfg.groupBufferMax]
   );
-  return old.length + over.length;
+  const traces = await pruneOld('turn_traces', now, cfg.traceRetentionDays);
+  const runs = await pruneOld('agent_runs', now, cfg.traceRetentionDays);
+  const audits = await pruneOld('audit_log', now, cfg.auditRetentionDays);
+  return old.length + over.length + traces + runs + audits;
 }
 
 let lastOpsWatchMs = 0;

@@ -8,7 +8,7 @@ Trạng thái: **P02 kế hoạch 02 xong (local; Zalo thật hoãn tới P09)**
 
 | File | Vai trò |
 | :-- | :-- |
-| `src/main.ts` | Khởi động: kiểm `ZALO_SESSION_KEY` (32 byte, thiếu/sai ⇒ exit 1), dựng phiên cho từng tài khoản, pacer, watchdog, dừng êm khi SIGINT |
+| `src/main.ts` | Khởi động: kiểm `ZALO_SESSION_KEY` (32 byte, thiếu/sai ⇒ exit 1) → cấu hình (`PACER_*`, `HEARTBEAT_*`, `OPS_WATCH_INTERVAL_MS`) → `DATABASE_URL` → **advisory lock `lenqclaw:worker:community` (D31 T6; đã có bản khác ⇒ in `WORKER_ALREADY_RUNNING`, exit 1, KHÔNG mở phiên zca-js; mất kết nối giữ khoá ⇒ `worker.lock_lost`, exit 1)** → dựng phiên, pacer, watchdog; vòng `every('heartbeat')` ghi `process_heartbeats('worker')` và `every('ops')` gọi `checkOps(now,'worker')`; dừng êm khi SIGINT/SIGTERM (nhả khoá) |
 | `src/client.ts` · `src/zca-client.ts` | `ZaloClientLike` (login cookie, `loginQR`, listener `message`/`group_event`/`undo`/`closed`/`error`, `sendText(OutboundText)`, đang gõ, đã xem, API đọc nhẹ + 15 hàm hành động nhóm, mỗi hàm bọc ĐÚNG một API zca-js 2.2.0) + bản thật bọc zca-js; bản giả ở `src/testing/` (`FakeSession.actions[]`, `nextActionError`, `reviewResult`, `groupInfo`, `fakeGroupEvent`). Lỗi `ZaloApiError` ở đường action ⇒ `ZaloActionError` (`apiCode` số Zalo); 221 ⇒ `ZaloRateLimitError`; đường đăng nhập vẫn `ZaloAuthError` |
 | `src/zca-normalize.ts` | `GroupEvent` (zca-js) ⇒ `ZaloGroupEvent` (`uids`/`names`/`sourceUid`/`groupName`/`time`); chỉ `import type` ⇒ test không nạp zca-js |
 | `src/actions.ts` | `executeAction(account, session, row)`: bảng `body.action` ⇒ API (SPEC-P02 §4.2) trả `{ok, result, failReason?, code?, botNotAdmin?}`; body sai ⇒ `InvalidActionError(reason)`; hành động lạ/cấm ⇒ `unknown_action` (KHÔNG có nhánh cho giải tán nhóm, đổi chủ, phó nhóm, rời nhóm, gửi tệp); xoá tin thiếu `cliMsgId`/`uidFrom` ⇒ `cli_msg_id_missing`, `cliMsgId === msgId` ⇒ `cli_msg_id_suspect` (KHÔNG đoán bằng `msgId`, KHÔNG thử với uid bot); `sync_group_info` ⇒ `store.applyGroupSync` |
@@ -16,9 +16,27 @@ Trạng thái: **P02 kế hoạch 02 xong (local; Zalo thật hoãn tới P09)**
 | `src/crypto.ts` | AES-256-GCM, IV ngẫu nhiên mỗi lần; bản rõ `{cookie, imei, userAgent}` không bao giờ ra log |
 | `src/inbound.ts` | Chuẩn hoá tin ⇒ `inbound_events` (chống trùng); payload §8.2 (`kind:'text'` có `cli_msg_id`/`d_name`/`mentions`/`quote`; `kind:'unsupported'` nhãn "thành viên gửi <loại> — chưa hỗ trợ"); `is_self` không khớp outbox ⇒ `human_takeover_until` +30 phút CHỈ DM (chủ gõ tay trong nhóm KHÔNG làm bot im); nhóm ⇒ `group_inserted`, KHÔNG hẹn "đã xem"; `handleGroupEvent` ghi 8 loại sự kiện (`join`, `join_request`, `leave`, `remove_member`, `add_admin`, `remove_admin`, `update_setting`, `update`; loại khác bỏ), `zalo_msg_id='gev-<nhóm>-<loại>-<time>'`, `sender_uid=sourceId\|\|'zalo'`; outcome `inserted\|duplicate\|self_bot_echo\|self_staff_takeover\|group_inserted` |
 | `src/pacer.ts` · `src/pacer-policy.ts` | Một tick: (1) tối đa `PACER_ACTIONS_PER_TICK`=3 hàng `action`/`react` (tuần tự, tính `maxPerMinute`, không tính ngân sách text), (2) tối đa MỘT `text` (DM: pacer bảng kế hoạch 01; nhóm: `typing` trước, giãn cách `PACER_GROUP_GAP_MS`+jitter, ngân sách `zalo_groups.budget_per_hour`/giờ trượt tính bằng `now()` của DB (`groupTextSentLastHour(account, thread)` — đếm cả hàng `sending`; không dùng đồng hồ worker), cache `groupGate` 60 s; mọi `text`/`action`/`react` vào nhóm CHƯA khai ⇒ `cancelled('group_unknown')`, nhóm `enabled=false` ⇒ `cancelled('group_disabled')` (audit `pacer.group_unknown`/`pacer.group_disabled`; chỉ `sync_group_info` được qua để dashboard thấy nhóm lạ); hết ngân sách ⇒ giữ `queued` note `group_budget`, quá `GROUP_TEXT_TTL_MIN` ⇒ `cancelled('budget_expired')` + audit `pacer.budget_expired`), (3) sự kiện seen/typing (seen nhóm bị huỷ). Tin dài tách ≤`PACER_MAX_CHARS`: `quote` chỉ part 0, mention chỉ ở đoạn chứa nó. Sau gửi nhóm: `linkSentGroupMessage(outboxId, msgId)` đổi dòng đệm `out-<id>` ⇒ msgId thật. Action: `markSending`(CAS) ⇒ gọi ⇒ `sent`+`result` \| `failed`+`result.error{name,code}`; audit `zalo.action` (ok) \| `zalo.action_failed` (không ghi nội dung); mã 166 ⇒ `zalo_groups.bot_is_admin=false` + audit `zalo.alert kind='deputy_missing'`; **`remove_member`/`block_member` là lớp chặn cuối BB-06**: sau `markSending` phải `store.claimApproval(approvalId, account, thread, action, uid)` — một câu `UPDATE … WHERE status='approved' AND executed_at IS NULL AND kind/thread/target_uid khớp` (CAS, đặt `executed_at` TRƯỚC khi gọi Zalo); không `approvalId` / thẻ sai-đã dùng ⇒ `failed('approval_invalid')` + audit `zalo.action_blocked`, KHÔNG gọi Zalo, KHÔNG đụng thẻ; Zalo chưa thi hành (221 / lỗi mạng sẽ retry) ⇒ `releaseApproval` trả thẻ; có `approvalId` ⇒ `completeApproval` (approved→executed|failed). Action không idempotent (`create_poll`, `create_reminder`, `create_note`, `update_group_settings`): lỗi mạng/không rõ ⇒ `failed('outcome_unknown')`, KHÔNG thử lại (chỉ `ZaloRateLimitError` mới `requeue`); 221 ⇒ requeue + lùi `PACER_BACKOFF_MS`. `PacerPolicy.record(now, thread, isGroup)`, `recordAction`, `checkAction`; `verifySendLog` có thêm luật `group_gap`, `group_budget`; `simulatePacer` coi thread `sim-group-*` là nhóm |
+| `src/store.ts` (P03b) | Mọi câu SQL của worker. D31/D32 thêm: `markSending(id, holdReason?)` (ghi `picked_at = now()` + `hold_reason` lý do ĐẦU TIÊN pacer giữ hàng), `fetchDue` trả `inbound_event_id`, `setOwnUid` (D37), `writeWorkerHeartbeat`/`countQueuedDue`; `alert(kind)` vẫn audit `zalo.alert` và với `kicked`/`dead`/`cookie_expired` gửi Telegram `zalo_session` NGAY qua `adapters/alert` |
 | `src/watchdog.ts` | 3000/3003 ⇒ `kicked`, không tự đăng nhập lại; 1006 ⇒ `reconnecting` lùi 5 s→5 phút, >10 lần ⇒ `dead`; im 20 phút (7–22h) ⇒ gọi API đọc |
 | `src/log.ts` | Log một dòng JSON, chỉ trường không bí mật |
 | `src/tools/pacer-sim.ts` | Giả lập 50 tin/20 người (DM, bảng §5); `--group`: 100 tin vào `sim-group-1`, ngân sách 20/giờ ⇒ in `first_hour: 20`, `min_gap_ms`, `violations: 0` (đối chiếu `evidence/ARCH/budget-ref.txt`) |
+
+## P03b — tốc độ, giám sát, báo động (D31/D32/D37)
+
+Pacer (SPEC-D31 §7.1, KHÔNG nới giới hạn D09): `PACER_TICK_MS` 250; `pickNext` xét trước thread có hàng ĐẦU là tin trả lời (`outbox.inbound_event_id` not null) — chỉ đổi thứ tự, `policy.check` giữ nguyên; thread có "đang gõ" trong `PACER_TYPING_FRESH_MS` (8000, gồm typing sớm của `prepare`) ⇒ tin text KHÔNG gửi typing lại và KHÔNG trễ thêm; `markSending` ghi `picked_at`; `hold_reason` = lý do ĐẦU TIÊN (`group_gap|thread_gap|per_minute|group_budget|backoff|recipients`) pacer giữ hàng đầu thread (bộ nhớ, ghi DB một lần) — view `reply_latency` trừ khoảng giữ khỏi `core_ms`.
+
+`own_uid` (D37): mỗi lần phiên `connected`, worker ghi `zalo_accounts.own_uid = session.ownUid` (migration 011; đăng xuất KHÔNG xoá). Core `botUid(account)` đọc cột (cache 60 s) → `BOT_ZALO_UID` → (chỉ `DATA_MODE=sim`) `BOT_UID_SIM`.
+
+| Env (đọc ở worker) | Mặc định | Ghi chú |
+| :-- | :-- | :-- |
+| `PACER_TICK_MS` | 250 | trước là 1000 |
+| `PACER_TYPING_FRESH_MS` | 8000 | typing tươi ⇒ bỏ typing lặp + bỏ trễ |
+| `HEARTBEAT_INTERVAL_MS` / `HEARTBEAT_STALE_MS` | 5000 / 60000 | dấu sống `process_heartbeats('worker')` (`info`: `session_state`, `last_pacer_tick_at`, `queued_due`) |
+| `OPS_WATCH_INTERVAL_MS` | 60000 | worker canh runner (`runner_stale`, `inbound_backlog`) |
+| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | (trống) | thiếu ⇒ báo động TẮT (`disabled`), không lỗi; chỉ `adapters/alert.ts` đọc token |
+| `ALERT_REPEAT_MIN` / `ALERT_MAX_PER_HOUR` / `ALERT_TIMEOUT_MS` | 30 / 20 / 5000 | chống lặp theo (loại, khoá) · trần giờ · timeout |
+
+Vận hành: chạy ĐÚNG MỘT worker (bản thứ hai thoát 1). Kiểm tra sống: `GET /api/healthz` (xem [web.md](web.md)). Báo động lúc phiên chết: worker gửi ngay khi `store.alert` ghi `kicked`/`dead`/`cookie_expired`; runner `opsWatch` là lưới dự phòng; CAS `alert_state` bảo đảm đúng một tin. Telegram thật CHƯA có bot/token — mọi test dùng `setAlertFetchForTest`.
 
 ## P02 — nhóm: bảng `action` ⇒ API zca-js 2.2.0
 
@@ -56,5 +74,5 @@ Trình duyệt `http://localhost:3000/zalo` (admin) → "Đăng nhập bằng QR
 ## Luật khi sửa
 
 - `zca-js` chỉ import trong app này (máy đo biên canh). Đổi phiên bản ⇒ pin chính xác, đối chiếu `.d.ts` (index gốc không phân giải dưới NodeNext ⇒ `paths` trong `tsconfig.json`).
-- CẤM log cookie/imei/userAgent; CẤM mở Zalo Web/PC bằng tài khoản bot (G01); CẤM chạy hai bản worker.
+- CẤM log cookie/imei/userAgent; CẤM mở Zalo Web/PC bằng tài khoản bot (G01); CẤM chạy hai bản worker (D31 T6: advisory lock chặn bản thứ hai).
 - Đổi số pacer ⇒ ghi `brain4agent/-known-gotchas.md` kèm lý do (SPEC-P02 §5).

@@ -1,0 +1,38 @@
+# RED EVIDENCE: file=src/services/timers.ts
+# mutation: "order by created_at limit ${PRUNE_BATCH})" => "order by created_at)"
+# cmd: npx vitest run --config vitest.db.config.ts src/dbtests/p03b-prune.db.test.ts
+# exit: 1
+
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/p03b-prune.db.test.ts (3 tests | 1 failed) 174ms
+   × pruneBuffers — giu du lieu van hanh (§11) > toi da 5000 dong / tick / bang: 5003 dong audit cu ⇒ tick 1 xoa 5000, con 3; tick 2 xoa not 59ms
+     → expected +0 to be 3 // Object.is equality
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  16:17:28
+   Duration  860ms (transform 145ms, setup 0ms, collect 356ms, tests 174ms, environment 0ms, prepare 121ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p03b-prune.db.test.ts > pruneBuffers — giu du lieu van hanh (§11) > toi da 5000 dong / tick / bang: 5003 dong audit cu ⇒ tick 1 xoa 5000, con 3; tick 2 xoa not
+AssertionError: expected +0 to be 3 // Object.is equality
+
+- Expected
++ Received
+
+- 3
++ 0
+
+ ❯ src/dbtests/p03b-prune.db.test.ts:57:97
+     55|     );
+     56|     await pruneBuffers(NOW, cfg);
+     57|     expect(await count(`select count(*)::int as c from audit_log where…
+       |                                                                                                 ^
+     58|     await pruneBuffers(NOW, cfg);
+     59|     expect(await count(`select count(*)::int as c from audit_log where…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
