@@ -7,6 +7,7 @@ import { sql } from '../adapters/db.js';
 import { audit } from './audit.js';
 import { readCommunityConfig, type CommunityConfig } from './community-config.js';
 import { enqueueSystemEvent } from './system-events.js';
+import { checkOps } from './ops-watch.js';
 
 export interface TimerReport {
   /** Ten buoc → so muc da xu ly. */
@@ -16,7 +17,12 @@ export interface TimerReport {
 /** D31: runner song song truyen cac thread dang chay — timers bo qua de khong tao luot chong. */
 export interface TimerContext {
   busyThreads?: ReadonlySet<string>;
+  /** D32: bat buoc `opsWatch` (runner that bat; sim tick/test khong ⇒ khong them khoa `opsWatch` vao `steps`). */
+  opsWatch?: boolean;
+  /** D32: thoi diem runner khoi dong (cho canh heartbeat worker chua tung co). */
+  startedAt?: Date;
 }
+
 
 /**
  * `flushAmbient`: phien `pending_since <= now - AMBIENT_DEBOUNCE_SEC` cua nhom dang bat, mode ambient:
@@ -97,9 +103,25 @@ export async function pruneBuffers(now: Date, cfg: CommunityConfig): Promise<num
   return old.length + over.length;
 }
 
+let lastOpsWatchMs = 0;
+
+/** Test: xoa moc gioi han tan suat opsWatch. */
+export function resetOpsWatchThrottleForTest(): void {
+  lastOpsWatchMs = 0;
+}
+
+/** D32 buoc `opsWatch`: tu gioi han moi OPS_WATCH_INTERVAL_MS (theo `now` tham so). Tra so tin bao dong da GUI (0 khi bo qua). */
+export async function opsWatch(now: Date, cfg: CommunityConfig, ctx: TimerContext = {}): Promise<number> {
+  if (lastOpsWatchMs !== 0 && now.getTime() - lastOpsWatchMs < cfg.opsWatchIntervalMs) return 0;
+  lastOpsWatchMs = now.getTime();
+  const rep = await checkOps(now, 'runner', { cfg, ...(ctx.startedAt ? { startedAt: ctx.startedAt } : {}) });
+  return rep.sent;
+}
+
 export async function runTimers(now: Date, cfg: CommunityConfig = readCommunityConfig(), ctx: TimerContext = {}): Promise<TimerReport> {
   const steps: Record<string, number> = {};
   steps.flushAmbient = await flushAmbient(now, cfg, ctx);
   steps.pruneBuffers = await pruneBuffers(now, cfg);
+  if (ctx.opsWatch) steps.opsWatch = await opsWatch(now, cfg, ctx);
   return { steps };
 }

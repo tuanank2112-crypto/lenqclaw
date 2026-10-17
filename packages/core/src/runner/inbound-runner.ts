@@ -125,7 +125,7 @@ export async function runDispatcher(opts: RunnerOptions = {}): Promise<void> {
         last = now;
         timersBusy = true;
         try {
-          const report = await runTimers(new Date(now), cfg, { busyThreads: new Set(inflight.keys()) });
+          const report = await runTimers(new Date(now), cfg, { busyThreads: new Set(inflight.keys()), opsWatch: opts.heartbeat !== false, startedAt: stats.startedAt });
           stats.lastTimersAt = new Date();
           opts.onTimers?.(report);
         } catch (err) {

@@ -1,0 +1,5 @@
+# RED EVIDENCE: file tam packages/core/src/zz-tmp-boundary-red.ts co chuoi api.telegram.org ngoai adapter (da xoa sau khi do)
+# cmd: node scripts/check_adapter_boundary.mjs
+packages/core/src/zz-tmp-boundary-red.ts:1: chuoi "api.telegram.org" ngoai adapters/alert.ts (BB-20)
+violations: 1
+# exit: 1

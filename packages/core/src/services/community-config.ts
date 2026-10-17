@@ -64,6 +64,14 @@ export interface CommunityConfig {
   heartbeatIntervalMs: number;
   heartbeatStaleMs: number;
   turnStuckMs: number;
+  // D32: bao dong Telegram + giam sat + giu du lieu van hanh
+  alertRepeatMin: number;
+  alertMaxPerHour: number;
+  alertTimeoutMs: number;
+  alertModelErrors: number;
+  opsWatchIntervalMs: number;
+  traceRetentionDays: number;
+  auditRetentionDays: number;
 }
 
 function readNumber(
@@ -174,5 +182,12 @@ export function readCommunityConfig(env: NodeJS.ProcessEnv = process.env): Commu
     heartbeatIntervalMs,
     heartbeatStaleMs,
     turnStuckMs: readNumber(env, 'TURN_STUCK_MS', 120000, 10000),
+    alertRepeatMin: readNumber(env, 'ALERT_REPEAT_MIN', 30, 1, 1440),
+    alertMaxPerHour: readNumber(env, 'ALERT_MAX_PER_HOUR', 20, 1, 200),
+    alertTimeoutMs: readNumber(env, 'ALERT_TIMEOUT_MS', 5000, 500, 30000),
+    alertModelErrors: readNumber(env, 'ALERT_MODEL_ERRORS', 5, 1, 1000),
+    opsWatchIntervalMs: readNumber(env, 'OPS_WATCH_INTERVAL_MS', 60000, 1000),
+    traceRetentionDays: readNumber(env, 'TRACE_RETENTION_DAYS', 180, 1),
+    auditRetentionDays: readNumber(env, 'AUDIT_RETENTION_DAYS', 365, 1),
   };
 }

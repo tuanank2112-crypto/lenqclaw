@@ -1,0 +1,101 @@
+# RED EVIDENCE: file=src/services/ops-watch.ts
+# mutation: "if (self === 'worker') await staleCheck('runner', 'runner_stale');" => ""
+# cmd: npx vitest run --config vitest.db.config.ts src/dbtests/ops-watch.db.test.ts
+# exit: 1
+
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/ops-watch.db.test.ts (14 tests | 4 failed) 1108ms
+   × G24 — runner_stale / worker_stale > heartbeat runner cu 120 s ⇒ checkOps(now,"worker") ⇒ DUNG 1 fetch; goi lai 3 lan trong 30 phut ⇒ van 1; heartbeat moi ⇒ +1 tin hoi phuc 52ms
+     → expected [] to have a length of 1 but got +0
+   × G24 — runner_stale / worker_stale > chua tung co dong heartbeat: chi bao khi tien trinh da chay >= HEARTBEAT_STALE_MS 43ms
+     → expected [] to have a length of 1 but got +0
+   × G24 — tran ALERT_MAX_PER_HOUR, thieu TELEGRAM_*, opsWatch tu gioi han > thieu TELEGRAM_* ⇒ moi ket qua "disabled", 0 fetch 27ms
+     → expected false to be true // Object.is equality
+   × G24 — tran ALERT_MAX_PER_HOUR, thieu TELEGRAM_*, opsWatch tu gioi han > da co 20 audit alert.sent trong 60 phut ⇒ suppressed + audit alert.capped, 0 fetch 73ms
+     → expected undefined to be 'suppressed' // Object.is equality
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 10 passed (14)
+   Start at  16:17:37
+   Duration  1.86s (transform 163ms, setup 0ms, collect 385ms, tests 1.11s, environment 0ms, prepare 161ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/ops-watch.db.test.ts > G24 — runner_stale / worker_stale > heartbeat runner cu 120 s ⇒ checkOps(now,"worker") ⇒ DUNG 1 fetch; goi lai 3 lan trong 30 phut ⇒ van 1; heartbeat moi ⇒ +1 tin hoi phuc
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/dbtests/ops-watch.db.test.ts:86:50
+     84|     const stale = () => texts.filter((t) => t.includes('runner mat dau…
+     85|     const r1 = await checkOps(new Date(), 'worker');
+     86|     expect(sentOf(r1, 'runner_stale', 'runner')).toHaveLength(1);
+       |                                                  ^
+     87|     expect(stale()).toHaveLength(1);
+     88|     for (let i = 0; i < 3; i++) await checkOps(new Date(), 'worker');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/dbtests/ops-watch.db.test.ts > G24 — runner_stale / worker_stale > chua tung co dong heartbeat: chi bao khi tien trinh da chay >= HEARTBEAT_STALE_MS
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/dbtests/ops-watch.db.test.ts:115:51
+    113|     expect(young.results.some((x) => x.kind === 'runner_stale')).toBe(…
+    114|     const old = await checkOps(new Date(), 'worker', { startedAt: new …
+    115|     expect(sentOf(old, 'runner_stale', 'runner')).toHaveLength(1);
+       |                                                   ^
+    116|   });
+    117| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/dbtests/ops-watch.db.test.ts > G24 — tran ALERT_MAX_PER_HOUR, thieu TELEGRAM_*, opsWatch tu gioi han > thieu TELEGRAM_* ⇒ moi ket qua "disabled", 0 fetch
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/dbtests/ops-watch.db.test.ts:261:89
+    259|     await setBeat('runner', 300);
+    260|     const r = await checkOps(new Date(), 'worker');
+    261|     expect(r.results.some((x) => x.kind === 'runner_stale' && x.result…
+       |                                                                                         ^
+    262|     expect(texts).toHaveLength(0);
+    263|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/dbtests/ops-watch.db.test.ts > G24 — tran ALERT_MAX_PER_HOUR, thieu TELEGRAM_*, opsWatch tu gioi han > da co 20 audit alert.sent trong 60 phut ⇒ suppressed + audit alert.capped, 0 fetch
+AssertionError: expected undefined to be 'suppressed' // Object.is equality
+
+- Expected: 
+"suppressed"
+
++ Received: 
+undefined
+
+ ❯ src/dbtests/ops-watch.db.test.ts:272:72
+    270|       await setBeat('runner', 300);
+    271|       const r = await checkOps(new Date(), 'worker');
+    272|       expect(r.results.find((x) => x.kind === 'runner_stale')?.result)…
+       |                                                                        ^
+    273|       expect(texts).toHaveLength(0);
+    274|       const capped = await sql<{ c: number }>(`select count(*)::int as…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+

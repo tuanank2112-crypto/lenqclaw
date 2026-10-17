@@ -4,6 +4,7 @@
 
 import { hostname } from 'node:os';
 import { audit, enqueue, sql, tx, type SessionState } from '@lenqclaw/core';
+import { sendAlert } from '@lenqclaw/core/adapters/alert';
 import type { AccountId } from './config.js';
 import { buildSplitBodies } from './pacer-policy.js';
 
@@ -125,7 +126,8 @@ export type AlertKind =
   | 'session_cas_conflict'
   | 'deputy_missing';
 
-/** Bao dong giai doan 1 = session_state + banner /zalo + audit 'zalo.alert' (§9.1). */
+/** Bao dong giai doan 1 = session_state + banner /zalo + audit 'zalo.alert' (§9.1). D32: `kicked`/`dead`/`cookie_expired`
+ * con gui Telegram NGAY (`zalo_session`) — runner `opsWatch` la luoi du phong. `sendAlert` khong bao gio nem. */
 export async function alert(id: AccountId, kind: AlertKind, data: Record<string, unknown> = {}): Promise<void> {
   await audit(sql, {
     actorType: 'system',
@@ -134,6 +136,14 @@ export async function alert(id: AccountId, kind: AlertKind, data: Record<string,
     target: id,
     data: { kind, ...data },
   });
+  if (kind === 'kicked' || kind === 'dead' || kind === 'cookie_expired') {
+    await sendAlert({
+      kind: 'zalo_session',
+      key: id,
+      severity: 'critical',
+      text: `Phien Zalo "${id}" khong con hoat dong (${kind}). Mo /zalo de dang nhap lai bang QR.`,
+    });
+  }
 }
 
 export interface InboundInsert {

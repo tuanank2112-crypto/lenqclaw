@@ -11,6 +11,7 @@ import { AccountSession } from './account-session.js';
 import { AccountPacer } from './pacer.js';
 import { errSummary, logEvent } from './log.js';
 import * as store from './store.js';
+import { checkOps } from '@lenqclaw/core/services/ops-watch';
 import { readCommunityConfig } from '@lenqclaw/core/services/community-config';
 
 const LOGIN_POLL_MS = 2_000;
@@ -97,6 +98,11 @@ async function main(): Promise<void> {
       last_pacer_tick_at: tickAt === null ? null : new Date(tickAt).toISOString(),
       queued_due: await store.countQueuedDue(s0.account),
     });
+  });
+
+  // D32 §10.2: worker canh runner (mat dau song / hang doi ket) — runner chet khong tu bao duoc.
+  every('ops', community.opsWatchIntervalMs, async () => {
+    await checkOps(new Date(), 'worker', { cfg: community, startedAt });
   });
 
   const shutdown = async (signal: string) => {

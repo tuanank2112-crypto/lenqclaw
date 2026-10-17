@@ -90,6 +90,16 @@ describe('readCommunityConfig', () => {
     expect(c.turnStuckMs).toBe(120000);
   });
 
+  it('D32: bao dong / giam sat / giu du lieu — mac dinh dung 01-CONTRACTS §10, sai ⇒ ConfigError', () => {
+    const c = readCommunityConfig({});
+    expect([c.alertRepeatMin, c.alertMaxPerHour, c.alertTimeoutMs, c.alertModelErrors]).toEqual([30, 20, 5000, 5]);
+    expect([c.opsWatchIntervalMs, c.traceRetentionDays, c.auditRetentionDays]).toEqual([60000, 180, 365]);
+    expect(readCommunityConfig({ ALERT_REPEAT_MIN: '10', TRACE_RETENTION_DAYS: '90' })).toMatchObject({ alertRepeatMin: 10, traceRetentionDays: 90 });
+    expect(() => readCommunityConfig({ ALERT_REPEAT_MIN: '0' })).toThrow(ConfigError);
+    expect(() => readCommunityConfig({ TRACE_RETENTION_DAYS: '0' })).toThrow(ConfigError);
+    expect(() => readCommunityConfig({ OPS_WATCH_INTERVAL_MS: 'x' })).toThrow(ConfigError);
+  });
+
   it('D31: ngoai khoang / fast >= rag / stale < 3 x interval => ConfigError', () => {
     expect(() => readCommunityConfig({ LANE_FAST_DEADLINE_MS: '4600' })).toThrow(ConfigError);
     expect(() => readCommunityConfig({ LANE_FAST_DEADLINE_MS: '900' })).toThrow(ConfigError);

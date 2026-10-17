@@ -1,0 +1,47 @@
+# RED EVIDENCE: file=src/store.ts
+# mutation: "if (kind === 'kicked' || kind === 'dead' || kind === 'cookie_expired') {" => "if (false as boolean) {"
+# cmd: npx vitest run --config vitest.db.config.ts src/dbtests/p03b-worker.db.test.ts
+# exit: 1
+
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/apps/zalo-worker
+
+{"t":"2026-10-17T09:17:44.714Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T09:17:44.761Z","event":"pacer.sent","account":"community","outbox_id":15567}
+{"t":"2026-10-17T09:17:44.795Z","event":"pacer.sent","account":"community","outbox_id":15568}
+{"t":"2026-10-17T09:17:47.215Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T09:17:47.227Z","event":"zalo.state","account":"community","state":"logged_out"}
+{"t":"2026-10-17T09:17:47.294Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T09:17:47.298Z","event":"zalo.closed","account":"community","code":3003,"decision":"kicked"}
+{"t":"2026-10-17T09:17:47.301Z","event":"zalo.state","account":"community","state":"kicked"}
+ ❯ src/dbtests/p03b-worker.db.test.ts (5 tests | 1 failed) 2661ms
+   ✓ T6 — khoa mot ban cua worker (BB-19) > khoa dang bi giu ⇒ worker thoat 1, in WORKER_ALREADY_RUNNING, KHONG mo phien zca-js (khong log worker.started/zalo.state) 2392ms
+   × P03b-C — worker gui zalo_session NGAY (D32 §10.2) > listener dong ma 3003 (kicked) ⇒ DUNG 1 tin Telegram zalo_session ngay lap tuc; dong lan 2 ⇒ khong lap (CAS) 39ms
+     → expected [] to have a length of 1 but got +0
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  16:17:41
+   Duration  5.69s (transform 498ms, setup 0ms, collect 2.58s, tests 2.66s, environment 0ms, prepare 201ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p03b-worker.db.test.ts > P03b-C — worker gui zalo_session NGAY (D32 §10.2) > listener dong ma 3003 (kicked) ⇒ DUNG 1 tin Telegram zalo_session ngay lap tuc; dong lan 2 ⇒ khong lap (CAS)
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/dbtests/p03b-worker.db.test.ts:183:21
+    181|     try {
+    182|       await s.onClosed(CLOSE_KICKED);
+    183|       expect(texts).toHaveLength(1);
+       |                     ^
+    184|       expect(texts[0]).toContain('kicked');
+    185|       expect(texts[0]).not.toContain('FAKE-WORKER-TOKEN');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+

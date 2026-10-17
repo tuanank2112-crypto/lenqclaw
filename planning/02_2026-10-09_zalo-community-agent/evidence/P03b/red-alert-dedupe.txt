@@ -1,0 +1,122 @@
+# RED EVIDENCE: file=src/adapters/alert.ts
+# mutation: "where not alert_state.open or alert_state.last_sent_at < now() - make_interval(mins => $3)" => "where $3::int >= 0"
+# cmd: npx vitest run --config vitest.db.config.ts src/dbtests/ops-watch.db.test.ts
+# exit: 1
+
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/ops-watch.db.test.ts (14 tests | 5 failed) 1146ms
+   × G24 — runner_stale / worker_stale > heartbeat runner cu 120 s ⇒ checkOps(now,"worker") ⇒ DUNG 1 fetch; goi lai 3 lan trong 30 phut ⇒ van 1; heartbeat moi ⇒ +1 tin hoi phuc 124ms
+     → expected [ …(4) ] to have a length of 1 but got 4
+   × G24 — zalo_session > runner VA worker cung luc thay phien "dead" ⇒ tong DUNG 1 tin zalo_session 59ms
+     → expected 2 to be 1 // Object.is equality
+   × G24 — inbound_backlog / model_down / slo_breach / bot_not_admin > model_down: 5 agent_runs loi, 0 ok trong 10 phut ⇒ 1 tin; co lan ok ⇒ hoi phuc 84ms
+     → expected [ { kind: 'model_down', …(3) } ] to have a length of +0 but got 1
+   × G24 — inbound_backlog / model_down / slo_breach / bot_not_admin > slo_breach: 10 dong reply_latency fast core_ms 7000 ⇒ DUNG 1 tin; 9 dong ⇒ khong bao (n < 10) 195ms
+     → expected [ { kind: 'slo_breach', …(3) } ] to have a length of +0 but got 1
+   × G24 — inbound_backlog / model_down / slo_breach / bot_not_admin > bot_not_admin: nhom bat, bot khong phai pho nhom, da dong bo ⇒ 1 tin; bot_is_admin=true ⇒ hoi phuc 77ms
+     → expected [ { kind: 'bot_not_admin', …(3) } ] to have a length of +0 but got 1
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 9 passed (14)
+   Start at  16:18:01
+   Duration  1.98s (transform 177ms, setup 0ms, collect 411ms, tests 1.15s, environment 0ms, prepare 166ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/ops-watch.db.test.ts > G24 — runner_stale / worker_stale > heartbeat runner cu 120 s ⇒ checkOps(now,"worker") ⇒ DUNG 1 fetch; goi lai 3 lan trong 30 phut ⇒ van 1; heartbeat moi ⇒ +1 tin hoi phuc
+AssertionError: expected [ …(4) ] to have a length of 1 but got 4
+
+- Expected
++ Received
+
+- 1
++ 4
+
+ ❯ src/dbtests/ops-watch.db.test.ts:89:21
+     87|     expect(stale()).toHaveLength(1);
+     88|     for (let i = 0; i < 3; i++) await checkOps(new Date(), 'worker');
+     89|     expect(stale()).toHaveLength(1);
+       |                     ^
+     90|     await setBeat('runner', 1);
+     91|     const r2 = await checkOps(new Date(), 'worker');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  src/dbtests/ops-watch.db.test.ts > G24 — zalo_session > runner VA worker cung luc thay phien "dead" ⇒ tong DUNG 1 tin zalo_session
+AssertionError: expected 2 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 2
+
+ ❯ src/dbtests/ops-watch.db.test.ts:123:81
+    121|     await setSession('dead');
+    122|     const [a, b] = await Promise.all([checkOps(new Date(), 'runner'), …
+    123|     expect(sentOf(a, 'zalo_session').length + sentOf(b, 'zalo_session'…
+       |                                                                                 ^
+    124|     expect(texts.filter((t) => t.includes('Phien Zalo'))).toHaveLength…
+    125|     // connected lai ⇒ 1 tin hoi phuc
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  src/dbtests/ops-watch.db.test.ts > G24 — inbound_backlog / model_down / slo_breach / bot_not_admin > model_down: 5 agent_runs loi, 0 ok trong 10 phut ⇒ 1 tin; co lan ok ⇒ hoi phuc
+AssertionError: expected [ { kind: 'model_down', …(3) } ] to have a length of +0 but got 1
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ src/dbtests/ops-watch.db.test.ts:179:43
+    177|       expect(sentOf(r, 'model_down', 'community')).toHaveLength(1);
+    178|       const again = await checkOps(t0, 'runner');
+    179|       expect(sentOf(again, 'model_down')).toHaveLength(0);
+       |                                           ^
+    180|       await mk('ok', '2031-03-01T09:58:00Z');
+    181|       const rec = await checkOps(t0, 'runner');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  src/dbtests/ops-watch.db.test.ts > G24 — inbound_backlog / model_down / slo_breach / bot_not_admin > slo_breach: 10 dong reply_latency fast core_ms 7000 ⇒ DUNG 1 tin; 9 dong ⇒ khong bao (n < 10)
+AssertionError: expected [ { kind: 'slo_breach', …(3) } ] to have a length of +0 but got 1
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ src/dbtests/ops-watch.db.test.ts:217:51
+    215|       expect(sentOf(r, 'slo_breach', 'fast')).toHaveLength(1);
+    216|       const again = await checkOps(base, 'runner');
+    217|       expect(sentOf(again, 'slo_breach', 'fast')).toHaveLength(0); // …
+       |                                                   ^
+    218|       expect(texts.filter((t) => t.includes('Lan fast vuot SLO'))).toH…
+    219|     } finally {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  src/dbtests/ops-watch.db.test.ts > G24 — inbound_backlog / model_down / slo_breach / bot_not_admin > bot_not_admin: nhom bat, bot khong phai pho nhom, da dong bo ⇒ 1 tin; bot_is_admin=true ⇒ hoi phuc
+AssertionError: expected [ { kind: 'bot_not_admin', …(3) } ] to have a length of +0 but got 1
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ src/dbtests/ops-watch.db.test.ts:235:52
+    233|       expect(sentOf(r, 'bot_not_admin', thread)).toHaveLength(1);
+    234|       const dup = await checkOps(new Date(), 'runner');
+    235|       expect(sentOf(dup, 'bot_not_admin', thread)).toHaveLength(0);
+       |                                                    ^
+    236|       await sql(`update zalo_groups set bot_is_admin = true where thre…
+    237|       const rec = await checkOps(new Date(), 'runner');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+

@@ -6,6 +6,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { closeDb, enqueue, holdAdvisoryLock, sql } from '@lenqclaw/core';
+import { setAlertFetchForTest } from '@lenqclaw/core/adapters/alert';
+import { CLOSE_KICKED } from '../watchdog.js';
 import { AccountPacer } from '../pacer.js';
 import { countQueuedDue, fetchDue, setOwnUid, writeWorkerHeartbeat } from '../store.js';
 import { FakeZaloClient } from '../testing/fake-client.js';
@@ -160,6 +162,35 @@ describe('P03b-B — own_uid (D37) va heartbeat worker (D32 §9)', () => {
       } else {
         await sql(`delete from process_heartbeats where name = 'worker'`);
       }
+    }
+  });
+});
+
+describe('P03b-C — worker gui zalo_session NGAY (D32 §10.2)', () => {
+  const TOKEN_ENV = ['TELEGRAM', 'BOT', 'TOKEN'].join('_');
+  it('listener dong ma 3003 (kicked) ⇒ DUNG 1 tin Telegram zalo_session ngay lap tuc; dong lan 2 ⇒ khong lap (CAS)', async () => {
+    const texts: string[] = [];
+    process.env[TOKEN_ENV] = '999:FAKE-WORKER-TOKEN';
+    process.env.TELEGRAM_CHAT_ID = '-1';
+    setAlertFetchForTest((async (_u: string, init: RequestInit) => {
+      texts.push(String(JSON.parse(String(init.body)).text));
+      return new Response('{}', { status: 200 });
+    }) as unknown as typeof fetch);
+    await sql(`delete from alert_state where kind = 'zalo_session'`);
+    const { s } = await connectedSession(new FakeZaloClient('7700555'));
+    try {
+      await s.onClosed(CLOSE_KICKED);
+      expect(texts).toHaveLength(1);
+      expect(texts[0]).toContain('kicked');
+      expect(texts[0]).not.toContain('FAKE-WORKER-TOKEN');
+      await s.onClosed(CLOSE_KICKED);
+      expect(texts).toHaveLength(1);
+    } finally {
+      setAlertFetchForTest(null);
+      delete process.env[TOKEN_ENV];
+      delete process.env.TELEGRAM_CHAT_ID;
+      await sql(`delete from alert_state where kind = 'zalo_session'`);
+      await s.stop();
     }
   });
 });

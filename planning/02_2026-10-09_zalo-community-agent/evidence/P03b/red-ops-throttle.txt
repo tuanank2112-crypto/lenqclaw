@@ -1,0 +1,38 @@
+# RED EVIDENCE: file=src/services/timers.ts
+# mutation: "if (lastOpsWatchMs !== 0 && now.getTime() - lastOpsWatchMs < cfg.opsWatchIntervalMs) return 0;" => ""
+# cmd: npx vitest run --config vitest.db.config.ts src/dbtests/ops-watch.db.test.ts
+# exit: 1
+
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/ops-watch.db.test.ts (14 tests | 1 failed) 1290ms
+   × G24 — tran ALERT_MAX_PER_HOUR, thieu TELEGRAM_*, opsWatch tu gioi han > runTimers buoc opsWatch tu gioi han moi OPS_WATCH_INTERVAL_MS (theo now tham so) 88ms
+     → expected 1 to be +0 // Object.is equality
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 13 passed (14)
+   Start at  16:17:33
+   Duration  2.13s (transform 148ms, setup 0ms, collect 366ms, tests 1.29s, environment 0ms, prepare 180ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/ops-watch.db.test.ts > G24 — tran ALERT_MAX_PER_HOUR, thieu TELEGRAM_*, opsWatch tu gioi han > runTimers buoc opsWatch tu gioi han moi OPS_WATCH_INTERVAL_MS (theo now tham so)
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ src/dbtests/ops-watch.db.test.ts:287:64
+    285|     expect(await opsWatch(t0, cfg)).toBeGreaterThanOrEqual(1); // work…
+    286|     await sql(`delete from alert_state`);
+    287|     expect(await opsWatch(new Date(t0.getTime() + 1000), cfg)).toBe(0)…
+       |                                                                ^
+    288|     expect(await opsWatch(new Date(t0.getTime() + cfg.opsWatchInterval…
+    289|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
