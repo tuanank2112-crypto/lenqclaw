@@ -238,7 +238,7 @@ Thứ tự bắt buộc: `P01 → P02 → P03 → (P04 ∥ P05 ∥ P06 ∥ P07) 
 - [ ] 🖐 Người dùng: Q-D31-1 (model cho tin gọi bot) · Q-D31-2 (gap nhóm) · Q-D31-3 (billing Gemini, `.env`)
 - [x] P03 — runtime agent trên LangGraph (G07, G08, G14, G15 local) + runtime D31 — H07↔[R07](reports/R07_thi-cong_P03.md) 🔁 · H08↔[R08](reports/R08_tham-dinh_P03.md) thẩm định ✅ · H09↔[R09](reports/R09_thi-cong_P03-fix.md) ✅ 2026-10-17 (D36) — G07/G08/G14/G15 ✅ local; G23 chờ model thật
 - [x] P03b — worker D31 + báo động Telegram + heartbeat/healthz + dọn dữ liệu + `own_uid` (🟠, D37) — H10↔[R10](reports/R10_thi-cong_P03b.md) ✅ 2026-10-17 (D38); G24 ✅ local
-- [ ] P04 — tri thức (G12 local sau golden)
+- [ ] P04 — tri thức (G12 local sau golden) — handoff [H11](handoffs/H11_thi-cong_P04.md) phóng 2026-10-17 (tuần tự P04 → P05 → P06 → P07: cùng chạm `policy.ts`/tools, tránh G32)
 - [ ] P05 — kiểm duyệt (G13, G16)
 - [ ] P06 — lead & trí nhớ
 - [ ] P07 — lịch & vận hành (G17 local)
