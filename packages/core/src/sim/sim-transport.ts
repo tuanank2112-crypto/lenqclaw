@@ -13,7 +13,7 @@ import { applySimOutbox } from './sim-actions.js';
 /** uid cua bot trong kenh gia lap (mention/quote tin bot). `zalo_accounts.display_name` KHONG dung lam uid. */
 export const BOT_UID_SIM = 'sim-bot';
 
-/** Mau tra loi khi handler loi (DM). Nhom: doi hanh vi o SPEC-P03 §2 (D20), KHONG o P01. */
+/** Mau tra loi khi handler loi — CHI gui cho DM (D20, SPEC-P03 §2); nhom chi audit. */
 export const BUSY_REPLY = 'Xin lỗi, hệ thống đang bận, vui lòng thử lại sau ít phút.';
 
 export type SimMsgType = 'webchat' | 'chat.sticker' | 'chat.photo';
@@ -240,13 +240,16 @@ export async function processInbound(handler: InboundHandler = echoHandler): Pro
       target: r.thread_id,
       data: { message: err instanceof Error ? err.message : String(err) },
     });
-    await enqueue({
-      zaloAccountId: r.zalo_account_id as AccountId,
-      threadId: r.thread_id,
-      threadType: r.thread_type,
-      kind: 'text',
-      body: { text: BUSY_REPLY },
-    });
+    // D20 (SPEC-P03 §2): CHI DM nhan BUSY_REPLY — o NHOM bot khong duoc noi vi loi he thong (chi audit).
+    if (r.thread_type === 'user') {
+      await enqueue({
+        zaloAccountId: r.zalo_account_id as AccountId,
+        threadId: r.thread_id,
+        threadType: 'user',
+        kind: 'text',
+        body: { text: BUSY_REPLY },
+      });
+    }
   }
 
   return { processed: 1 };
@@ -266,6 +269,13 @@ export interface ScenarioLine {
   sender_uid: string;
   text: string;
   msg_id?: string;
+  // P03 (SPEC-P03 §11 hang 6): kich ban nhom — tuy chon, dong cu (echo.jsonl) khong dung.
+  sender_name?: string;
+  /** Mention bot (`@bot`) — chi nhom. */
+  mention_bot?: boolean;
+  /** Tra loi (quote) tin gui gan nhat cua BOT trong thread nay (da giao, co msgId). */
+  quote_last_bot?: boolean;
+  msg_type?: SimMsgType;
 }
 
 export interface RunScenarioResult {
@@ -297,6 +307,15 @@ export async function runScenario(
 
   for (const line of lines) {
     const parsed = JSON.parse(line) as ScenarioLine;
+    let quoteMsgId: string | null = null;
+    if (parsed.quote_last_bot) {
+      const last = await sql<{ zalo_msg_id: string }>(
+        `select zalo_msg_id from outbox where zalo_account_id = $1 and thread_id = $2 and kind = 'text' and zalo_msg_id is not null
+          order by id desc limit 1`,
+        [parsed.account, parsed.thread_id]
+      );
+      quoteMsgId = last[0]?.zalo_msg_id ?? null;
+    }
     const { duplicate } = await simInbound({
       account: parsed.account,
       threadId: parsed.thread_id,
@@ -304,6 +323,10 @@ export async function runScenario(
       senderUid: parsed.sender_uid,
       text: parsed.text,
       msgId: parsed.msg_id,
+      ...(parsed.sender_name ? { senderName: parsed.sender_name } : {}),
+      ...(parsed.mention_bot ? { mentionBot: true } : {}),
+      ...(quoteMsgId ? { quoteMsgId } : {}),
+      ...(parsed.msg_type ? { msgType: parsed.msg_type } : {}),
     });
     if (duplicate) {
       duplicates++;

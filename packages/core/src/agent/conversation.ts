@@ -63,10 +63,15 @@ export function maskForModel(text: string): string {
   return redactPhones(text);
 }
 
-export async function loadHistory(conversationId: string, excludeMessageId: number): Promise<MessageParam[]> {
+/** D22: toi da `limit` tin gan nhat (cu → moi), da che SDT; KHONG nen, KHONG tom tat. */
+export async function loadHistory(
+  conversationId: string,
+  excludeMessageId: number,
+  limit: number = HISTORY_LIMIT
+): Promise<MessageParam[]> {
   const rows = await sql<HistoryRow>(
-    `select role, content from messages where conversation_id = $1 and id <> $2 order by id desc limit ${HISTORY_LIMIT}`,
-    [conversationId, excludeMessageId]
+    `select role, content from messages where conversation_id = $1 and id <> $2 order by id desc limit $3`,
+    [conversationId, excludeMessageId, limit]
   );
   return rows
     .reverse()

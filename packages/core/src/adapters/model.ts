@@ -49,6 +49,8 @@ export interface ModelCall {
   images?: ImageRef[];
   /** Gan vao agent_runs.conversation_id neu co (tuy chon — P01 chua co agent thuc). */
   conversationId?: string | null;
+  /** D24: id luot agent => `agent_runs.turn_id` (= `turn_traces.id`); thieu => NULL (triage, embed). */
+  turnId?: string;
 }
 
 export interface CallModelResult {
@@ -60,7 +62,7 @@ export interface CallModelResult {
 /** Interface toi thieu ma test dung de gia lap client anthropic (`setModelClientForTest`). */
 export interface ModelClientLike {
   messages: {
-    create(body: Anthropic.MessageCreateParamsNonStreaming): Promise<Message>;
+    create(body: Anthropic.MessageCreateParamsNonStreaming, options?: { signal?: AbortSignal }): Promise<Message>;
   };
 }
 
@@ -253,6 +255,7 @@ function withImages(messages: MessageParam[], images: ImageRef[] | undefined): M
 
 async function recordAgentRun(row: {
   conversationId: string | null;
+  turnId?: string | null;
   route: ModelRoute;
   model: string;
   inputTokens: number | null;
@@ -264,8 +267,8 @@ async function recordAgentRun(row: {
   try {
     await sql(
       `insert into agent_runs
-        (conversation_id, route, model, input_tokens, output_tokens, cache_read_tokens, latency_ms, outcome)
-       values ($1,$2,$3,$4,$5,$6,$7,$8)`,
+        (conversation_id, route, model, input_tokens, output_tokens, cache_read_tokens, latency_ms, outcome, turn_id)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
       [
         row.conversationId,
         row.route,
@@ -275,6 +278,7 @@ async function recordAgentRun(row: {
         row.cacheReadTokens,
         row.latencyMs,
         row.outcome,
+        row.turnId ?? null,
       ]
     );
   } catch {
@@ -292,17 +296,21 @@ async function recordAgentRun(row: {
 
 async function callAnthropicOnce(
   model: string,
-  c: ModelCall
+  c: ModelCall,
+  signal?: AbortSignal
 ): Promise<{ message: Message; usage: Usage }> {
   const client = getAnthropicClient(c.route);
   try {
-    const message = await client.messages.create({
-      model,
-      max_tokens: MAX_OUTPUT_TOKENS,
-      system: buildSystem(c.system),
-      messages: withImages(c.messages, c.images),
-      tools: withCacheControlOnLastTool(c.tools),
-    });
+    const message = await client.messages.create(
+      {
+        model,
+        max_tokens: MAX_OUTPUT_TOKENS,
+        system: buildSystem(c.system),
+        messages: withImages(c.messages, c.images),
+        tools: withCacheControlOnLastTool(c.tools),
+      },
+      signal ? { signal } : undefined
+    );
     return { message, usage: message.usage };
   } catch (err) {
     // R02-tham-dinh G3: loi mang/timeout (`APIConnectionError`, ke ca
@@ -496,7 +504,12 @@ function getGeminiApiKey(): string {
   return key;
 }
 
-async function fetchGeminiOnce(model: string, body: unknown, route: ModelRoute = 'community'): Promise<GeminiResponseBody> {
+async function fetchGeminiOnce(
+  model: string,
+  body: unknown,
+  route: ModelRoute = 'community',
+  signal?: AbortSignal
+): Promise<GeminiResponseBody> {
   const apiKey = getGeminiApiKey();
   const url = `${GEMINI_ENDPOINT_HOST}${encodeURIComponent(model)}:generateContent`;
   let fetchImpl: typeof fetch;
@@ -515,6 +528,7 @@ async function fetchGeminiOnce(model: string, body: unknown, route: ModelRoute =
       // 01-CONTRACTS §2b: key qua header, CAM dat trong URL.
       headers: { 'content-type': 'application/json', 'x-goog-api-key': apiKey },
       body: JSON.stringify(body),
+      ...(signal ? { signal } : {}),
     });
   } catch (err) {
     throw new GeminiRetryableError(`Loi mang khi goi Gemini ${model}: ${err instanceof Error ? err.message : String(err)}`);
@@ -533,12 +547,17 @@ async function fetchGeminiOnce(model: string, body: unknown, route: ModelRoute =
 /** 01-CONTRACTS §2b "Loi": 429/500/503/504/mang/timeout ⇒ retry toi da 2
  * lan, lui 1s roi 3s, roi ModelUnavailableError; 400/401/403/404 ⇒ nem loi
  * goc ngay (khong retry). */
-async function callGeminiWithRetry(model: string, body: unknown, route: ModelRoute = 'community'): Promise<GeminiResponseBody> {
+async function callGeminiWithRetry(
+  model: string,
+  body: unknown,
+  route: ModelRoute = 'community',
+  signal?: AbortSignal
+): Promise<GeminiResponseBody> {
   // SPEC-P03 §11.10: route 'triage' KHONG retry, khong MODEL_FALLBACKS — do
   // trung tam o `triageMessage` (mot lan goi, timeout rieng); o day ta van
   // giu duong retry cho cac route khac nguyen ven.
   if (route === 'triage') {
-    return fetchGeminiOnce(model, body, route);
+    return fetchGeminiOnce(model, body, route, signal);
   }
   let lastErr: unknown;
   for (let attempt = 0; attempt <= GEMINI_RETRY_DELAYS_MS.length; attempt++) {
@@ -554,7 +573,7 @@ async function callGeminiWithRetry(model: string, body: unknown, route: ModelRou
   throw new ModelUnavailableError(`Model ${model}: ${(lastErr as Error)?.message ?? 'khong kha dung'} sau retry.`);
 }
 
-async function callGeminiOnce(model: string, c: ModelCall): Promise<{ message: Message; usage: Usage }> {
+async function callGeminiOnce(model: string, c: ModelCall, signal?: AbortSignal): Promise<{ message: Message; usage: Usage }> {
   const messagesWithImages = withImages(c.messages, c.images);
   const body = {
     systemInstruction: { parts: [{ text: c.system }] },
@@ -562,7 +581,7 @@ async function callGeminiOnce(model: string, c: ModelCall): Promise<{ message: M
     tools: toGeminiTools(c.tools),
     generationConfig: { maxOutputTokens: MAX_OUTPUT_TOKENS },
   };
-  const raw = await callGeminiWithRetry(model, body, c.route);
+  const raw = await callGeminiWithRetry(model, body, c.route, signal);
   const candidate = raw.candidates?.[0];
   const content = geminiPartsToContent(candidate?.content?.parts);
   const stopReason = determineStopReason(candidate, raw.promptFeedback);
@@ -780,7 +799,13 @@ interface OpenAICompatConfig {
   testFetch: typeof fetch | null;
 }
 
-async function fetchOpenAICompatOnce(cfg: OpenAICompatConfig, model: string, body: unknown, route: ModelRoute): Promise<OAIResponseBody> {
+async function fetchOpenAICompatOnce(
+  cfg: OpenAICompatConfig,
+  model: string,
+  body: unknown,
+  route: ModelRoute,
+  signal?: AbortSignal
+): Promise<OAIResponseBody> {
   let fetchImpl: typeof fetch;
   if (route === 'triage') {
     // 01-CONTRACTS §2c/§2d "Thu nghiem": triage dung lai setTriageFetchForTest
@@ -803,6 +828,7 @@ async function fetchOpenAICompatOnce(cfg: OpenAICompatConfig, model: string, bod
         ...(cfg.extraHeaders ?? {}),
       },
       body: JSON.stringify(body),
+      ...(signal ? { signal } : {}),
     });
   } catch (err) {
     throw new OpenAICompatRetryableError(`Loi mang khi goi ${cfg.label} ${model}: ${err instanceof Error ? err.message : String(err)}`);
@@ -837,9 +863,15 @@ async function fetchOpenAICompatOnce(cfg: OpenAICompatConfig, model: string, bod
  * ⇒ retry toi da 2 lan (lui 1s roi 3s) roi ModelUnavailableError, sau do
  * MODEL_FALLBACKS o `callModel`; 402 nem thang tu `fetchOpenAICompatOnce`
  * (khong qua vong nay); 400/401/403/404 nem loi goc. */
-async function callOpenAICompatWithRetry(cfg: OpenAICompatConfig, model: string, body: unknown, route: ModelRoute): Promise<OAIResponseBody> {
+async function callOpenAICompatWithRetry(
+  cfg: OpenAICompatConfig,
+  model: string,
+  body: unknown,
+  route: ModelRoute,
+  signal?: AbortSignal
+): Promise<OAIResponseBody> {
   if (route === 'triage') {
-    return fetchOpenAICompatOnce(cfg, model, body, route);
+    return fetchOpenAICompatOnce(cfg, model, body, route, signal);
   }
   let lastErr: unknown;
   for (let attempt = 0; attempt <= GEMINI_RETRY_DELAYS_MS.length; attempt++) {
@@ -855,7 +887,12 @@ async function callOpenAICompatWithRetry(cfg: OpenAICompatConfig, model: string,
   throw new ModelUnavailableError(`Model ${model}: ${(lastErr as Error)?.message ?? 'khong kha dung'} sau retry.`);
 }
 
-async function callOpenAICompatOnce(cfg: OpenAICompatConfig, model: string, c: ModelCall): Promise<{ message: Message; usage: Usage }> {
+async function callOpenAICompatOnce(
+  cfg: OpenAICompatConfig,
+  model: string,
+  c: ModelCall,
+  signal?: AbortSignal
+): Promise<{ message: Message; usage: Usage }> {
   const messagesWithImages = withImages(c.messages, c.images);
   const body: Record<string, unknown> = {
     model,
@@ -868,7 +905,7 @@ async function callOpenAICompatOnce(cfg: OpenAICompatConfig, model: string, c: M
     // dan de huan luyen (Luat 91/2025). §2d (vyce): KHONG gui truong nay.
     body.provider = { data_collection: 'deny' };
   }
-  const raw = await callOpenAICompatWithRetry(cfg, model, body, c.route);
+  const raw = await callOpenAICompatWithRetry(cfg, model, body, c.route, signal);
   const choice = raw.choices?.[0];
   const content = oaiMessageToContent(choice?.message);
   const stopReason = determineOAIStopReason(choice);
@@ -909,7 +946,7 @@ function openRouterBaseUrl(): string {
   return raw && raw.length > 0 ? raw : OPENROUTER_DEFAULT_BASE_URL;
 }
 
-async function callOpenRouterOnce(model: string, c: ModelCall): Promise<{ message: Message; usage: Usage }> {
+async function callOpenRouterOnce(model: string, c: ModelCall, signal?: AbortSignal): Promise<{ message: Message; usage: Usage }> {
   return callOpenAICompatOnce(
     {
       label: 'OpenRouter',
@@ -920,7 +957,8 @@ async function callOpenRouterOnce(model: string, c: ModelCall): Promise<{ messag
       testFetch: testFetchOpenRouter,
     },
     model,
-    c
+    c,
+    signal
   );
 }
 
@@ -939,7 +977,7 @@ function vyceBaseUrl(): string {
   return raw && raw.length > 0 ? raw : VYCE_DEFAULT_BASE_URL;
 }
 
-async function callVyceOnce(model: string, c: ModelCall): Promise<{ message: Message; usage: Usage }> {
+async function callVyceOnce(model: string, c: ModelCall, signal?: AbortSignal): Promise<{ message: Message; usage: Usage }> {
   // 01-CONTRACTS §2d "Du lieu": Vyce la proxy ben thu ba, KHONG co cam ket
   // khong luu du lieu ⇒ TU CHOI khi DATA_MODE != 'sim' — nem loi cau hinh
   // NGAY, KHONG goi mang (0 lan fetch).
@@ -957,7 +995,8 @@ async function callVyceOnce(model: string, c: ModelCall): Promise<{ message: Mes
       testFetch: testFetchVyce,
     },
     model,
-    c
+    c,
+    signal
   );
 }
 
@@ -988,6 +1027,7 @@ export async function callModel(c: ModelCall): Promise<CallModelResult> {
               : await callGeminiOnce(model, c);
       await recordAgentRun({
         conversationId: c.conversationId ?? null,
+        turnId: c.turnId ?? null,
         route: c.route,
         model,
         inputTokens: usage.input_tokens,
@@ -1009,6 +1049,7 @@ export async function callModel(c: ModelCall): Promise<CallModelResult> {
       }
       await recordAgentRun({
         conversationId: c.conversationId ?? null,
+        turnId: c.turnId ?? null,
         route: c.route,
         model,
         inputTokens: null,
@@ -1028,6 +1069,8 @@ export interface TriageModelCall {
   system: string;
   messages: MessageParam[];
   conversationId?: string | null;
+  /** D31: huy fetch bang `AbortSignal` sau chung nay ms (thay `Promise.race` — fetch khong chay tiep ngam). */
+  timeoutMs: number;
 }
 
 /** SPEC-P03 §11.10: goi model cho route 'triage' — MOT lan goi DUY NHAT,
@@ -1039,15 +1082,16 @@ export async function callTriageModel(c: TriageModelCall): Promise<CallModelResu
   const model = resolveTriageModel(provider);
   const startedAt = Date.now();
   const call: ModelCall = { route: 'triage', system: c.system, messages: c.messages };
+  const signal = AbortSignal.timeout(c.timeoutMs);
   try {
     const { message, usage } =
       provider === 'anthropic'
-        ? await callAnthropicOnce(model, call)
+        ? await callAnthropicOnce(model, call, signal)
         : provider === 'openrouter'
-          ? await callOpenRouterOnce(model, call)
+          ? await callOpenRouterOnce(model, call, signal)
           : provider === 'vyce'
-            ? await callVyceOnce(model, call)
-            : await callGeminiOnce(model, call);
+            ? await callVyceOnce(model, call, signal)
+            : await callGeminiOnce(model, call, signal);
     await recordAgentRun({
       conversationId: c.conversationId ?? null,
       route: 'triage',

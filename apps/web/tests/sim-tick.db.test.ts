@@ -1,5 +1,5 @@
-// apps/web/tests/sim-tick.db.test.ts — POST /api/dev/sim/tick (P01: runTimers la
-// khung rong => steps {}; buoc thuc te do P03–P07 dien).
+// apps/web/tests/sim-tick.db.test.ts — POST /api/dev/sim/tick (P01: runTimers la khung rong; P03 dien
+// flushAmbient + pruneBuffers, buoc con lai do P04–P07 dien).
 
 import { randomUUID } from 'node:crypto';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
@@ -54,14 +54,15 @@ describe('/api/dev/sim/tick (db)', () => {
     expect((await simTick(await req('http://localhost/api/dev/sim/tick', 'operator', {}))).status).toBe(403);
   });
 
-  it('admin ⇒ 200, khung timers tra steps rong + delivered la so; now sai dinh dang ⇒ 400', async () => {
+  it('admin ⇒ 200, timers tra steps (flushAmbient, pruneBuffers) + delivered la so; now sai dinh dang ⇒ 400', async () => {
     process.env.DATA_MODE = 'sim';
     const res = await simTick(
       await req('http://localhost/api/dev/sim/tick', 'admin', { now: new Date().toISOString() })
     );
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.steps).toEqual({});
+    // P03: runTimers co 2 buoc thuc (flushAmbient, pruneBuffers) — moi buoc tra so muc da xu ly.
+    expect(body.steps).toEqual({ flushAmbient: expect.any(Number), pruneBuffers: expect.any(Number) });
     expect(typeof body.delivered).toBe('number');
 
     const bad = await simTick(await req('http://localhost/api/dev/sim/tick', 'admin', { now: 'khong-phai-ngay' }));

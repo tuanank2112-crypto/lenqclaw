@@ -143,11 +143,13 @@ describe('/api/dev/sim/send — kenh gia lap nhom (db)', () => {
     const a = await send('admin', { ...BASE, threadId: t, text: 'tin sẽ bị xoá' });
     expect(a.status).toBe(200);
     const msgId = (await inboundOf(t))[0]!.zalo_msg_id;
-    await sql(
-      `insert into group_messages (zalo_account_id, thread_id, zalo_msg_id, cli_msg_id, sender_uid, text, deleted_at)
-       values ('community',$1,$2,'cli-x','sim-mem-1','tin sẽ bị xoá', now())`,
+    // P03: tin den qua pipeline nen da nam trong dem (ingest) — danh dau xoa dong co san thay vi chen moi.
+    const upd = await sql(
+      `update group_messages set cli_msg_id = 'cli-x', deleted_at = now()
+        where zalo_account_id = 'community' and thread_id = $1 and zalo_msg_id = $2 returning id`,
       [t, msgId]
     );
+    expect(upd).toHaveLength(1);
     await send('admin', { ...BASE, threadId: t, senderUid: 'sim-owner', event: 'join', eventUids: ['sim-new-2'], eventNames: ['Người Mới'] });
     const actionId = await enqueue({
       zaloAccountId: 'community',

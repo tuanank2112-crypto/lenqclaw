@@ -111,9 +111,11 @@ export const PipelineState = Annotation.Root({
   group: keep<GroupRow | null>(() => null),
   sender: keep<{ uid: string; role: Role } | null>(() => null),
   row: keep<GroupMessageRow | null>(() => null),
-  triage: keep<CommunityTriage | null>(() => null),
+  // D28 lech SPEC (01-CONTRACTS §12.2 ghi `triage`/`gate`): LangGraph CAM trung ten kenh trang thai voi ten node
+  // (`StateGraph.addNode` nem loi) ⇒ doi ten TRUONG state, giu nguyen ten NODE (hinh duoc nguoi dung duyet).
+  triageResult: keep<CommunityTriage | null>(() => null),
   moderation: keep<{ verdict: string; action: string; exempt: boolean } | null>(() => null),
-  gate: keep<GateDecision | null>(() => null),
+  gateDecision: keep<GateDecision | null>(() => null),
   turnRequest: keep<TurnRequest | null>(() => null),
   turnResult: keep<TurnResult | null>(() => null),
   /** Vi sao pipeline dung khong co luot (test/log). */

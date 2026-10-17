@@ -22,6 +22,8 @@ export interface InboundEvent {
   isSelf: boolean;
   payload: Record<string, unknown>;
   receivedAt: string;
+  /** D31: epoch ms luc dispatcher/processInbound nhan tin (moc `queued_ms`); thieu ⇒ node `turn` dung luc goi. */
+  claimedAt?: number;
 }
 
 export type OutboxKind = 'text' | 'image' | 'typing' | 'seen' | 'action' | 'react';

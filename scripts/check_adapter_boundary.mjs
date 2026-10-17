@@ -37,6 +37,52 @@ const OPENROUTER_HOST = 'openrouter.ai';
 // adapters/model.ts (goi H11, goi c).
 const VYCE_HOST = 'vyceai.com';
 
+// --- P03 / D28 (BB-15, BB-17) + D32 (BB-20): ranh gioi node do thi LangGraph, cam checkpoint/LangSmith,
+// Telegram chi o adapters/alert.ts. SPEC-P03 §11 hang 12.
+const GRAPH_DIR = 'packages/core/src/agent/community/graph';
+const NODES_DIR = `${GRAPH_DIR}/nodes`;
+const ADAPTER_ALERT = 'packages/core/src/adapters/alert.ts';
+// Node co cot outbox ✗ (01-CONTRACTS §12.3): KHONG import adapters/transport, services/outbox-actions, services/approvals.
+const OUTBOX_FORBIDDEN_NODES = new Set(['ingest', 'triage', 'gate', 'defer', 'turn', 'agent', 'nudge', 'trace']);
+const OUTBOX_MODULES = new Set([
+  'packages/core/src/adapters/transport',
+  'packages/core/src/services/outbox-actions',
+  'packages/core/src/services/approvals',
+]);
+const MODEL_MODULE = 'packages/core/src/adapters/model';
+const TRIAGE_MODULE = 'packages/core/src/agent/community/triage';
+
+/** Giai specifier tuong doi thanh duong dan goc repo (bo duoi .js/.ts); specifier goi (khong './') giu nguyen. */
+function resolveSpec(fromRel, spec) {
+  if (!spec.startsWith('.')) return spec;
+  return path.posix.normalize(path.posix.join(path.posix.dirname(fromRel), spec.replace(/\.(js|ts)$/, '')));
+}
+// Danh dinh cam trong TOAN packages/ (sau khi bo comment): checkpointer, store, interrupt, Command, Send, MessagesAnnotation.
+const FORBIDDEN_LANGGRAPH_IDENTS = [
+  { re: /\bMemorySaver\b/, label: 'MemorySaver' },
+  { re: /\bPostgresSaver\b/, label: 'PostgresSaver' },
+  { re: /\bInMemoryStore\b/, label: 'InMemoryStore' },
+  { re: /\bMessagesAnnotation\b/, label: 'MessagesAnnotation' },
+  { re: /\binterrupt\s*\(/, label: 'interrupt(' },
+  { re: /\bnew\s+Command\s*\(/, label: 'new Command(' },
+  { re: /\bSend\s*\(/, label: 'Send(' },
+  { re: /\bcheckpointer\s*:/, label: 'checkpointer:' },
+];
+
+/** Chi quet MA: bo comment khoi + dong (thong bao/hang trong chuoi van con — chap nhan, quet muc bao dong). */
+function stripComments(content) {
+  return content.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' ')).replace(/(^|[^:'"`])\/\/[^\n]*/g, '$1');
+}
+
+/** Specifier thuoc nhom `@langchain/*` (tru dung `@langchain/langgraph`) hoac `langsmith` bi cam (BB-17). */
+function isForbiddenLangchainSpecifier(spec) {
+  if (spec === '@langchain/langgraph') return false;
+  if (spec.startsWith('@langchain/langgraph-checkpoint')) return true;
+  if (spec.startsWith('@langchain/langgraph/')) return true; // prebuilt, web, ...
+  if (spec.startsWith('@langchain/')) return true; // @langchain/core/*, @langchain/<provider>
+  return spec === 'langsmith' || spec.startsWith('langsmith/');
+}
+
 async function walk(dir, insideSrc) {
   const entries = await readdir(dir, { withFileTypes: true });
   const files = [];
@@ -177,6 +223,49 @@ async function main() {
     if (!isTransportAdapter) {
       for (const offset of findOutboxInsertOffsets(content)) {
         violations.push(`${rel}: "insert into outbox" (be mat chinh tac, ~offset ${offset}) ngoai adapters/transport.ts`);
+      }
+    }
+
+    // ---- BB-15 / BB-17 / BB-20 ----
+    const inPackages = rel.startsWith('packages/');
+    const isTestFile = /\.test\.[a-z]+$/.test(rel);
+    const nodeMatch = rel.startsWith(`${NODES_DIR}/`) ? path.basename(rel).replace(/\.[a-z]+$/, '') : null;
+    for (const ref of refs) {
+      const lineNo = lineAt(content, ref.index);
+      // (c) cam goi/thu vien: ke ca import type khong duoc (an toan hon) — ngoai tru typeOnly cua goi duoc phep.
+      if (inPackages && !ref.typeOnly && isForbiddenLangchainSpecifier(ref.specifier)) {
+        violations.push(`${rel}:${lineNo}: ${ref.keyword} "${ref.specifier}" bi cam (BB-17: chi Annotation/StateGraph/START/END/GraphRecursionError tu "@langchain/langgraph")`);
+      }
+      if (ref.typeOnly) continue;
+      // (a) node outbox ✗
+      if (nodeMatch !== null && OUTBOX_FORBIDDEN_NODES.has(nodeMatch) && OUTBOX_MODULES.has(resolveSpec(rel, ref.specifier))) {
+        violations.push(`${rel}:${lineNo}: node "${nodeMatch}" (outbox ✗) import "${ref.specifier}" (BB-15)`);
+      }
+      // (b) callModel chi o nodes/agent.ts; triageCommunityMessage chi o nodes/triage.ts
+      if (rel.startsWith(`${GRAPH_DIR}/`) && !isTestFile) {
+        if (resolveSpec(rel, ref.specifier) === MODEL_MODULE && rel !== `${NODES_DIR}/agent.ts`) {
+          violations.push(`${rel}:${lineNo}: import "${ref.specifier}" ngoai graph/nodes/agent.ts (BB-15)`);
+        }
+        if (resolveSpec(rel, ref.specifier) === TRIAGE_MODULE && rel !== `${NODES_DIR}/triage.ts`) {
+          violations.push(`${rel}:${lineNo}: import "${ref.specifier}" ngoai graph/nodes/triage.ts (BB-15)`);
+        }
+      }
+    }
+    if (inPackages) {
+      const code = stripComments(content);
+      for (const { re, label } of FORBIDDEN_LANGGRAPH_IDENTS) {
+        const m = re.exec(code);
+        if (m) violations.push(`${rel}:${lineAt(code, m.index)}: dinh danh "${label}" bi cam (BB-17: khong checkpointer/Store/interrupt/Command/Send/MessagesAnnotation)`);
+      }
+    }
+    if (rel !== ADAPTER_ALERT) {
+      for (const needle of ['api.telegram.org', 'TELEGRAM_BOT_TOKEN']) {
+        let from = 0;
+        let at;
+        while ((at = content.indexOf(needle, from)) !== -1) {
+          violations.push(`${rel}:${lineAt(content, at)}: chuoi "${needle}" ngoai adapters/alert.ts (BB-20)`);
+          from = at + needle.length;
+        }
       }
     }
 

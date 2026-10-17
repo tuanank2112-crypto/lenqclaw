@@ -40,7 +40,7 @@ function ev(over: Partial<InboundEvent> = {}): InboundEvent {
 
 function pstate(over: Partial<PipelineStateT> = {}): PipelineStateT {
   return {
-    event: ev(), group: null, sender: null, row: null, triage: null, moderation: null, gate: null, turnRequest: null,
+    event: ev(), group: null, sender: null, row: null, triageResult: null, moderation: null, gateDecision: null, turnRequest: null,
     turnResult: null, stop: null, triageMs: null, ...over,
   };
 }
@@ -104,23 +104,23 @@ describe('afterTriage', () => {
   });
   it('khong phu thuoc ket qua triage', () => {
     const t: CommunityTriage = { verdict: 'spam', confidence: 0.9, is_question: false, question_confidence: 0, lead_intent: false, lead_confidence: 0, wants_private: false };
-    expect(afterTriage(pstate({ triage: t }))).toBe('moderate');
-    expect(afterTriage(pstate({ triage: null }))).toBe('moderate');
+    expect(afterTriage(pstate({ triageResult: t }))).toBe('moderate');
+    expect(afterTriage(pstate({ triageResult: null }))).toBe('moderate');
   });
 });
 
 describe('afterGate', () => {
   it('khong admitted => END', () => {
-    expect(afterGate(pstate({ gate: gate({ admitted: false, reason: 'no_trigger', trigger: null, mustReply: false }) }))).toBe(END);
+    expect(afterGate(pstate({ gateDecision: gate({ admitted: false, reason: 'no_trigger', trigger: null, mustReply: false }) }))).toBe(END);
   });
   it('gate null => END (phong thu)', () => {
-    expect(afterGate(pstate({ gate: null }))).toBe(END);
+    expect(afterGate(pstate({ gateDecision: null }))).toBe(END);
   });
   it('admitted + ambient => defer', () => {
-    expect(afterGate(pstate({ gate: gate({ trigger: 'ambient', mustReply: false }) }))).toBe('defer');
+    expect(afterGate(pstate({ gateDecision: gate({ trigger: 'ambient', mustReply: false }) }))).toBe('defer');
   });
   it.each(['mention', 'reply_to_bot', 'name_pattern', 'owner_command'] as const)('admitted + %s => turn', (trigger) => {
-    expect(afterGate(pstate({ gate: gate({ trigger }) }))).toBe('turn');
+    expect(afterGate(pstate({ gateDecision: gate({ trigger }) }))).toBe('turn');
   });
 });
 

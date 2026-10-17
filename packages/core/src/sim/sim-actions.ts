@@ -167,7 +167,7 @@ async function completeApproval(approvalId: string, ok: boolean, result: Record<
   }
 }
 
-/** Giao het (toi da `limit`) hang `queued` cua thread `sim-*` da den han (`not_before <= now()`), theo thu tu id —
+/** Giao het (toi da `limit`) hang `queued` (typing/seen duoc danh dau `sent` nhung khong dem vao `delivered`) cua thread `sim-*` da den han (`not_before <= now()`), theo thu tu id —
  * KHONG cham hang thread that khi `DATA_MODE=sim` chay chung worker that (D29 diem 6). Ngoai le CO CHU Y:
  * `extraThreadIds` — `runScenario` truyen dung cac thread cua kich ban dang phat lai (vd `u-101` o `echo.jsonl`). Moi hang duoc "nhan" (`sending`) bang
  * `for update skip locked` nen hai lan goi dong thoi khong giao trung. */
@@ -217,7 +217,8 @@ export async function applySimOutbox(opts: { limit?: number; extraThreadIds?: st
           [row.zalo_account_id, row.id, msgId]
         );
       }
-      delivered++;
+      // typing/seen la tin hieu (khong phai tin nhan): da `sent` nhung KHONG tinh vao `delivered` (D31: prepare gui typing som).
+      if (row.kind !== 'typing' && row.kind !== 'seen') delivered++;
     } catch (err) {
       await sql(
         `update outbox set status = 'failed', result = $2::jsonb, body = body || jsonb_build_object('fail_reason', 'sim_error') where id = $1`,

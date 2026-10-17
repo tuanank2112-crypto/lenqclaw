@@ -55,8 +55,8 @@ export function afterModerate(s: PipelineStateT): 'gate' | typeof END {
 }
 
 export function afterGate(s: PipelineStateT): 'turn' | 'defer' | typeof END {
-  if (!s.gate || !s.gate.admitted) return END;
-  return s.gate.trigger === 'ambient' ? 'defer' : 'turn';
+  if (!s.gateDecision || !s.gateDecision.admitted) return END;
+  return s.gateDecision.trigger === 'ambient' ? 'defer' : 'turn';
 }
 
 export function afterSystemEvent(s: PipelineStateT): 'turn' | typeof END {

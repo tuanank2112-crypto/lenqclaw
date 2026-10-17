@@ -5,6 +5,7 @@
 
 import { callTriageModel } from '../../adapters/model.js';
 import type { CommunityTriage } from '../../domain/types.js';
+import { readCommunityConfig } from '../../services/community-config.js';
 import { redactPhones } from './redact.js';
 import { buildTriageUserMessage, TRIAGE_SYSTEM } from './prompts/triage.js';
 
@@ -62,6 +63,7 @@ export async function triageCommunityMessage(
         },
       ],
       conversationId: conversationId ?? null,
+      timeoutMs: readCommunityConfig().triageTimeoutMs,
     });
     const raw = res.message.content
       .filter((b): b is { type: 'text'; text: string; citations: null } => b.type === 'text')
