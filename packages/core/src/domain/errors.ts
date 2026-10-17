@@ -11,7 +11,8 @@ export class ConflictError extends Error {
 }
 
 export class ModelUnavailableError extends Error {
-  readonly code = 'ModelUnavailableError';
+  // `string` (khong phai literal) de lop con (ModelDeadlineError) ghi de `code`.
+  readonly code: string = 'ModelUnavailableError';
   constructor(message = 'Mo hinh ngon ngu tam thoi khong kha dung.') {
     super(message);
     this.name = 'ModelUnavailableError';
@@ -171,5 +172,33 @@ export class ZaloActionError extends Error {
   constructor(message = 'Zalo tu choi hanh dong quan tri.') {
     super(message);
     this.name = 'ZaloActionError';
+  }
+}
+
+/** (D31, BB-18) Het han chot cua luot / con < MODEL_MIN_ATTEMPT_MS: con cua
+ * `ModelUnavailableError` nen caller di chung duong `model_down`; KHONG thu lai. */
+export class ModelDeadlineError extends ModelUnavailableError {
+  readonly code: string = 'ModelDeadlineError';
+  constructor(message = 'Het han chot cua luot, khong goi them model.') {
+    super(message);
+    this.name = 'ModelDeadlineError';
+  }
+}
+
+/** Thieu persona_docs active cho mot trong 4 kind (loi cau hinh — dashboard seed). */
+export class PersonaMissingError extends Error {
+  readonly code = 'PersonaMissingError';
+  constructor(message = 'Thieu persona dang kich hoat (soul/rules/identity/capabilities).') {
+    super(message);
+    this.name = 'PersonaMissingError';
+  }
+}
+
+/** Tong khoi persona 1..6 vuot 24 000 ky tu. */
+export class PersonaTooLargeError extends Error {
+  readonly code = 'PersonaTooLargeError';
+  constructor(message = 'Tong do dai persona vuot gioi han 24000 ky tu.') {
+    super(message);
+    this.name = 'PersonaTooLargeError';
   }
 }

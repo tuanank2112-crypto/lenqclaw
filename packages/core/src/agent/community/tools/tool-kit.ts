@@ -15,6 +15,12 @@ export type ToolDefinition = Tool & { strict: true };
 
 export interface AgentTool<TInput = Record<string, unknown>, TOutput = unknown, TCtx = ToolContext> {
   readonly definition: ToolDefinition;
+  /** D28: tool tinh la "da tra loi luot" — node `tools` cong `TurnState.answered` khi chay THANH CONG
+   * (send_group_message, invite_to_private, review_join_request; khong tool nao khac). */
+  readonly answers?: true;
+  /** D31: tool truy hoi nang luot tuong tac tu lan `fast` len `rag` (search_knowledge, search_memory,
+   * recall_group_history, read_skill). */
+  readonly extendsDeadline?: true;
   run(ctx: TCtx, input: TInput): Promise<TOutput>;
 }
 

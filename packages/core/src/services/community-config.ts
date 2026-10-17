@@ -47,6 +47,23 @@ export interface CommunityConfig {
   triageTimeoutMs: number;
   dataMode: string;
   transport: 'sim' | 'zalo';
+  // D31 (BB-18/BB-19): toc do, han chot, runner song song
+  modelCommunityFast: string;
+  modelMaxOutputTokens: number;
+  modelCallTimeoutMs: number;
+  modelMinAttemptMs: number;
+  laneFastDeadlineMs: number;
+  laneRagDeadlineMs: number;
+  turnBackgroundDeadlineMs: number;
+  toolMinMs: number;
+  embedTimeoutMs: number;
+  runnerConcurrency: number;
+  runnerPollMs: number;
+  runnerDrainMs: number;
+  // D32: dau song tien trinh
+  heartbeatIntervalMs: number;
+  heartbeatStaleMs: number;
+  turnStuckMs: number;
 }
 
 function readNumber(
@@ -81,6 +98,24 @@ export function readCommunityConfig(env: NodeJS.ProcessEnv = process.env): Commu
   const transport = readString(env, 'TRANSPORT', 'sim');
   if (transport !== 'sim' && transport !== 'zalo') {
     throw new ConfigError(`TRANSPORT="${transport}" khong hop le (chi "sim" hoac "zalo").`);
+  }
+  // BB-17 / D28: thu vien LangGraph/LangSmith TU goi mang khi bat tracing (do duoc o
+  // spike) => bat la loi cau hinh, tien trinh khong khoi dong.
+  for (const key of ['LANGSMITH_TRACING', 'LANGCHAIN_TRACING_V2']) {
+    const v = env[key]?.trim().toLowerCase();
+    if (v === 'true' || v === '1') {
+      throw new ConfigError(`${key} khong duoc bat (BB-17: khong LangSmith/LangGraph Platform).`);
+    }
+  }
+  const laneFastDeadlineMs = readNumber(env, 'LANE_FAST_DEADLINE_MS', 3500, 1000, 4500);
+  const laneRagDeadlineMs = readNumber(env, 'LANE_RAG_DEADLINE_MS', 12500, 5000, 14500);
+  if (laneFastDeadlineMs >= laneRagDeadlineMs) {
+    throw new ConfigError(`LANE_FAST_DEADLINE_MS (${laneFastDeadlineMs}) phai nho hon LANE_RAG_DEADLINE_MS (${laneRagDeadlineMs}).`);
+  }
+  const heartbeatIntervalMs = readNumber(env, 'HEARTBEAT_INTERVAL_MS', 5000, 1000, 60000);
+  const heartbeatStaleMs = readNumber(env, 'HEARTBEAT_STALE_MS', 60000, 1000);
+  if (heartbeatStaleMs < 3 * heartbeatIntervalMs) {
+    throw new ConfigError(`HEARTBEAT_STALE_MS (${heartbeatStaleMs}) phai >= 3 x HEARTBEAT_INTERVAL_MS (${heartbeatIntervalMs}).`);
   }
   return {
     zaloAccounts: ['community'],
@@ -117,12 +152,27 @@ export function readCommunityConfig(env: NodeJS.ProcessEnv = process.env): Commu
     kbTopK: readNumber(env, 'KB_TOP_K', 8, 1),
     memoryHalfLifeDays: readNumber(env, 'MEMORY_HALF_LIFE_DAYS', 30, 1),
     leadScoreHandoff: readNumber(env, 'LEAD_SCORE_HANDOFF', 60, 0, 100),
-    maxToolRounds: readNumber(env, 'MAX_TOOL_ROUNDS', 8, 1),
+    maxToolRounds: readNumber(env, 'MAX_TOOL_ROUNDS', 8, 1, 20),
     dmHistoryTurns: readNumber(env, 'DM_HISTORY_TURNS', 5, 1, 20),
     messagesRetentionDays: readNumber(env, 'MESSAGES_RETENTION_DAYS', 30, 1),
     humanTakeoverMin: readNumber(env, 'HUMAN_TAKEOVER_MIN', 60),
     triageTimeoutMs: readNumber(env, 'TRIAGE_TIMEOUT_MS', 4000, 1),
     dataMode: readString(env, 'DATA_MODE', 'sim'),
     transport,
+    modelCommunityFast: readString(env, 'MODEL_COMMUNITY_FAST', ''),
+    modelMaxOutputTokens: readNumber(env, 'MODEL_MAX_OUTPUT_TOKENS', 1024, 256, 16000),
+    modelCallTimeoutMs: readNumber(env, 'MODEL_CALL_TIMEOUT_MS', 30000, 1000, 120000),
+    modelMinAttemptMs: readNumber(env, 'MODEL_MIN_ATTEMPT_MS', 800, 200, 5000),
+    laneFastDeadlineMs,
+    laneRagDeadlineMs,
+    turnBackgroundDeadlineMs: readNumber(env, 'TURN_BACKGROUND_DEADLINE_MS', 30000, 10000, 120000),
+    toolMinMs: readNumber(env, 'TOOL_MIN_MS', 300, 0, 5000),
+    embedTimeoutMs: readNumber(env, 'EMBED_TIMEOUT_MS', 1500, 200, 10000),
+    runnerConcurrency: readNumber(env, 'RUNNER_CONCURRENCY', 4, 1, 8),
+    runnerPollMs: readNumber(env, 'RUNNER_POLL_MS', 200, 50, 5000),
+    runnerDrainMs: readNumber(env, 'RUNNER_DRAIN_MS', 30000, 0, 120000),
+    heartbeatIntervalMs,
+    heartbeatStaleMs,
+    turnStuckMs: readNumber(env, 'TURN_STUCK_MS', 120000, 10000),
   };
 }

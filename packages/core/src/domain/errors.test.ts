@@ -22,6 +22,9 @@ const CLASSES: Array<[string, new (message?: string) => Error & { code: string }
   ['EmbeddingUnavailableError', errors.EmbeddingUnavailableError],
   ['KnowledgeUnavailableError', errors.KnowledgeUnavailableError],
   ['ZaloActionError', errors.ZaloActionError],
+  ['ModelDeadlineError', errors.ModelDeadlineError],
+  ['PersonaMissingError', errors.PersonaMissingError],
+  ['PersonaTooLargeError', errors.PersonaTooLargeError],
 ];
 
 describe('domain/errors', () => {
@@ -31,6 +34,12 @@ describe('domain/errors', () => {
     expect(e.code).toBe(name);
     expect(e.name).toBe(name);
     expect(e.message.length).toBeGreaterThan(0);
+  });
+
+  it('ModelDeadlineError la con cua ModelUnavailableError (D31: di chung duong model_down)', () => {
+    const e = new errors.ModelDeadlineError();
+    expect(e).toBeInstanceOf(errors.ModelUnavailableError);
+    expect(e.code).toBe('ModelDeadlineError');
   });
 
   it('thong diep tuy chinh duoc giu nguyen', () => {

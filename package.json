@@ -30,5 +30,14 @@
   "devDependencies": {
     "tsx": "^4.19.2",
     "typescript": "^5.9.3"
+  },
+  "overrides": {
+    "@langchain/langgraph-checkpoint": "1.1.5",
+    "@langchain/langgraph-sdk": {
+      ".": "1.12.0",
+      "p-queue": "9.3.3"
+    },
+    "langsmith": "0.10.7",
+    "zod": "4.6.5"
   }
 }

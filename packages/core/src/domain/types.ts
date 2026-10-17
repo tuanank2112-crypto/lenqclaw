@@ -178,8 +178,11 @@ export interface GroupTurnContext {
   readonly joinRequest?: { uid: string; displayName: string | null };
   readonly now: Date;
   readonly conversationId: string;
-  /** So lan send_group_message trong luot (mutable — host kiem mustReply). */
-  sent: number;
+  /** D31: id `inbound_events` dang xu ly (tool truyen xuong `enqueue`). */
+  readonly inboundEventId: number;
+  /** D31: han chot luot (epoch ms; tool truyen xuong `embedTexts`). */
+  readonly deadlineAt: number;
+  // D28: BO truong mutable `sent` — dem "da tra loi" la `TurnState.answered`.
 }
 
 export interface DmTurnContext {
@@ -197,6 +200,8 @@ export interface DmTurnContext {
   readonly memberNotes: string | null;
   /** D22: lead mo cua requester (SPEC-P06 §3). */
   readonly openLead: { status: string; score: number; missing: string[] } | null;
+  readonly inboundEventId: number;
+  readonly deadlineAt: number;
 }
 
 export type ToolContext = GroupTurnContext | DmTurnContext;

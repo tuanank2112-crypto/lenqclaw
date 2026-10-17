@@ -52,4 +52,55 @@ describe('readCommunityConfig', () => {
     expect(readCommunityConfig({ ZALO_ACCOUNTS: ' community ' }).zaloAccounts).toEqual(['community']);
     expect(() => readCommunityConfig({ TRANSPORT: 'telegram' })).toThrow(ConfigError);
   });
+
+  // SPEC-P03 §11 hang 11 (D28, BB-17)
+  it('LANGSMITH_TRACING / LANGCHAIN_TRACING_V2 bat => ConfigError; khong dat / false => ok', () => {
+    expect(() => readCommunityConfig({ LANGSMITH_TRACING: 'true' })).toThrow(ConfigError);
+    expect(() => readCommunityConfig({ LANGSMITH_TRACING: 'TRUE' })).toThrow(ConfigError);
+    expect(() => readCommunityConfig({ LANGCHAIN_TRACING_V2: '1' })).toThrow(ConfigError);
+    expect(() => readCommunityConfig({ LANGCHAIN_TRACING_V2: 'true' })).toThrow(ConfigError);
+    expect(() => readCommunityConfig({})).not.toThrow();
+    expect(() => readCommunityConfig({ LANGSMITH_TRACING: 'false', LANGCHAIN_TRACING_V2: '0' })).not.toThrow();
+  });
+
+  it('MAX_TOOL_ROUNDS: mac dinh 8, 0 va 21 => ConfigError, 20 ok', () => {
+    expect(readCommunityConfig({}).maxToolRounds).toBe(8);
+    expect(() => readCommunityConfig({ MAX_TOOL_ROUNDS: '0' })).toThrow(ConfigError);
+    expect(() => readCommunityConfig({ MAX_TOOL_ROUNDS: '21' })).toThrow(ConfigError);
+    expect(readCommunityConfig({ MAX_TOOL_ROUNDS: '20' }).maxToolRounds).toBe(20);
+  });
+
+  // D31 (01-CONTRACTS §10)
+  it('D31: mac dinh dung bang §10', () => {
+    const c = readCommunityConfig({});
+    expect(c.laneFastDeadlineMs).toBe(3500);
+    expect(c.laneRagDeadlineMs).toBe(12500);
+    expect(c.turnBackgroundDeadlineMs).toBe(30000);
+    expect(c.modelMaxOutputTokens).toBe(1024);
+    expect(c.modelCallTimeoutMs).toBe(30000);
+    expect(c.modelMinAttemptMs).toBe(800);
+    expect(c.toolMinMs).toBe(300);
+    expect(c.embedTimeoutMs).toBe(1500);
+    expect(c.runnerConcurrency).toBe(4);
+    expect(c.runnerPollMs).toBe(200);
+    expect(c.runnerDrainMs).toBe(30000);
+    expect(c.modelCommunityFast).toBe('');
+    expect(c.heartbeatIntervalMs).toBe(5000);
+    expect(c.heartbeatStaleMs).toBe(60000);
+    expect(c.turnStuckMs).toBe(120000);
+  });
+
+  it('D31: ngoai khoang / fast >= rag / stale < 3 x interval => ConfigError', () => {
+    expect(() => readCommunityConfig({ LANE_FAST_DEADLINE_MS: '4600' })).toThrow(ConfigError);
+    expect(() => readCommunityConfig({ LANE_FAST_DEADLINE_MS: '900' })).toThrow(ConfigError);
+    expect(() => readCommunityConfig({ LANE_RAG_DEADLINE_MS: '14600' })).toThrow(ConfigError);
+    expect(() => readCommunityConfig({ LANE_FAST_DEADLINE_MS: '4500', LANE_RAG_DEADLINE_MS: '5000' })).not.toThrow();
+    expect(() => readCommunityConfig({ RUNNER_CONCURRENCY: '9' })).toThrow(ConfigError);
+    expect(() => readCommunityConfig({ RUNNER_CONCURRENCY: '0' })).toThrow(ConfigError);
+    expect(() => readCommunityConfig({ MODEL_MAX_OUTPUT_TOKENS: '255' })).toThrow(ConfigError);
+    expect(() => readCommunityConfig({ MODEL_MIN_ATTEMPT_MS: '100' })).toThrow(ConfigError);
+    expect(() => readCommunityConfig({ HEARTBEAT_INTERVAL_MS: '20000', HEARTBEAT_STALE_MS: '30000' })).toThrow(ConfigError);
+    expect(readCommunityConfig({ MODEL_COMMUNITY_FAST: ' gemini-x ' }).modelCommunityFast).toBe('gemini-x');
+  });
 });
+
