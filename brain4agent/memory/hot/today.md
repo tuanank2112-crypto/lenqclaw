@@ -13,6 +13,9 @@ Người dùng: "đến đâu rồi? tiếp tục đi".
 - Bước 0 `--check` exit 0. Trạng thái: P01 ✅, P02 ✅, sơ đồ LangGraph người dùng ĐÃ DUYỆT (2026-10-16), D31–D33 người dùng chốt (tốc độ < 5 s / RAG < 15 s, báo động Telegram, persona không qua eval), D34 SO duyệt R06 (`ba799dc`).
 - Não chưa ghi D31–D34 ⇒ đồng bộ kernel, roadmap, changelog, index.
 - Handoff H07 thi công P03 (SPEC-P03 + runtime D31; giá trị tạm Q-D31-1 CÓ / Q-D31-2 KHÔNG / Q-D31-3 chưa billing ⇒ G23 model thật có thể `blocked`). Phóng worker 🟠.
+- R07 (worker 🟠): 8 commit `5c959ec..d8e744f` + report `6749e34`. SO đo lại: gate exit 0, `npm test` 499/0/0, test:db ×2 = 182 (84/25/73), 0 skip; diff 91 file trong phạm vi (root `package.json` `overrides` + `latency:slo` đúng 01-CONTRACTS §12.1 — H07 cấm nhầm). G23 model thật `blocked` (Vyce 402, Gemini free tier 68 % lỗi). Prompt `rules` khớp nguyên văn SPEC §7.3 ⇒ review 🔴 đạt.
+- Phát hiện SO: nhóm chỉ nói qua `send_group_message` + cạnh `tools → agent` ⇒ lượt mention tốn 2 lời gọi model, ngân sách D31 §3 tính 1 ⇒ đưa vào vòng sửa.
+- H08 thẩm định đối kháng 🔴 (opus, không đọc R07) — `bb9a5e9`, đang chạy.
 
 ### ⏭ Treo
 - 🖐 Q-D31-1/2/3 (billing Gemini chặn số đo thật G23).
