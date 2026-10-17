@@ -1,0 +1,125 @@
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/agent/community/graph/edges.test.ts (124 tests | 8 failed | 116 skipped) 12ms
+   × D35.4 — skipFinalCall (THUAN) > mot tool answers thanh cong ⇒ true 6ms
+     → skipFinalCall is not a function
+   × D35.4 — skipFinalCall (THUAN) > hai tool answers thanh cong ⇒ true 1ms
+     → skipFinalCall is not a function
+   × D35.4 — skipFinalCall (THUAN) > tool answers LOI ⇒ false 1ms
+     → skipFinalCall is not a function
+   × D35.4 — skipFinalCall (THUAN) > mot answers OK + mot answers loi ⇒ false 0ms
+     → skipFinalCall is not a function
+   × D35.4 — skipFinalCall (THUAN) > tron answers + tool thuong ⇒ false 1ms
+     → skipFinalCall is not a function
+   × D35.4 — skipFinalCall (THUAN) > toan tool thuong ⇒ false 0ms
+     → skipFinalCall is not a function
+   × D35.4 — skipFinalCall (THUAN) > khong co vong tools (messages chi la user dau) ⇒ false 0ms
+     → skipFinalCall is not a function
+   × D35.4 — skipFinalCall (THUAN) > so tool_result khac so tool_use ⇒ false (an toan) 0ms
+     → skipFinalCall is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/agent/community/graph/edges.test.ts > D35.4 — skipFinalCall (THUAN) > mot tool answers thanh cong ⇒ true
+TypeError: skipFinalCall is not a function
+ ❯ src/agent/community/graph/edges.test.ts:363:12
+    361|   });
+    362|   it('mot tool answers thanh cong ⇒ true', () => {
+    363|     expect(skipFinalCall(tstate({ messages: [uses('send_group_message'…
+       |            ^
+    364|   });
+    365|   it('hai tool answers thanh cong ⇒ true', () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  src/agent/community/graph/edges.test.ts > D35.4 — skipFinalCall (THUAN) > hai tool answers thanh cong ⇒ true
+TypeError: skipFinalCall is not a function
+ ❯ src/agent/community/graph/edges.test.ts:366:12
+    364|   });
+    365|   it('hai tool answers thanh cong ⇒ true', () => {
+    366|     expect(skipFinalCall(tstate({ messages: [uses('send_group_message'…
+       |            ^
+    367|   });
+    368|   it('tool answers LOI ⇒ false', () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  src/agent/community/graph/edges.test.ts > D35.4 — skipFinalCall (THUAN) > tool answers LOI ⇒ false
+TypeError: skipFinalCall is not a function
+ ❯ src/agent/community/graph/edges.test.ts:369:12
+    367|   });
+    368|   it('tool answers LOI ⇒ false', () => {
+    369|     expect(skipFinalCall(tstate({ messages: [uses('send_group_message'…
+       |            ^
+    370|   });
+    371|   it('mot answers OK + mot answers loi ⇒ false', () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  src/agent/community/graph/edges.test.ts > D35.4 — skipFinalCall (THUAN) > mot answers OK + mot answers loi ⇒ false
+TypeError: skipFinalCall is not a function
+ ❯ src/agent/community/graph/edges.test.ts:372:12
+    370|   });
+    371|   it('mot answers OK + mot answers loi ⇒ false', () => {
+    372|     expect(skipFinalCall(tstate({ messages: [uses('send_group_message'…
+       |            ^
+    373|   });
+    374|   it('tron answers + tool thuong ⇒ false', () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ FAIL  src/agent/community/graph/edges.test.ts > D35.4 — skipFinalCall (THUAN) > tron answers + tool thuong ⇒ false
+TypeError: skipFinalCall is not a function
+ ❯ src/agent/community/graph/edges.test.ts:375:12
+    373|   });
+    374|   it('tron answers + tool thuong ⇒ false', () => {
+    375|     expect(skipFinalCall(tstate({ messages: [uses('send_group_message'…
+       |            ^
+    376|   });
+    377|   it('toan tool thuong ⇒ false', () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯
+
+ FAIL  src/agent/community/graph/edges.test.ts > D35.4 — skipFinalCall (THUAN) > toan tool thuong ⇒ false
+TypeError: skipFinalCall is not a function
+ ❯ src/agent/community/graph/edges.test.ts:378:12
+    376|   });
+    377|   it('toan tool thuong ⇒ false', () => {
+    378|     expect(skipFinalCall(tstate({ messages: [uses('search_knowledge'),…
+       |            ^
+    379|   });
+    380|   it('khong co vong tools (messages chi la user dau) ⇒ false', () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/8]⎯
+
+ FAIL  src/agent/community/graph/edges.test.ts > D35.4 — skipFinalCall (THUAN) > khong co vong tools (messages chi la user dau) ⇒ false
+TypeError: skipFinalCall is not a function
+ ❯ src/agent/community/graph/edges.test.ts:381:12
+    379|   });
+    380|   it('khong co vong tools (messages chi la user dau) ⇒ false', () => {
+    381|     expect(skipFinalCall(tstate({ messages: [{ role: 'user', content: …
+       |            ^
+    382|     expect(skipFinalCall(tstate({ messages: [] }), ANS)).toBe(false);
+    383|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/8]⎯
+
+ FAIL  src/agent/community/graph/edges.test.ts > D35.4 — skipFinalCall (THUAN) > so tool_result khac so tool_use ⇒ false (an toan)
+TypeError: skipFinalCall is not a function
+ ❯ src/agent/community/graph/edges.test.ts:385:12
+    383|   });
+    384|   it('so tool_result khac so tool_use ⇒ false (an toan)', () => {
+    385|     expect(skipFinalCall(tstate({ messages: [uses('send_group_message'…
+       |            ^
+    386|   });
+    387| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/8]⎯
+
+ Test Files  1 failed (1)
+      Tests  8 failed | 116 skipped (124)
+   Start at  13:43:50
+   Duration  1.58s (transform 108ms, setup 0ms, collect 1.10s, tests 12ms, environment 0ms, prepare 138ms)
+
+EXIT 1

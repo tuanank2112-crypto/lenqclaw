@@ -1,0 +1,97 @@
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+stdout | src/dbtests/p03-fix.db.test.ts > D35.4 — N6: bo loi goi chot khi vong tools chi gom tool answers thanh cong > D35.4 mention tra loi bang send_group_message = 1 agent_runs (khong goi chot)
+MODEL_CALLS mention_send_group_message 2
+
+stdout | src/dbtests/p03-fix.db.test.ts > D35.4 — N6: bo loi goi chot khi vong tools chi gom tool answers thanh cong > D35.4 RAG: search_knowledge ⇒ send_group_message = 2 agent_runs, lane rag
+MODEL_CALLS rag_search_then_send 3
+
+stdout | src/dbtests/p03-fix.db.test.ts > D35.4 — N6: bo loi goi chot khi vong tools chi gom tool answers thanh cong > D35.4 mention tra bang text cuoi (auto_post) van = 1; RAG tra bang text cuoi = 2
+MODEL_CALLS mention_autopost 1
+
+stdout | src/dbtests/p03-fix.db.test.ts > D35.4 — N6: bo loi goi chot khi vong tools chi gom tool answers thanh cong > D35.4 mention tra bang text cuoi (auto_post) van = 1; RAG tra bang text cuoi = 2
+MODEL_CALLS rag_autopost 2
+
+stdout | src/dbtests/p03-fix.db.test.ts > D35.4 — N6: bo loi goi chot khi vong tools chi gom tool answers thanh cong > D35.4 vong co tool answers LOI (GroupBudgetExceededError) ⇒ VAN goi model them lan nua
+MODEL_CALLS answers_tool_error 2
+
+stdout | src/dbtests/p03-fix.db.test.ts > D35.4 — N6: bo loi goi chot khi vong tools chi gom tool answers thanh cong > D35.4 vong tron answers + tool thuong ⇒ VAN goi model them lan nua
+MODEL_CALLS mixed_round 2
+
+stdout | src/dbtests/p03-fix.db.test.ts > D35.4 — N6: bo loi goi chot khi vong tools chi gom tool answers thanh cong > D35.4 nudge cuu duoc: rong ⇒ nudge ⇒ send_group_message ⇒ KHONG goi chot (2 agent_runs), outcome replied
+MODEL_CALLS nudge_then_send 3
+
+ ❯ src/dbtests/p03-fix.db.test.ts (25 tests | 3 failed | 19 skipped) 768ms
+   × D35.4 — N6: bo loi goi chot khi vong tools chi gom tool answers thanh cong > D35.4 mention tra loi bang send_group_message = 1 agent_runs (khong goi chot) 161ms
+     → expected 2 to be 1 // Object.is equality
+   × D35.4 — N6: bo loi goi chot khi vong tools chi gom tool answers thanh cong > D35.4 RAG: search_knowledge ⇒ send_group_message = 2 agent_runs, lane rag 114ms
+     → expected 3 to be 2 // Object.is equality
+   × D35.4 — N6: bo loi goi chot khi vong tools chi gom tool answers thanh cong > D35.4 nudge cuu duoc: rong ⇒ nudge ⇒ send_group_message ⇒ KHONG goi chot (2 agent_runs), outcome replied 89ms
+     → expected 3 to be 2 // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p03-fix.db.test.ts > D35.4 — N6: bo loi goi chot khi vong tools chi gom tool answers thanh cong > D35.4 mention tra loi bang send_group_message = 1 agent_runs (khong goi chot)
+AssertionError: expected 2 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 2
+
+ ❯ src/dbtests/p03-fix.db.test.ts:172:41
+    170|     await runAll();
+    171|     log('mention_send_group_message', await agentRunsForThread(g));
+    172|     expect(await agentRunsForThread(g)).toBe(1);
+       |                                         ^
+    173|     expect(modelCalls(g)).toBe(1);
+    174|     expect((await outboxFor(g)).map((o) => o.body.text)).toEqual(['Age…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/dbtests/p03-fix.db.test.ts > D35.4 — N6: bo loi goi chot khi vong tools chi gom tool answers thanh cong > D35.4 RAG: search_knowledge ⇒ send_group_message = 2 agent_runs, lane rag
+AssertionError: expected 3 to be 2 // Object.is equality
+
+- Expected
++ Received
+
+- 2
++ 3
+
+ ❯ src/dbtests/p03-fix.db.test.ts:184:41
+    182|     await runAll();
+    183|     log('rag_search_then_send', await agentRunsForThread(g));
+    184|     expect(await agentRunsForThread(g)).toBe(2);
+       |                                         ^
+    185|     expect((await tracesFor(g))[0]).toMatchObject({ outcome: 'replied'…
+    186|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/dbtests/p03-fix.db.test.ts > D35.4 — N6: bo loi goi chot khi vong tools chi gom tool answers thanh cong > D35.4 nudge cuu duoc: rong ⇒ nudge ⇒ send_group_message ⇒ KHONG goi chot (2 agent_runs), outcome replied
+AssertionError: expected 3 to be 2 // Object.is equality
+
+- Expected
++ Received
+
+- 2
++ 3
+
+ ❯ src/dbtests/p03-fix.db.test.ts:231:41
+    229|     await runAll();
+    230|     log('nudge_then_send', await agentRunsForThread(g));
+    231|     expect(await agentRunsForThread(g)).toBe(2);
+       |                                         ^
+    232|     expect((await tracesFor(g))[0]).toMatchObject({ outcome: 'replied'…
+    233|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 3 passed | 19 skipped (25)
+   Start at  13:44:53
+   Duration  3.61s (transform 532ms, setup 0ms, collect 2.39s, tests 768ms, environment 0ms, prepare 167ms)
+
+EXIT 1

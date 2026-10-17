@@ -1,0 +1,34 @@
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/p03-fix.db.test.ts (25 tests | 1 failed | 24 skipped) 213ms
+   × D35.10 — G7: remember_member_note o nhom chi cho uid = requester > D35.10 thanh vien A khong the ghi chu vao ho so thanh vien B tu nhom; ghi chu chinh minh van duoc 174ms
+     → expected 1 to be +0 // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p03-fix.db.test.ts > D35.10 — G7: remember_member_note o nhom chi cho uid = requester > D35.10 thanh vien A khong the ghi chu vao ho so thanh vien B tu nhom; ghi chu chinh minh van duoc
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ src/dbtests/p03-fix.db.test.ts:405:125
+    403|     await send({ threadId: g, senderUid: 'sim-mem-1', text: 'ghi nhớ g…
+    404|     await runAll();
+    405|     expect(await count(`select 1 from member_profiles where zalo_uid =…
+       |                                                                                                                             ^
+    406|     expect(await count(`select 1 from member_profiles where zalo_uid =…
+    407|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 24 skipped (25)
+   Start at  13:45:23
+   Duration  2.91s (transform 512ms, setup 0ms, collect 2.29s, tests 213ms, environment 0ms, prepare 169ms)
+
+EXIT 1

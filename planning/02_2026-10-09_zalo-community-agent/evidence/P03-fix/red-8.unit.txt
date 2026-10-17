@@ -1,0 +1,239 @@
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/boundary.test.ts (16 tests | 9 failed) 3896ms
+   × check_adapter_boundary — cay sach > cay toi thieu hop le => violations: 0, exit 0 193ms
+     → expected 'packages/core/src/boundary.test.ts:13…' to contain 'violations: 0'
+   × D35.8 — import gian tiep toi module outbox (node outbox cam) > node agent import file co ghi outbox (group-post) => vi pham 193ms
+     → expected 'packages/core/src/boundary.test.ts:13…' to match /nodes\/agent\.ts/agent\.ts
+   × D35.8 — import gian tiep toi module outbox (node outbox cam) > node deliver (outbox duoc phep) import group-post => KHONG vi pham 173ms
+     → expected 'packages/core/src/boundary.test.ts:13…' to contain 'violations: 0'
+   × D35.8 — allowlist ten tu @langchain/langgraph (01-CONTRACTS §12.1) > import messagesStateReducer => vi pham 176ms
+     → expected 'packages/core/src/boundary.test.ts:13…' to contain 'messagesStateReducer'
+   × D35.8 — allowlist ten tu @langchain/langgraph (01-CONTRACTS §12.1) > Annotation, StateGraph, START, END (alias), GraphRecursionError, type Foo => hop le 259ms
+     → expected 'packages/core/src/boundary.test.ts:13…' to contain 'violations: 0'
+   × D35.8 — import()/require() khong literal > import(CP) voi CP la bien => vi pham 179ms
+     → expected 'packages/core/src/boundary.test.ts:13…' to contain 'khong literal'
+   × D35.8 — import()/require() khong literal > import("./literal.js") hop le; nhac import(foo) trong comment khong tinh 232ms
+     → expected 'packages/core/src/boundary.test.ts:13…' to contain 'violations: 0'
+   × D35.8 — canh THUAN: graph/edges.ts (BB-16) > edges.ts import adapters/* => vi pham 219ms
+     → expected 'packages/core/src/boundary.test.ts:13…' to contain 'edges.ts'
+   ✓ D35.8 — canh THUAN: graph/edges.ts (BB-16) > edges.ts dung Date.now() / new Date( / Math.random( / process. / fetch( => vi pham 920ms
+   × D35.8 — canh THUAN: graph/edges.ts (BB-16) > edges.ts nhac Date.now() CHI trong comment => hop le 191ms
+     → expected 'packages/core/src/boundary.test.ts:13…' to contain 'violations: 0'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/boundary.test.ts > check_adapter_boundary — cay sach > cay toi thieu hop le => violations: 0, exit 0
+AssertionError: expected 'packages/core/src/boundary.test.ts:13…' to contain 'violations: 0'
+
+- Expected
++ Received
+
+- violations: 0
++ packages/core/src/boundary.test.ts:133: export "@langchain/core/messages" bi cam (BB-17: chi Annotation/StateGraph/START/END/GraphRecursionError tu "@langchain/langgraph")
++ packages/core/src/boundary.test.ts:144: dinh danh "MemorySaver" bi cam (BB-17: khong checkpointer/Store/interrupt/Command/Send/MessagesAnnotation)
++ packages/core/src/dbtests/p03-fix.db.test.ts: "insert into outbox" (be mat chinh tac, ~offset 17755) ngoai adapters/transport.ts
++ violations: 3
++
+
+ ❯ src/boundary.test.ts:43:19
+     41|   it('cay toi thieu hop le => violations: 0, exit 0', () => {
+     42|     const r = run(tree(BASE));
+     43|     expect(r.out).toContain('violations: 0');
+       |                   ^
+     44|     expect(r.code).toBe(0);
+     45|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  src/boundary.test.ts > D35.8 — import gian tiep toi module outbox (node outbox cam) > node agent import file co ghi outbox (group-post) => vi pham
+AssertionError: expected 'packages/core/src/boundary.test.ts:13…' to match /nodes\/agent\.ts/agent\.ts
+
+- Expected: 
+/nodes\/agent\.ts/
+
++ Received: 
+"packages/core/src/boundary.test.ts:133: export \"@langchain/core/messages\" bi cam (BB-17: chi Annotation/StateGraph/START/END/GraphRecursionError tu \"@langchain/langgraph\")
+packages/core/src/boundary.test.ts:144: dinh danh \"MemorySaver\" bi cam (BB-17: khong checkpointer/Store/interrupt/Command/Send/MessagesAnnotation)
+packages/core/src/dbtests/p03-fix.db.test.ts: \"insert into outbox\" (be mat chinh tac, ~offset 17755) ngoai adapters/transport.ts
+violations: 3
+"
+
+ ❯ src/boundary.test.ts:52:19
+     50|     const r = run(tree({ ...BASE, [`${GRAPH}/nodes/agent.ts`]: "import…
+     51|     expect(r.code).toBe(1);
+     52|     expect(r.out).toMatch(/nodes\/agent\.ts/);
+       |                   ^
+     53|   });
+     54|   it('node agent import file RE-EXPORT tu transport => vi pham', () =>…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  src/boundary.test.ts > D35.8 — import gian tiep toi module outbox (node outbox cam) > node deliver (outbox duoc phep) import group-post => KHONG vi pham
+AssertionError: expected 'packages/core/src/boundary.test.ts:13…' to contain 'violations: 0'
+
+- Expected
++ Received
+
+- violations: 0
++ packages/core/src/boundary.test.ts:133: export "@langchain/core/messages" bi cam (BB-17: chi Annotation/StateGraph/START/END/GraphRecursionError tu "@langchain/langgraph")
++ packages/core/src/boundary.test.ts:144: dinh danh "MemorySaver" bi cam (BB-17: khong checkpointer/Store/interrupt/Command/Send/MessagesAnnotation)
++ packages/core/src/dbtests/p03-fix.db.test.ts: "insert into outbox" (be mat chinh tac, ~offset 17755) ngoai adapters/transport.ts
++ violations: 3
++
+
+ ❯ src/boundary.test.ts:66:19
+     64|   it('node deliver (outbox duoc phep) import group-post => KHONG vi ph…
+     65|     const r = run(tree({ ...BASE, [`${GRAPH}/nodes/deliver.ts`]: "impo…
+     66|     expect(r.out).toContain('violations: 0');
+       |                   ^
+     67|     expect(r.code).toBe(0);
+     68|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  src/boundary.test.ts > D35.8 — allowlist ten tu @langchain/langgraph (01-CONTRACTS §12.1) > import messagesStateReducer => vi pham
+AssertionError: expected 'packages/core/src/boundary.test.ts:13…' to contain 'messagesStateReducer'
+
+- Expected
++ Received
+
+- messagesStateReducer
++ packages/core/src/boundary.test.ts:133: export "@langchain/core/messages" bi cam (BB-17: chi Annotation/StateGraph/START/END/GraphRecursionError tu "@langchain/langgraph")
++ packages/core/src/boundary.test.ts:144: dinh danh "MemorySaver" bi cam (BB-17: khong checkpointer/Store/interrupt/Command/Send/MessagesAnnotation)
++ packages/core/src/dbtests/p03-fix.db.test.ts: "insert into outbox" (be mat chinh tac, ~offset 17755) ngoai adapters/transport.ts
++ violations: 3
++
+
+ ❯ src/boundary.test.ts:80:19
+     78|     );
+     79|     expect(r.code).toBe(1);
+     80|     expect(r.out).toContain('messagesStateReducer');
+       |                   ^
+     81|   });
+     82|   it('import namespace * => vi pham', () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+ FAIL  src/boundary.test.ts > D35.8 — allowlist ten tu @langchain/langgraph (01-CONTRACTS §12.1) > Annotation, StateGraph, START, END (alias), GraphRecursionError, type Foo => hop le
+AssertionError: expected 'packages/core/src/boundary.test.ts:13…' to contain 'violations: 0'
+
+- Expected
++ Received
+
+- violations: 0
++ packages/core/src/boundary.test.ts:133: export "@langchain/core/messages" bi cam (BB-17: chi Annotation/StateGraph/START/END/GraphRecursionError tu "@langchain/langgraph")
++ packages/core/src/boundary.test.ts:144: dinh danh "MemorySaver" bi cam (BB-17: khong checkpointer/Store/interrupt/Command/Send/MessagesAnnotation)
++ packages/core/src/dbtests/p03-fix.db.test.ts: "insert into outbox" (be mat chinh tac, ~offset 17755) ngoai adapters/transport.ts
++ violations: 3
++
+
+ ❯ src/boundary.test.ts:94:19
+     92|       })
+     93|     );
+     94|     expect(r.out).toContain('violations: 0');
+       |                   ^
+     95|   });
+     96| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+ FAIL  src/boundary.test.ts > D35.8 — import()/require() khong literal > import(CP) voi CP la bien => vi pham
+AssertionError: expected 'packages/core/src/boundary.test.ts:13…' to contain 'khong literal'
+
+- Expected
++ Received
+
+- khong literal
++ packages/core/src/boundary.test.ts:133: export "@langchain/core/messages" bi cam (BB-17: chi Annotation/StateGraph/START/END/GraphRecursionError tu "@langchain/langgraph")
++ packages/core/src/boundary.test.ts:144: dinh danh "MemorySaver" bi cam (BB-17: khong checkpointer/Store/interrupt/Command/Send/MessagesAnnotation)
++ packages/core/src/dbtests/p03-fix.db.test.ts: "insert into outbox" (be mat chinh tac, ~offset 17755) ngoai adapters/transport.ts
++ violations: 3
++
+
+ ❯ src/boundary.test.ts:107:19
+    105|     );
+    106|     expect(r.code).toBe(1);
+    107|     expect(r.out).toContain('khong literal');
+       |                   ^
+    108|   });
+    109|   it('template co ${} trong import() => vi pham', () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯
+
+ FAIL  src/boundary.test.ts > D35.8 — import()/require() khong literal > import("./literal.js") hop le; nhac import(foo) trong comment khong tinh
+AssertionError: expected 'packages/core/src/boundary.test.ts:13…' to contain 'violations: 0'
+
+- Expected
++ Received
+
+- violations: 0
++ packages/core/src/boundary.test.ts:133: export "@langchain/core/messages" bi cam (BB-17: chi Annotation/StateGraph/START/END/GraphRecursionError tu "@langchain/langgraph")
++ packages/core/src/boundary.test.ts:144: dinh danh "MemorySaver" bi cam (BB-17: khong checkpointer/Store/interrupt/Command/Send/MessagesAnnotation)
++ packages/core/src/dbtests/p03-fix.db.test.ts: "insert into outbox" (be mat chinh tac, ~offset 17755) ngoai adapters/transport.ts
++ violations: 3
++
+
+ ❯ src/boundary.test.ts:115:19
+    113|   it('import("./literal.js") hop le; nhac import(foo) trong comment kh…
+    114|     const r = run(tree({ ...BASE, 'packages/core/src/x.ts': '// import…
+    115|     expect(r.out).toContain('violations: 0');
+       |                   ^
+    116|   });
+    117| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯
+
+ FAIL  src/boundary.test.ts > D35.8 — canh THUAN: graph/edges.ts (BB-16) > edges.ts import adapters/* => vi pham
+AssertionError: expected 'packages/core/src/boundary.test.ts:13…' to contain 'edges.ts'
+
+- Expected
++ Received
+
+- edges.ts
++ packages/core/src/boundary.test.ts:133: export "@langchain/core/messages" bi cam (BB-17: chi Annotation/StateGraph/START/END/GraphRecursionError tu "@langchain/langgraph")
++ packages/core/src/boundary.test.ts:144: dinh danh "MemorySaver" bi cam (BB-17: khong checkpointer/Store/interrupt/Command/Send/MessagesAnnotation)
++ packages/core/src/dbtests/p03-fix.db.test.ts: "insert into outbox" (be mat chinh tac, ~offset 17755) ngoai adapters/transport.ts
++ violations: 3
++
+
+ ❯ src/boundary.test.ts:123:19
+    121|     const r = run(tree({ ...BASE, [`${GRAPH}/edges.ts`]: "import { enq…
+    122|     expect(r.code).toBe(1);
+    123|     expect(r.out).toContain('edges.ts');
+       |                   ^
+    124|   });
+    125|   it('edges.ts import services/* => vi pham', () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯
+
+ FAIL  src/boundary.test.ts > D35.8 — canh THUAN: graph/edges.ts (BB-16) > edges.ts nhac Date.now() CHI trong comment => hop le
+AssertionError: expected 'packages/core/src/boundary.test.ts:13…' to contain 'violations: 0'
+
+- Expected
++ Received
+
+- violations: 0
++ packages/core/src/boundary.test.ts:133: export "@langchain/core/messages" bi cam (BB-17: chi Annotation/StateGraph/START/END/GraphRecursionError tu "@langchain/langgraph")
++ packages/core/src/boundary.test.ts:144: dinh danh "MemorySaver" bi cam (BB-17: khong checkpointer/Store/interrupt/Command/Send/MessagesAnnotation)
++ packages/core/src/dbtests/p03-fix.db.test.ts: "insert into outbox" (be mat chinh tac, ~offset 17755) ngoai adapters/transport.ts
++ violations: 3
++
+
+ ❯ src/boundary.test.ts:139:19
+    137|   it('edges.ts nhac Date.now() CHI trong comment => hop le', () => {
+    138|     const r = run(tree({ ...BASE, [`${GRAPH}/edges.ts`]: '// THUAN: kh…
+    139|     expect(r.out).toContain('violations: 0');
+       |                   ^
+    140|   });
+    141| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/9]⎯
+
+ Test Files  1 failed (1)
+      Tests  9 failed | 7 passed (16)
+   Start at  13:43:57
+   Duration  4.47s (transform 50ms, setup 0ms, collect 70ms, tests 3.90s, environment 0ms, prepare 166ms)
+
+EXIT 1

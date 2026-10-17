@@ -1,0 +1,36 @@
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/p03-fix.db.test.ts (25 tests | 1 failed | 23 skipped) 201ms
+   × D35.7 — N5: processInbound = claimNextInbound([]) + handleClaimed (ep thu tu thread) > D35.7 E1: tin cu hon cung thread con chua xong (dang bi khoa nhan) ⇒ processInbound KHONG nhan tin moi hon 64ms
+     → expected [ '4884' ] to deeply equal []
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p03-fix.db.test.ts > D35.7 — N5: processInbound = claimNextInbound([]) + handleClaimed (ep thu tu thread) > D35.7 E1: tin cu hon cung thread con chua xong (dang bi khoa nhan) ⇒ processInbound KHONG nhan tin moi hon
+AssertionError: expected [ '4884' ] to deeply equal []
+
+- Expected
++ Received
+
+- Array []
++ Array [
++   "4884",
++ ]
+
+ ❯ src/dbtests/p03-fix.db.test.ts:344:18
+    342|     release();
+    343|     await holder;
+    344|     expect(seen).toEqual([]);
+       |                  ^
+    345|     expect(r.processed).toBe(0);
+    346|     await drainStale();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed | 23 skipped (25)
+   Start at  13:45:11
+   Duration  2.77s (transform 558ms, setup 0ms, collect 2.22s, tests 201ms, environment 0ms, prepare 134ms)
+
+EXIT 1

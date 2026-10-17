@@ -1,0 +1,220 @@
+=== M5 [nhom b] packages/core/src/agent/community/group-post.ts: host post cung bi chan ngan sach ⇒ mention het ngan sach 0 tin
+$ (packages/core) npx vitest run --config vitest.db.config.ts src/dbtests/p03-fix.db.test.ts
+exit=1
+   × D35.4 — N6: bo loi goi chot khi vong tools chi gom tool answers thanh cong > D35.4 vong co tool answers LOI (GroupBudgetExceededError) ⇒ VAN goi model them lan nua 56ms
+     → expected [] to have a length of 1 but got +0
+   × D35.9 — N8: bo sung test (khoa dot bien M5, M17) > D35.9 SPEC-P03 §6.4.4: host post khi het ngan sach gio VAN enqueue (hang queued), khong im 47ms
+     → expected [ { status: 'sent', t: 'tin trước' } ] to have a length of 2 but got 1
+      Tests  2 failed | 25 passed (27)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/dbtests/p03-fix.db.test.ts > D35.4 — N6: bo loi goi chot khi vong tools chi gom tool answers thanh cong > D35.4 vong co tool answers LOI (GroupBudgetExceededError) ⇒ VAN goi model them lan nua
+AssertionError: expected [] to have a length of 1 but got +0
+restore: git checkout exit=0; status=""
+VERDICT M5: BAT DUOC (do)
+
+=== M10 [nhom d] packages/core/src/agent/community/graph/nodes/agent.ts: node agent (outbox ✗) nap gian tiep ham ghi outbox
+$ (.) node scripts/check_adapter_boundary.mjs
+exit=1
+packages/core/src/agent/community/graph/nodes/agent.ts:8: node "agent" (outbox ✗) import GIAN TIEP "../../group-post.js" — file nay ghi outbox (BB-15)
+violations: 1
+restore: git checkout exit=0; status=""
+VERDICT M10: BAT DUOC (do)
+
+=== M11 [nhom d] packages/core/src/agent/community/graph/state.ts: import ten ngoai danh sach cho phep (§12.1) tu @langchain/langgraph
+$ (.) node scripts/check_adapter_boundary.mjs
+exit=1
+packages/core/src/agent/community/graph/state.ts:5: ten "messagesStateReducer" tu "@langchain/langgraph" ngoai allowlist 01-CONTRACTS §12.1 (BB-17)
+violations: 1
+restore: git checkout exit=0; status=""
+VERDICT M11: BAT DUOC (do)
+
+=== M12 [nhom d] packages/core/src/agent/community/graph/pipeline.ts: import dong specifier khong phai literal (checkpoint)
+$ (.) node scripts/check_adapter_boundary.mjs
+exit=1
+packages/core/src/agent/community/graph/pipeline.ts:23: import()/require() khong literal (BB-17: khong kiem duoc specifier)
+violations: 1
+restore: git checkout exit=0; status=""
+VERDICT M12: BAT DUOC (do)
+
+=== M14 [nhom d] packages/core/src/agent/community/graph/edges.ts: canh khong THUAN (Date.now trong needsNudge)
+$ (packages/core) npx vitest run src/agent/community/graph/edges.test.ts
+exit=0
+      Tests  124 passed (124)
+$ (.) node scripts/check_adapter_boundary.mjs
+exit=1
+packages/core/src/agent/community/graph/edges.ts:132: graph/edges.ts (canh THUAN) dung "Date.now" (BB-16: khong I/O, dong ho, ngau nhien)
+violations: 1
+restore: git checkout exit=0; status=""
+VERDICT M14: BAT DUOC (do)
+
+=== M17 [nhom e] packages/core/src/agent/community/graph/nodes/prepare.ts: han chot fast tinh tu luc bat dau luot thay vi received_at (SLO lech)
+$ (packages/core) npx vitest run --config vitest.db.config.ts src/dbtests/p03-fix.db.test.ts
+exit=1
+   × D35.9 — N8: bo sung test (khoa dot bien M5, M17) > D35.9 moc SLO: han chot fast tinh tu received_at (khong phai startedAt) tai node prepare 2705ms
+     → expected 'auto_posted' to be 'model_down' // Object.is equality
+      Tests  1 failed | 26 passed (27)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/dbtests/p03-fix.db.test.ts > D35.9 — N8: bo sung test (khoa dot bien M5, M17) > D35.9 moc SLO: han chot fast tinh tu received_at (khong phai startedAt) tai node prepare
+AssertionError: expected 'auto_posted' to be 'model_down' // Object.is equality
+restore: git checkout exit=0; status=""
+VERDICT M17: BAT DUOC (do)
+
+=== X1 [nhom D35.1] packages/core/src/agent/community/graph/edges.ts: bo D8 truoc D4 (tra ve thu tu cu: D4 truoc D8 se can dong D8 sau D7)
+$ (packages/core) npx vitest run src/agent/community/graph/edges.test.ts
+exit=1
+   × decideDelivery — 12 dong D1–D12 (01-CONTRACTS §12.5) > D8 da tra loi bang tool 8ms
+     → expected { delivery: 'fallback', …(1) } to deeply equal { Object (delivery, outcome) }
+   × decideDelivery — 12 dong D1–D12 (01-CONTRACTS §12.5) > D8 da tra loi + text cuoi => khong auto_post 1ms
+     → expected { delivery: 'auto_post', …(1) } to deeply equal { Object (delivery, outcome) }
+   × D35.1 — D8 truoc D4 > mention da tra loi bang tool + loi goi chot model_down ⇒ none/replied (khong tin "truc trac") 1ms
+     → expected { delivery: 'model_down', …(1) } to deeply equal { Object (delivery, outcome) }
+   × D35.1 — D8 truoc D4 > mention da tra loi + het han chot (deadlineHit) ⇒ none/replied; deadlineHit van duoc ghi o state 1ms
+     → expected { delivery: 'model_down', …(1) } to deeply equal { Object (delivery, outcome) }
+restore: git checkout exit=0; status=""
+VERDICT X1: BAT DUOC (do)
+
+=== X2 [nhom D35.2] packages/core/src/adapters/model.ts: loi doc than Gemini khong con retryable (loi tho)
+$ (packages/core) npx vitest run src/adapters/model.body-errors.test.ts
+exit=1
+   × than phan hoi — gemini > stall_body: abort khi dang doc than, het han luot ⇒ ModelDeadlineError (khong loi tho) 1228ms
+     → expected Error: Loi doc than phan hoi Gemini main-… to be an instance of ModelDeadlineError
+   × than phan hoi — gemini > stall_body KHONG deadline nhung abort ⇒ van la ModelUnavailableError (khong loi tho) 2ms
+     → expected Error: Loi doc than phan hoi Gemini main-… to be an instance of ModelUnavailableError
+   × than phan hoi — gemini > bad_json (200, than khong phai JSON) cuoi cung het gio ⇒ ModelDeadlineError, khong SyntaxError tho 4ms
+     → expected Error: Loi doc than phan hoi Gemini main-… to be an instance of ModelDeadlineError
+   × than phan hoi — gemini > bad_json lan 1, lan 2 tot ⇒ retry thanh cong (retryable) 5ms
+      Tests  4 failed | 4 passed (8)
+restore: git checkout exit=0; status=""
+VERDICT X2: BAT DUOC (do)
+
+=== X3 [nhom D35.2] packages/core/src/adapters/model.ts: loi doc than OpenAI-compat khong con retryable
+$ (packages/core) npx vitest run src/adapters/model.body-errors.test.ts
+exit=1
+   × than phan hoi — openrouter > stall_body: abort khi dang doc than, het han luot ⇒ ModelDeadlineError (khong loi tho) 1221ms
+     → expected Error: Loi doc than phan hoi OpenRouter m… to be an instance of ModelDeadlineError
+   × than phan hoi — openrouter > stall_body KHONG deadline nhung abort ⇒ van la ModelUnavailableError (khong loi tho) 1ms
+     → expected Error: Loi doc than phan hoi OpenRouter m… to be an instance of ModelUnavailableError
+   × than phan hoi — openrouter > bad_json (200, than khong phai JSON) cuoi cung het gio ⇒ ModelDeadlineError, khong SyntaxError tho 1ms
+     → expected Error: Loi doc than phan hoi OpenRouter m… to be an instance of ModelDeadlineError
+   × than phan hoi — openrouter > bad_json lan 1, lan 2 tot ⇒ retry thanh cong (retryable) 3ms
+      Tests  4 failed | 4 passed (8)
+restore: git checkout exit=0; status=""
+VERDICT X3: BAT DUOC (do)
+
+=== X4 [nhom D35.3] packages/core/src/agent/community/handoff.ts: owner_dm lai bi takeover
+$ (packages/core) npx vitest run --config vitest.db.config.ts src/dbtests/p03-fix.db.test.ts
+exit=1
+   × D35.3 — C3: owner_dm KHONG takeover > D35.3 B1: owner_dm model sap ⇒ tra MODEL_DOWN_DM_REPLY nhung KHONG dat human_takeover_until; tin sau cua chu van duoc tra loi 1082ms
+     → expected 1 to be +0 // Object.is equality
+   × D35.3 — C3: owner_dm KHONG takeover > D35.3 B1b: owner_dm model rong ⇒ dm_empty (BUSY) nhung KHONG takeover, khong tu DM handoff cho chinh chu 41ms
+     → expected 1 to be +0 // Object.is equality
+      Tests  2 failed | 25 passed (27)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/dbtests/p03-fix.db.test.ts > D35.3 — C3: owner_dm KHONG takeover > D35.3 B1: owner_dm model sap ⇒ tra MODEL_DOWN_DM_REPLY nhung KHONG dat human_takeover_until; tin sau cua chu van duoc tra loi
+AssertionError: expected 1 to be +0 // Object.is equality
+restore: git checkout exit=0; status=""
+VERDICT X4: BAT DUOC (do)
+
+=== X5 [nhom D35.4] packages/core/src/agent/community/graph/nodes/agent.ts: khong bo loi goi chot
+$ (packages/core) npx vitest run --config vitest.db.config.ts src/dbtests/p03-fix.db.test.ts
+exit=1
+   × D35.4 — N6: bo loi goi chot khi vong tools chi gom tool answers thanh cong > D35.4 mention tra loi bang send_group_message = 1 agent_runs (khong goi chot) 60ms
+     → expected 2 to be 1 // Object.is equality
+   × D35.4 — N6: bo loi goi chot khi vong tools chi gom tool answers thanh cong > D35.4 RAG: search_knowledge ⇒ send_group_message = 2 agent_runs, lane rag 72ms
+     → expected 3 to be 2 // Object.is equality
+   × D35.4 — N6: bo loi goi chot khi vong tools chi gom tool answers thanh cong > D35.4 nudge cuu duoc: rong ⇒ nudge ⇒ send_group_message ⇒ KHONG goi chot (2 agent_runs), outcome replied 61ms
+     → expected 3 to be 2 // Object.is equality
+      Tests  3 failed | 24 passed (27)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+restore: git checkout exit=0; status=""
+VERDICT X5: BAT DUOC (do)
+
+=== X6 [nhom D35.4] packages/core/src/agent/community/graph/edges.ts: skipFinalCall bo qua tool answers LOI
+$ (packages/core) npx vitest run src/agent/community/graph/edges.test.ts
+exit=1
+   × D35.4 — skipFinalCall (THUAN) > tool answers LOI ⇒ false 7ms
+     → expected true to be false // Object.is equality
+   × D35.4 — skipFinalCall (THUAN) > mot answers OK + mot answers loi ⇒ false 1ms
+     → expected true to be false // Object.is equality
+      Tests  2 failed | 122 passed (124)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/agent/community/graph/edges.test.ts > D35.4 — skipFinalCall (THUAN) > tool answers LOI ⇒ false
+AssertionError: expected true to be false // Object.is equality
+restore: git checkout exit=0; status=""
+VERDICT X6: BAT DUOC (do)
+
+=== X7 [nhom D35.5] packages/core/src/agent/community/persona.ts: khong thoat xuong dong/nhay trong dong tin
+$ (packages/core) npx vitest run src/agent/community/persona.test.ts
+exit=1
+   × D35.5 — rao du lieu khong tin cay > N1: xuong dong trong text KHONG tao dong tieu de tin thu hai 8ms
+     → expected [ …(2) ] to have a length of 1 but got 2
+   × D35.5 — rao du lieu khong tin cay > N1: dau nhay va xuong dong trong TEN khong dong chuoi ten som, khong gia dong tin 1ms
+     → expected [ …(2) ] to have a length of 1 but got 2
+   × D35.5 — rao du lieu khong tin cay > N1: dau nhay trong text bi doi (khong the dong gia chuoi "...") 1ms
+     → expected '[#8812 uid=u-1 "Tên A" 09:41] noi "xi…' not to contain '"xin chao"'
+      Tests  3 failed | 16 passed (19)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+restore: git checkout exit=0; status=""
+VERDICT X7: BAT DUOC (do)
+
+=== X8 [nhom D35.5] packages/core/src/agent/community/graph/nodes/prepare.ts: text DM khong nam trong rao untrusted
+$ (packages/core) npx vitest run --config vitest.db.config.ts src/dbtests/p03-fix.db.test.ts
+exit=1
+   × D35.5 — rao du lieu khong tin cay (N1, N2, N3, G3, G8) > D35.5 A2: DM — text khong the gia khung <<<lead ...>>>; nam trong rao untrusted dm_message 40ms
+     → expected true to be false // Object.is equality
+      Tests  1 failed | 26 passed (27)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/dbtests/p03-fix.db.test.ts > D35.5 — rao du lieu khong tin cay (N1, N2, N3, G3, G8) > D35.5 A2: DM — text khong the gia khung <<<lead ...>>>; nam trong rao untrusted dm_message
+AssertionError: expected true to be false // Object.is equality
+restore: git checkout exit=0; status=""
+VERDICT X8: BAT DUOC (do)
+
+=== X9 [nhom D35.6] packages/core/src/agent/community/graph/nodes/deliver.ts: auto_post lai nem khi tin kich hoat bi xoa
+$ (packages/core) npx vitest run --config vitest.db.config.ts src/dbtests/p03-fix.db.test.ts
+exit=1
+   × D35.6 — N4: tin kich hoat bi xoa giua luot ⇒ dang KHONG quote > D35.6 B2: xoa tin kich hoat khi model dang tra loi (auto_post) ⇒ 1 tin khong quote, khong handler_error 454ms
+     → expected [] to have a length of 1 but got +0
+      Tests  1 failed | 26 passed (27)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/dbtests/p03-fix.db.test.ts > D35.6 — N4: tin kich hoat bi xoa giua luot ⇒ dang KHONG quote > D35.6 B2: xoa tin kich hoat khi model dang tra loi (auto_post) ⇒ 1 tin khong quote, khong handler_error
+AssertionError: expected [] to have a length of 1 but got +0
+restore: git checkout exit=0; status=""
+VERDICT X9: BAT DUOC (do)
+
+=== X10 [nhom D35.7] packages/core/src/sim/sim-transport.ts: bo dieu kien ep thu tu thread khi nhan tin
+$ (packages/core) npx vitest run --config vitest.db.config.ts src/dbtests/p03-fix.db.test.ts
+exit=1
+   × D35.7 — N5: processInbound = claimNextInbound([]) + handleClaimed (ep thu tu thread) > D35.7 E1: tin cu hon cung thread con chua xong (dang bi khoa nhan) ⇒ processInbound KHONG nhan tin moi hon 36ms
+     → expected [ '6667' ] to deeply equal []
+      Tests  1 failed | 26 passed (27)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/dbtests/p03-fix.db.test.ts > D35.7 — N5: processInbound = claimNextInbound([]) + handleClaimed (ep thu tu thread) > D35.7 E1: tin cu hon cung thread con chua xong (dang bi khoa nhan) ⇒ processInbound KHONG nhan tin moi hon
+AssertionError: expected [ '6667' ] to deeply equal []
+restore: git checkout exit=0; status=""
+VERDICT X10: BAT DUOC (do)
+
+=== X11 [nhom D35.10] packages/core/src/agent/community/tools/remember-member-note.ts: ghi chu nhom cho phep uid khac
+$ (packages/core) npx vitest run --config vitest.db.config.ts src/dbtests/p03-fix.db.test.ts
+exit=1
+   × D35.10 — G7: remember_member_note o nhom chi cho uid = requester > D35.10 thanh vien A khong the ghi chu vao ho so thanh vien B tu nhom; ghi chu chinh minh van duoc 135ms
+     → expected 1 to be +0 // Object.is equality
+      Tests  1 failed | 26 passed (27)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/dbtests/p03-fix.db.test.ts > D35.10 — G7: remember_member_note o nhom chi cho uid = requester > D35.10 thanh vien A khong the ghi chu vao ho so thanh vien B tu nhom; ghi chu chinh minh van duoc
+AssertionError: expected 1 to be +0 // Object.is equality
+restore: git checkout exit=0; status=""
+VERDICT X11: BAT DUOC (do)
+
+=== X12 [nhom D35.11] packages/core/src/adapters/db.ts: bo keepAlive o ket noi giu khoa
+$ (packages/core) npx vitest run src/adapters/db-lock.test.ts
+exit=1
+   × advisoryLockClientConfig (D35.11) > bat keepAlive va giu connectionString 10ms
+     → expected undefined to be true // Object.is equality
+      Tests  1 failed | 1 passed (2)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/adapters/db-lock.test.ts > advisoryLockClientConfig (D35.11) > bat keepAlive va giu connectionString
+AssertionError: expected undefined to be true // Object.is equality
+restore: git checkout exit=0; status=""
+VERDICT X12: BAT DUOC (do)
+
+DONE

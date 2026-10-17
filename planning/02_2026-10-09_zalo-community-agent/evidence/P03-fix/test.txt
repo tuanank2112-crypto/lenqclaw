@@ -1,0 +1,106 @@
+
+> lenqclaw@0.0.1 test
+> npm run test --workspaces --if-present
+
+
+> @lenqclaw/web@0.0.1 test
+> vitest run --exclude "**/*.db.test.ts"
+
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/apps/web
+
+ ✓ app/zalo/display.test.ts (5 tests) 4ms
+ ✓ app/api/zalo/policy.test.ts (2 tests) 4ms
+ ✓ lib/auth/policy.test.ts (15 tests) 11ms
+ ✓ lib/auth/session.test.ts (9 tests) 14ms
+
+ Test Files  4 passed (4)
+      Tests  31 passed (31)
+   Start at  14:10:31
+   Duration  519ms (transform 140ms, setup 0ms, collect 255ms, tests 34ms, environment 1ms, prepare 573ms)
+
+
+> @lenqclaw/zalo-worker@0.0.1 test
+> vitest run --exclude "**/*.db.test.ts"
+
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/apps/zalo-worker
+
+ ✓ src/config.test.ts (7 tests) 7ms
+ ✓ src/zca-normalize.test.ts (3 tests) 7ms
+ ✓ src/crypto.test.ts (9 tests) 12ms
+ ✓ src/watchdog.test.ts (3 tests) 43ms
+{"t":"2026-10-17T07:10:33.679Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-17T07:10:33.684Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-17T07:10:33.685Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-17T07:10:33.686Z","event":"pacer.sent","account":"community","outbox_id":2}
+{"t":"2026-10-17T07:10:33.689Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-17T07:10:33.698Z","event":"pacer.backoff","account":"community","reason":"rate_limit_error","backoff_ms":1800000}
+{"t":"2026-10-17T07:10:33.700Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-17T07:10:33.704Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-17T07:10:33.704Z","event":"pacer.sent","account":"community","outbox_id":2}
+ ✓ src/pacer-policy.test.ts (24 tests) 214ms
+ ✓ src/pacer.test.ts (20 tests) 31ms
+ ✓ src/check-agent-tools.test.ts (4 tests) 464ms
+ ✓ src/inbound.test.ts (15 tests) 8ms
+ ✓ src/actions.test.ts (14 tests) 11ms
+ ✓ src/main.test.ts (3 tests) 4746ms
+   ✓ zalo-worker main — khoa phien > thieu ZALO_SESSION_KEY ⇒ exit 1 1823ms
+   ✓ zalo-worker main — khoa phien > khoa sai do dai ⇒ exit 1, khong in lai gia tri 1456ms
+   ✓ zalo-worker main — khoa phien > khoa dung nhung ZALO_ACCOUNTS khac community ⇒ exit 1 1466ms
+
+ Test Files  10 passed (10)
+      Tests  102 passed (102)
+   Start at  14:10:32
+   Duration  5.67s (transform 1.43s, setup 0ms, collect 5.61s, tests 5.54s, environment 3ms, prepare 2.62s)
+
+
+> @lenqclaw/core@0.0.1 test
+> vitest run --exclude "**/*.db.test.ts"
+
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ✓ src/services/community-config.test.ts (8 tests) 15ms
+ ✓ src/agent/community/persona.test.ts (19 tests) 17ms
+ ✓ src/agent/community/gate.test.ts (38 tests) 30ms
+ ✓ src/adapters/model.test.ts (5 tests) 99ms
+ ✓ src/agent/community/policy.test.ts (82 tests) 26ms
+ ✓ src/domain/errors.test.ts (26 tests) 16ms
+ ✓ src/agent/community/tools/tool-kit.test.ts (7 tests) 8ms
+ ✓ src/agent/community/graph/edges.test.ts (124 tests) 36ms
+ ✓ src/services/vn-time.test.ts (8 tests) 8ms
+ ✓ src/agent/community/triage.test.ts (10 tests) 10ms
+ ✓ src/db/seed.test.ts (6 tests) 17ms
+ ✓ src/retrieval/search-knowledge.test.ts (6 tests) 7ms
+ ✓ src/adapters/transport.test.ts (3 tests) 5ms
+ ✓ src/sim/sim-mentions.test.ts (3 tests) 5ms
+ ✓ src/agent/community/redact.test.ts (4 tests) 6ms
+ ✓ src/adapters/db-lock.test.ts (2 tests) 4ms
+ ✓ src/agent/conversation.test.ts (2 tests) 4ms
+ ✓ src/boundary.test.ts (16 tests) 2539ms
+   ✓ D35.8 — canh THUAN: graph/edges.ts (BB-16) > edges.ts dung Date.now() / new Date( / Math.random( / process. / fetch( => vi pham 538ms
+ ✓ src/domain/password.test.ts (2 tests) 234ms
+ ✓ src/agent/community/graph/graph-shape.test.ts (5 tests) 11ms
+ ✓ src/adapters/model.deadline.test.ts (13 tests) 3877ms
+   ✓ callModel — han chot (deadlineAt) > fetch tre 5000 ms, han chot +1500 ms ⇒ ModelDeadlineError trong <= 1700 ms, signal da huy 1517ms
+   ✓ callModel — han chot (deadlineAt) > 503 + du gio (+5000 ms) ⇒ van lui va thu lai nhu cu (ModelUnavailableError khi het retry khong phai ModelDeadlineError) 1023ms
+   ✓ callModel — han chot (deadlineAt) > ModelDeadlineError la con cua ModelUnavailableError va KHONG thu MODEL_FALLBACKS 1017ms
+ ✓ src/adapters/model.gemini.test.ts (6 tests) 4122ms
+   ✓ callModel — nhanh gemini (01-CONTRACTS §2b) > 503 x3 (het retry) o model chinh => thu MODEL_FALLBACKS, thanh cong, model = fallback 4024ms
+ ✓ src/adapters/model.openrouter.test.ts (7 tests) 4141ms
+   ✓ callModel — nhanh openrouter (01-CONTRACTS §2c) > 429 x3 (het retry) o model chinh => thu MODEL_FALLBACKS, thanh cong, model = fallback 4027ms
+ ✓ src/adapters/model.vyce.test.ts (6 tests) 4140ms
+   ✓ callModel — nhanh vyce (01-CONTRACTS §2d) > 429 x3 (het retry) o model chinh => thu MODEL_FALLBACKS, thanh cong, model = fallback (dung chung retry voi §2c) 4025ms
+ ✓ src/adapters/model.body-errors.test.ts (8 tests) 4461ms
+   ✓ than phan hoi — gemini > stall_body: abort khi dang doc than, het han luot ⇒ ModelDeadlineError (khong loi tho) 1208ms
+   ✓ than phan hoi — gemini > bad_json lan 1, lan 2 tot ⇒ retry thanh cong (retryable) 1017ms
+   ✓ than phan hoi — openrouter > stall_body: abort khi dang doc than, het han luot ⇒ ModelDeadlineError (khong loi tho) 1212ms
+   ✓ than phan hoi — openrouter > bad_json lan 1, lan 2 tot ⇒ retry thanh cong (retryable) 1014ms
+
+ Test Files  25 passed (25)
+      Tests  416 passed (416)
+   Start at  14:10:38
+   Duration  5.87s (transform 1.51s, setup 0ms, collect 8.57s, tests 23.84s, environment 7ms, prepare 4.79s)
+
+EXIT 0

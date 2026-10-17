@@ -1,0 +1,50 @@
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/p03-fix.db.test.ts (25 tests | 2 failed | 23 skipped) 1227ms
+   × D35.3 — C3: owner_dm KHONG takeover > D35.3 B1: owner_dm model sap ⇒ tra MODEL_DOWN_DM_REPLY nhung KHONG dat human_takeover_until; tin sau cua chu van duoc tra loi 1125ms
+     → expected 1 to be +0 // Object.is equality
+   × D35.3 — C3: owner_dm KHONG takeover > D35.3 B1b: owner_dm model rong ⇒ dm_empty (BUSY) nhung KHONG takeover, khong tu DM handoff cho chinh chu 69ms
+     → expected 1 to be +0 // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p03-fix.db.test.ts > D35.3 — C3: owner_dm KHONG takeover > D35.3 B1: owner_dm model sap ⇒ tra MODEL_DOWN_DM_REPLY nhung KHONG dat human_takeover_until; tin sau cua chu van duoc tra loi
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ src/dbtests/p03-fix.db.test.ts:140:123
+    138|     await send({ threadId: 'sim-owner', threadType: 'user', senderUid:…
+    139|     await runAll();
+    140|     expect(await count(`select 1 from conversations where thread_id = …
+       |                                                                                                                           ^
+    141|     expect(await count(`select 1 from outbox where thread_id = 'sim-ow…
+    142|     const m2 = uniq('KEYB2');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/dbtests/p03-fix.db.test.ts > D35.3 — C3: owner_dm KHONG takeover > D35.3 B1b: owner_dm model rong ⇒ dm_empty (BUSY) nhung KHONG takeover, khong tu DM handoff cho chinh chu
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ src/dbtests/p03-fix.db.test.ts:157:123
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 23 skipped (25)
+   Start at  13:44:47
+   Duration  4.05s (transform 465ms, setup 0ms, collect 2.44s, tests 1.23s, environment 0ms, prepare 150ms)
+
+EXIT 1

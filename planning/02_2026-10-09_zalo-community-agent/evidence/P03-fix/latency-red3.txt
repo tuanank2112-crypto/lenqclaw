@@ -1,0 +1,44 @@
+
+> lenqclaw@0.0.1 latency:slo
+> node --env-file=.env --import tsx scripts/latency_slo.mjs --n 3 --fake-delay-ms 300 --block-ms 5000
+
+{
+  "config": {
+    "mode": "fake(300ms)",
+    "n": 3,
+    "concurrency": 1,
+    "lane_fast_deadline_ms": 3500,
+    "lane_rag_deadline_ms": 12500,
+    "block_ms": 5000,
+    "provider": "gemini",
+    "model_fast": "(mac dinh theo provider)",
+    "since": "2026-10-17T07:09:14.974Z"
+  },
+  "summary": {
+    "fast": {
+      "n": 3,
+      "answered": 3,
+      "p50": 561,
+      "p95": 627,
+      "deadline_hit_rate": 0,
+      "lane_accuracy": 1
+    },
+    "rag": {
+      "n": 3,
+      "answered": 3,
+      "p50": 899,
+      "p95": 900,
+      "deadline_hit_rate": 0,
+      "lane_accuracy": 1
+    },
+    "hol": {
+      "runtime_ms": 5241,
+      "lane": "fast",
+      "outcome": "model_down"
+    }
+  },
+  "error_rate": 0
+}
+G23 FAIL: HOL: runtime 5241 ms > 3500
+G23 RESULT: FAIL
+EXIT 1

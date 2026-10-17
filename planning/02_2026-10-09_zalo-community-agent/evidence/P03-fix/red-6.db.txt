@@ -1,0 +1,55 @@
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/p03-fix.db.test.ts (25 tests | 2 failed | 23 skipped) 905ms
+   × D35.6 — N4: tin kich hoat bi xoa giua luot ⇒ dang KHONG quote > D35.6 B2: xoa tin kich hoat khi model dang tra loi (auto_post) ⇒ 1 tin khong quote, khong handler_error 501ms
+     → expected [] to have a length of 1 but got +0
+   × D35.6 — N4: tin kich hoat bi xoa giua luot ⇒ dang KHONG quote > D35.6 tin kich hoat bi xoa + model rong (fallback) ⇒ van 1 tin khong quote 374ms
+     → expected [] to have a length of 1 but got +0
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p03-fix.db.test.ts > D35.6 — N4: tin kich hoat bi xoa giua luot ⇒ dang KHONG quote > D35.6 B2: xoa tin kich hoat khi model dang tra loi (auto_post) ⇒ 1 tin khong quote, khong handler_error
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/dbtests/p03-fix.db.test.ts:297:17
+    295|     await runAll();
+    296|     const out = await outboxFor(g);
+    297|     expect(out).toHaveLength(1);
+       |                 ^
+    298|     expect(out[0]!.body.text).toBe('Đây là câu trả lời.');
+    299|     expect(out[0]!.body.quote).toBeUndefined();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/dbtests/p03-fix.db.test.ts > D35.6 — N4: tin kich hoat bi xoa giua luot ⇒ dang KHONG quote > D35.6 tin kich hoat bi xoa + model rong (fallback) ⇒ van 1 tin khong quote
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/dbtests/p03-fix.db.test.ts:316:17
+    314|     await runAll();
+    315|     const out = await outboxFor(g);
+    316|     expect(out).toHaveLength(1);
+       |                 ^
+    317|     expect(out[0]!.body.text).toBe(FALLBACK_GROUP_REPLY);
+    318|     expect(out[0]!.body.quote).toBeUndefined();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 23 skipped (25)
+   Start at  13:45:05
+   Duration  2.89s (transform 373ms, setup 0ms, collect 1.70s, tests 905ms, environment 0ms, prepare 98ms)
+
+EXIT 1

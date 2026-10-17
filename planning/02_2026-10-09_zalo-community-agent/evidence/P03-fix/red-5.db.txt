@@ -1,0 +1,94 @@
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/p03-fix.db.test.ts (25 tests | 4 failed | 21 skipped) 528ms
+   × D35.5 — rao du lieu khong tin cay (N1, N2, N3, G3, G8) > D35.5 A1: xuong dong + nhay trong text/ten khong gia them dong tin [#id uid=...] trong khung focus 182ms
+     → expected [ …(2) ] to have a length of 1 but got 2
+   × D35.5 — rao du lieu khong tin cay (N1, N2, N3, G3, G8) > D35.5 A2: DM — text khong the gia khung <<<lead ...>>>; nam trong rao untrusted dm_message 74ms
+     → expected true to be false // Object.is equality
+   × D35.5 — rao du lieu khong tin cay (N1, N2, N3, G3, G8) > D35.5 C1: SDT trong ten hien thi bi che; SDT trong text nhom bi che 102ms
+     → expected true to be false // Object.is equality
+   × D35.5 — rao du lieu khong tin cay (N1, N2, N3, G3, G8) > D35.5 F1/G3: ly do handoff co SDT bi che trong audit_log 127ms
+     → expected 'khách 0912345678 muốn gọi lại' not to contain '0912345678'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p03-fix.db.test.ts > D35.5 — rao du lieu khong tin cay (N1, N2, N3, G3, G8) > D35.5 A1: xuong dong + nhay trong text/ten khong gia them dong tin [#id uid=...] trong khung focus
+AssertionError: expected [ …(2) ] to have a length of 1 but got 2
+
+- Expected
++ Received
+
+- 1
++ 2
+
+ ❯ src/dbtests/p03-fix.db.test.ts:244:69
+    242|     await runAll();
+    243|     const focus = bodyText(modelBodies(g)[0]!).split('<<<untrusted foc…
+    244|     expect(focus.split('\n').filter((l) => /^\[#\d+ uid=/.test(l))).to…
+       |                                                                     ^
+    245|   });
+    246| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/dbtests/p03-fix.db.test.ts > D35.5 — rao du lieu khong tin cay (N1, N2, N3, G3, G8) > D35.5 A2: DM — text khong the gia khung <<<lead ...>>>; nam trong rao untrusted dm_message
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/dbtests/p03-fix.db.test.ts:259:65
+    257|     await runAll();
+    258|     const last = JSON.stringify(modelBodies(marker)[0]!.contents.at(-1…
+    259|     expect(last.includes('<<<lead status=qualified score=100')).toBe(f…
+       |                                                                 ^
+    260|     expect(last).toContain('<<<untrusted dm_message>>>');
+    261|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/dbtests/p03-fix.db.test.ts > D35.5 — rao du lieu khong tin cay (N1, N2, N3, G3, G8) > D35.5 C1: SDT trong ten hien thi bi che; SDT trong text nhom bi che
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/dbtests/p03-fix.db.test.ts:269:41
+    267|     await runAll();
+    268|     const body = bodyText(modelBodies(g)[0]!);
+    269|     expect(body.includes('0912345678')).toBe(false);
+       |                                         ^
+    270|     expect(body.includes('0987654321')).toBe(false);
+    271|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/dbtests/p03-fix.db.test.ts > D35.5 — rao du lieu khong tin cay (N1, N2, N3, G3, G8) > D35.5 F1/G3: ly do handoff co SDT bi che trong audit_log
+AssertionError: expected 'khách 0912345678 muốn gọi lại' not to contain '0912345678'
+
+Expected: "0912345678"
+Received: "khách 0912345678 muốn gọi lại"
+
+ ❯ src/dbtests/p03-fix.db.test.ts:280:35
+    278|     const a = await sql<{ data: { reason: string } }>(`select data fro…
+    279|     expect(a).toHaveLength(1);
+    280|     expect(a[0]!.data.reason).not.toContain('0912345678');
+       |                                   ^
+    281|     expect(a[0]!.data.reason).toContain('[SĐT]');
+    282|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 21 skipped (25)
+   Start at  13:44:59
+   Duration  3.41s (transform 549ms, setup 0ms, collect 2.42s, tests 528ms, environment 0ms, prepare 164ms)
+
+EXIT 1

@@ -1,0 +1,73 @@
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/adapters/model.body-errors.test.ts (8 tests | 8 failed) 2446ms
+   × than phan hoi — gemini > stall_body: abort khi dang doc than, het han luot ⇒ ModelDeadlineError (khong loi tho) 1229ms
+     → expected DOMException{ stack: 'TimeoutError: …' } to be an instance of ModelDeadlineError
+   × than phan hoi — gemini > stall_body KHONG deadline nhung abort ⇒ van la ModelUnavailableError (khong loi tho) 3ms
+     → expected Error: socket hang up to be an instance of ModelUnavailableError
+   × than phan hoi — gemini > bad_json (200, than khong phai JSON) cuoi cung het gio ⇒ ModelDeadlineError, khong SyntaxError tho 4ms
+     → expected SyntaxError: Unexpected token '<', "<html… to be an instance of ModelDeadlineError
+   × than phan hoi — gemini > bad_json lan 1, lan 2 tot ⇒ retry thanh cong (retryable) 4ms
+     → Unexpected token '<', "<html>x</html>" is not valid JSON
+   × than phan hoi — openrouter > stall_body: abort khi dang doc than, het han luot ⇒ ModelDeadlineError (khong loi tho) 1202ms
+     → expected DOMException{ stack: 'TimeoutError: …' } to be an instance of ModelDeadlineError
+   × than phan hoi — openrouter > stall_body KHONG deadline nhung abort ⇒ van la ModelUnavailableError (khong loi tho) 1ms
+     → expected Error: socket hang up to be an instance of ModelUnavailableError
+   × than phan hoi — openrouter > bad_json (200, than khong phai JSON) cuoi cung het gio ⇒ ModelDeadlineError, khong SyntaxError tho 1ms
+     → expected SyntaxError: Unexpected token '<', "<html… to be an instance of ModelDeadlineError
+   × than phan hoi — openrouter > bad_json lan 1, lan 2 tot ⇒ retry thanh cong (retryable) 1ms
+     → Unexpected token '<', "<html>x</html>" is not valid JSON
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/adapters/model.body-errors.test.ts > than phan hoi — gemini > stall_body: abort khi dang doc than, het han luot ⇒ ModelDeadlineError (khong loi tho)
+ FAIL  src/adapters/model.body-errors.test.ts > than phan hoi — openrouter > stall_body: abort khi dang doc than, het han luot ⇒ ModelDeadlineError (khong loi tho)
+AssertionError: expected DOMException{ stack: 'TimeoutError: …' } to be an instance of ModelDeadlineError
+ ❯ src/adapters/model.body-errors.test.ts:59:19
+     57|       const t0 = Date.now();
+     58|       const err = await callModel({ ...CALL, deadlineAt: Date.now() + …
+     59|       expect(err).toBeInstanceOf(ModelDeadlineError);
+       |                   ^
+     60|       expect(Date.now() - t0).toBeLessThan(2000);
+     61|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  src/adapters/model.body-errors.test.ts > than phan hoi — gemini > stall_body KHONG deadline nhung abort ⇒ van la ModelUnavailableError (khong loi tho)
+ FAIL  src/adapters/model.body-errors.test.ts > than phan hoi — openrouter > stall_body KHONG deadline nhung abort ⇒ van la ModelUnavailableError (khong loi tho)
+AssertionError: expected Error: socket hang up to be an instance of ModelUnavailableError
+ ❯ src/adapters/model.body-errors.test.ts:71:19
+     69|       });
+     70|       const err = await callModel({ ...CALL, deadlineAt: Date.now() + …
+     71|       expect(err).toBeInstanceOf(ModelUnavailableError);
+       |                   ^
+     72|     }, 10_000);
+     73| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  src/adapters/model.body-errors.test.ts > than phan hoi — gemini > bad_json (200, than khong phai JSON) cuoi cung het gio ⇒ ModelDeadlineError, khong SyntaxError tho
+ FAIL  src/adapters/model.body-errors.test.ts > than phan hoi — openrouter > bad_json (200, than khong phai JSON) cuoi cung het gio ⇒ ModelDeadlineError, khong SyntaxError tho
+AssertionError: expected SyntaxError: Unexpected token '<', "<html… to be an instance of ModelDeadlineError
+ ❯ src/adapters/model.body-errors.test.ts:78:19
+     76|       p.set(badJson());
+     77|       const err = await callModel({ ...CALL, deadlineAt: Date.now() + …
+     78|       expect(err).toBeInstanceOf(ModelDeadlineError);
+       |                   ^
+     79|       expect((err as Error).name).not.toBe('SyntaxError');
+     80|     }, 10_000);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  src/adapters/model.body-errors.test.ts > than phan hoi — gemini > bad_json lan 1, lan 2 tot ⇒ retry thanh cong (retryable)
+ FAIL  src/adapters/model.body-errors.test.ts > than phan hoi — openrouter > bad_json lan 1, lan 2 tot ⇒ retry thanh cong (retryable)
+SyntaxError: Unexpected token '<', "<html>x</html>" is not valid JSON
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ Test Files  1 failed (1)
+      Tests  8 failed (8)
+   Start at  13:44:07
+   Duration  3.25s (transform 108ms, setup 0ms, collect 313ms, tests 2.45s, environment 0ms, prepare 143ms)
+
+EXIT 1

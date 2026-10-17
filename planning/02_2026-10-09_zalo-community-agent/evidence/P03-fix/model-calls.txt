@@ -1,0 +1,8 @@
+MODEL_CALLS mention_send_group_message 1
+MODEL_CALLS rag_search_then_send 2
+MODEL_CALLS mention_autopost 1
+MODEL_CALLS rag_autopost 2
+MODEL_CALLS answers_tool_error 2
+MODEL_CALLS mixed_round 2
+MODEL_CALLS nudge_then_send 2
+      Tests  6 passed | 21 skipped (27)

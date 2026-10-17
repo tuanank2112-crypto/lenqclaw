@@ -1,0 +1,41 @@
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/adapters/db-lock.test.ts (2 tests | 2 failed) 5ms
+   × advisoryLockClientConfig (D35.11) > bat keepAlive va giu connectionString 4ms
+     → advisoryLockClientConfig is not a function
+   × advisoryLockClientConfig (D35.11) > keepAliveInitialDelayMillis la so duong nho (<= 30 s) de phat hien som 0ms
+     → advisoryLockClientConfig is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/adapters/db-lock.test.ts > advisoryLockClientConfig (D35.11) > bat keepAlive va giu connectionString
+TypeError: advisoryLockClientConfig is not a function
+ ❯ src/adapters/db-lock.test.ts:8:15
+      6| describe('advisoryLockClientConfig (D35.11)', () => {
+      7|   it('bat keepAlive va giu connectionString', () => {
+      8|     const c = advisoryLockClientConfig('postgres://u:p@127.0.0.1:5432/…
+       |               ^
+      9|     expect(c.keepAlive).toBe(true);
+     10|     expect(c.connectionString).toBe('postgres://u:p@127.0.0.1:5432/x');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/adapters/db-lock.test.ts > advisoryLockClientConfig (D35.11) > keepAliveInitialDelayMillis la so duong nho (<= 30 s) de phat hien som
+TypeError: advisoryLockClientConfig is not a function
+ ❯ src/adapters/db-lock.test.ts:13:15
+     11|   });
+     12|   it('keepAliveInitialDelayMillis la so duong nho (<= 30 s) de phat hi…
+     13|     const c = advisoryLockClientConfig('postgres://x');
+       |               ^
+     14|     expect(c.keepAliveInitialDelayMillis).toBeGreaterThan(0);
+     15|     expect(c.keepAliveInitialDelayMillis).toBeLessThanOrEqual(30_000);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  13:44:04
+   Duration  615ms (transform 42ms, setup 0ms, collect 95ms, tests 5ms, environment 0ms, prepare 136ms)
+
+EXIT 1

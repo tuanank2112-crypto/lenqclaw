@@ -1,0 +1,88 @@
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/agent/community/graph/edges.test.ts (124 tests | 3 failed | 117 skipped) 18ms
+   × D35.1 — D8 truoc D4 > mention da tra loi bang tool + loi goi chot model_down ⇒ none/replied (khong tin "truc trac") 13ms
+     → expected { delivery: 'model_down', …(1) } to deeply equal { Object (delivery, outcome) }
+   × D35.1 — D8 truoc D4 > mention da tra loi + het han chot (deadlineHit) ⇒ none/replied; deadlineHit van duoc ghi o state 1ms
+     → expected { delivery: 'model_down', …(1) } to deeply equal { Object (delivery, outcome) }
+   × D35.1 — D8 truoc D4 > welcome da chao + model_down ⇒ none/replied 1ms
+     → expected { delivery: 'model_down', …(1) } to deeply equal { Object (delivery, outcome) }
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/agent/community/graph/edges.test.ts > D35.1 — D8 truoc D4 > mention da tra loi bang tool + loi goi chot model_down ⇒ none/replied (khong tin "truc trac")
+AssertionError: expected { delivery: 'model_down', …(1) } to deeply equal { Object (delivery, outcome) }
+
+- Expected
++ Received
+
+  Object {
+-   "delivery": "none",
+-   "outcome": "replied",
++   "delivery": "model_down",
++   "outcome": "model_down",
+  }
+
+ ❯ src/agent/community/graph/edges.test.ts:330:93
+    328| describe('D35.1 — D8 truoc D4', () => {
+    329|   it('mention da tra loi bang tool + loi goi chot model_down ⇒ none/re…
+    330|     expect(decideDelivery(tstate({ answered: 1, stop: 'model_down', de…
+       |                                                                                             ^
+    331|   });
+    332|   it('mention da tra loi + het han chot (deadlineHit) ⇒ none/replied; …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/agent/community/graph/edges.test.ts > D35.1 — D8 truoc D4 > mention da tra loi + het han chot (deadlineHit) ⇒ none/replied; deadlineHit van duoc ghi o state
+AssertionError: expected { delivery: 'model_down', …(1) } to deeply equal { Object (delivery, outcome) }
+
+- Expected
++ Received
+
+  Object {
+-   "delivery": "none",
+-   "outcome": "replied",
++   "delivery": "model_down",
++   "outcome": "model_down",
+  }
+
+ ❯ src/agent/community/graph/edges.test.ts:333:92
+    331|   });
+    332|   it('mention da tra loi + het han chot (deadlineHit) ⇒ none/replied; …
+    333|     expect(decideDelivery(tstate({ answered: 1, stop: 'model_down', de…
+       |                                                                                            ^
+    334|   });
+    335|   it('welcome da chao + model_down ⇒ none/replied', () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/agent/community/graph/edges.test.ts > D35.1 — D8 truoc D4 > welcome da chao + model_down ⇒ none/replied
+AssertionError: expected { delivery: 'model_down', …(1) } to deeply equal { Object (delivery, outcome) }
+
+- Expected
++ Received
+
+  Object {
+-   "delivery": "none",
+-   "outcome": "replied",
++   "delivery": "model_down",
++   "outcome": "model_down",
+  }
+
+ ❯ src/agent/community/graph/edges.test.ts:336:122
+    334|   });
+    335|   it('welcome da chao + model_down ⇒ none/replied', () => {
+    336|     expect(decideDelivery(tstate({ answered: 1, stop: 'model_down' }, …
+       |                                                                                                                          ^
+    337|   });
+    338|   it('chua tra loi + model_down van la D4 (model_down)', () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 4 passed | 117 skipped (124)
+   Start at  13:43:47
+   Duration  1.48s (transform 95ms, setup 0ms, collect 998ms, tests 18ms, environment 0ms, prepare 127ms)
+
+EXIT 1

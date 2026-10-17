@@ -1,0 +1,59 @@
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/p03-fix.db.test.ts (25 tests | 2 failed | 23 skipped) 3654ms
+   × D35.2 — C2: loi doc/parse than phan hoi nam trong phan loai loi (Gemini) > D35.2 B5 stall_body: than treo toi het han luot ⇒ MODEL_DOWN_GROUP_REPLY (1 tin), outcome model_down, deadline_hit 3551ms
+     → expected [] to deeply equal [ Array(1) ]
+   × D35.2 — C2: loi doc/parse than phan hoi nam trong phan loai loi (Gemini) > D35.2 B5 bad_json: than 200 khong phai JSON ⇒ MODEL_DOWN_GROUP_REPLY (1 tin), khong loi tho, 0 handler_error 59ms
+     → expected [] to deeply equal [ Array(1) ]
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p03-fix.db.test.ts > D35.2 — C2: loi doc/parse than phan hoi nam trong phan loai loi (Gemini) > D35.2 B5 stall_body: than treo toi het han luot ⇒ MODEL_DOWN_GROUP_REPLY (1 tin), outcome model_down, deadline_hit
+AssertionError: expected [] to deeply equal [ Array(1) ]
+
+- Expected
++ Received
+
+- Array [
+-   "Mình đang gặp trục trặc kỹ thuật, bạn hỏi lại sau ít phút nhé.",
+- ]
++ Array []
+
+ ❯ src/dbtests/p03-fix.db.test.ts:114:58
+    112|     await send({ threadId: g, senderUid: 'sim-mem-1', text: 'ơi bot', …
+    113|     await runAll();
+    114|     expect((await outboxFor(g)).map((o) => o.body.text)).toEqual([MODE…
+       |                                                          ^
+    115|     const t = (await tracesFor(g))[0]!;
+    116|     expect(t.outcome).toBe('model_down');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/dbtests/p03-fix.db.test.ts > D35.2 — C2: loi doc/parse than phan hoi nam trong phan loai loi (Gemini) > D35.2 B5 bad_json: than 200 khong phai JSON ⇒ MODEL_DOWN_GROUP_REPLY (1 tin), khong loi tho, 0 handler_error
+AssertionError: expected [] to deeply equal [ Array(1) ]
+
+- Expected
++ Received
+
+- Array [
+-   "Mình đang gặp trục trặc kỹ thuật, bạn hỏi lại sau ít phút nhé.",
+- ]
++ Array []
+
+ ❯ src/dbtests/p03-fix.db.test.ts:127:58
+    125|     await send({ threadId: g, senderUid: 'sim-mem-1', text: 'ơi bot', …
+    126|     await runAll();
+    127|     expect((await outboxFor(g)).map((o) => o.body.text)).toEqual([MODE…
+       |                                                          ^
+    128|     expect((await tracesFor(g))[0]!.outcome).toBe('model_down');
+    129|     expect(await auditCount('inbound.handler_error', g)).toBe(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 23 skipped (25)
+   Start at  13:44:39
+   Duration  6.75s (transform 568ms, setup 0ms, collect 2.68s, tests 3.65s, environment 0ms, prepare 184ms)
+
+EXIT 1

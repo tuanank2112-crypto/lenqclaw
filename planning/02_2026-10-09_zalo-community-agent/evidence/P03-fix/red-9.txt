@@ -1,0 +1,24 @@
+=== M5 [nhom b] packages/core/src/agent/community/group-post.ts: host post cung bi chan ngan sach ⇒ mention het ngan sach 0 tin
+$ (packages/core) npx vitest run --config vitest.db.config.ts src/dbtests/p03-fix.db.test.ts
+exit=1
+   × D35.4 — N6: bo loi goi chot khi vong tools chi gom tool answers thanh cong > D35.4 vong co tool answers LOI (GroupBudgetExceededError) ⇒ VAN goi model them lan nua 56ms
+     → expected [] to have a length of 1 but got +0
+   × D35.9 — N8: bo sung test (khoa dot bien M5, M17) > D35.9 SPEC-P03 §6.4.4: host post khi het ngan sach gio VAN enqueue (hang queued), khong im 47ms
+     → expected [ { status: 'sent', t: 'tin trước' } ] to have a length of 2 but got 1
+      Tests  2 failed | 25 passed (27)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/dbtests/p03-fix.db.test.ts > D35.4 — N6: bo loi goi chot khi vong tools chi gom tool answers thanh cong > D35.4 vong co tool answers LOI (GroupBudgetExceededError) ⇒ VAN goi model them lan nua
+AssertionError: expected [] to have a length of 1 but got +0
+restore: git checkout exit=0; status=""
+VERDICT M5: BAT DUOC (do)
+=== M17 [nhom e] packages/core/src/agent/community/graph/nodes/prepare.ts: han chot fast tinh tu luc bat dau luot thay vi received_at (SLO lech)
+$ (packages/core) npx vitest run --config vitest.db.config.ts src/dbtests/p03-fix.db.test.ts
+exit=1
+   × D35.9 — N8: bo sung test (khoa dot bien M5, M17) > D35.9 moc SLO: han chot fast tinh tu received_at (khong phai startedAt) tai node prepare 2705ms
+     → expected 'auto_posted' to be 'model_down' // Object.is equality
+      Tests  1 failed | 26 passed (27)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  src/dbtests/p03-fix.db.test.ts > D35.9 — N8: bo sung test (khoa dot bien M5, M17) > D35.9 moc SLO: han chot fast tinh tu received_at (khong phai startedAt) tai node prepare
+AssertionError: expected 'auto_posted' to be 'model_down' // Object.is equality
+restore: git checkout exit=0; status=""
+VERDICT M17: BAT DUOC (do)

@@ -1,0 +1,12 @@
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ✓ src/dbtests/p03-fix.db.test.ts (25 tests | 23 skipped) 2257ms
+   ✓ D35.8 — N8: bien thu > D35.8 mon SLO: han chot fast tinh tu received_at (khong phai startedAt) tai node prepare 2063ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed | 23 skipped (25)
+   Start at  13:45:16
+   Duration  4.95s (transform 509ms, setup 0ms, collect 2.30s, tests 2.26s, environment 0ms, prepare 155ms)
+
+EXIT 0
