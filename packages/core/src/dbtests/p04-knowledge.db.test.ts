@@ -29,7 +29,7 @@ const newDocId = (): string => {
   return id;
 };
 
-/** Embed gia: van ban bat dau bang `queryMarker` (truy van) hoac chua `VEC<marker>` (muc chi-vector) ⇒ cung huong voi truy van; con lai ⇒ chi so rieng theo hash (100..899). */
+/** Embed gia: van ban bat dau bang `queryMarker` (truy van) hoac chua `VEC<marker>` (muc chi-vector) ⇒ cung huong voi truy van; chua token ⇒ gan huong (cosine 0.5); con lai ⇒ chi so rieng theo hash (100..899). */
 function fakeEmbed(queryMarker: string, log?: { calls: number; texts: string[] }): typeof fetch {
   return async (_url, init) => {
     const reqs = (JSON.parse(String(init?.body)) as { requests: Array<{ content: { parts: Array<{ text: string }> } }> }).requests;
@@ -40,6 +40,12 @@ function fakeEmbed(queryMarker: string, log?: { calls: number; texts: string[] }
     const embeddings = reqs.map((r) => {
       const t = r.content.parts[0]!.text;
       if (t.startsWith(queryMarker) || t.includes(`VEC${queryMarker}`)) return { values: unit(queryVec(queryMarker)) };
+      if (t.includes(queryMarker)) {
+        // chua token cua truy van nhung khong phai chinh truy van: gan huong truy van (cosine 0.5) ⇒ luon lot top 20 vector
+        const v = unit(50).map((x) => x * Math.sqrt(0.75));
+        v[queryVec(queryMarker)] = 0.5;
+        return { values: v };
+      }
       let h = 0;
       for (const ch of t) h = (h * 31 + ch.charCodeAt(0)) % 800;
       return { values: unit(100 + h) };
