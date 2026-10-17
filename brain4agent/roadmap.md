@@ -60,6 +60,9 @@ Việc lẻ chưa xếp giai đoạn: lịch `cron` (D16, `cron_expr` + `croner`
 
 > Mục của kế hoạch 01 (sàn thợ) bên dưới là LỊCH SỬ — đã BỎ do pivot (Đ32), chỉ giữ ý tưởng dùng lại được. Mục mới của kế hoạch 02 xếp ngay dưới dòng này.
 
+- **Câu trả lời khi hết giờ do xếp hàng (D35.13, R08 G1)** — tin gọi bot chờ ≥ 3,5 s sau lượt khác cùng nhóm ⇒ 0 lời gọi model, vẫn trả `MODEL_DOWN_GROUP_REPLY` ("trục trặc kỹ thuật") dù model khoẻ. Đổi câu riêng cho `deadline_hit` do `queued_ms` (vd "mình đang bận chút, hỏi lại giúp mình nhé") — quyết khi có số đo P09.
+- **Người trong `deny_users` gọi bot (D35.13, R08 G2)** — 0 triage và 0 lượt ⇒ không lớp model kiểm duyệt nào; lưới tất định ở `moderate` vẫn chạy. Xét lại ở P05.
+
 - **Nhận ảnh/file/voice vào agent cộng đồng** (speech-to-text, OCR ảnh chụp lỗi) — non-goal 0.1, cần giới hạn tải file + bộ nhớ.
 - **Nhiều tài khoản `community` / tài khoản doanh nghiệp** — D12 + D25 (GĐ2 lộ trình). Zalo OA: người dùng BỎ (D25 — chỉ zca-js).
 - **Lịch `cron` + `croner`** — D16 chỉ làm `at|every|daily|weekly`.

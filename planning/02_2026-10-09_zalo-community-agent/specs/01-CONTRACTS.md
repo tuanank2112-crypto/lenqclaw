@@ -684,7 +684,7 @@ Bề mặt: **G** = lượt nhóm (mọi `group_*`), **D** = DM member/stranger,
 | `warn_member` | `{uid: string, reason: string}` | mọi vai | | | ngân sách cảnh cáo `MOD_WARN_PER_HOUR`; owner/moderator ⇒ `ActionNotPermittedError` |
 | `request_member_removal` | `{uid: string, kind: 'kick'\|'block', reason: string}` | mọi vai | | | TẠO `approvals` (`pending`) + DM owner; trả `{status:'pending_approval', approval_id}`; KHÔNG thi hành |
 | `invite_to_private` | `{uid: string, note: string≤300}` | mọi vai | | | gửi tin nhóm mention uid "mình nhắn riêng bạn nhé"; nếu đã có `conversations(account, uid)` có tin vào ⇒ DM luôn; ghi `member_profiles.notes` dòng "mời riêng: <note>" |
-| `remember_member_note` | `{uid: string, note: string≤500}` | mọi vai | mọi vai | ✓ | chỉ GHI (append) `member_profiles`; CẤM đọc ở G (BB-07); ở D chỉ cho uid = requester |
+| `remember_member_note` | `{uid: string, note: string≤500}` | mọi vai | mọi vai | ✓ | chỉ GHI (append) `member_profiles`; CẤM đọc ở G (BB-07); ở G và D chỉ cho uid = requester (D35.10) |
 | `handoff_to_owner` | `{reason: string}` | mọi vai | mọi vai | | DM owner `HANDOFF_DM`; đặt `conversations.human_takeover_until = now + HUMAN_TAKEOVER_MIN` cho thread hiện tại |
 | `create_poll` | `{question, options: string[2..10], expires_hours?: integer≤168, multi?: boolean, anonymous?: boolean}` | owner, moderator | | ✓ (`thread_id` thêm) | outbox `create_poll` |
 | `create_reminder` | `{title, start_at: ISO8601, repeat: 'none'\|'daily'\|'weekly'\|'monthly'}` | owner, moderator | | ✓ (`thread_id`) | outbox `create_reminder`; `start_at` phải > now |
@@ -920,7 +920,7 @@ export interface TurnRequest {
   focusMessageIds: number[];                               // group_messages.id; ambient_flush: [] (prepare đọc id > last_seen_message_id)
   dm?: { conversationId: string; latestText: string; latestMessageId: number };
   joinedUids?: string[]; joinRequest?: { uid: string }; automation?: { automationId: string };
-  triage: CommunityTriage | null;                          // node `turn` gộp từ PipelineState.triage
+  triage: CommunityTriage | null;                          // node `turn` gộp từ PipelineState.triageResult (D35.12)
   // D31 (SPEC-D31 §5.1): node `turn` điền từ event/state
   inboundEventId: number; receivedAt: number; claimedAt: number;   // epoch ms; receivedAt = inbound_events.received_at (mốc SLO)
   triageMs: number | null;                                 // null khi triage không chạy (tin gọi bot — T3)
@@ -932,9 +932,9 @@ export const PipelineState = Annotation.Root({
   group: keep<GroupRow | null>(() => null),                // zalo_groups của thread (ingest/system_event)
   sender: keep<{ uid: string; role: Role } | null>(() => null),
   row: keep<GroupMessageRow | null>(() => null),           // tin vừa đệm
-  triage: keep<CommunityTriage | null>(() => null),
+  triageResult: keep<CommunityTriage | null>(() => null),  // D35.12: LangGraph cấm kênh trùng tên node `triage`
   moderation: keep<{ verdict: string; action: string; exempt: boolean } | null>(() => null),
-  gate: keep<GateDecision | null>(() => null),
+  gateDecision: keep<GateDecision | null>(() => null),     // D35.12: LangGraph cấm kênh trùng tên node `gate`
   turnRequest: keep<TurnRequest | null>(() => null),
   turnResult: keep<TurnResult | null>(() => null),
   stop: keep<PipelineStop | null>(() => null),             // vì sao pipeline dừng không có lượt (test/log)
@@ -988,13 +988,13 @@ Mỗi node một file `graph/nodes/<tên>.ts`, export `<tênCamel>Node: NodeFn<�
 | `ingest` | pipeline | `buffer.ts::ingestGroupMessage`, `roles.ts::resolveRole` | `group, sender, row, stop∈{group_unknown, group_disabled, self}` | `group_members`, `group_messages` (insert, cắt, `answered_at`), audit `group.denied` | ✗ | ✗ |
 | `triage` | pipeline | `isAddressedToBot` (THUẦN; namePatterns từ `loadPersonaBundle` cache, lỗi ⇒ `[]`) + `needsTriage` (THUẦN) ⇒ `triage.ts::triageCommunityMessage` (D31: tin gọi bot KHÔNG gọi) | `triage` (null khi không cần/quá hạn), `triageMs` | nhóm: `group_messages.is_question`; DM: `messages.content.triage` | ✗ | `callTriageModel` |
 | `moderate` | pipeline | `moderation.ts::moderateGroupMessage` + `applyLadderAction` (SPEC-P05) | `moderation`, `stop='deleted'` | `moderation_events/scores`, `group_messages.deleted_at`, `approvals`, audit | ✓ | ✗ |
-| `gate` | pipeline | `persona.ts::loadPersonaBundle` (namePatterns, cache 60 s) + `decideGroupInbound` (THUẦN) | `gate`, `turnRequest` (khi admitted ∧ trigger ≠ ambient), `stop='not_admitted'` | ✗ (chỉ đọc) | ✗ | ✗ |
+| `gate` | pipeline | `persona.ts::loadPersonaBundle` (namePatterns, cache 60 s) + `decideGroupInbound` (THUẦN) | `gateDecision`, `turnRequest` (khi admitted ∧ trigger ≠ ambient), `stop='not_admitted'` | ✗ (chỉ đọc) | ✗ | ✗ |
 | `defer` | pipeline | `sessions.ts::markAmbientPending` | `stop='ambient_deferred'` | `group_sessions.pending_since` | ✗ | ✗ |
 | `group_event` | pipeline | `join-requests.ts`, `welcome.ts`, đồng bộ admin (SPEC-P05 §6–§7) | `stop='group_event_done'` | `group_members`, `join_requests`, `approvals`, `group_sessions.welcome_pending_since`, audit | ✓ | ✗ |
 | `system_event` | pipeline | kiểm `zaloMsgId LIKE 'sys-%'` ∧ `payload.kind='system'`; bảng SPEC-P03 §4.3 | `group`, `turnRequest` hoặc `stop∈{system_no_turn, forged_system_event}` | audit `router.forged_system_event` | ✓ (chỉ `APPROVAL_RESULT_DM`) | ✗ |
 | `dm_intake` | pipeline | `resolveRole`, `sessions.ts` (conversation, `saveMessage`) | `sender, turnRequest, stop∈{takeover, unsupported}` | `conversations`, `messages` | ✓ (chỉ `TEXT_ONLY_REPLY`) | ✗ |
 | `turn` | pipeline | `runTurn({...s.turnRequest, triage: s.triage, inboundEventId, receivedAt, claimedAt, triageMs})` (D31) | `turnResult` | (qua turnGraph) | (qua turnGraph) | (qua turnGraph) |
-| `prepare` | turn | (D31) `enqueue` `typing` NGAY đầu node nếu `isInteractive(kind)`; `initialDeadline`; `loadPersonaBundle`, `buildSystemPrompt` (§11), `toolsFor`, đọc đệm/lịch sử DM/`loadMemberContext` | `turnId, startedAt, ctx, personaVersions, system, toolNames, messages[0], roundCap, prepError, lane, deadlineAt` | `group_sessions` (đánh dấu TRƯỚC model — SPEC-P03 §4.2) | ✓ CHỈ `typing` (D31) | ✗ |
+| `prepare` | turn | (D31) `enqueue` `typing` NGAY đầu node nếu `isInteractive(kind)`; `initialDeadline`; `loadPersonaBundle`, `buildSystemPrompt` (§11), `toolsFor`, đọc đệm/lịch sử DM/`loadMemberContext` | `turnId, startedAt, ctx, personaVersions, system, toolNames, messages[0], roundCap, prepError, lane, deadlineAt` | `group_sessions` (đánh dấu TRƯỚC model — SPEC-P03 §4.2), `conversations` (D35.12) | ✓ CHỈ `typing` (D31) | ✗ |
 | `agent` | turn | `callModel({route:'community', system, messages, tools, conversationId, turnId, tier, deadlineAt})` (D31: `tier='fast'` khi tương tác) | `messages(+assistant), stop, finalText, modelMs, deadlineHit` | `agent_runs` (adapter ghi) | ✗ | `callModel` |
 | `tools` | turn | mỗi `tool_use` theo thứ tự: (D31) còn < `TOOL_MIN_MS` tới `deadlineAt` ⇒ `is_error DeadlineExceeded` không chạy; `assertValidToolInput` ⇒ `assertToolAllowed` ⇒ `tool.run(ctx, input)`; `escalateLane` | `messages(+1 user chứa MỌI tool_result), rounds+1, toolsCalled, answered, lane, deadlineAt, toolMs` | theo tool | ✓ (qua tool) | ✗ (embedding của `search_knowledge` qua `embedTexts` được phép) |
 | `nudge` | turn | — | `messages(+NUDGE_TEXT), nudged=true, roundCap=rounds+2` | ✗ | ✗ | ✗ |
@@ -1062,11 +1062,11 @@ export function hostText(req: TurnRequest, reason: 'fallback' | 'model_down', v:
 | D1 | `prepError === 'persona_invalid'` | `persona_invalid` | `error` |
 | D2 | `kind = group_join_review ∧ answered > 0` | `none` | `replied` |
 | D3 | `kind = group_join_review` (model im/sập/refusal/chạm trần) | `join_default` (Q9: CHO VÀO) | `model_down` nếu `stop=model_down`, `refusal` nếu `stop=refusal`, còn lại `fallback` |
+| D8 | `answered > 0` — (D35.1) xét NGAY SAU D3, trước D4 | `none` | `replied` |
 | D4 | `stop = model_down` | `model_down` | `model_down` |
 | D5 | DM ∧ `stop = refusal` | `dm_empty` | `refusal` |
 | D6 | DM ∧ `finalText ≠ ''` ∧ `!capped` | `dm_reply` | `replied` |
 | D7 | DM (rỗng / chạm trần) | `dm_empty` | `fallback` |
-| D8 | `answered > 0` | `none` | `replied` |
 | D9 | `!mustReply` | `none` | `silent` |
 | D10 | `stop = refusal` | `fallback` | `refusal` |
 | D11 | `finalText ≠ ''` ∧ `!capped` | `auto_post` | `auto_posted` |

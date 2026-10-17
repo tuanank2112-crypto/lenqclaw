@@ -130,6 +130,23 @@ Người dùng: "không". Kích hoạt phiên bản persona trên dashboard có 
 ### D34 — 2026-10-16 · Duyệt kỹ thuật SPEC-D31 (R06); SO chốt các câu không cần người (SO)
 SO kiểm `33248d1`: 0 key lộ trong evidence/specs/report, gate exit 0 (218 test), hình đồ thị KHÔNG đổi node/cạnh (chỉ chú thích §4.1/§4.2 + tác dụng phụ typing của `prepare`) ⇒ không cần người duyệt lại ảnh 12. SO chốt: Q-D31-4 CHẤP NHẬN tin gọi bot không qua triage (lưới tất định + agent `flag_message` + kiểm duyệt ở tin sau); Q-D31-5 ping ngoài `/api/healthz` HOÃN tới P09/VPS; Q-D31-6 giữ `turn_traces`/`agent_runs` 180 ngày, `audit_log` 365 ngày. Xếp gói: runtime D31 (làn, hạn chót, runner song song + advisory lock, typing sớm) vào P03; worker D31 (tick 250, advisory lock, heartbeat) + adapter báo động Telegram + dọn dữ liệu thành gói **P03b** 🟠 sau P03; thẻ dashboard + `/api/healthz` vào P08. Hạn giữ `inbound_events`/`outbox` (chứa nội dung tin) ⇒ Idea Vault, quyết trước P09. CHỜ NGƯỜI: Q-D31-1 (flash-lite cho tin gọi bot), Q-D31-2 (nới gap nhóm D09), Q-D31-3 (billing Gemini + `MODEL_PROVIDER=gemini`; Vyce đang 401). **Lật:** không.
 
+### D35 — 2026-10-17 · Phán R07 = 🔁 SỬA theo thẩm định R08; SO chốt cách sửa P03 (SO)
+SO đo lại `d8e744f`: gate exit 0, `npm test` 499/0/0, test:db ×2 = 182 (84/25/73), 0 skip, diff 91 file trong phạm vi (root `package.json` `overrides` + `latency:slo` đúng 01-CONTRACTS §12.1 — H07 cấm nhầm, chấp nhận). Prompt `rules` khớp nguyên văn SPEC-P03 §7.3 (review 🔴 đạt). SO xác minh 3 mục CHẶN R08 trong mã (`edges.ts:154`, `model.ts:611/919`, `handoff.ts:20`). Chốt, thi công ở [H09](handoffs/H09_thi-cong_P03-fix.md):
+1. **C1 — thứ tự `decideDelivery`:** D8 (`answered > 0` ⇒ `none`/`replied`) xét NGAY SAU D3, trước D4. Nhóm đã có tin trả lời thì lời gọi chốt sập/hết giờ KHÔNG sinh tin thứ hai (`deadline_hit` vẫn ghi). Không thêm/bớt dòng (01-CONTRACTS §12.5).
+2. **C2 — adapter model:** đọc + parse thân phản hồi nằm TRONG phân loại lỗi: huỷ khi đang đọc thân ⇒ như timeout (hết hạn lượt ⇒ `ModelDeadlineError`, còn giờ ⇒ lỗi retryable); thân 200 không phải JSON ⇒ retryable. Mọi nhánh provider (Gemini, OpenAI-compat). Không còn đường lỗi thô từ adapter ở lượt mention.
+3. **C3 — takeover:** `human_takeover_until` CHỈ đặt khi `kind='dm'`; `owner_dm` không bao giờ takeover, không tự DM handoff cho chính chủ.
+4. **N6 — bỏ lời gọi chốt (không đổi hình):** node `agent` KHÔNG gọi model nếu vòng `tools` vừa xong gồm TOÀN tool cờ `answers` và tất cả chạy thành công ⇒ `stop='end_turn'`, `finalText=''`. Kỳ vọng: mention trả bằng `send_group_message` = **1** `agent_runs` (SPEC-P03 §11 hàng 5(a) giữ nguyên), RAG = 2 (khớp SPEC-D31 §3 dòng 7 + 9). Câu hỏi R07 Q3 đóng.
+5. **Rào dữ liệu không tin cậy (N1, N2, N3, G3, G8):** dòng tiêu đề tin trong khung focus thoát xuống dòng và dấu nháy của tên/nội dung; text DM của người dùng nằm trong rào `<<<untrusted>>>` sau khối trí nhớ; tên hiển thị, `memberNotes` và lý do handoff ghi audit đều qua che SĐT (§5.3).
+6. **N4:** tin kích hoạt bị xoá giữa lượt ⇒ `deliver` đăng KHÔNG quote (vẫn đúng 1 tin), không ném.
+7. **N5 + R07 Q4:** `processInbound` = `claimNextInbound([])` ép thứ tự thread ĐÚNG SPEC-D31 §6 (bỏ câu nhận không ép thứ tự); test P01 "12 `processInbound` đồng thời" đổi thành 12 tin ở 12 thread (mục đích giữ: không xử lý trùng). Route sim gọi `processInbound` khi đó không phá thứ tự.
+8. **N7:** `check_adapter_boundary` bắt thêm: import gián tiếp (re-export), tên gói `@langchain/*`/`langsmith` ngoài allowlist §12.1, `import()` không literal ⇒ vi phạm; thêm máy đo cạnh THUẦN (file `graph/edges.ts` không import `adapters/*`, `services/*`). Mỗi luật có bằng chứng đỏ.
+9. **N8:** test §6.4.4 (host post khi hết ngân sách vẫn enqueue hàng `queued`) + test mốc `received_at` tại `prepare`.
+10. **G7:** `remember_member_note` ở bề mặt G chỉ cho `uid = requester` (như D) — chặn cấy ghi chú vào hồ sơ người khác từ nhóm.
+11. **G5:** kết nối giữ advisory lock bật `keepAlive`.
+12. **Sửa SPEC theo thực tế thư viện / mã (không đổi hành vi):** R07 Q2 — trường state `PipelineState.triageResult`/`gateDecision` (LangGraph cấm kênh trùng tên node); R07 Q6 — node `gate` chỉ đọc, KHÔNG audit `sender_denied`/`sender_not_allowed` (lý do ở `gateDecision.reason`, `turn_traces` không có lượt) — `group.denied` audit ở `ingest`; G4 — `prepare` ghi thêm `conversations`; R07 Q7 ⇒ gotcha G33.
+13. **Hoãn:** R07 Q5 (`botUid` thật — tạm env `BOT_ZALO_UID`) chốt ở P03b (worker ghi `ownUid`); G1 (câu "trục trặc kỹ thuật" khi hết giờ do xếp hàng) và G2 (người `deny_users` không còn lớp model kiểm duyệt) ⇒ Idea Vault.
+**Lật:** không.
+
 ### Quyết định bị thay thế
 | Mốc cũ | Phát biểu cũ | Thay bằng | Lý do |
 | :-- | :-- | :-- | :-- |
@@ -165,6 +182,10 @@ SO kiểm `33248d1`: 0 key lộ trong evidence/specs/report, gate exit 0 (218 te
 | SPEC-P07 §5 "Heartbeat = CHÍNH báo cáo này — không có heartbeat khác" | không có heartbeat khác | D32 — dấu sống tiến trình `process_heartbeats` (không gửi cho ai) + báo động Telegram | runner/worker chết thì không ai biết |
 | D24 "không cần hạn giữ ở 0.1" · SPEC-P07 §2 bước 8 "KHÔNG chạm `turn_traces`, `audit_log`" | giữ vết vô hạn | D32 e4 — `turn_traces`/`agent_runs` 180 ngày, `audit_log` 365 ngày | bảng tăng không giới hạn; 365 ngày cho BB-09 |
 | 01-CONTRACTS §2.2 / plan.md Q3 | "giả định 1024 chiều; probe ở P04" | đóng Q3 — đo trả đúng 1024 | `latency-probe.txt` |
+| 01-CONTRACTS §12.5 thứ tự D4 → D8 | `stop=model_down` xét trước `answered>0` | D35.1 — D8 ngay sau D3 | nhóm đã trả lời vẫn nhận thêm tin "trục trặc" (R08 C1) |
+| SPEC-P03 §6.2 cạnh `tools → agent` luôn gọi model | lời gọi chốt sau mọi vòng tool | D35.4 — bỏ lời gọi khi vòng chỉ gồm tool `answers` thành công | 2 lời gọi/mention, vượt ngân sách D31 §3 |
+| 01-CONTRACTS §12.2 `PipelineState.triage`/`gate` | tên trường trùng tên node | D35.12 — `triageResult`/`gateDecision` | LangGraph ném khi kênh trùng tên node |
+| SPEC-P03 §2 "audit khi có quyết định (admitted/denied)" | node `gate` audit | D35.12 — `gate` chỉ đọc; `group.denied` audit ở `ingest` | §12.3 BB-15 |
 | zaloclaw injection-guard | regex chặn/kick | D05(c) | báo nhầm trong cộng đồng AI; bảo mật bằng policy tool theo vai |
 | SPEC-P03 §5.1 bước 5 (bản duyệt 2026-10-09) | DM nạp "lịch sử 20 tin" | D22 | ≤ 5 lượt (10 tin) + ghi chú thành viên; chi phí |
 | 01-CONTRACTS §7.1 (bản duyệt 2026-10-09) | tool `recall_member_profile` (D) | D22 | ghi chú nạp sẵn mỗi lượt DM — tool thừa tốn token định nghĩa |
@@ -205,7 +226,7 @@ Thứ tự bắt buộc: `P01 → P02 → P03 → (P04 ∥ P05 ∥ P06 ∥ P07) 
 - [ ] 🖐 Người dùng xem bóc tách luồng kỹ thuật: tốc độ output · chất lượng · eval · status · sessions (yêu cầu 2026-10-16) — có thể bổ sung SPEC P03 trước khi thi công
 - [x] D31–D33 — SPEC tốc độ + giám sát Telegram — H06↔[R06](reports/R06_kien-truc_toc-do.md) ✅ kỹ thuật (D34)
 - [ ] 🖐 Người dùng: Q-D31-1 (model cho tin gọi bot) · Q-D31-2 (gap nhóm) · Q-D31-3 (billing Gemini, `.env`)
-- [ ] P03 — runtime agent trên LangGraph (G07, G08, G14, G15 local) + runtime D31 — handoff [H07](handoffs/H07_thi-cong_P03.md) phóng 2026-10-17
+- [ ] P03 — runtime agent trên LangGraph (G07, G08, G14, G15 local) + runtime D31 — H07↔[R07](reports/R07_thi-cong_P03.md) 🔁 · H08↔[R08](reports/R08_tham-dinh_P03.md) thẩm định ✅ · H09 vòng sửa (D35) 2026-10-17
 - [ ] P03b — worker D31 + báo động Telegram + dọn dữ liệu (🟠, sau P03)
 - [ ] P04 — tri thức (G12 local sau golden)
 - [ ] P05 — kiểm duyệt (G13, G16)

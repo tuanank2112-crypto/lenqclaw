@@ -15,7 +15,8 @@ Người dùng: "đến đâu rồi? tiếp tục đi".
 - Handoff H07 thi công P03 (SPEC-P03 + runtime D31; giá trị tạm Q-D31-1 CÓ / Q-D31-2 KHÔNG / Q-D31-3 chưa billing ⇒ G23 model thật có thể `blocked`). Phóng worker 🟠.
 - R07 (worker 🟠): 8 commit `5c959ec..d8e744f` + report `6749e34`. SO đo lại: gate exit 0, `npm test` 499/0/0, test:db ×2 = 182 (84/25/73), 0 skip; diff 91 file trong phạm vi (root `package.json` `overrides` + `latency:slo` đúng 01-CONTRACTS §12.1 — H07 cấm nhầm). G23 model thật `blocked` (Vyce 402, Gemini free tier 68 % lỗi). Prompt `rules` khớp nguyên văn SPEC §7.3 ⇒ review 🔴 đạt.
 - Phát hiện SO: nhóm chỉ nói qua `send_group_message` + cạnh `tools → agent` ⇒ lượt mention tốn 2 lời gọi model, ngân sách D31 §3 tính 1 ⇒ đưa vào vòng sửa.
-- H08 thẩm định đối kháng 🔴 (opus, không đọc R07) — `bb9a5e9`, đang chạy.
+- H08 thẩm định đối kháng 🔴 (opus, không đọc R07) — R08 `493feb3`: 3 CHẶN (nhóm đã trả lời vẫn nhận thêm tin "trục trặc" do D4 trước D8; `res.json()` ngoài phân loại lỗi ⇒ mention 0 tin; `owner_dm` lỗi ⇒ bot im với chủ 60 phút), 8 NÊN SỬA, 8 GHI CHÚ, 6/16 đột biến LỌT; đo: mention 2 lời gọi model, RAG 3.
+- SO xác minh 3 CHẶN trong mã ⇒ **D35**: R07 🔁, 13 điểm sửa (gồm bỏ lời gọi chốt sau tool `answers` ⇒ mention 1 / RAG 2, không đổi hình). SPEC 01-CONTRACTS §7.1/§12.2/§12.3/§12.5, SPEC-P03 §2/§6.2, SPEC-D31 §6 sửa theo. G33 (npm bỏ qua `overrides`). H09 vòng sửa ⇒ phóng worker 🟠.
 
 ### ⏭ Treo
 - 🖐 Q-D31-1/2/3 (billing Gemini chặn số đo thật G23).

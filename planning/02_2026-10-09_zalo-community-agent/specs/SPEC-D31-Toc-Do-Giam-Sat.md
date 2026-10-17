@@ -109,7 +109,7 @@ So sánh (cùng mô phỏng): **hiện trạng** (3.6-flash minimal, triage trê
 ```ts
 export async function claimNextInbound(exclude: readonly string[]): Promise<InboundEvent | null>;   // sim-transport.ts — tách từ processInbound
 export async function handleClaimed(e: InboundEvent, handler: InboundHandler): Promise<void>;        // phần sau claim của processInbound (audit lỗi, BUSY_REPLY chỉ DM — D20)
-export async function processInbound(handler?: InboundHandler): Promise<{ processed: number }>;    // GIỮ = claimNextInbound([]) + handleClaimed (test/sim)
+export async function processInbound(handler?: InboundHandler): Promise<{ processed: number }>;    // GIỮ = claimNextInbound([]) (ép thứ tự thread — D35.7) + handleClaimed (test/sim)
 export async function runDispatcher(opts: RunnerOptions & { concurrency: number; pollMs: number }): Promise<void>;
 ```
 Câu nhận (thread key = `thread_id`; một tài khoản ở 0.1):
