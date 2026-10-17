@@ -74,9 +74,10 @@ describe('/api/dev/sim/replay — group-mention.jsonl (db, model gia)', () => {
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ inbound: 6, duplicates: 0, outbound: 3 });
 
-    // 3 luot mention ⇒ 3 × (tool + chot) = 6 lan goi model community; 0 cho tin thuong / sticker / ambient
+    // D35.4 (N6): tool `answers` (send_group_message) chay thanh cong ⇒ node `agent` KHONG goi model chot ⇒ 3 luot mention × 1 lan goi = 3
+    // (truoc la 6 = 3 × (tool + chot); con so cu chi dung voi dist cu chua co D35.4). 0 cho tin thuong / sticker / ambient.
     const after = await sql<{ c: number }>(`select count(*)::int as c from agent_runs where route = 'community'`);
-    expect(after[0]!.c - community[0]!.c).toBe(6);
+    expect(after[0]!.c - community[0]!.c).toBe(3);
 
     const outs = await sql<{ kind: string; trigger: string | null }>(
       `select t.kind, t.trigger from turn_traces t where t.thread_id = 'sim-group-1' order by t.created_at desc limit 3`
