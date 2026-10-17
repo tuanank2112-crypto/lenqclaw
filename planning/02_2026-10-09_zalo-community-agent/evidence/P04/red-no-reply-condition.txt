@@ -1,0 +1,51 @@
+# mutation: src/services/knowledge.ts
+# old: and r.id > m.id and r.sender_uid
+# new: and false and r.id > m.id and r.sender_uid
+# test: src/dbtests/p04-unanswered.db.test.ts
+# exit=1
+
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/p04-unanswered.db.test.ts (6 tests | 1 failed) 640ms
+   × findUnansweredQuestions / pickUnanswered (SPEC-P04 §5) > 5 ca db-checks (b): chi q1 bo trong; runTimers ⇒ dung 1 su kien sys-%; lan 2 ⇒ 0 (da answered_at) 43ms
+     → expected [ Array(3) ] to deeply equal [ { groupMessageId: 7738, …(1) } ]
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  17:19:30
+   Duration  3.27s (transform 521ms, setup 0ms, collect 2.27s, tests 640ms, environment 0ms, prepare 133ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p04-unanswered.db.test.ts > findUnansweredQuestions / pickUnanswered (SPEC-P04 §5) > 5 ca db-checks (b): chi q1 bo trong; runTimers ⇒ dung 1 su kien sys-%; lan 2 ⇒ 0 (da answered_at)
+AssertionError: expected [ Array(3) ] to deeply equal [ { groupMessageId: 7738, …(1) } ]
+
+- Expected
++ Received
+
+  Array [
+    Object {
+      "groupMessageId": 7738,
+      "threadId": "p03g-5a80b85c",
+    },
++   Object {
++     "groupMessageId": 7739,
++     "threadId": "p03g-5a80b85c",
++   },
++   Object {
++     "groupMessageId": 7741,
++     "threadId": "p03g-5a80b85c",
++   },
+  ]
+
+ ❯ src/dbtests/p04-unanswered.db.test.ts:105:51
+    103| 
+    104|     const found = await findUnansweredQuestions(NOW, cfg);
+    105|     expect(found.filter((f) => f.threadId === g)).toEqual([{ groupMess…
+       |                                                   ^
+    106| 
+    107|     const rep = await runTimers(NOW, cfg);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+

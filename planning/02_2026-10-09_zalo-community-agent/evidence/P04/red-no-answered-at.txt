@@ -1,0 +1,102 @@
+# mutation: src/services/knowledge.ts
+# old:       `update group_messages set answered_at = $2::timestamptz where id = $1 and answered_at is null returning id::int as id`,
+# new:       `select $1::int as id, $2::timestamptz as t`,
+# test: src/dbtests/p04-unanswered.db.test.ts
+# exit=1
+
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/p04-unanswered.db.test.ts (6 tests | 4 failed) 666ms
+   × findUnansweredQuestions / pickUnanswered (SPEC-P04 §5) > 5 ca db-checks (b): chi q1 bo trong; runTimers ⇒ dung 1 su kien sys-%; lan 2 ⇒ 0 (da answered_at) 89ms
+     → expected false to be true // Object.is equality
+   × findUnansweredQuestions / pickUnanswered (SPEC-P04 §5) > UNANSWERED_MAX_PER_TICK gioi han so cau/tick (cu nhat truoc); thread dang chay (busyThreads) bi bo qua, KHONG bi danh dau 71ms
+     → expected +0 to be 1 // Object.is equality
+   × findUnansweredQuestions / pickUnanswered (SPEC-P04 §5) > hai tien trinh nhat cung luc ⇒ moi cau chi sinh DUNG 1 su kien 36ms
+     → expected 2 to be 1 // Object.is equality
+   × luot group_unanswered qua do thi (model gia) > nhat ⇒ sys event ⇒ turn: search_knowledge ⇒ send_group_message quote cau hoi (kind group_unanswered, trace ghi, khong triage) 324ms
+     → expected [] to have a length of 1 but got +0
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 2 passed (6)
+   Start at  17:19:35
+   Duration  3.34s (transform 519ms, setup 0ms, collect 2.32s, tests 666ms, environment 0ms, prepare 124ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p04-unanswered.db.test.ts > findUnansweredQuestions / pickUnanswered (SPEC-P04 §5) > 5 ca db-checks (b): chi q1 bo trong; runTimers ⇒ dung 1 su kien sys-%; lan 2 ⇒ 0 (da answered_at)
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/dbtests/p04-unanswered.db.test.ts:119:69
+    117|       [g]
+    118|     );
+    119|     expect(marked.find((m) => m.zalo_msg_id === p('q1'))!.answered).to…
+       |                                                                     ^
+    120|     expect(await auditCount('unanswered.picked', g)).toBe(1);
+    121| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/dbtests/p04-unanswered.db.test.ts > findUnansweredQuestions / pickUnanswered (SPEC-P04 §5) > UNANSWERED_MAX_PER_TICK gioi han so cau/tick (cu nhat truoc); thread dang chay (busyThreads) bi bo qua, KHONG bi danh dau
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/dbtests/p04-unanswered.db.test.ts:164:111
+    162|     await pickUnanswered(NOW, one, new Set(), [g]);
+    163|     expect(await sysEvents(g)).toBe(1);
+    164|     expect(await count(`select 1 from group_messages where thread_id =…
+       |                                                                                                               ^
+    165|   });
+    166| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/dbtests/p04-unanswered.db.test.ts > findUnansweredQuestions / pickUnanswered (SPEC-P04 §5) > hai tien trinh nhat cung luc ⇒ moi cau chi sinh DUNG 1 su kien
+AssertionError: expected 2 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 2
+
+ ❯ src/dbtests/p04-unanswered.db.test.ts:171:32
+    169|     await msg({ thread: g, msgId: `p04-race-${g}`, sender: 'u-race', a…
+    170|     await Promise.all([pickUnanswered(NOW, cfg, new Set(), [g]), pickU…
+    171|     expect(await sysEvents(g)).toBe(1);
+       |                                ^
+    172|   });
+    173| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/dbtests/p04-unanswered.db.test.ts > luot group_unanswered qua do thi (model gia) > nhat ⇒ sys event ⇒ turn: search_knowledge ⇒ send_group_message quote cau hoi (kind group_unanswered, trace ghi, khong triage)
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/dbtests/p04-unanswered.db.test.ts:194:102
+    192|     expect(out[0]!.body.quote?.msgId).toBe(`p04-gq-${g}`);
+    193|     expect(modelCalls(g)).toBeGreaterThanOrEqual(2);
+    194|     expect(await sql(`select 1 from group_messages where id = $1 and a…
+       |                                                                                                      ^
+    195|     await runTimers(new Date(NOW.getTime() + 2000), cfg);
+    196|     expect(await sysEvents(g)).toBe(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+

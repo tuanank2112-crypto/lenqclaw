@@ -1,0 +1,74 @@
+# mutation: src/retrieval/search-knowledge.ts
+# old: const wantVector = opts.useVector !== false && cfg.embedProvider !== 'none';
+# new: const wantVector = false;
+# test: src/dbtests/p04-knowledge.db.test.ts
+# exit=1
+
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/p04-knowledge.db.test.ts (14 tests | 3 failed) 691ms
+   × searchKnowledge — lai (lexical + vector + RRF) > muc CHI-VECTOR (khong khop tu khoa nao) lot top K, vectorRank khong null; muc khop tu khoa co ca hai hang 72ms
+     → expected false to be true // Object.is equality
+   × searchKnowledge — lai (lexical + vector + RRF) > muc approved nhung chua co embedding KHONG vao danh sach vector; draft co embedding cung khong 34ms
+     → expected [] to include 'p04doc-02a61041'
+   × tool search_knowledge (SPEC-P04 §3) > rut body con <= 600 ky tu quanh token khop, audit kb.search {hits, vector}, tra title + note trich dan 21ms
+     → expected false to be true // Object.is equality
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 11 passed (14)
+   Start at  17:19:27
+   Duration  1.56s (transform 193ms, setup 0ms, collect 466ms, tests 691ms, environment 0ms, prepare 151ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p04-knowledge.db.test.ts > searchKnowledge — lai (lexical + vector + RRF) > muc CHI-VECTOR (khong khop tu khoa nao) lot top K, vectorRank khong null; muc khop tu khoa co ca hai hang
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/dbtests/p04-knowledge.db.test.ts:271:24
+    269| 
+    270|     const { hits, vectorUsed } = await searchKnowledgeDetailed(query, …
+    271|     expect(vectorUsed).toBe(true);
+       |                        ^
+    272|     const v = hits.find((h) => h.documentId === id && h.sectionId === …
+    273|     expect(v).toBeDefined();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/dbtests/p04-knowledge.db.test.ts > searchKnowledge — lai (lexical + vector + RRF) > muc approved nhung chua co embedding KHONG vao danh sach vector; draft co embedding cung khong
+AssertionError: expected [] to include 'p04doc-02a61041'
+ ❯ src/dbtests/p04-knowledge.db.test.ts:295:17
+    293|     const { hits } = await searchKnowledgeDetailed(`${t}`, { topK: 20 …
+    294|     const ids = hits.map((h) => h.documentId);
+    295|     expect(ids).toContain(id);
+       |                 ^
+    296|     expect(ids).not.toContain(draft); // ban draft co vector y het nhu…
+    297|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/dbtests/p04-knowledge.db.test.ts > tool search_knowledge (SPEC-P04 §3) > rut body con <= 600 ky tu quanh token khop, audit kb.search {hits, vector}, tra title + note trich dan
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/dbtests/p04-knowledge.db.test.ts:347:31
+    345|     const a = await sql<{ data: { hits: number; vector: boolean } }>(`…
+    346|     expect(a).toHaveLength(1);
+    347|     expect(a[0]!.data.vector).toBe(true);
+       |                               ^
+    348|     expect(a[0]!.data.hits).toBe(out.hits.length);
+    349| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+

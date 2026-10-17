@@ -1,0 +1,57 @@
+# mutation: src/retrieval/search-knowledge.ts
+# old: `d.status = 'approved' and d.effective_from <=
+# new: `d.status is not null and d.effective_from <=
+# test: src/dbtests/p04-knowledge.db.test.ts
+# exit=1
+
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/p04-knowledge.db.test.ts (14 tests | 2 failed) 779ms
+   × searchKnowledge — lexical (useVector:false) > draft / deprecated / het han / chua hieu luc ⇒ 0 hit; approved con han ⇒ co hit 61ms
+     → expected [ 'p04doc-17d9b36d', …(3) ] to deeply equal [ Array(2) ]
+   × searchKnowledge — lai (lexical + vector + RRF) > muc approved nhung chua co embedding KHONG vao danh sach vector; draft co embedding cung khong 31ms
+     → expected [ 'p04doc-84a1e322', …(19) ] to not include 'p04doc-84a1e322'
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 12 passed (14)
+   Start at  17:19:23
+   Duration  1.66s (transform 194ms, setup 0ms, collect 482ms, tests 779ms, environment 0ms, prepare 157ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p04-knowledge.db.test.ts > searchKnowledge — lexical (useVector:false) > draft / deprecated / het han / chua hieu luc ⇒ 0 hit; approved con han ⇒ co hit
+AssertionError: expected [ 'p04doc-17d9b36d', …(3) ] to deeply equal [ Array(2) ]
+
+- Expected
++ Received
+
+  Array [
++   "p04doc-17d9b36d",
++   "p04doc-62cc64f3",
+    "p04doc-7192349d",
+    "p04doc-fb88ca22",
+  ]
+
+ ❯ src/dbtests/p04-knowledge.db.test.ts:185:50
+    183|     await mkDoc({ t, sections: sec, effectiveFrom: day(1) }); // mai m…
+    184|     const hits = await searchKnowledge(t, { useVector: false, topK: 20…
+    185|     expect(hits.map((h) => h.documentId).sort()).toEqual([ok, edge].so…
+       |                                                  ^
+    186|   });
+    187| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/dbtests/p04-knowledge.db.test.ts > searchKnowledge — lai (lexical + vector + RRF) > muc approved nhung chua co embedding KHONG vao danh sach vector; draft co embedding cung khong
+AssertionError: expected [ 'p04doc-84a1e322', …(19) ] to not include 'p04doc-84a1e322'
+ ❯ src/dbtests/p04-knowledge.db.test.ts:296:21
+    294|     const ids = hits.map((h) => h.documentId);
+    295|     expect(ids).toContain(id);
+    296|     expect(ids).not.toContain(draft); // ban draft co vector y het nhu…
+       |                     ^
+    297|   });
+    298| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
