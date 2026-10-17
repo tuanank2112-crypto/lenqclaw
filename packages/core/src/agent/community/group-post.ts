@@ -93,6 +93,7 @@ export async function postGroupText(ctx: GroupTurnContext, a: PostGroupArgs): Pr
     threadType: 'group',
     kind: 'text',
     body: { text: body, ...(quote ? { quote } : {}), ...(mentions.length > 0 ? { mentions } : {}) },
+    inboundEventId: ctx.inboundEventId,
   });
 
   const inserted = await sql<{ id: number }>(

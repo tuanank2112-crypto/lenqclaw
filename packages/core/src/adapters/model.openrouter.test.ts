@@ -85,7 +85,7 @@ describe('callModel — nhanh openrouter (01-CONTRACTS §2c)', () => {
       provider: { data_collection: string };
     };
     expect(body.model).toBe('or-test-main');
-    expect(body.max_tokens).toBe(16000);
+    expect(body.max_tokens).toBe(1024);
     // BAT BUOC — Luat 91/2025 (01-CONTRACTS §2c).
     expect(body.provider.data_collection).toBe('deny');
     expect(body.messages[0]!.role).toBe('system');

@@ -73,3 +73,62 @@ export async function closeDb(): Promise<void> {
     pool = null;
   }
 }
+
+// ---------------------------------------------------------------------------
+// D31 (BB-19): khoa mot ban — advisory lock Postgres tren ket noi RIENG
+// ---------------------------------------------------------------------------
+
+export interface AdvisoryLock {
+  release(): Promise<void>;
+}
+
+/**
+ * Giu `pg_try_advisory_lock(hashtextextended(name, 0))` tren mot `pg.Client` RIENG (khong lay tu pool) suot doi tien
+ * trinh. Khoa dang bi giu boi ban khac ⇒ dong client, tra `null`. Ket noi giu khoa dut (`error`/`end`) khi dang giu ⇒
+ * goi `onLost` (caller: dung nhan viec, exit 1 — supervisor khoi dong lai va lay lai khoa).
+ */
+export async function holdAdvisoryLock(
+  name: 'lenqclaw:runner' | 'lenqclaw:worker:community',
+  onLost: (err: Error) => void
+): Promise<AdvisoryLock | null> {
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) throw new Error('DATABASE_URL chua duoc cau hinh. Xem specs/OPERATIONS.md §3.');
+  const client = new pg.Client({ connectionString });
+  await client.connect();
+  let held = false;
+  let released = false;
+  const lost = (err?: Error) => {
+    if (!held || released) return;
+    held = false;
+    onLost(err ?? new Error('Ket noi giu advisory lock da dong.'));
+  };
+  client.on('error', (err) => lost(err));
+  client.on('end', () => lost());
+  try {
+    const res = await client.query<{ ok: boolean }>('select pg_try_advisory_lock(hashtextextended($1, 0)) as ok', [name]);
+    if (!res.rows[0]?.ok) {
+      released = true;
+      await client.end().catch(() => undefined);
+      return null;
+    }
+  } catch (err) {
+    released = true;
+    await client.end().catch(() => undefined);
+    throw err;
+  }
+  held = true;
+  return {
+    async release() {
+      if (released) return;
+      released = true;
+      held = false;
+      try {
+        await client.query('select pg_advisory_unlock(hashtextextended($1, 0))', [name]);
+      } catch {
+        /* ket noi da dut — khoa tu nha */
+      }
+      await client.end().catch(() => undefined);
+    },
+  };
+}
+

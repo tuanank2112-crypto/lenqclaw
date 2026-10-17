@@ -79,8 +79,8 @@ describe('callModel — nhanh gemini (01-CONTRACTS §2b)', () => {
       generationConfig: { maxOutputTokens: number };
     };
     expect(body.systemInstruction.parts[0]!.text).toBe('ban la tro ly');
-    // Đ19-2: max_tokens = 16000 ca hai nhanh (Gemini: generationConfig.maxOutputTokens).
-    expect(body.generationConfig.maxOutputTokens).toBe(16000);
+    // D31 T10 (doi tu Đ19-2: 16000): route community => MODEL_MAX_OUTPUT_TOKENS = 1024 (Gemini: generationConfig.maxOutputTokens).
+    expect(body.generationConfig.maxOutputTokens).toBe(1024);
     expect(body.contents[0]!.role).toBe('user');
     expect(body.contents[0]!.parts).toContainEqual({ text: 'xin chao' });
     expect(body.contents[0]!.parts).toContainEqual({ inlineData: { mimeType: 'image/png', data: 'AAAA' } });

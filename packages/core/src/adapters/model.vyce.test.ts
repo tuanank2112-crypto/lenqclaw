@@ -91,7 +91,7 @@ describe('callModel — nhanh vyce (01-CONTRACTS §2d)', () => {
       provider?: unknown;
     };
     expect(body.model).toBe('vyce-test-main');
-    expect(body.max_tokens).toBe(16000);
+    expect(body.max_tokens).toBe(1024);
     // §2d: KHONG gui truong `provider` (rieng OpenRouter §2c).
     expect(body.provider).toBeUndefined();
     expect('provider' in body).toBe(false);

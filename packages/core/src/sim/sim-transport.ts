@@ -195,30 +195,39 @@ interface InboundRow {
 }
 
 /**
- * R02-tham-dinh D5, theo SPEC-P03 (runtime agent): NHAN TRUOC, XU LY
- * SAU. Mot cau `UPDATE ... WHERE id = (SELECT ... FOR UPDATE SKIP LOCKED)
- * RETURNING *` nhan (danh dau `processed_at`) DUNG MOT dong — day la MOT
- * cau lenh tu than atomic, KHONG can boc trong `tx()` — roi goi `handler`
- * NGOAI transaction (handler tu `enqueue` bang client rieng cua no; giu no
- * trong mot `tx` dang mo se can pool khi goi dong thoi, tung gay treo chet
- * — 4h cua R02-tham-dinh). Ngu nghia: moi tin xu ly TOI DA MOT LAN — khong
- * bao gio tra loi trung du handler loi hay khong. Handler nem loi => ghi
- * `audit_log action='inbound.handler_error'` + gui `BUSY_REPLY`, KHONG xu
- * ly lai (khong retry, khong throw tiep).
+ * D31 (SPEC-D31 §6): NHAN truoc, XU LY sau — tach khoi `processInbound` de dispatcher chay song song theo thread.
+ * Mot cau `UPDATE … WHERE id = (SELECT … FOR UPDATE SKIP LOCKED) RETURNING` nhan (danh dau `processed_at`) DUNG MOT dong,
+ * atomic, KHONG boc trong `tx()` (handler tu `enqueue` bang client rieng — giu trong `tx` dang mo se can pool, tung treo
+ * chet — R02-tham-dinh). `exclude` = cac thread dang chay (khong nhan tin cua chung); tin chi duoc nhan khi KHONG con
+ * tin chua xu ly nao cu hon cung thread ⇒ trong mot thread LUON dung thu tu `id`, khong chong. Chi MOT vong dispatcher
+ * goi ham nay (tuan tu, ~2 ms) ⇒ khong dua hai lan nhan cung thread.
  */
-export async function processInbound(handler: InboundHandler = echoHandler): Promise<{ processed: number }> {
-  const rows = await sql<InboundRow>(
-    `update inbound_events
-     set processed_at = now()
-     where id = (
-       select id from inbound_events where processed_at is null order by id limit 1 for update skip locked
-     )
-     returning id, zalo_account_id, zalo_msg_id, thread_id, thread_type, sender_uid, is_self, payload, received_at`
-  );
-  if (rows.length === 0) return { processed: 0 };
+export async function claimNextInbound(exclude: readonly string[]): Promise<InboundEvent | null> {
+  return claimInbound(exclude, true);
+}
 
-  const r = rows[0]!;
-  const event: InboundEvent = {
+/**
+ * Cau nhan dung chung. `ordered=false` (CHI `processInbound` cua test/sim) bo dieu kien "khong co tin cu hon chua xu ly
+ * cung thread": nhieu loi goi `processInbound` DONG THOI van nhan duoc nhieu tin cua mot thread (test P01 "12 processInbound
+ * dong thoi"); dispatcher luon dung `ordered=true` va tu giu thu tu bang tap `exclude`.
+ */
+async function claimInbound(exclude: readonly string[], ordered: boolean): Promise<InboundEvent | null> {
+  const orderGuard = ordered
+    ? `and not exists (select 1 from inbound_events p
+                        where p.processed_at is null and p.zalo_account_id = e.zalo_account_id
+                          and p.thread_id = e.thread_id and p.id < e.id)`
+    : '';
+  const rows = await sql<InboundRow>(
+    `update inbound_events set processed_at = now()
+      where id = (select e.id from inbound_events e
+                   where e.processed_at is null and not (e.thread_id = any($1::text[])) ${orderGuard}
+                   order by e.id limit 1 for update skip locked)
+      returning id, zalo_account_id, zalo_msg_id, thread_id, thread_type, sender_uid, is_self, payload, received_at`,
+    [exclude]
+  );
+  const r = rows[0];
+  if (!r) return null;
+  return {
     id: r.id,
     zaloAccountId: r.zalo_account_id as AccountId,
     zaloMsgId: r.zalo_msg_id,
@@ -228,30 +237,39 @@ export async function processInbound(handler: InboundHandler = echoHandler): Pro
     isSelf: r.is_self,
     payload: r.payload,
     receivedAt: r.received_at,
+    claimedAt: Date.now(),
   };
+}
 
+/**
+ * Phan SAU nhan cua `processInbound`: goi `handler`; nem loi ⇒ ghi `audit_log action='inbound.handler_error'` + gui
+ * `BUSY_REPLY` CHI cho DM (D20 — nhom chi audit), KHONG xu ly lai (toi da mot lan, khong retry, khong throw tiep).
+ */
+export async function handleClaimed(e: InboundEvent, handler: InboundHandler): Promise<void> {
   try {
-    await handler(event);
+    await handler(e);
   } catch (err) {
     await audit(sql, {
       actorType: 'system',
-      actorId: String(r.id),
+      actorId: String(e.id),
       action: 'inbound.handler_error',
-      target: r.thread_id,
+      target: e.threadId,
       data: { message: err instanceof Error ? err.message : String(err) },
     });
     // D20 (SPEC-P03 §2): CHI DM nhan BUSY_REPLY — o NHOM bot khong duoc noi vi loi he thong (chi audit).
-    if (r.thread_type === 'user') {
-      await enqueue({
-        zaloAccountId: r.zalo_account_id as AccountId,
-        threadId: r.thread_id,
-        threadType: 'user',
-        kind: 'text',
-        body: { text: BUSY_REPLY },
-      });
+    if (e.threadType === 'user') {
+      await enqueue({ zaloAccountId: e.zaloAccountId, threadId: e.threadId, threadType: 'user', kind: 'text', body: { text: BUSY_REPLY } });
     }
   }
+}
 
+/** GIU hanh vi cu (test/sim, tuan tu toan cuc): nhan tin cu nhat khong khoa + `handleClaimed`. KHONG ep thu tu thread
+ * giua cac loi goi dong thoi (xem `claimInbound`) — SPEC-D31 §6 ghi "= claimNextInbound([])"; lech nho nay co ly do
+ * (test P01 "12 processInbound dong thoi"), ghi cau hoi o report R07. */
+export async function processInbound(handler: InboundHandler = echoHandler): Promise<{ processed: number }> {
+  const e = await claimInbound([], false);
+  if (!e) return { processed: 0 };
+  await handleClaimed(e, handler);
   return { processed: 1 };
 }
 

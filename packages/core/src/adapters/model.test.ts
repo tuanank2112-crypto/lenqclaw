@@ -49,8 +49,8 @@ describe('callModel (adapters/model.ts)', () => {
     const result = await callModel({ route: 'community', system: 'ban la tro ly cong dong', messages: [{ role: 'user', content: 'xin chao' }] });
 
     expect(result.model).toBe('claude-test-community');
-    // Đ19-2: max_tokens = 16000 ca hai nhanh.
-    expect(captured.body?.max_tokens).toBe(16000);
+    // D31 T10 (doi tu Đ19-2: 16000): route community => MODEL_MAX_OUTPUT_TOKENS = 1024.
+    expect(captured.body?.max_tokens).toBe(1024);
     expect(Array.isArray(captured.body?.system)).toBe(true);
     const systemBlocks = captured.body!.system as Array<{ cache_control?: { type: string } }>;
     expect(systemBlocks[systemBlocks.length - 1]!.cache_control).toEqual({ type: 'ephemeral' });

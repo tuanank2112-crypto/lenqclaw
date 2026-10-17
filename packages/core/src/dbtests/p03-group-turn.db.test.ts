@@ -17,6 +17,7 @@ import {
   agentRunsForThread,
   auditCount,
   count,
+  DELAY,
   drainStale,
   EMPTY,
   FN,
@@ -553,6 +554,115 @@ describe('P03 — luat trong tool / chinh sach', () => {
     await runAll();
     expect(await auditCount('router.forged_system_event', g)).toBe(1);
     expect(await tracesFor(g)).toHaveLength(0);
+  });
+});
+
+describe('P03 — D31 toc do (BB-18): han chot, lan, typing som', () => {
+  it('(t) mention + fetch gia tre 6000 ms ⇒ MODEL_DOWN_GROUP_REPLY trong han chot fast, deadline_hit=true, agent_runs.outcome=deadline', async () => {
+    const g = await mkGroup();
+    script(g, [DELAY(6000, T('tra loi qua tre'))]);
+    const { msgId } = await send({ threadId: g, senderUid: 'sim-mem-1', text: 'ơi bot', mentionBot: true });
+    const t0 = Date.now();
+    await runAll();
+    expect(Date.now() - t0).toBeLessThan(5500);
+    const out = await outboxFor(g);
+    expect(out.map((o) => o.body.text)).toEqual([MODEL_DOWN_GROUP_REPLY]);
+    const lat = await sql<{ ms: number }>(
+      `select (extract(epoch from (o.created_at - i.received_at)) * 1000)::int as ms
+         from outbox o join inbound_events i on i.id = o.inbound_event_id
+        where o.thread_id = $1 and o.kind = 'text' and i.zalo_msg_id = $2`,
+      [g, msgId]
+    );
+    expect(lat[0]!.ms).toBeLessThanOrEqual(3500 + 300);
+    const t = (await tracesFor(g))[0]!;
+    const row = await sql<{ deadline_hit: boolean; lane: string; model_ms: number; queued_ms: number | null }>(
+      `select deadline_hit, lane, model_ms, queued_ms from turn_traces where id = $1`,
+      [t.id]
+    );
+    expect(row[0]).toMatchObject({ deadline_hit: true, lane: 'fast' });
+    expect(row[0]!.model_ms).toBeGreaterThan(2000);
+    expect(t.outcome).toBe('model_down');
+    const runs = await sql<{ outcome: string }>(`select outcome from agent_runs where turn_id = $1::uuid`, [t.id]);
+    expect(runs.map((r) => r.outcome)).toEqual(['deadline']);
+  }, 15_000);
+
+  it('(u) mention ⇒ search_knowledge ⇒ tra loi: lane=rag; typing TRUOC agent_runs dau tien; 0 triage cho tin do; outbox text mang inbound_event_id', async () => {
+    const g = await mkGroup({ moderation: true });
+    script(g, [TOOLS({ name: 'search_knowledge', args: { query: 'agent chatbot' } }), REPLY('Agent khác chatbot kịch bản (theo tài liệu).'), T('xong')]);
+    const triBefore = await count(`select 1 from agent_runs where route = 'triage'`);
+    const { msgId } = await send({ threadId: g, senderUid: 'sim-mem-1', text: 'agent khác chatbot ở đâu?', mentionBot: true });
+    await runAll();
+    const t = (await tracesFor(g))[0]!;
+    expect(t.outcome).toBe('replied');
+    const meta = await sql<{ lane: string; tool_ms: number; inbound_event_id: string; triage_ms: number | null; pre_turn_ms: number | null }>(
+      `select lane, tool_ms, inbound_event_id::text, triage_ms, pre_turn_ms from turn_traces where id = $1`,
+      [t.id]
+    );
+    expect(meta[0]!.lane).toBe('rag');
+    expect(meta[0]!.triage_ms).toBeNull();
+    expect(meta[0]!.pre_turn_ms).not.toBeNull();
+    expect(await count(`select 1 from agent_runs where route = 'triage'`)).toBe(triBefore);
+    const ev = await sql<{ id: string }>(`select id::text from inbound_events where thread_id = $1 and zalo_msg_id = $2`, [g, msgId]);
+    const out = await sql<{ inbound_event_id: string | null }>(`select inbound_event_id::text from outbox where thread_id = $1 and kind = 'text'`, [g]);
+    expect(out).toEqual([{ inbound_event_id: ev[0]!.id }]);
+    const order = await sql<{ typing_first: boolean }>(
+      `select (select min(created_at) from outbox where thread_id = $1 and kind = 'typing')
+            < (select min(created_at) from agent_runs where turn_id = $2::uuid) as typing_first`,
+      [g, t.id]
+    );
+    expect(order[0]!.typing_first).toBe(true);
+  });
+
+  it('D31: con < TOOL_MIN_MS toi han chot ⇒ tool KHONG chay, model thay DeadlineExceeded', async () => {
+    const g = await mkGroup();
+    process.env.TOOL_MIN_MS = '5000'; // luon lon hon thoi gian con lai cua lan fast (3500 ms)
+    try {
+      script(g, [TOOLS({ name: 'search_knowledge', args: { query: 'agent' } }), T('Mình trả lời khi chưa tra được tài liệu.')]);
+      await send({ threadId: g, senderUid: 'sim-mem-1', text: 'tra giúp', mentionBot: true });
+      await runAll();
+    } finally {
+      delete process.env.TOOL_MIN_MS;
+    }
+    expect(await auditCount('kb.search', g)).toBe(0);
+    expect(JSON.stringify(modelBodies(g)[1]!.contents)).toContain('DeadlineExceeded');
+    const t = (await tracesFor(g))[0]!;
+    expect(t.rounds).toBe(1);
+    const lane = await sql<{ lane: string }>(`select lane from turn_traces where id = $1`, [t.id]);
+    expect(lane[0]!.lane).toBe('fast'); // tool chua chay ⇒ chua nang lan
+  });
+
+  it('D31: luot nen (ambient) dung lan background + model mac dinh (khong tier fast)', async () => {
+    process.env.MODEL_COMMUNITY_FAST = 'fast-model-only-for-interactive';
+    try {
+      const g = await mkGroup({ mode: 'ambient' });
+      script(g, [T('im')]);
+      await send({ threadId: g, senderUid: 'sim-mem-2', text: 'tin ambient' });
+      await runAll();
+      await runTimers(new Date(Date.now() + 25_000));
+      await runAll();
+      const t = (await tracesFor(g))[0]!;
+      const lane = await sql<{ lane: string }>(`select lane from turn_traces where id = $1`, [t.id]);
+      expect(lane[0]!.lane).toBe('background');
+      const model = await sql<{ model: string }>(`select model from agent_runs where turn_id = $1::uuid`, [t.id]);
+      expect(model[0]!.model).toBe('gemini-fake-main'); // MODEL_COMMUNITY, khong phai ban fast
+    } finally {
+      delete process.env.MODEL_COMMUNITY_FAST;
+    }
+  });
+
+  it('D31: luot tuong tac dung model fast (MODEL_COMMUNITY_FAST), co dinh ca luot', async () => {
+    process.env.MODEL_COMMUNITY_FAST = 'fast-model-x';
+    try {
+      const g = await mkGroup();
+      script(g, [TOOLS({ name: 'describe_capabilities', args: {} }), REPLY('Mình làm được nhiều việc.'), T('xong')]);
+      await send({ threadId: g, senderUid: 'sim-mem-1', text: 'bạn làm được gì', mentionBot: true });
+      await runAll();
+      const t = (await tracesFor(g))[0]!;
+      const models = await sql<{ model: string }>(`select distinct model from agent_runs where turn_id = $1::uuid`, [t.id]);
+      expect(models).toEqual([{ model: 'fast-model-x' }]);
+    } finally {
+      delete process.env.MODEL_COMMUNITY_FAST;
+    }
   });
 });
 

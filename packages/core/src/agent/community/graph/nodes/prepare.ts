@@ -37,7 +37,7 @@ export const prepareNode: NodeFn<TurnStateT> = async (s) => {
   if (isInteractive(req.kind)) {
     // D31 T7: "dang go" som — truoc moi doc DB khac. Loi enqueue typing khong lam hong luot.
     try {
-      await enqueue({ zaloAccountId: req.account, threadId: req.threadId, threadType: req.threadType, kind: 'typing', body: { typing: true } });
+      await enqueue({ zaloAccountId: req.account, threadId: req.threadId, threadType: req.threadType, kind: 'typing', body: { typing: true }, inboundEventId: req.inboundEventId });
     } catch {
       /* typing la tin hieu phu */
     }

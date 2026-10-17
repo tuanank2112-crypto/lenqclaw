@@ -37,6 +37,8 @@ export interface OutboxInsert {
    * dich vu cu khong phai doi kieu; kieu chat nam o `OutboxBody`. */
   body: OutboxBody | Record<string, unknown>;
   notBefore?: Date;
+  /** D31: `inbound_events.id` dang xu ly ⇒ `outbox.inbound_event_id` (do tin tra loi; pacer uu tien thu tu). */
+  inboundEventId?: number;
 }
 
 export interface Transport {
@@ -48,8 +50,8 @@ export interface Transport {
 /** Ham DUY NHAT ghi bang `outbox` (BB-04). */
 export async function enqueue(msg: OutboxInsert): Promise<number> {
   const rows = await sql<{ id: number }>(
-    `insert into outbox (zalo_account_id, thread_id, thread_type, kind, body, not_before)
-     values ($1,$2,$3,$4,$5,$6)
+    `insert into outbox (zalo_account_id, thread_id, thread_type, kind, body, not_before, inbound_event_id)
+     values ($1,$2,$3,$4,$5,$6,$7)
      returning id`,
     [
       msg.zaloAccountId,
@@ -58,6 +60,7 @@ export async function enqueue(msg: OutboxInsert): Promise<number> {
       msg.kind,
       JSON.stringify(msg.body),
       msg.notBefore ?? new Date(),
+      msg.inboundEventId ?? null,
     ]
   );
   return rows[0]!.id;

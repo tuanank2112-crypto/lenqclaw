@@ -25,6 +25,7 @@
     "check:adapter-boundary": "node scripts/check_adapter_boundary.mjs",
     "check:agent-tools": "node scripts/check_agent_tools.mjs",
     "eval:golden": "tsx scripts/eval_golden.mjs",
+    "latency:slo": "node --env-file=.env --import tsx scripts/latency_slo.mjs",
     "gate": "node scripts/gate.mjs"
   },
   "devDependencies": {

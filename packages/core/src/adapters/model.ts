@@ -27,7 +27,8 @@ import type {
   Usage,
 } from '@anthropic-ai/sdk/resources/messages';
 import { sql } from './db.js';
-import { ModelUnavailableError } from '../domain/errors.js';
+import { ModelDeadlineError, ModelUnavailableError } from '../domain/errors.js';
+import { readCommunityConfig } from '../services/community-config.js';
 
 // Re-export de noi khac (vd test) khong phai tu import "@anthropic-ai/sdk"
 // truc tiep — giu dung MOT diem import SDK trong toan repo (BB-07).
@@ -51,6 +52,10 @@ export interface ModelCall {
   conversationId?: string | null;
   /** D24: id luot agent => `agent_runs.turn_id` (= `turn_traces.id`); thieu => NULL (triage, embed). */
   turnId?: string;
+  /** D31 (T2): route `community` + 'fast' => `MODEL_COMMUNITY_FAST`; thieu => 'default'. */
+  tier?: 'fast' | 'default';
+  /** D31 (BB-18): han chot cua luot (epoch ms). Moi lan thu: timeout = min(MODEL_CALL_TIMEOUT_MS, deadlineAt - now). */
+  deadlineAt?: number;
 }
 
 export interface CallModelResult {
@@ -143,6 +148,8 @@ const DEFAULT_MODEL_ANTHROPIC = 'claude-opus-5';
 const DEFAULT_MODEL_GEMINI = 'gemini-3.6-flash';
 const DEFAULT_MODEL_OPENROUTER = 'google/gemini-3.6-flash';
 const DEFAULT_MODEL_VYCE = 'deepseek-v4-flash';
+const DEFAULT_MODEL_FAST_GEMINI = 'gemini-3.5-flash-lite';
+const DEFAULT_MODEL_FAST_OPENROUTER = 'google/gemini-3.5-flash-lite';
 const DEFAULT_MODEL_TRIAGE_ANTHROPIC = 'claude-haiku-4-5';
 const DEFAULT_MODEL_TRIAGE_GEMINI = 'gemini-3.5-flash-lite';
 const DEFAULT_MODEL_TRIAGE_OPENROUTER = 'google/gemini-3.5-flash-lite';
@@ -171,7 +178,18 @@ export function resolveProvider(): ModelProvider {
  * ('gemini-3.6-flash' khi gemini, 'claude-opus-5' khi anthropic,
  * 'google/gemini-3.6-flash' khi openrouter — 01-CONTRACTS §2c,
  * 'deepseek-v4-flash' khi vyce — 01-CONTRACTS §2d). */
-export function resolveModel(route: ModelRoute, provider: ModelProvider = resolveProvider()): string {
+export function resolveModel(
+  route: ModelRoute,
+  provider: ModelProvider = resolveProvider(),
+  tier: 'fast' | 'default' = 'default'
+): string {
+  // D31 T2: luot tuong tac dung model nhanh (route community + tier 'fast'); anthropic/vyce = model route community.
+  if (route === 'community' && tier === 'fast') {
+    const fast = process.env.MODEL_COMMUNITY_FAST?.trim();
+    if (fast) return fast;
+    if (provider === 'gemini') return DEFAULT_MODEL_FAST_GEMINI;
+    if (provider === 'openrouter') return DEFAULT_MODEL_FAST_OPENROUTER;
+  }
   const perRoute = process.env[ROUTE_ENV[route]]?.trim();
   if (perRoute) return perRoute;
   const def = process.env.MODEL_DEFAULT?.trim();
@@ -211,6 +229,50 @@ function resolveFallbackModels(provider: ModelProvider): string[] {
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** Gioi han thoi gian cua MOT loi goi `callModel` (D31, BB-18). */
+interface CallLimits {
+  deadlineAt?: number;
+  callTimeoutMs: number;
+  minAttemptMs: number;
+  /** Triage: mot signal co dinh cho ca loi goi (khong retry). */
+  fixed?: AbortSignal;
+}
+
+function limitsFor(c: ModelCall): CallLimits {
+  const cfg = readCommunityConfig();
+  return { deadlineAt: c.deadlineAt, callTimeoutMs: cfg.modelCallTimeoutMs, minAttemptMs: cfg.modelMinAttemptMs };
+}
+
+/** Signal cho MOT lan thu; con < MODEL_MIN_ATTEMPT_MS toi han chot => ModelDeadlineError, KHONG goi mang. */
+function attemptSignal(l: CallLimits | undefined): AbortSignal | undefined {
+  if (!l) return undefined;
+  if (l.fixed) return l.fixed;
+  let timeout = l.callTimeoutMs;
+  if (l.deadlineAt !== undefined) {
+    const remaining = l.deadlineAt - Date.now();
+    if (remaining < l.minAttemptMs) {
+      throw new ModelDeadlineError(`Con ${Math.max(0, Math.round(remaining))} ms toi han chot (< ${l.minAttemptMs} ms) — khong goi model.`);
+    }
+    timeout = Math.min(timeout, remaining);
+  }
+  return AbortSignal.timeout(timeout);
+}
+
+/** Da toi han chot (du sai so nho) — fetch bi huy vi het gio, khong phai loi mang that. */
+function deadlinePassed(l: CallLimits | undefined): boolean {
+  return l?.deadlineAt !== undefined && Date.now() >= l.deadlineAt - 25;
+}
+
+/** Sau khi cho `ms`, con du gio cho mot lan thu nua khong. */
+function timeLeftAfter(l: CallLimits | undefined, ms: number): boolean {
+  return l?.deadlineAt === undefined || l.deadlineAt - (Date.now() + ms) >= l.minAttemptMs;
+}
+
+/** `max_tokens` / `maxOutputTokens`: route community = MODEL_MAX_OUTPUT_TOKENS (1024, D31 T10); route khac giu tran cu. */
+function maxTokensFor(route: ModelRoute): number {
+  return route === 'community' ? readCommunityConfig().modelMaxOutputTokens : MAX_OUTPUT_TOKENS;
 }
 
 function buildSystem(system: string): TextBlockParam[] {
@@ -262,7 +324,7 @@ async function recordAgentRun(row: {
   outputTokens: number | null;
   cacheReadTokens: number | null;
   latencyMs: number;
-  outcome: 'ok' | 'error';
+  outcome: 'ok' | 'error' | 'deadline';
 }): Promise<void> {
   try {
     await sql(
@@ -297,14 +359,15 @@ async function recordAgentRun(row: {
 async function callAnthropicOnce(
   model: string,
   c: ModelCall,
-  signal?: AbortSignal
+  limits?: CallLimits
 ): Promise<{ message: Message; usage: Usage }> {
   const client = getAnthropicClient(c.route);
+  const signal = attemptSignal(limits);
   try {
     const message = await client.messages.create(
       {
         model,
-        max_tokens: MAX_OUTPUT_TOKENS,
+        max_tokens: maxTokensFor(c.route),
         system: buildSystem(c.system),
         messages: withImages(c.messages, c.images),
         tools: withCacheControlOnLastTool(c.tools),
@@ -313,6 +376,10 @@ async function callAnthropicOnce(
     );
     return { message, usage: message.usage };
   } catch (err) {
+    if (signal?.aborted) {
+      if (deadlinePassed(limits)) throw new ModelDeadlineError(`Model ${model}: het han chot luot.`);
+      throw new ModelUnavailableError(`Model ${model}: qua thoi gian cho (${err instanceof Error ? err.message : 'abort'}).`);
+    }
     // R02-tham-dinh G3: loi mang/timeout (`APIConnectionError`, ke ca
     // `APIConnectionTimeoutError` — la lop con) cung phai thanh
     // `ModelUnavailableError`, khong chi 429/5xx — caller §9 dua vao kieu
@@ -551,37 +618,41 @@ async function callGeminiWithRetry(
   model: string,
   body: unknown,
   route: ModelRoute = 'community',
-  signal?: AbortSignal
+  limits?: CallLimits
 ): Promise<GeminiResponseBody> {
   // SPEC-P03 §11.10: route 'triage' KHONG retry, khong MODEL_FALLBACKS — do
   // trung tam o `triageMessage` (mot lan goi, timeout rieng); o day ta van
   // giu duong retry cho cac route khac nguyen ven.
   if (route === 'triage') {
-    return fetchGeminiOnce(model, body, route, signal);
+    return fetchGeminiOnce(model, body, route, attemptSignal(limits));
   }
   let lastErr: unknown;
   for (let attempt = 0; attempt <= GEMINI_RETRY_DELAYS_MS.length; attempt++) {
+    const signal = attemptSignal(limits); // het gio => ModelDeadlineError, khong goi mang
     try {
-      return await fetchGeminiOnce(model, body, route);
+      return await fetchGeminiOnce(model, body, route, signal);
     } catch (err) {
       if (!(err instanceof GeminiRetryableError)) throw err;
+      if (deadlinePassed(limits)) throw new ModelDeadlineError(`Het han chot khi cho Gemini ${model}.`);
       lastErr = err;
       if (attempt === GEMINI_RETRY_DELAYS_MS.length) break;
-      await sleep(GEMINI_RETRY_DELAYS_MS[attempt]!);
+      const delay = GEMINI_RETRY_DELAYS_MS[attempt]!;
+      if (!timeLeftAfter(limits, delay)) throw new ModelDeadlineError(`Khong du gio de lui ${delay} ms roi thu lai Gemini ${model}.`);
+      await sleep(delay);
     }
   }
   throw new ModelUnavailableError(`Model ${model}: ${(lastErr as Error)?.message ?? 'khong kha dung'} sau retry.`);
 }
 
-async function callGeminiOnce(model: string, c: ModelCall, signal?: AbortSignal): Promise<{ message: Message; usage: Usage }> {
+async function callGeminiOnce(model: string, c: ModelCall, limits?: CallLimits): Promise<{ message: Message; usage: Usage }> {
   const messagesWithImages = withImages(c.messages, c.images);
   const body = {
     systemInstruction: { parts: [{ text: c.system }] },
     contents: toGeminiContents(messagesWithImages),
     tools: toGeminiTools(c.tools),
-    generationConfig: { maxOutputTokens: MAX_OUTPUT_TOKENS },
+    generationConfig: { maxOutputTokens: maxTokensFor(c.route) },
   };
-  const raw = await callGeminiWithRetry(model, body, c.route, signal);
+  const raw = await callGeminiWithRetry(model, body, c.route, limits);
   const candidate = raw.candidates?.[0];
   const content = geminiPartsToContent(candidate?.content?.parts);
   const stopReason = determineStopReason(candidate, raw.promptFeedback);
@@ -868,20 +939,24 @@ async function callOpenAICompatWithRetry(
   model: string,
   body: unknown,
   route: ModelRoute,
-  signal?: AbortSignal
+  limits?: CallLimits
 ): Promise<OAIResponseBody> {
   if (route === 'triage') {
-    return fetchOpenAICompatOnce(cfg, model, body, route, signal);
+    return fetchOpenAICompatOnce(cfg, model, body, route, attemptSignal(limits));
   }
   let lastErr: unknown;
   for (let attempt = 0; attempt <= GEMINI_RETRY_DELAYS_MS.length; attempt++) {
+    const signal = attemptSignal(limits);
     try {
-      return await fetchOpenAICompatOnce(cfg, model, body, route);
+      return await fetchOpenAICompatOnce(cfg, model, body, route, signal);
     } catch (err) {
       if (!(err instanceof OpenAICompatRetryableError)) throw err;
+      if (deadlinePassed(limits)) throw new ModelDeadlineError(`Het han chot khi cho ${cfg.label} ${model}.`);
       lastErr = err;
       if (attempt === GEMINI_RETRY_DELAYS_MS.length) break;
-      await sleep(GEMINI_RETRY_DELAYS_MS[attempt]!);
+      const delay = GEMINI_RETRY_DELAYS_MS[attempt]!;
+      if (!timeLeftAfter(limits, delay)) throw new ModelDeadlineError(`Khong du gio de lui ${delay} ms roi thu lai ${cfg.label} ${model}.`);
+      await sleep(delay);
     }
   }
   throw new ModelUnavailableError(`Model ${model}: ${(lastErr as Error)?.message ?? 'khong kha dung'} sau retry.`);
@@ -891,21 +966,21 @@ async function callOpenAICompatOnce(
   cfg: OpenAICompatConfig,
   model: string,
   c: ModelCall,
-  signal?: AbortSignal
+  limits?: CallLimits
 ): Promise<{ message: Message; usage: Usage }> {
   const messagesWithImages = withImages(c.messages, c.images);
   const body: Record<string, unknown> = {
     model,
     messages: buildOAIMessages(c.system, messagesWithImages),
     tools: toOAITools(c.tools),
-    max_tokens: MAX_OUTPUT_TOKENS,
+    max_tokens: maxTokensFor(c.route),
   };
   if (cfg.includeDataCollectionDeny) {
     // 01-CONTRACTS §2c: BAT BUOC — khong cho nha cung cap dung du lieu cu
     // dan de huan luyen (Luat 91/2025). §2d (vyce): KHONG gui truong nay.
     body.provider = { data_collection: 'deny' };
   }
-  const raw = await callOpenAICompatWithRetry(cfg, model, body, c.route, signal);
+  const raw = await callOpenAICompatWithRetry(cfg, model, body, c.route, limits);
   const choice = raw.choices?.[0];
   const content = oaiMessageToContent(choice?.message);
   const stopReason = determineOAIStopReason(choice);
@@ -946,7 +1021,7 @@ function openRouterBaseUrl(): string {
   return raw && raw.length > 0 ? raw : OPENROUTER_DEFAULT_BASE_URL;
 }
 
-async function callOpenRouterOnce(model: string, c: ModelCall, signal?: AbortSignal): Promise<{ message: Message; usage: Usage }> {
+async function callOpenRouterOnce(model: string, c: ModelCall, limits?: CallLimits): Promise<{ message: Message; usage: Usage }> {
   return callOpenAICompatOnce(
     {
       label: 'OpenRouter',
@@ -958,7 +1033,7 @@ async function callOpenRouterOnce(model: string, c: ModelCall, signal?: AbortSig
     },
     model,
     c,
-    signal
+    limits
   );
 }
 
@@ -977,7 +1052,7 @@ function vyceBaseUrl(): string {
   return raw && raw.length > 0 ? raw : VYCE_DEFAULT_BASE_URL;
 }
 
-async function callVyceOnce(model: string, c: ModelCall, signal?: AbortSignal): Promise<{ message: Message; usage: Usage }> {
+async function callVyceOnce(model: string, c: ModelCall, limits?: CallLimits): Promise<{ message: Message; usage: Usage }> {
   // 01-CONTRACTS §2d "Du lieu": Vyce la proxy ben thu ba, KHONG co cam ket
   // khong luu du lieu ⇒ TU CHOI khi DATA_MODE != 'sim' — nem loi cau hinh
   // NGAY, KHONG goi mang (0 lan fetch).
@@ -996,7 +1071,7 @@ async function callVyceOnce(model: string, c: ModelCall, signal?: AbortSignal): 
     },
     model,
     c,
-    signal
+    limits
   );
 }
 
@@ -1008,10 +1083,24 @@ async function callVyceOnce(model: string, c: ModelCall, signal?: AbortSignal): 
 
 export async function callModel(c: ModelCall): Promise<CallModelResult> {
   const provider = resolveProvider();
-  const primaryModel = resolveModel(c.route, provider);
+  const primaryModel = resolveModel(c.route, provider, c.tier ?? 'default');
   const fallbacks = resolveFallbackModels(provider);
   const candidates = [primaryModel, ...fallbacks];
   const startedAt = Date.now();
+  const limits = limitsFor(c);
+
+  const record = (model: string, outcome: 'ok' | 'error' | 'deadline', usage?: Usage) =>
+    recordAgentRun({
+      conversationId: c.conversationId ?? null,
+      turnId: c.turnId ?? null,
+      route: c.route,
+      model,
+      inputTokens: usage ? usage.input_tokens : null,
+      outputTokens: usage ? usage.output_tokens : null,
+      cacheReadTokens: usage ? usage.cache_read_input_tokens : null,
+      latencyMs: Date.now() - startedAt,
+      outcome,
+    });
 
   let lastErr: unknown;
   for (let i = 0; i < candidates.length; i++) {
@@ -1019,45 +1108,32 @@ export async function callModel(c: ModelCall): Promise<CallModelResult> {
     try {
       const { message, usage } =
         provider === 'anthropic'
-          ? await callAnthropicOnce(model, c)
+          ? await callAnthropicOnce(model, c, limits)
           : provider === 'openrouter'
-            ? await callOpenRouterOnce(model, c)
+            ? await callOpenRouterOnce(model, c, limits)
             : provider === 'vyce'
-              ? await callVyceOnce(model, c)
-              : await callGeminiOnce(model, c);
-      await recordAgentRun({
-        conversationId: c.conversationId ?? null,
-        turnId: c.turnId ?? null,
-        route: c.route,
-        model,
-        inputTokens: usage.input_tokens,
-        outputTokens: usage.output_tokens,
-        cacheReadTokens: usage.cache_read_input_tokens,
-        latencyMs: Date.now() - startedAt,
-        outcome: 'ok',
-      });
+              ? await callVyceOnce(model, c, limits)
+              : await callGeminiOnce(model, c, limits);
+      await record(model, 'ok', usage);
       return { message, usage, model };
     } catch (err) {
       lastErr = err;
-      // 01-CONTRACTS §2c/§2d: 402 (het credit) la ModelUnavailableError
-      // nhung KHONG duoc thu MODEL_FALLBACKS — chi cac loi khac (hoac
-      // gemini/anthropic) moi lien tuc qua candidate tiep theo.
+      // D31 (BB-18): het han chot ⇒ DUNG NGAY — khong thu fallback, khong thu lai sau han.
+      if (err instanceof ModelDeadlineError) {
+        await record(model, 'deadline');
+        throw err;
+      }
+      // 01-CONTRACTS §2c/§2d: 402 (het credit) la ModelUnavailableError nhung KHONG duoc thu MODEL_FALLBACKS.
       const isRetryableAcrossModels = err instanceof ModelUnavailableError && !(err instanceof OpenAICompatCreditExhaustedError);
       const isLastCandidate = i === candidates.length - 1;
       if (isRetryableAcrossModels && !isLastCandidate) {
-        continue; // 01-CONTRACTS §2b: thu model du phong tiep theo trong CUNG loi goi.
+        // chi thu model du phong khi con du gio cho mot lan thu (D31)
+        if (timeLeftAfter(limits, 0)) continue;
+        const dl = new ModelDeadlineError('Het gio de thu model du phong.');
+        await record(model, 'deadline');
+        throw dl;
       }
-      await recordAgentRun({
-        conversationId: c.conversationId ?? null,
-        turnId: c.turnId ?? null,
-        route: c.route,
-        model,
-        inputTokens: null,
-        outputTokens: null,
-        cacheReadTokens: null,
-        latencyMs: Date.now() - startedAt,
-        outcome: 'error',
-      });
+      await record(model, 'error');
       throw err;
     }
   }
@@ -1082,16 +1158,16 @@ export async function callTriageModel(c: TriageModelCall): Promise<CallModelResu
   const model = resolveTriageModel(provider);
   const startedAt = Date.now();
   const call: ModelCall = { route: 'triage', system: c.system, messages: c.messages };
-  const signal = AbortSignal.timeout(c.timeoutMs);
+  const limits: CallLimits = { callTimeoutMs: c.timeoutMs, minAttemptMs: 0, fixed: AbortSignal.timeout(c.timeoutMs) };
   try {
     const { message, usage } =
       provider === 'anthropic'
-        ? await callAnthropicOnce(model, call, signal)
+        ? await callAnthropicOnce(model, call, limits)
         : provider === 'openrouter'
-          ? await callOpenRouterOnce(model, call, signal)
+          ? await callOpenRouterOnce(model, call, limits)
           : provider === 'vyce'
-            ? await callVyceOnce(model, call, signal)
-            : await callGeminiOnce(model, call, signal);
+            ? await callVyceOnce(model, call, limits)
+            : await callGeminiOnce(model, call, limits);
     await recordAgentRun({
       conversationId: c.conversationId ?? null,
       route: 'triage',

@@ -7,6 +7,7 @@ import type { ContentBlockParam, Message } from '@anthropic-ai/sdk/resources/mes
 import { callModel } from '../../../../adapters/model.js';
 import { ModelDeadlineError, ModelUnavailableError } from '../../../../domain/errors.js';
 import { getRegisteredToolDefinitions } from '../../tools/registry.js';
+import { isInteractive } from '../edges.js';
 import type { NodeFn, StopKind, TurnStateT } from '../state.js';
 
 function textOf(message: Message): string {
@@ -40,6 +41,9 @@ export const agentNode: NodeFn<TurnStateT> = async (s) => {
       tools,
       conversationId: s.ctx.conversationId,
       turnId: s.turnId,
+      // D31 (T2, BB-18): luot tuong tac dung model nhanh, CO DINH ca luot; han chot theo lan hien tai.
+      tier: isInteractive(s.request.kind) ? 'fast' : 'default',
+      deadlineAt: s.deadlineAt,
     });
     const stop = stopOf(res.message);
     const update: Partial<TurnStateT> = {

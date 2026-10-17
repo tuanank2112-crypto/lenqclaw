@@ -7,10 +7,12 @@ import type { ToolResultBlockParam, ToolUseBlock } from '@anthropic-ai/sdk/resou
 import { sql } from '../../../../adapters/db.js';
 import { ToolNotAllowedError } from '../../../../domain/errors.js';
 import { audit } from '../../../../services/audit.js';
+import { readCommunityConfig } from '../../../../services/community-config.js';
 import { assertToolAllowed } from '../../policy.js';
 import { getRegisteredTools } from '../../tools/registry.js';
 import { assertValidToolInput } from '../../tools/tool-kit.js';
-import type { NodeFn, TurnStateT } from '../state.js';
+import { escalateLane } from '../edges.js';
+import type { Lane, NodeFn, TurnStateT } from '../state.js';
 
 function errorResult(id: string, code: string, message: string): ToolResultBlockParam {
   return { type: 'tool_result', tool_use_id: id, is_error: true, content: JSON.stringify({ code, message }) };
@@ -27,6 +29,10 @@ export const toolsNode: NodeFn<TurnStateT> = async (s) => {
   const called: string[] = [];
   let answered = 0;
   const started = Date.now();
+  const cfg = readCommunityConfig();
+  const laneCfg = { fastMs: cfg.laneFastDeadlineMs, ragMs: cfg.laneRagDeadlineMs, backgroundMs: cfg.turnBackgroundDeadlineMs };
+  let lane: Lane = s.lane;
+  let deadlineAt = s.deadlineAt;
 
   for (const use of uses) {
     called.push(use.name);
@@ -35,9 +41,17 @@ export const toolsNode: NodeFn<TurnStateT> = async (s) => {
       if (!tool) throw new ToolNotAllowedError(`tool lạ: ${use.name}`);
       assertValidToolInput(tool.definition, use.input);
       assertToolAllowed(s.request.kind, role, use.name);
+      // D31 (BB-18): con < TOOL_MIN_MS toi han chot ⇒ KHONG chay tool; model thay loi va (neu con gio) tra loi khong tra cuu.
+      if (deadlineAt - Date.now() < cfg.toolMinMs) {
+        results.push(errorResult(use.id, 'DeadlineExceeded', 'Không còn đủ thời gian để chạy tool này; hãy trả lời ngay với thông tin đang có.'));
+        continue;
+      }
       const out = await tool.run(s.ctx, use.input as Record<string, unknown>);
       results.push({ type: 'tool_result', tool_use_id: use.id, content: JSON.stringify(out ?? null) });
       if (tool.answers) answered += 1;
+      // tool truy hoi (extendsDeadline) chay xong ⇒ nang lan fast → rag (hạn mới tinh tu luc NHAN tin)
+      const up = escalateLane({ ...s, lane, deadlineAt }, [use.name], laneCfg);
+      if (up) ({ lane, deadlineAt } = up);
     } catch (err) {
       // Loi nghiep vu cua repo: `code === name` (domain/errors.ts). Loi pg co `code` (SQLSTATE) nhung `name` khac ⇒ coi la loi
       // he thong, nem len runTurn (ghi vet `error`), khong dua cho model.
@@ -56,5 +70,7 @@ export const toolsNode: NodeFn<TurnStateT> = async (s) => {
     toolsCalled: called,
     answered: s.answered + answered,
     toolMs: s.toolMs + (Date.now() - started),
+    lane,
+    deadlineAt,
   };
 };

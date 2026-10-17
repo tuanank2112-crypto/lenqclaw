@@ -38,7 +38,14 @@ async function hostVars(ctx: GroupTurnContext): Promise<{ names: string[]; group
 }
 
 async function sendDm(s: TurnStateT, conversationId: string, text: string): Promise<void> {
-  await enqueue({ zaloAccountId: s.request.account, threadId: s.request.threadId, threadType: 'user', kind: 'text', body: { text } });
+  await enqueue({
+    zaloAccountId: s.request.account,
+    threadId: s.request.threadId,
+    threadType: 'user',
+    kind: 'text',
+    body: { text },
+    inboundEventId: s.request.inboundEventId,
+  });
   await saveMessage(conversationId, 'out', 'assistant', text);
 }
 

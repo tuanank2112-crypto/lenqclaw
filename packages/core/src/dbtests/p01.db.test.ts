@@ -5,7 +5,7 @@
 // `it` TRONG CUNG mot file.
 //
 // TEST_DB_RESET=1: drop schema public + migrate tu DB rong, `applied` PHAI bang
-// so file db/migrations/*.sql (khong ghi cung — hien 9). Mac dinh (khong dat):
+// so file db/migrations/*.sql (khong ghi cung — hien 10). Mac dinh (khong dat):
 // dung DB hien co da migrate, kiem `schema_migrations` du so file.
 
 import { randomUUID, createHash } from 'node:crypto';
@@ -58,13 +58,16 @@ const EXPECTED_TABLES = [
   // 009
   'tenants',
   'turn_traces',
+  // 010 (D31/D32)
+  'process_heartbeats',
+  'alert_state',
 ];
 
 async function migrationFiles(): Promise<string[]> {
   return (await readdir(MIGRATIONS_DIR)).filter((f) => f.endsWith('.sql')).sort();
 }
 
-describe('1) runMigrations — schema day du tren 001..009 (SPEC-P01 §3)', () => {
+describe('1) runMigrations — schema day du tren 001..010 (SPEC-P01 §3)', () => {
   beforeAll(async () => {
     if (RESET) {
       await sql('drop schema public cascade');
