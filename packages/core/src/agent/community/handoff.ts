@@ -8,6 +8,7 @@ import type { ToolContext } from '../../domain/types.js';
 import { audit } from '../../services/audit.js';
 import { readCommunityConfig } from '../../services/community-config.js';
 import { HANDOFF_DM } from './prompts/system.js';
+import { redactPhones } from './redact.js';
 import { firstOwnerUid } from './roles.js';
 
 export interface HandoffOptions {
@@ -17,8 +18,11 @@ export interface HandoffOptions {
 
 export async function handoffToOwner(ctx: ToolContext, reason: string, opts: HandoffOptions = {}): Promise<{ notified: boolean }> {
   const isDm = ctx.kind === 'dm' || ctx.kind === 'owner_dm';
-  const takeover = opts.takeover ?? isDm;
+  // D35.3 (R08 C3): CHI DM thuong (kind='dm') moi takeover; owner_dm khong bao gio (chu khong bi im chinh minh).
+  const takeover = opts.takeover ?? ctx.kind === 'dm';
   const cleanReason = reason.replace(/\s+/g, ' ').trim().slice(0, 200);
+  // D35.5 (G3): audit KHONG luu SDT do model viet; DM cho chu van thay ly do day du.
+  const auditReason = redactPhones(cleanReason);
   const owner = await firstOwnerUid(ctx.account);
   let notified = false;
   if (owner !== null && !(isDm && owner === ctx.threadId)) {
@@ -44,7 +48,7 @@ export async function handoffToOwner(ctx: ToolContext, reason: string, opts: Han
     actorId: ctx.requester?.uid ?? null,
     action: 'handoff.owner',
     target: ctx.threadId,
-    data: { reason: cleanReason, takeover, notified },
+    data: { reason: auditReason, takeover, notified },
   });
   return { notified };
 }

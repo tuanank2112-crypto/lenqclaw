@@ -1,8 +1,7 @@
 // p03-group-turn.db.test.ts — SPEC-P03 §11 hang 5 (a)–(s) (+ (t)(u) o goi C): luot nhom/DM qua `routeInboundEvent`
 // (= runPipeline) voi model GIA theo kich ban (`setGeminiFetchForTest`). Moi test tao nhom/thread rieng.
-// Ghi chu so lan goi model: moi lan `tools` chay, `tools → agent` BAT BUOC goi model them mot lan (canh co dinh,
-// spike A: search + send = 3 lan) ⇒ mention + 1 tool + chot = 2 `agent_runs` (SPEC-P03 §11 5(a) ghi "1" la sai
-// so voi hinh da duyet — xem report R07, cau hoi mo).
+// Ghi chu so lan goi model (D35.4): canh `tools → agent` co dinh, nhung node `agent` KHONG goi model khi vong `tools` vua xong
+// chi gom tool `answers` thanh cong ⇒ mention + send_group_message = 1 `agent_runs` (khop SPEC-P03 §11 5(a)); RAG = 2.
 
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { closeDb, sql } from '../adapters/db.js';
@@ -56,6 +55,10 @@ afterAll(async () => {
   // Don dep dong dem `out-<outbox_id>` cua nhom test: nhieu test (vd worker p02-group) dung id co dinh `out-9001`/`out-9002`;
   // de lai dong dem that ⇒ dung unique khi sequence outbox di qua cac so do.
   await sql(`delete from group_messages where thread_id like 'p03g-%'`);
+  // Don nhom thu (list_groups quet moi nhom ⇒ de lai hang nghin nhom lam cham/flaky ca owner DM trong han chot fast).
+  await sql(`delete from group_members where thread_id like 'p03g-%'`);
+  await sql(`delete from group_sessions where thread_id like 'p03g-%'`);
+  await sql(`delete from zalo_groups where thread_id like 'p03g-%'`);
   await closeDb();
 });
 
@@ -84,15 +87,15 @@ describe('P03 — luot nhom', () => {
     );
     expect(bot).toEqual([{ is_self: true, sender_uid: 'sim-bot' }]);
 
-    // 2 lan goi model: tool + chot (canh tools → agent co dinh); cung turn_id = turn_traces.id
-    expect(await agentRunsForThread(g)).toBe(2);
+    // D35.4: vong tools chi gom tool `answers` thanh cong ⇒ KHONG goi model chot ⇒ 1 lan goi; cung turn_id = turn_traces.id
+    expect(await agentRunsForThread(g)).toBe(1);
     const t = await tracesFor(g);
     expect(t).toHaveLength(1);
     expect(t[0]).toMatchObject({ outcome: 'replied', rounds: 1, sent: 1, kind: 'group_mention', tools: ['send_group_message'] });
     // D24: bang vet KHONG chua noi dung tin
     const dump = await sql<{ t: string }>(`select t::text as t from turn_traces t where thread_id = $1`, [g]);
     expect(dump[0]!.t).not.toContain(marker);
-    expect(await count(`select 1 from agent_runs where turn_id = $1::uuid`, [t[0]!.id])).toBe(2);
+    expect(await count(`select 1 from agent_runs where turn_id = $1::uuid`, [t[0]!.id])).toBe(1);
     // typing som (D31 T7) + tin tra loi
     expect((await outboxFor(g, ['typing'])).length).toBe(1);
     // cau chot "xong" cua luot mention da tra loi bang tool KHONG phai suy nghi rieng tu can luu (chi luot khong bat buoc tra loi)
@@ -399,7 +402,7 @@ describe('P03 — luot nhom', () => {
     expect(out.map((o) => o.body.text)).toEqual(['Đây là câu trả lời sau khi được nhắc.']);
     expect((await tracesFor(g))[0]).toMatchObject({ outcome: 'replied', sent: 1, rounds: 1 });
     expect(await auditCount('turn.fallback_reply', g)).toBe(0);
-    expect(modelCalls(g)).toBe(3);
+    expect(modelCalls(g)).toBe(2); // D35.4: nudge → send_group_message → khong goi chot
   });
 });
 

@@ -195,9 +195,13 @@ describe('5) processInbound — nhan truoc xu ly sau, khong ket chet', () => {
     await closeDb();
   });
 
-  it('12 processInbound dong thoi xong < 5s, moi tin dung 1 outbox', async () => {
-    const threadId = `sim-concurrency-${randomUUID().slice(0, 8)}`;
+  it('12 processInbound dong thoi (12 tin o 12 thread) xong < 5s, moi tin dung 1 outbox', async () => {
+    // D35.7: processInbound ep thu tu thread (= claimNextInbound([])) ⇒ 12 tin CUNG thread chi nhan duoc lan luot; muc dich
+    // test giu nguyen (khong xu ly trung, khong ket chet) nen dung 12 thread khac nhau.
+    const prefix = `sim-concurrency-${randomUUID().slice(0, 8)}`;
+    const threadIds = Array.from({ length: 12 }, (_, i) => `${prefix}-${i}`);
     for (let i = 0; i < 12; i++) {
+      const threadId = threadIds[i]!;
       await simInbound({
         account: 'community',
         threadId,
@@ -208,7 +212,7 @@ describe('5) processInbound — nhan truoc xu ly sau, khong ket chet', () => {
       });
     }
 
-    const before = await sql<{ c: number }>(`select count(*)::int as c from outbox where thread_id = $1`, [threadId]);
+    const before = await sql<{ c: number }>(`select count(*)::int as c from outbox where thread_id = any($1::text[])`, [threadIds]);
 
     const startedAt = Date.now();
     const results = await Promise.all(Array.from({ length: 12 }, () => processInbound(echoHandler)));
@@ -217,7 +221,7 @@ describe('5) processInbound — nhan truoc xu ly sau, khong ket chet', () => {
     expect(elapsedMs).toBeLessThan(5000);
     expect(results.filter((r) => r.processed === 1).length).toBe(12);
 
-    const after = await sql<{ c: number }>(`select count(*)::int as c from outbox where thread_id = $1`, [threadId]);
+    const after = await sql<{ c: number }>(`select count(*)::int as c from outbox where thread_id = any($1::text[])`, [threadIds]);
     expect(after[0]!.c - before[0]!.c).toBe(12);
   });
 });

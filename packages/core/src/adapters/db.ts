@@ -82,6 +82,11 @@ export interface AdvisoryLock {
   release(): Promise<void>;
 }
 
+/** D35.11 (R08 G5): cau hinh client giu khoa — bat TCP keepAlive de ket noi nua-mo bi phat hien (khong chi dua vao 'error'/'end'). */
+export function advisoryLockClientConfig(connectionString: string): pg.ClientConfig {
+  return { connectionString, keepAlive: true, keepAliveInitialDelayMillis: 10_000 };
+}
+
 /**
  * Giu `pg_try_advisory_lock(hashtextextended(name, 0))` tren mot `pg.Client` RIENG (khong lay tu pool) suot doi tien
  * trinh. Khoa dang bi giu boi ban khac ⇒ dong client, tra `null`. Ket noi giu khoa dut (`error`/`end`) khi dang giu ⇒
@@ -93,7 +98,7 @@ export async function holdAdvisoryLock(
 ): Promise<AdvisoryLock | null> {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) throw new Error('DATABASE_URL chua duoc cau hinh. Xem specs/OPERATIONS.md §3.');
-  const client = new pg.Client({ connectionString });
+  const client = new pg.Client(advisoryLockClientConfig(connectionString));
   await client.connect();
   let held = false;
   let released = false;

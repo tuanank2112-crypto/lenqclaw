@@ -71,7 +71,7 @@ export const deliverNode: NodeFn<TurnStateT> = async (s) => {
     }
     case 'auto_post': {
       if (!ctx || !isGroupCtx(ctx)) throw new Error('deliver: auto_post can ngu canh nhom.');
-      await postGroupText(ctx, { text: s.finalText, replyToMsgId: ctx.focusMessages[0]?.id ?? null, by: 'host' });
+      await postGroupText(ctx, { text: s.finalText, replyToMsgId: ctx.focusMessages[0]?.id ?? null, by: 'host', quoteOptional: true });
       await audit(sql, { actorType: 'system', actorId: null, action: 'turn.auto_posted_final', target: req.threadId, data: null });
       hostPosted = 1;
       break;
@@ -79,7 +79,7 @@ export const deliverNode: NodeFn<TurnStateT> = async (s) => {
     case 'fallback': {
       if (!ctx || !isGroupCtx(ctx)) throw new Error('deliver: fallback can ngu canh nhom.');
       const text = hostText(req, 'fallback', await hostVars(ctx));
-      await postGroupText(ctx, { text, replyToMsgId: req.kind === 'group_welcome' ? null : (ctx.focusMessages[0]?.id ?? null), by: 'host' });
+      await postGroupText(ctx, { text, replyToMsgId: req.kind === 'group_welcome' ? null : (ctx.focusMessages[0]?.id ?? null), by: 'host', quoteOptional: true });
       await audit(sql, { actorType: 'system', actorId: null, action: 'turn.fallback_reply', target: req.threadId, data: null });
       hostPosted = 1;
       if (req.trigger !== null) await handoffToOwner(ctx, handoffReason ?? 'no_reply', { takeover: false });
@@ -91,7 +91,7 @@ export const deliverNode: NodeFn<TurnStateT> = async (s) => {
       if (isGroupCtx(ctx)) {
         if (req.mustReply) {
           const text = hostText(req, 'model_down', await hostVars(ctx));
-          await postGroupText(ctx, { text, replyToMsgId: req.kind === 'group_welcome' ? null : (ctx.focusMessages[0]?.id ?? null), by: 'host' });
+          await postGroupText(ctx, { text, replyToMsgId: req.kind === 'group_welcome' ? null : (ctx.focusMessages[0]?.id ?? null), by: 'host', quoteOptional: true });
           hostPosted = 1;
           if (req.trigger !== null) await handoffToOwner(ctx, 'model_unavailable', { takeover: false });
         }

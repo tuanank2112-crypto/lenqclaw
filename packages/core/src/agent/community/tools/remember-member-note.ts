@@ -1,5 +1,5 @@
 // tool `remember_member_note` — CHI GHI (append) ghi chu thanh vien; CAM doc o luot nhom (BB-07).
-// O DM chi cho uid = requester; o nhom uid phai la thanh vien con hieu luc; O DM owner: moi uid.
+// O DM va o nhom chi cho uid = requester (D35.10); o nhom uid con phai la thanh vien con hieu luc; O DM owner: moi uid.
 
 import { sql } from '../../../adapters/db.js';
 import { ActionNotPermittedError, InvalidToolInputError, UnknownMemberError } from '../../../domain/errors.js';
@@ -34,6 +34,10 @@ export const rememberMemberNoteTool: AgentTool<{ uid: string; note: string }> = 
     if (note.length > NOTE_MAX) throw new InvalidToolInputError(`note dài quá ${NOTE_MAX} ký tự.`);
     let displayName: string | null = null;
     if (isGroupCtx(ctx)) {
+      // D35.10 (R08 G7): o nhom chi cho uid = requester — chan cay ghi chu vao ho so nguoi khac roi nap vao DM cua ho.
+      if (!ctx.requester || input.uid !== ctx.requester.uid) {
+        throw new ActionNotPermittedError('Chỉ được ghi chú về chính người đang hỏi bạn trong nhóm.');
+      }
       const m = await sql<{ display_name: string | null }>(
         `select display_name from group_members where zalo_account_id = $1 and thread_id = $2 and zalo_uid = $3 and left_at is null`,
         [ctx.account, ctx.threadId, input.uid]

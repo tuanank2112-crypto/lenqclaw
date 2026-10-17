@@ -71,7 +71,7 @@ export interface TurnRequest {
   joinedUids?: string[];
   joinRequest?: { uid: string };
   automation?: { automationId: string };
-  /** Node `turn` gop tu PipelineState.triage. */
+  /** Node `turn` gop tu PipelineState.triageResult (D35.12: LangGraph cam kenh trung ten node `triage`). */
   triage: CommunityTriage | null;
   // D31 (SPEC-D31 §5.1): node `turn` dien tu event/state.
   inboundEventId: number;

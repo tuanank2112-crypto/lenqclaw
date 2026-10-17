@@ -1,7 +1,7 @@
 // node `gate` (pipeline) — cong nhan tin nhom (SPEC-P03 §3): doc persona (namePatterns, cache 60 s) roi
 // `decideGroupInbound` (THUAN). admitted ∧ trigger ≠ ambient ⇒ dung `TurnRequest{group_mention}`; ambient ⇒ de
 // `defer` lo; con lai ⇒ `stop='not_admitted'`. Bang 01-CONTRACTS §12.3: `gate` CHI DOC DB (khong ghi, khong audit),
-// outbox ✗, model ✗ (BB-15) — ly do tu choi nam o `PipelineState.gate.reason` (test/log).
+// outbox ✗, model ✗ (BB-15) — ly do tu choi nam o `PipelineState.gateDecision.reason` (D35.12: kenh khong the trung ten node `gate`; khong audit sender_denied/sender_not_allowed — `group.denied` audit o `ingest`).
 
 import { resolveBotUid } from '../../bot.js';
 import { decideGroupInbound, hasControlCommand } from '../../gate.js';

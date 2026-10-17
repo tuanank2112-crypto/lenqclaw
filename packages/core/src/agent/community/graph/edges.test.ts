@@ -24,6 +24,7 @@ import {
   needsNudge,
   needsTriage,
   routeEvent,
+  skipFinalCall,
   type LaneConfig,
 } from './edges.js';
 import type { PipelineStateT, TurnRequest, TurnStateT } from './state.js';
@@ -319,5 +320,68 @@ describe('hostText', () => {
   it('hang so dung nguyen van SPEC', () => {
     expect(FALLBACK_GROUP_REPLY).toBe('Mình chưa trả lời được ngay, bạn chờ mình một chút nhé.');
     expect(MODEL_DOWN_GROUP_REPLY).toBe('Mình đang gặp trục trặc kỹ thuật, bạn hỏi lại sau ít phút nhé.');
+  });
+});
+
+// D35.1 (R08 C1): D8 (`answered > 0`) xet NGAY SAU D3, truoc D4 — nhom da co tin tra loi thi loi goi chot sap/het gio
+// KHONG sinh tin thu hai. Khong them/bot dong (01-CONTRACTS §12.5).
+describe('D35.1 — D8 truoc D4', () => {
+  it('mention da tra loi bang tool + loi goi chot model_down ⇒ none/replied (khong tin "truc trac")', () => {
+    expect(decideDelivery(tstate({ answered: 1, stop: 'model_down', deadlineHit: false }))).toEqual({ delivery: 'none', outcome: 'replied' });
+  });
+  it('mention da tra loi + het han chot (deadlineHit) ⇒ none/replied; deadlineHit van duoc ghi o state', () => {
+    expect(decideDelivery(tstate({ answered: 1, stop: 'model_down', deadlineHit: true }))).toEqual({ delivery: 'none', outcome: 'replied' });
+  });
+  it('welcome da chao + model_down ⇒ none/replied', () => {
+    expect(decideDelivery(tstate({ answered: 1, stop: 'model_down' }, req({ kind: 'group_welcome', mustReply: true })))).toEqual({ delivery: 'none', outcome: 'replied' });
+  });
+  it('chua tra loi + model_down van la D4 (model_down)', () => {
+    expect(decideDelivery(tstate({ answered: 0, stop: 'model_down' }))).toEqual({ delivery: 'model_down', outcome: 'model_down' });
+  });
+  it('join_review van D2/D3 truoc D8 (answered>0 ⇒ D2 replied; im + model_down ⇒ join_default)', () => {
+    expect(decideDelivery(tstate({ answered: 1, stop: 'model_down' }, req({ kind: 'group_join_review', mustReply: false })))).toEqual({ delivery: 'none', outcome: 'replied' });
+    expect(decideDelivery(tstate({ answered: 0, stop: 'model_down' }, req({ kind: 'group_join_review', mustReply: false })))).toEqual({ delivery: 'join_default', outcome: 'model_down' });
+  });
+  it('persona_invalid (D1) van truoc moi thu', () => {
+    expect(decideDelivery(tstate({ prepError: 'persona_invalid', answered: 1, stop: 'model_down' }))).toEqual({ delivery: 'persona_invalid', outcome: 'error' });
+  });
+  it('DM khong bi anh huong (D4 giu nguyen)', () => {
+    const dm = req({ kind: 'dm', mustReply: false, threadType: 'user', trigger: null, requester: { uid: 'u1', role: 'member' } });
+    expect(decideDelivery(tstate({ stop: 'model_down', answered: 0 }, dm))).toEqual({ delivery: 'model_down', outcome: 'model_down' });
+  });
+});
+
+// D35.4 (R08 N6): bo loi goi chot khi vong `tools` vua xong gom TOAN tool co `answers` va tat ca thanh cong.
+describe('D35.4 — skipFinalCall (THUAN)', () => {
+  const ANS = new Set(['send_group_message', 'invite_to_private', 'review_join_request']);
+  const uses = (...names: string[]) => ({ role: 'assistant' as const, content: names.map((name, i) => ({ type: 'tool_use' as const, id: `t${i}`, name, input: {} })) });
+  const results = (...errs: boolean[]) => ({
+    role: 'user' as const,
+    content: errs.map((is_error, i) => ({ type: 'tool_result' as const, tool_use_id: `t${i}`, content: '{}', ...(is_error ? { is_error: true as const } : {}) })),
+  });
+  it('mot tool answers thanh cong ⇒ true', () => {
+    expect(skipFinalCall(tstate({ messages: [uses('send_group_message'), results(false)] }), ANS)).toBe(true);
+  });
+  it('hai tool answers thanh cong ⇒ true', () => {
+    expect(skipFinalCall(tstate({ messages: [uses('send_group_message', 'invite_to_private'), results(false, false)] }), ANS)).toBe(true);
+  });
+  it('tool answers LOI ⇒ false', () => {
+    expect(skipFinalCall(tstate({ messages: [uses('send_group_message'), results(true)] }), ANS)).toBe(false);
+  });
+  it('mot answers OK + mot answers loi ⇒ false', () => {
+    expect(skipFinalCall(tstate({ messages: [uses('send_group_message', 'send_group_message'), results(false, true)] }), ANS)).toBe(false);
+  });
+  it('tron answers + tool thuong ⇒ false', () => {
+    expect(skipFinalCall(tstate({ messages: [uses('send_group_message', 'describe_capabilities'), results(false, false)] }), ANS)).toBe(false);
+  });
+  it('toan tool thuong ⇒ false', () => {
+    expect(skipFinalCall(tstate({ messages: [uses('search_knowledge'), results(false)] }), ANS)).toBe(false);
+  });
+  it('khong co vong tools (messages chi la user dau) ⇒ false', () => {
+    expect(skipFinalCall(tstate({ messages: [{ role: 'user', content: 'hi' }] }), ANS)).toBe(false);
+    expect(skipFinalCall(tstate({ messages: [] }), ANS)).toBe(false);
+  });
+  it('so tool_result khac so tool_use ⇒ false (an toan)', () => {
+    expect(skipFinalCall(tstate({ messages: [uses('send_group_message', 'send_group_message'), results(false)] }), ANS)).toBe(false);
   });
 });

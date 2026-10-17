@@ -608,7 +608,12 @@ async function fetchGeminiOnce(
     const text = await res.text().catch(() => '');
     throw new Error(`Gemini ${model} tra loi ${status} (khong retry — loi cau hinh): ${text.slice(0, 300)}`);
   }
-  return (await res.json()) as GeminiResponseBody;
+  // D35.2: doc + parse than nam TRONG phan loai loi: huy khi dang doc than = nhu timeout; than 200 khong phai JSON = retryable.
+  try {
+    return (await res.json()) as GeminiResponseBody;
+  } catch (err) {
+    throw new GeminiRetryableError(`Loi doc than phan hoi Gemini ${model}: ${err instanceof Error ? err.name : "unknown"}.`);
+  }
 }
 
 /** 01-CONTRACTS §2b "Loi": 429/500/503/504/mang/timeout ⇒ retry toi da 2
@@ -916,7 +921,13 @@ async function fetchOpenAICompatOnce(
     const text = await res.text().catch(() => '');
     throw new Error(`${cfg.label} ${model} tra loi ${status} (khong retry — loi cau hinh): ${text.slice(0, 300)}`);
   }
-  const parsed = (await res.json()) as OAIResponseBody;
+  // D35.2: nhu nhanh Gemini; het han luot ⇒ ModelDeadlineError o vong retry.
+  let parsed: OAIResponseBody;
+  try {
+    parsed = (await res.json()) as OAIResponseBody;
+  } catch (err) {
+    throw new OpenAICompatRetryableError(`Loi doc than phan hoi ${cfg.label} ${model}: ${err instanceof Error ? err.name : "unknown"}.`);
+  }
   if (parsed.error) {
     const code = parsed.error.code;
     if (code === 429 || code === 500 || code === 502 || code === 503 || code === 504) {

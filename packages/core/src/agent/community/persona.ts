@@ -138,20 +138,28 @@ function hhmmVn(iso: string): string {
   return t.toISOString().slice(11, 16);
 }
 
-/** MOT dong tin: `[#id uid=<uid> "Ten" HH:MM] text` (text da che SDT; tin cua bot hien `uid=BOT`). */
+/**
+ * D35.5 (R08 N1): mot truong ngoai troi nam TRON trong mot dong tin — xuong dong (CR, LF, U+2028/9) doi thanh ` ⏎ `,
+ * dau nhay kep doi thanh `”` ⇒ khong gia duoc dong tieu de `[#id uid=… "Ten" HH:MM]` hay dong chuoi ten.
+ */
+export function oneLineField(s: string): string {
+  return s.replace(/[\r\n\u2028\u2029]+/g, ' ⏎ ').replace(/"/g, '”');
+}
+
+/** MOT dong tin: `[#id uid=<uid> "Ten" HH:MM] text` (ten + text da che SDT, mot dong; tin cua bot hien `uid=BOT`). */
 export function renderMessageLine(m: GroupMessageRow): string {
-  const uid = m.isSelf ? 'BOT' : sanitizeUntrusted(m.senderUid);
-  const name = sanitizeUntrusted(m.senderName ?? '');
-  const quote = m.quoteMsgId ? ` ↪ trả lời tin ${sanitizeUntrusted(m.quoteMsgId)}` : '';
-  const text = sanitizeUntrusted(redactPhones(m.text ?? ''));
+  const uid = m.isSelf ? 'BOT' : sanitizeUntrusted(m.senderUid).replace(/[\s"\]]/g, '_');
+  const name = oneLineField(sanitizeUntrusted(redactPhones(m.senderName ?? '')));
+  const quote = m.quoteMsgId ? ` ↪ trả lời tin ${oneLineField(sanitizeUntrusted(m.quoteMsgId)).replace(/\s+/g, '_')}` : '';
+  const text = oneLineField(sanitizeUntrusted(redactPhones(m.text ?? '')));
   return `[#${m.id} uid=${uid} "${name}" ${hhmmVn(m.receivedAt)}${quote}] ${text}`;
 }
 
 export function renderGroupContext(ctx: Pick<GroupTurnContext, 'threadId' | 'group' | 'recent'>): string {
   const members = new Set(ctx.recent.map((r) => r.senderUid)).size;
-  const name = sanitizeUntrusted(ctx.group.name ?? '');
+  const name = oneLineField(sanitizeUntrusted(redactPhones(ctx.group.name ?? '')));
   return [
-    `<<<untrusted group_context thread=${sanitizeUntrusted(ctx.threadId)}>>>`,
+    `<<<untrusted group_context thread=${sanitizeUntrusted(ctx.threadId).replace(/\s+/g, '_')}>>>`,
     `tên nhóm: "${name}" · thành viên trong đệm: ${members} · bot là phó nhóm: ${ctx.group.botIsAdmin ? 'có' : 'không'} · chế độ: ${ctx.group.mode}`,
     '<<<end>>>',
   ].join('\n');
@@ -181,10 +189,20 @@ export function renderMemberBlocks(args: {
 }): string {
   const out: string[] = [];
   if (args.notes && args.notes.trim() !== '') {
-    out.push('<<<untrusted member_notes>>>', sanitizeUntrusted(args.notes.trim()), '<<<end>>>');
+    // D35.5 (G8): ghi chu thanh vien cung che SDT (§5.3).
+    out.push('<<<untrusted member_notes>>>', sanitizeUntrusted(redactPhones(args.notes.trim())), '<<<end>>>');
   }
   if (args.openLead) {
     out.push(`<<<lead status=${args.openLead.status} score=${args.openLead.score} missing=${args.openLead.missing.join(',')}>>>`, '<<<end>>>');
   }
   return out.join('\n');
+}
+
+/**
+ * D35.5 (R08 N2): tin DM hien tai = khoi tri nho (neu co) + text nguoi dung NAM TRONG rao `<<<untrusted dm_message>>>`.
+ * `<` `>` doi thanh `‹` `›` ⇒ khong gia duoc `<<<end>>>` / `<<<lead …>>>`. Text giu nguyen SDT (khach tu cho so lien he — §5.3).
+ */
+export function renderDmCurrent(memberBlocks: string, latestText: string): string {
+  const fenced = ['<<<untrusted dm_message>>>', sanitizeUntrusted(latestText), '<<<end>>>'].join('\n');
+  return memberBlocks ? `${memberBlocks}\n${fenced}` : fenced;
 }

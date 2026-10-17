@@ -20,6 +20,9 @@ export interface PostGroupArgs {
   mentionUids?: readonly string[];
   /** 'tool' ⇒ kiem ngan sach (BB-08); 'host' ⇒ KHONG kiem — van enqueue, pacer giu hang cho den khi co ngan sach. */
   by: 'tool' | 'host';
+  /** D35.6 (N4): host dang tin tra loi — tin can quote khong con trong dem (bi xoa/undo giua luot) ⇒ dang KHONG quote
+   * thay vi nem. Tool de `false` (model phai thay `MessageNotInBufferError` va tu quyet). */
+  quoteOptional?: boolean;
 }
 
 export interface PostGroupResult {
@@ -54,16 +57,18 @@ export async function postGroupText(ctx: GroupTurnContext, a: PostGroupArgs): Pr
   let quote: QuoteRef | undefined;
   if (a.replyToMsgId != null) {
     const row = await findBufferedMessage(ctx.account, ctx.threadId, a.replyToMsgId);
-    if (!row) throw new MessageNotInBufferError(`Tin #${a.replyToMsgId} khong co trong dem nhom nay.`);
-    quote = {
-      msgId: row.zaloMsgId,
-      cliMsgId: row.cliMsgId ?? row.zaloMsgId,
-      uidFrom: row.senderUid,
-      content: (row.text ?? '').slice(0, 200),
-      msgType: row.msgType,
-      ts: String(new Date(row.receivedAt).getTime()),
-      ttl: 0,
-    };
+    if (!row && !a.quoteOptional) throw new MessageNotInBufferError(`Tin #${a.replyToMsgId} khong co trong dem nhom nay.`);
+    if (row) {
+      quote = {
+        msgId: row.zaloMsgId,
+        cliMsgId: row.cliMsgId ?? row.zaloMsgId,
+        uidFrom: row.senderUid,
+        content: (row.text ?? '').slice(0, 200),
+        msgType: row.msgType,
+        ts: String(new Date(row.receivedAt).getTime()),
+        ttl: 0,
+      };
+    }
   }
 
   // mention: host dung "@Ten" tu group_members.display_name (khong tin ten model tu go — BB-10).

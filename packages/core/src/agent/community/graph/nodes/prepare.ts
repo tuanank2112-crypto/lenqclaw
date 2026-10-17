@@ -1,7 +1,7 @@
 // node `prepare` (turn) — dung loi goi model cho MOT luot (SPEC-P03 §6.1): nguon DUY NHAT cua ngu canh
 // (BB-13: state `messages` bat dau rong moi luot; DM <= 2 x DM_HISTORY_TURNS tin; nhom 25/40 tin dem; KHONG nen,
 // KHONG tom tat). Danh dau `group_sessions` TRUOC model (D28). BB-07: nhanh nhom KHONG doc ho so/ghi chu thanh vien;
-// chi nhanh DM goi `loadMemberContext`. D31: luot tuong tac enqueue `typing` NGAY dau node (outbox ✓ CHI typing).
+// chi nhanh DM goi `loadMemberContext`. G4 (D35.12): nhanh nhom ghi them `conversations` (`ensureGroupConversation`) ngoai `group_sessions`. D31: luot tuong tac enqueue `typing` NGAY dau node (outbox ✓ CHI typing).
 
 import { randomUUID } from 'node:crypto';
 import type { MessageParam } from '@anthropic-ai/sdk/resources/messages';
@@ -14,8 +14,9 @@ import { loadMemberContext } from '../../../../services/memory.js';
 import { loadHistory } from '../../../conversation.js';
 import { resolveBotUid } from '../../bot.js';
 import { getGroup, loadMessagesByIds, loadRecentBefore, loadUnseen } from '../../buffer.js';
-import { buildGroupUserMessage, buildSystemPrompt, loadPersonaBundle, renderMemberBlocks, sanitizeUntrusted } from '../../persona.js';
+import { buildGroupUserMessage, buildSystemPrompt, loadPersonaBundle, oneLineField, renderDmCurrent, renderMemberBlocks, sanitizeUntrusted } from '../../persona.js';
 import { toolsFor } from '../../policy.js';
+import { redactPhones } from '../../redact.js';
 import { ensureGroupConversation, getLastSeenMessageId, markSessionAtPrepare } from '../../sessions.js';
 import { initialDeadline, isInteractive } from '../edges.js';
 import type { NodeFn, TurnStateT } from '../state.js';
@@ -85,8 +86,8 @@ export const prepareNode: NodeFn<TurnStateT> = async (s) => {
     const history = await loadHistory(req.dm.conversationId, req.dm.latestMessageId, 2 * cfg.dmHistoryTurns);
     while (history.length > 0 && history[0]!.role !== 'user') history.shift();
     const blocks = renderMemberBlocks({ notes: member.notes, openLead: member.openLead });
-    // §5.3: text cua CHINH tin hien tai giu nguyen (khach tu cho so lien he); lich su da che SDT.
-    const current: MessageParam = { role: 'user', content: blocks ? `${blocks}\n${req.dm.latestText}` : req.dm.latestText };
+    // §5.3: text cua CHINH tin hien tai giu nguyen SDT (khach tu cho so lien he); lich su da che SDT. D35.5: text nam trong rao untrusted.
+    const current: MessageParam = { role: 'user', content: renderDmCurrent(blocks, req.dm.latestText) };
     return {
       turnId,
       startedAt,
@@ -152,7 +153,7 @@ export const prepareNode: NodeFn<TurnStateT> = async (s) => {
 
   let extra: string | undefined;
   if (req.joinedUids && req.joinedUids.length > 0) {
-    extra = ['<<<untrusted new_members>>>', ...req.joinedUids.map((u) => `${sanitizeUntrusted(u)} "${sanitizeUntrusted(names.get(u) ?? '')}"`), '<<<end>>>'].join('\n');
+    extra = ['<<<untrusted new_members>>>', ...req.joinedUids.map((u) => `${sanitizeUntrusted(u)} "${oneLineField(sanitizeUntrusted(redactPhones(names.get(u) ?? '')))}"`), '<<<end>>>'].join('\n');
   }
   return {
     turnId,

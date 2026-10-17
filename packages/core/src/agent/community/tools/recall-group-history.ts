@@ -41,7 +41,7 @@ export const recallGroupHistoryTool: AgentTool<{ limit?: number; before_id?: num
       messages: rows.reverse().map((r) => ({
         id: r.id,
         uid: r.is_self ? 'BOT' : r.sender_uid,
-        name: r.sender_name,
+        name: r.sender_name === null ? null : redactPhones(r.sender_name),
         at: r.at,
         text: redactPhones(r.text ?? ''),
       })),

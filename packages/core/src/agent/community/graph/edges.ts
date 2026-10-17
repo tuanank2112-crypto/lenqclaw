@@ -139,6 +139,22 @@ export function afterAgent(t: TurnStateT): 'tools' | 'nudge' | 'deliver' {
   return 'deliver';
 }
 
+/**
+ * D35.4 (R08 N6): node `agent` KHONG goi model khi vong `tools` vua xong gom TOAN tool co `answers` va TAT CA thanh cong
+ * (luot da noi xong). THUAN: chi doc `messages` cuoi (assistant `tool_use` + user `tool_result`).
+ */
+export function skipFinalCall(t: TurnStateT, answersTools: ReadonlySet<string>): boolean {
+  const n = t.messages.length;
+  if (n < 2) return false;
+  const results = t.messages[n - 1]!;
+  const uses = t.messages[n - 2]!;
+  if (results.role !== 'user' || uses.role !== 'assistant' || !Array.isArray(results.content) || !Array.isArray(uses.content)) return false;
+  const toolUses = uses.content.filter((b) => b.type === 'tool_use') as Array<{ name: string }>;
+  const toolResults = results.content.filter((b) => b.type === 'tool_result') as Array<{ is_error?: boolean }>;
+  if (toolUses.length === 0 || toolUses.length !== toolResults.length) return false;
+  return toolUses.every((u) => answersTools.has(u.name)) && toolResults.every((r) => r.is_error !== true);
+}
+
 /** Bang 12 dong D1–D12 (01-CONTRACTS §12.5), xet theo thu tu, dung o dong dau khop. */
 export function decideDelivery(t: TurnStateT): { delivery: Delivery; outcome: TurnOutcome } {
   const kind = t.request.kind;
@@ -151,11 +167,12 @@ export function decideDelivery(t: TurnStateT): { delivery: Delivery; outcome: Tu
     const outcome: TurnOutcome = t.stop === 'model_down' ? 'model_down' : t.stop === 'refusal' ? 'refusal' : 'fallback';
     return { delivery: 'join_default', outcome };
   }
+  // D35.1 (R08 C1): D8 NGAY SAU D3 — nhom da co tin tra loi thi loi goi chot sap/het gio KHONG sinh tin thu hai.
+  if (!dm && t.answered > 0) return { delivery: 'none', outcome: 'replied' }; // D8
   if (t.stop === 'model_down') return { delivery: 'model_down', outcome: 'model_down' }; // D4
   if (dm && t.stop === 'refusal') return { delivery: 'dm_empty', outcome: 'refusal' }; // D5
   if (dm && t.finalText !== '' && !capped) return { delivery: 'dm_reply', outcome: 'replied' }; // D6
   if (dm) return { delivery: 'dm_empty', outcome: 'fallback' }; // D7
-  if (t.answered > 0) return { delivery: 'none', outcome: 'replied' }; // D8
   if (!t.request.mustReply) return { delivery: 'none', outcome: 'silent' }; // D9
   if (t.stop === 'refusal') return { delivery: 'fallback', outcome: 'refusal' }; // D10
   if (t.finalText !== '' && !capped) return { delivery: 'auto_post', outcome: 'auto_posted' }; // D11

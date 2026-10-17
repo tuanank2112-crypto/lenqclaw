@@ -6,8 +6,8 @@
 import type { ContentBlockParam, Message } from '@anthropic-ai/sdk/resources/messages';
 import { callModel } from '../../../../adapters/model.js';
 import { ModelDeadlineError, ModelUnavailableError } from '../../../../domain/errors.js';
-import { getRegisteredToolDefinitions } from '../../tools/registry.js';
-import { isInteractive } from '../edges.js';
+import { getRegisteredToolDefinitions, getRegisteredTools } from '../../tools/registry.js';
+import { isInteractive, skipFinalCall } from '../edges.js';
 import type { NodeFn, StopKind, TurnStateT } from '../state.js';
 
 function textOf(message: Message): string {
@@ -27,6 +27,9 @@ function stopOf(message: Message): StopKind {
 
 export const agentNode: NodeFn<TurnStateT> = async (s) => {
   if (!s.ctx) throw new Error('agent: thieu ctx (bug cach noi do thi).');
+  // D35.4 (N6): vong tools vua xong chi gom tool `answers` thanh cong => luot da noi xong, KHONG goi model chot.
+  const answersTools = new Set([...getRegisteredTools()].filter(([, tool]) => tool.answers === true).map(([name]) => name));
+  if (skipFinalCall(s, answersTools)) return { stop: 'end_turn' as const, finalText: '' };
   const defs = getRegisteredToolDefinitions();
   const tools = s.toolNames.flatMap((n) => {
     const d = defs.get(n);

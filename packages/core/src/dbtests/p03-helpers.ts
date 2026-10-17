@@ -19,6 +19,10 @@ export type Step =
   | { kind: 'empty' }
   | { kind: 'refusal' }
   | { kind: 'http'; status: number }
+  /** 200 + than khong phai JSON (proxy tra HTML). */
+  | { kind: 'bad_json' }
+  /** 200 header ngay, than treo toi khi AbortSignal huy (R08 B5). */
+  | { kind: 'stall_body' }
   | { kind: 'delay'; ms: number; then: Step }
   | { kind: 'fn'; fn: (body: GeminiBody, text: string) => Step };
 
@@ -27,6 +31,8 @@ export const TOOLS = (...calls: Array<{ name: string; args: Record<string, unkno
 export const EMPTY: Step = { kind: 'empty' };
 export const REFUSAL: Step = { kind: 'refusal' };
 export const HTTP = (status: number): Step => ({ kind: 'http', status });
+export const BAD_JSON: Step = { kind: 'bad_json' };
+export const STALL_BODY: Step = { kind: 'stall_body' };
 export const DELAY = (ms: number, then: Step): Step => ({ kind: 'delay', ms, then });
 /** Buoc tinh theo body that (vd lay id tin kich hoat de quote). */
 export const FN = (fn: (body: GeminiBody, text: string) => Step): Step => ({ kind: 'fn', fn });
@@ -81,7 +87,7 @@ function json(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
 }
 
-function geminiResponse(step: Exclude<Step, { kind: 'delay' } | { kind: 'http' } | { kind: 'fn' }>): Response {
+function geminiResponse(step: Exclude<Step, { kind: 'delay' } | { kind: 'http' } | { kind: 'fn' } | { kind: 'bad_json' } | { kind: 'stall_body' }>): Response {
   const usage = { promptTokenCount: 100, candidatesTokenCount: 20 };
   switch (step.kind) {
     case 'text':
@@ -100,6 +106,16 @@ function geminiResponse(step: Exclude<Step, { kind: 'delay' } | { kind: 'http' }
 
 async function play(step: Step, signal: AbortSignal | undefined, body: GeminiBody): Promise<Response> {
   if (step.kind === 'http') return new Response('err', { status: step.status });
+  if (step.kind === 'bad_json') return new Response('<html>proxy</html>', { status: 200 });
+  if (step.kind === 'stall_body') {
+    const stream = new ReadableStream({
+      start(c) {
+        c.enqueue(new TextEncoder().encode('{"candidates":['));
+        signal?.addEventListener('abort', () => c.error(signal.reason ?? new Error('aborted')), { once: true });
+      },
+    });
+    return new Response(stream, { status: 200, headers: { 'content-type': 'application/json' } });
+  }
   if (step.kind === 'fn') return play(step.fn(body, bodyText(body)), signal, body);
   if (step.kind === 'delay') {
     await new Promise<void>((resolve, reject) => {

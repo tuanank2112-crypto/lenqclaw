@@ -203,20 +203,11 @@ interface InboundRow {
  * goi ham nay (tuan tu, ~2 ms) ⇒ khong dua hai lan nhan cung thread.
  */
 export async function claimNextInbound(exclude: readonly string[]): Promise<InboundEvent | null> {
-  return claimInbound(exclude, true);
-}
-
-/**
- * Cau nhan dung chung. `ordered=false` (CHI `processInbound` cua test/sim) bo dieu kien "khong co tin cu hon chua xu ly
- * cung thread": nhieu loi goi `processInbound` DONG THOI van nhan duoc nhieu tin cua mot thread (test P01 "12 processInbound
- * dong thoi"); dispatcher luon dung `ordered=true` va tu giu thu tu bang tap `exclude`.
- */
-async function claimInbound(exclude: readonly string[], ordered: boolean): Promise<InboundEvent | null> {
-  const orderGuard = ordered
-    ? `and not exists (select 1 from inbound_events p
+  // Tin chi duoc nhan khi KHONG con tin chua xu ly nao cu hon cung thread (D35.7: MOI duong nhan deu ep thu tu, ke ca
+  // `processInbound` cua test/sim — khong con nhanh `ordered=false`).
+  const orderGuard = `and not exists (select 1 from inbound_events p
                         where p.processed_at is null and p.zalo_account_id = e.zalo_account_id
-                          and p.thread_id = e.thread_id and p.id < e.id)`
-    : '';
+                          and p.thread_id = e.thread_id and p.id < e.id)`;
   const rows = await sql<InboundRow>(
     `update inbound_events set processed_at = now()
       where id = (select e.id from inbound_events e
@@ -263,11 +254,10 @@ export async function handleClaimed(e: InboundEvent, handler: InboundHandler): P
   }
 }
 
-/** GIU hanh vi cu (test/sim, tuan tu toan cuc): nhan tin cu nhat khong khoa + `handleClaimed`. KHONG ep thu tu thread
- * giua cac loi goi dong thoi (xem `claimInbound`) — SPEC-D31 §6 ghi "= claimNextInbound([])"; lech nho nay co ly do
- * (test P01 "12 processInbound dong thoi"), ghi cau hoi o report R07. */
+/** Test/sim: `claimNextInbound([])` + `handleClaimed` (SPEC-D31 §6, D35.7). EP thu tu thread nhu dispatcher: tin cu hon cung
+ * thread chua xong thi KHONG nhan tin moi hon (route `/api/dev/sim/send` goi ham nay khi `core:run` cung chay). */
 export async function processInbound(handler: InboundHandler = echoHandler): Promise<{ processed: number }> {
-  const e = await claimInbound([], false);
+  const e = await claimNextInbound([]);
   if (!e) return { processed: 0 };
   await handleClaimed(e, handler);
   return { processed: 1 };
