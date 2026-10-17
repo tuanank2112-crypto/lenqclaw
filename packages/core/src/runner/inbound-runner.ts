@@ -102,7 +102,7 @@ export async function runDispatcher(opts: RunnerOptions = {}): Promise<void> {
   const baseHandler = opts.handler ?? routeInboundEvent;
   // D37: lam moi anh chup `botUid` (cache 60 s) truoc moi luot — node do thi doc dong bo `resolveBotUid()`.
   const handler: InboundHandler = async (e) => {
-    await botUid().catch(() => null);
+    await botUid('community', process.env, Date.now, e.threadId).catch(() => null);
     return baseHandler(e);
   };
   const concurrency = opts.concurrency ?? cfg.runnerConcurrency;

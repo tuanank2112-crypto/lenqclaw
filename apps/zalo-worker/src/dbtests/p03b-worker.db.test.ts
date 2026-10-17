@@ -21,6 +21,8 @@ beforeEach(async () => {
 });
 afterAll(async () => {
   await resetAccount();
+  // D39: test phien `connected` ghi own_uid that vao DB dev; don ⇒ sim khong bi mat nhan dien mention bot.
+  await sql(`update zalo_accounts set own_uid = null where id = 'community'`);
   await closeDb();
 });
 

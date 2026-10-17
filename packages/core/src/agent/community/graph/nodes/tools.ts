@@ -46,12 +46,15 @@ export const toolsNode: NodeFn<TurnStateT> = async (s) => {
         results.push(errorResult(use.id, 'DeadlineExceeded', 'Không còn đủ thời gian để chạy tool này; hãy trả lời ngay với thông tin đang có.'));
         continue;
       }
-      const out = await tool.run(s.ctx, use.input as Record<string, unknown>);
+      // D39 (SPEC-D31 §5.2): tool truy hoi (extendsDeadline) ⇒ nang lan fast → rag NGAY TRUOC khi chay, de tool (embedTexts)
+      // nhan han `rag` thay vi han `fast` da cu. Lua chon tra cuu cua model da quyet lan (T1).
+      if (tool.extendsDeadline) {
+        const up = escalateLane({ ...s, lane, deadlineAt }, [use.name], laneCfg);
+        if (up) ({ lane, deadlineAt } = up);
+      }
+      const out = await tool.run({ ...s.ctx, deadlineAt }, use.input as Record<string, unknown>);
       results.push({ type: 'tool_result', tool_use_id: use.id, content: JSON.stringify(out ?? null) });
       if (tool.answers) answered += 1;
-      // tool truy hoi (extendsDeadline) chay xong ⇒ nang lan fast → rag (hạn mới tinh tu luc NHAN tin)
-      const up = escalateLane({ ...s, lane, deadlineAt }, [use.name], laneCfg);
-      if (up) ({ lane, deadlineAt } = up);
     } catch (err) {
       // Loi nghiep vu cua repo: `code === name` (domain/errors.ts). Loi pg co `code` (SQLSTATE) nhung `name` khac ⇒ coi la loi
       // he thong, nem len runTurn (ghi vet `error`), khong dua cho model.

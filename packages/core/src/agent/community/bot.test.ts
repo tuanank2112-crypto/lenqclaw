@@ -94,3 +94,24 @@ describe('resolveBotUid() dong bo cho node do thi', () => {
     expect(r.admitted).toBe(false);
   });
 });
+
+describe('D39: DATA_MODE=sim + thread sim-% ⇒ BOT_UID_SIM bat ke cot own_uid', () => {
+  it('cot co uid that, thread sim-% trong DATA_MODE=sim ⇒ BOT_UID_SIM; resolveBotUid theo anh chup do', async () => {
+    db.own = '7001';
+    expect(await botUid('community', { DATA_MODE: 'sim' }, Date.now, 'sim-abc')).toBe(BOT_UID_SIM);
+    expect(resolveBotUid({ DATA_MODE: 'sim' })).toBe(BOT_UID_SIM);
+  });
+  it('thread that (khong sim-) hoac DATA_MODE khac sim ⇒ van doc cot own_uid', async () => {
+    db.own = '7001';
+    expect(await botUid('community', { DATA_MODE: 'sim' }, Date.now, 'g-123')).toBe('7001');
+    expect(resolveBotUid({ DATA_MODE: 'sim' })).toBe('7001');
+    resetBotUidCache();
+    expect(await botUid('community', { DATA_MODE: 'real' }, Date.now, 'sim-abc')).toBe('7001');
+  });
+  it('luot sau tren thread that dat lai anh chup (khong ro ri co sim)', async () => {
+    db.own = '7001';
+    await botUid('community', { DATA_MODE: 'sim' }, Date.now, 'sim-abc');
+    await botUid('community', { DATA_MODE: 'sim' }, Date.now, 'g-123');
+    expect(resolveBotUid({ DATA_MODE: 'sim' })).toBe('7001');
+  });
+});

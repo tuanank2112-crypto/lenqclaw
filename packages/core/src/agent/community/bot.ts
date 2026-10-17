@@ -3,6 +3,7 @@
 //   1. cot `zalo_accounts.own_uid` (worker ghi `session.ownUid` moi lan phien `connected`) — doc qua cache 60 s
 //   2. env `BOT_ZALO_UID`
 //   3. CHI khi `DATA_MODE=sim` (mac dinh cua config): `BOT_UID_SIM`
+//   (D39) thread `sim-%` + DATA_MODE=sim ⇒ BOT_UID_SIM truoc moi nguon tren.
 //   4. khong co ⇒ `null`: cong coi nhu KHONG co mention bot (khong doan uid).
 // Cac node do thi (graph/**, hinh chot, khong sua) goi ham DONG BO `resolveBotUid()`: no doc anh chup cache moi nhat
 // (runner lam moi bang `await botUid()` truoc moi luot) roi env/sim; khong co nguon nao ⇒ `BOT_UID_UNKNOWN` (khong
@@ -18,12 +19,19 @@ export const BOT_UID_UNKNOWN = 'bot-uid-unknown';
 interface CacheEntry {
   uid: string | null;
   at: number;
+  /** D39: luot gan nhat la thread `sim-%` trong `DATA_MODE=sim` ⇒ `resolveBotUid` tra `BOT_UID_SIM` bat ke cot. */
+  sim: boolean;
 }
 const cache = new Map<string, CacheEntry>();
 
 /** Xoa cache (test). */
 export function resetBotUidCache(): void {
   cache.clear();
+}
+
+/** D39: sim khong bao gio dung uid that — `DATA_MODE=sim` + thread `sim-%` ⇒ `BOT_UID_SIM` bat ke cot `own_uid`. */
+function isSimThread(env: NodeJS.ProcessEnv, threadId: string | undefined): boolean {
+  return threadId !== undefined && threadId.startsWith('sim-') && (env.DATA_MODE?.trim() || 'sim') === 'sim';
 }
 
 function fromEnv(env: NodeJS.ProcessEnv): string | null {
@@ -37,8 +45,10 @@ function fromEnv(env: NodeJS.ProcessEnv): string | null {
 export async function botUid(
   account: string = 'community',
   env: NodeJS.ProcessEnv = process.env,
-  now: () => number = Date.now
+  now: () => number = Date.now,
+  threadId?: string
 ): Promise<string | null> {
+  const sim = isSimThread(env, threadId);
   const hit = cache.get(account);
   if (!hit || now() - hit.at >= BOT_UID_CACHE_MS) {
     let uid: string | null = hit?.uid ?? null;
@@ -48,12 +58,17 @@ export async function botUid(
     } catch {
       /* DB chap chon: giu gia tri cu, thu lai sau 60 s */
     }
-    cache.set(account, { uid, at: now() });
+    cache.set(account, { uid, at: now(), sim });
   }
-  return cache.get(account)!.uid ?? fromEnv(env);
+  const entry = cache.get(account)!;
+  entry.sim = sim;
+  if (sim) return BOT_UID_SIM;
+  return entry.uid ?? fromEnv(env);
 }
 
 /** Dong bo cho node do thi: anh chup cache (`own_uid`) → env → sim → `BOT_UID_UNKNOWN`. */
 export function resolveBotUid(env: NodeJS.ProcessEnv = process.env, account: string = 'community'): string {
-  return cache.get(account)?.uid ?? fromEnv(env) ?? BOT_UID_UNKNOWN;
+  const e = cache.get(account);
+  if (e?.sim) return BOT_UID_SIM;
+  return e?.uid ?? fromEnv(env) ?? BOT_UID_UNKNOWN;
 }
