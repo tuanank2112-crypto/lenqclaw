@@ -2,7 +2,8 @@
 // chong gia mao (`zalo_msg_id` phai `sys-%` va `payload.kind='system'`), roi chon loai luot.
 //   ambient_flush        ⇒ luot group_ambient_flush           unanswered_question ⇒ luot group_unanswered
 //   approval_executed    ⇒ DM owner APPROVAL_RESULT_DM, KHONG luot model
-//   welcome_flush · join_request · automation ⇒ KHUNG (P05/P07): audit `system.unhandled`, `stop='system_no_turn'`
+//   welcome_flush       ⇒ luot group_welcome (mustReply)     join_request ⇒ luot group_join_review (CHI policy agent_review, P05)
+//   automation ⇒ KHUNG (P07): audit `system.unhandled`, `stop='system_no_turn'`
 // Outbox: CHI `APPROVAL_RESULT_DM` (bang 01-CONTRACTS §12.3). Model ✗.
 
 import { sql } from '../../../../adapters/db.js';
@@ -78,8 +79,39 @@ export const systemEventNode: NodeFn<PipelineStateT> = async (s) => {
       }
       return { stop: 'system_no_turn' };
     }
+    case 'welcome_flush': {
+      const group = await getGroup(e.zaloAccountId, e.threadId);
+      const uids = Array.isArray(data.uids) ? data.uids.filter((u): u is string => typeof u === 'string') : [];
+      if (!group || !group.enabled || !group.welcomeEnabled || uids.length === 0) {
+        await audit(sql, { actorType: 'system', actorId: String(e.id), action: 'welcome.skip', target: e.threadId, data: null });
+        return { group, stop: 'system_no_turn' };
+      }
+      return {
+        group,
+        turnRequest: { ...baseRequest(s), kind: 'group_welcome', trigger: null, mustReply: true, focusMessageIds: [], joinedUids: uids },
+      };
+    }
+    case 'join_request': {
+      const group = await getGroup(e.zaloAccountId, e.threadId);
+      const uid = typeof data.uid === 'string' ? data.uid : '';
+      const pending =
+        uid && group
+          ? await sql(
+              `select 1 from join_requests where zalo_account_id = $1 and thread_id = $2 and zalo_uid = $3 and decision = 'pending' limit 1`,
+              [e.zaloAccountId, e.threadId, uid]
+            )
+          : [];
+      if (!group || !group.enabled || group.joinPolicy !== 'agent_review' || pending.length === 0) {
+        await audit(sql, { actorType: 'system', actorId: String(e.id), action: 'join_review.skip', target: e.threadId, data: null });
+        return { group, stop: 'system_no_turn' };
+      }
+      return {
+        group,
+        turnRequest: { ...baseRequest(s), kind: 'group_join_review', trigger: null, mustReply: false, focusMessageIds: [], joinRequest: { uid } },
+      };
+    }
     default: {
-      // welcome_flush · join_request · automation (P05/P07) hoac loai la.
+      // automation (P07) hoac loai la.
       await audit(sql, {
         actorType: 'system',
         actorId: String(e.id),

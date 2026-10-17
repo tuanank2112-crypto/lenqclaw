@@ -10,6 +10,7 @@ import { enqueue } from '../../../../adapters/transport.js';
 import { PersonaMissingError, PersonaTooLargeError } from '../../../../domain/errors.js';
 import type { DmTurnContext, GroupMessageRow, GroupTurnContext } from '../../../../domain/types.js';
 import { readCommunityConfig } from '../../../../services/community-config.js';
+import { loadJoinReviewInfo } from '../../../../services/join-requests.js';
 import { loadMemberContext } from '../../../../services/memory.js';
 import { loadHistory } from '../../../conversation.js';
 import { resolveBotUid } from '../../bot.js';
@@ -121,6 +122,8 @@ export const prepareNode: NodeFn<TurnStateT> = async (s) => {
   }
 
   const names = await displayNames(req.account, req.threadId, [req.requester?.uid ?? '', ...(req.joinedUids ?? [])].filter(Boolean));
+  // P05 §6: luot group_join_review — nguoi xin vao CHUA la thanh vien nen ten/so lan xin truoc doc tu `join_requests`.
+  const joinInfo = req.kind === 'group_join_review' && req.joinRequest ? await loadJoinReviewInfo(req.account, req.threadId, req.joinRequest.uid) : null;
   const groupCtx: GroupTurnContext = {
     kind: req.kind as GroupTurnContext['kind'],
     account: req.account,
@@ -140,7 +143,7 @@ export const prepareNode: NodeFn<TurnStateT> = async (s) => {
     focusMessages: focus,
     recent,
     ...(req.joinedUids ? { joinedUids: req.joinedUids } : {}),
-    ...(req.joinRequest ? { joinRequest: { uid: req.joinRequest.uid, displayName: null } } : {}),
+    ...(req.joinRequest ? { joinRequest: { uid: req.joinRequest.uid, displayName: joinInfo?.displayName ?? null } } : {}),
     now,
     conversationId,
     inboundEventId: req.inboundEventId,
@@ -154,6 +157,13 @@ export const prepareNode: NodeFn<TurnStateT> = async (s) => {
   let extra: string | undefined;
   if (req.joinedUids && req.joinedUids.length > 0) {
     extra = ['<<<untrusted new_members>>>', ...req.joinedUids.map((u) => `${sanitizeUntrusted(u)} "${oneLineField(sanitizeUntrusted(redactPhones(names.get(u) ?? '')))}"`), '<<<end>>>'].join('\n');
+  }
+  if (joinInfo && req.joinRequest) {
+    extra = [
+      '<<<untrusted join_request>>>',
+      `${sanitizeUntrusted(req.joinRequest.uid)} "${oneLineField(sanitizeUntrusted(redactPhones(joinInfo.displayName ?? '')))}" — số lần xin vào trước: ${joinInfo.prior}`,
+      '<<<end>>>',
+    ].join('\n');
   }
   return {
     turnId,

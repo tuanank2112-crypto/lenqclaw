@@ -54,18 +54,20 @@ describe('/api/dev/sim/tick (db)', () => {
     expect((await simTick(await req('http://localhost/api/dev/sim/tick', 'operator', {}))).status).toBe(403);
   });
 
-  it('admin ⇒ 200, timers tra steps (flushAmbient, pickUnanswered, expireApprovals, reconcileDeletes, pruneBuffers, embedPending) + delivered la so; now sai dinh dang ⇒ 400', async () => {
+  it('admin ⇒ 200, timers tra steps (flushAmbient, flushWelcomes, pickUnanswered, expireApprovals, expireJoinRequests, reconcileDeletes, pruneBuffers, embedPending) + delivered la so; now sai dinh dang ⇒ 400', async () => {
     process.env.DATA_MODE = 'sim';
     const res = await simTick(
       await req('http://localhost/api/dev/sim/tick', 'admin', { now: new Date().toISOString() })
     );
     expect(res.status).toBe(200);
     const body = await res.json();
-    // P03 + P04 + P05: runTimers co 6 buoc thuc — moi buoc tra so muc da xu ly (P05 them expireApprovals, reconcileDeletes).
+    // P03 + P04 + P05: runTimers co 8 buoc thuc — moi buoc tra so muc da xu ly (P05 them flushWelcomes, expireApprovals, expireJoinRequests, reconcileDeletes).
     expect(body.steps).toEqual({
       flushAmbient: expect.any(Number),
+      flushWelcomes: expect.any(Number),
       pickUnanswered: expect.any(Number),
       expireApprovals: expect.any(Number),
+      expireJoinRequests: expect.any(Number),
       reconcileDeletes: expect.any(Number),
       pruneBuffers: expect.any(Number),
       embedPending: expect.any(Number),

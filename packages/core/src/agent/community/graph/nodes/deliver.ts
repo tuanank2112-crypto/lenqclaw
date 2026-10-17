@@ -7,6 +7,7 @@ import { sql } from '../../../../adapters/db.js';
 import { enqueue } from '../../../../adapters/transport.js';
 import type { DmTurnContext, GroupTurnContext } from '../../../../domain/types.js';
 import { audit } from '../../../../services/audit.js';
+import { applyJoinDefault } from '../../../../services/join-requests.js';
 import { saveMessage } from '../../../conversation.js';
 import { postGroupText } from '../../group-post.js';
 import { handoffToOwner } from '../../handoff.js';
@@ -116,8 +117,10 @@ export const deliverNode: NodeFn<TurnStateT> = async (s) => {
       break;
     }
     case 'join_default': {
-      // Q9: CHO VAO mac dinh — thi hanh that la SPEC-P05 §6; P03 chi ghi nhan quyet dinh.
-      await audit(sql, { actorType: 'system', actorId: null, action: 'join_review.default', target: req.threadId, data: { outcome } });
+      // Q9: CHO VAO mac dinh (SPEC-P05 §6) — model im / sap / refusal / cham tran ⇒ host duyet yeu cau con `pending`.
+      const joinUid = req.joinRequest?.uid;
+      const applied = joinUid ? await applyJoinDefault({ account: req.account, threadId: req.threadId, uid: joinUid, now: new Date(), inboundEventId: req.inboundEventId }) : false;
+      await audit(sql, { actorType: 'system', actorId: null, action: 'join_review.default', target: req.threadId, data: { outcome, applied } });
       break;
     }
     case 'persona_invalid': {

@@ -154,7 +154,7 @@ async function safeStep(step: string, fn: () => Promise<number>): Promise<number
   }
 }
 
-/** Thu tu theo SPEC-P07 §2: #2 flushAmbient · #4 pickUnanswered (P04 §5) · #6 expireApprovals (P05 §5.5) ·
+/** Thu tu theo SPEC-P07 §2: #2 flushAmbient · #3 flushWelcomes (P05 §7.1) · #4 pickUnanswered (P04 §5) · #6 expireApprovals + expireJoinRequests (P05 §5.5, §6) ·
  * #7 reconcileDeletes (P05 §9) · #8 pruneBuffers · #9 embedPending (P04 §1, <= 50 muc) · #13 opsWatch. */
 export async function runTimers(now: Date, cfg: CommunityConfig = readCommunityConfig(), ctx: TimerContext = {}): Promise<TimerReport> {
   const steps: Record<string, number> = {};
