@@ -393,9 +393,16 @@ describe('pacer tren DB (§5, §8)', () => {
     const texts = fake.sent.filter((x) => x.kind === 'text');
     expect(texts.length).toBe(50);
     expect(verifySendLog(texts.map((x) => ({ at: x.at, threadId: x.threadId })), FAST)).toEqual([]);
-    // moi tin text co "dang go" dung truoc
-    const typings = fake.sent.filter((x) => x.kind === 'typing').length;
-    expect(typings).toBeGreaterThanOrEqual(50);
+    // moi tin text co "dang go" cung thread dung truoc trong <= typingFreshMs. D31 T7 (SPEC-D31 §7.1.3): thread da co "dang go" tuoi
+    // ⇒ tin sau KHONG gui typing lai (truoc D31 la 1 typing / tin, tong >= 50; nay moi nguoi nhan >= 1 typing, tong <= 50).
+    const typingEvents = fake.sent.filter((x) => x.kind === 'typing');
+    expect(typingEvents.length).toBeGreaterThanOrEqual(threads.length);
+    expect(typingEvents.length).toBeLessThanOrEqual(50);
+    for (const t of texts) {
+      const before = typingEvents.filter((ty) => ty.threadId === t.threadId && ty.at <= t.at).map((ty) => ty.at);
+      expect(before.length, `text toi ${t.threadId} khong co typing truoc`).toBeGreaterThan(0);
+      expect(t.at - Math.max(...before)).toBeLessThanOrEqual(FAST.typingFreshMs);
+    }
     await s.stop();
   }, 120_000);
 
