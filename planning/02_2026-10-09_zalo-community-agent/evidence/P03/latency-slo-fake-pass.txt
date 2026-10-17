@@ -1,0 +1,42 @@
+# evidence/P03/latency-slo-fake-pass.txt — output may, KHONG sua tay. DOI CHUNG (G23): cung may do, model GIA tre 300 ms, n=20 ⇒ DAT (exit 0), cho thay 3 ca DO do chinh dot bien.
+# date_utc=2026-10-17T05:55:53Z
+$ node --env-file=.env --import tsx scripts/latency_slo.mjs --n 20 --fake-delay-ms 300
+{
+  "config": {
+    "mode": "fake(300ms)",
+    "n": 20,
+    "concurrency": 4,
+    "lane_fast_deadline_ms": 3500,
+    "lane_rag_deadline_ms": 12500,
+    "block_ms": 0,
+    "provider": "gemini",
+    "model_fast": "(mac dinh theo provider)",
+    "since": "2026-10-17T05:55:54.599Z"
+  },
+  "summary": {
+    "fast": {
+      "n": 20,
+      "answered": 20,
+      "p50": 550,
+      "p95": 660,
+      "deadline_hit_rate": 0,
+      "lane_accuracy": 1
+    },
+    "rag": {
+      "n": 20,
+      "answered": 20,
+      "p50": 875,
+      "p95": 888,
+      "deadline_hit_rate": 0,
+      "lane_accuracy": 1
+    },
+    "hol": {
+      "runtime_ms": 561,
+      "lane": "fast",
+      "outcome": "replied"
+    }
+  },
+  "error_rate": 0
+}
+G23 RESULT: PASS
+exit=0

@@ -1,0 +1,69 @@
+# evidence/P03/red-policy-stranger.txt — output may, KHONG sua tay. policy.test.ts DO khi stranger o DM duoc dung moi tool cua be mat D
+# date_utc=2026-10-17T05:43:57Z
+# DOT BIEN packages\core\src\agent\community\policy.ts:
+#   - if (surface === 'D' && role === 'stranger') {
+#   + if (false) {
+$ npx vitest run src\agent\community\policy.test.ts   (cwd=packages\core)
+   Duration  1.15s (transform 258ms, setup 0ms, collect 655ms, tests 28ms, environment 0ms, prepare 160ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/agent/community/policy.test.ts > allowedToolNames — moi tool × be mat > dm/stranger remember_member_note => false (stranger KHONG ghi chu)
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/agent/community/policy.test.ts:118:43
+    116|   });
+    117|   it.each(CASES)('%s/%s %s => %s (%s)', (kind, role, tool, ok) => {
+    118|     expect(allowed(kind, role).has(tool)).toBe(ok);
+       |                                           ^
+    119|   });
+    120|   it('moi tool trong TOOL_NAMES xuat hien o it nhat mot ca cho (bang c…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/agent/community/policy.test.ts > surfaceOf / toolsFor / assertToolAllowed > assertToolAllowed nem ToolNotAllowedError voi tool cam / tool la
+AssertionError: expected function to throw an error, but it didn't
+ ❯ src/agent/community/policy.test.ts:144:79
+    142|   });
+    143|   it('assertToolAllowed nem ToolNotAllowedError voi tool cam / tool la…
+    144|     expect(() => assertToolAllowed('dm', 'stranger', 'remember_member_…
+       |                                                                               ^
+    145|     expect(() => assertToolAllowed('group_mention', 'member', 'kick_me…
+    146|     expect(() => assertToolAllowed('group_mention', 'member', 'send_gr…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/agent/community/policy.test.ts > surfaceOf / toolsFor / assertToolAllowed > stranger o DM: dung tap strangerAllowed
+AssertionError: expected [ 'describe_capabilities', …(6) ] to deeply equal [ 'describe_capabilities', …(5) ]
+
+- Expected
++ Received
+
+  Array [
+    "describe_capabilities",
+    "handoff_to_owner",
+    "read_skill",
++   "remember_member_note",
+    "save_lead",
+    "search_knowledge",
+    "submit_lead",
+  ]
+
+ ❯ src/agent/community/policy.test.ts:150:51
+    148|   it('stranger o DM: dung tap strangerAllowed', () => {
+    149|     const want = TOOL_NAMES.filter((n) => TOOL_POLICY[n].strangerAllow…
+    150|     expect([...allowed('dm', 'stranger')].sort()).toEqual(want);
+       |                                                   ^
+    151|   });
+    152| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+exit=1
+# KY VONG: exit != 0 (DO)  -> OK
+# da tra ma nguyen trang: packages\core\src\agent\community\policy.ts

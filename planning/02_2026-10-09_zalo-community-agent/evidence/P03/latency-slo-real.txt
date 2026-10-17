@@ -1,0 +1,6 @@
+# evidence/P03/latency-slo-real.txt — output may, KHONG sua tay. G23 phan model THAT voi cau hinh .env mac dinh (H07 §1: chua co billing ⇒ exit 3 'blocked' duoc chap nhan).
+# date_utc=2026-10-17T05:54:30Z
+$ node --env-file=.env --import tsx scripts/latency_slo.mjs --n 20
+{"preflight":{"calls":5,"errors":5,"first_error":"ModelUnavailableError: Vyce deepseek-v4-flash het credit (402), khong retry/fallback: {\"error\":{\"message\":\"Insufficient balance. Please top up your account.\",\"t"}}
+G23 RESULT: BLOCKED (model that loi 5/5 lan goi thu > 10%: 401/429/5xx/mang — khong do SLO)
+exit=3

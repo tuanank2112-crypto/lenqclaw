@@ -1,0 +1,36 @@
+# evidence/P03/migration-010-probe.txt — output may, KHONG sua tay. SPEC-P03 §11 hang 17: 010 ap TU RONG sau 001..009 tren DB TAM, chay lai applied 0.
+# date_utc=2026-10-17T05:46:25Z  (DB tam lenqclaw_probe010 tren container lenqclaw-db-1; xoa sau khi do; URL/mat khau KHONG ghi)
+$ docker exec lenqclaw-db-1 psql -d postgres -c "drop database if exists lenqclaw_probe010" -c "create database lenqclaw_probe010"
+NOTICE:  database "lenqclaw_probe010" does not exist, skipping
+DROP DATABASE
+CREATE DATABASE
+exit=0
+$ ls db/migrations | wc -l
+10
+$ DATABASE_URL=<probe> npm run db:migrate   (lan 1, tu rong)
+-- applying 009_tenant_trace.sql
+-- applying 010_ops_latency.sql
+applied: 10
+exit=0
+$ DATABASE_URL=<probe> npm run db:migrate   (lan 2)
+> lenqclaw@0.0.1 db:migrate
+> tsx packages/core/src/db/migrate.ts
+applied: 0
+exit=0
+$ psql: schema_migrations (version)
+001_init.sql
+002_search.sql
+003_kb_building.sql
+004_zalo_login.sql
+005_zalo_ui.sql
+006_dispatch_slots.sql
+007_drop_marketplace.sql
+008_community.sql
+009_tenant_trace.sql
+010_ops_latency.sql
+$ psql: doi tuong cua 010
+view reply_latency|1
+process_heartbeats|1
+alert_state|1
+turn_traces cot D31|9
+outbox cot D31|3

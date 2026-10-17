@@ -1,0 +1,50 @@
+# evidence/P03/red-boundary-langgraph.txt — output may, KHONG sua tay. SPEC-P03 §11 hang 12: check_adapter_boundary phai DO tren file tam vi pham BB-15/BB-17/BB-20 (moi ca xoa/khoi phuc file ngay sau).
+# date_utc=2026-10-17T05:46:09Z
+
+## Ca 1 — file tam dung MemorySaver (BB-17)
+$ node scripts/check_adapter_boundary.mjs
+packages/core/src/agent/community/graph/zz_red_tmp.ts:1: dinh danh "MemorySaver" bi cam (BB-17: khong checkpointer/Store/interrupt/Command/Send/MessagesAnnotation)
+violations: 1
+exit=1
+
+## Ca 2 — import goi checkpoint (BB-17)
+$ node scripts/check_adapter_boundary.mjs
+packages/core/src/agent/community/graph/zz_red_tmp.ts:1: import "@langchain/langgraph-checkpoint" bi cam (BB-17: chi Annotation/StateGraph/START/END/GraphRecursionError tu "@langchain/langgraph")
+packages/core/src/agent/community/graph/zz_red_tmp.ts:1: dinh danh "MemorySaver" bi cam (BB-17: khong checkpointer/Store/interrupt/Command/Send/MessagesAnnotation)
+violations: 2
+exit=1
+
+## Ca 3 — node outbox-cam (defer) nap adapters/transport (BB-15 a)
+$ node scripts/check_adapter_boundary.mjs
+packages/core/src/agent/community/graph/nodes/defer.ts:7: node "defer" (outbox ✗) import "../../../../adapters/transport.js" (BB-15)
+violations: 1
+exit=1
+
+## Ca 4 — node gate goi callModel (BB-15 b)
+$ node scripts/check_adapter_boundary.mjs
+packages/core/src/agent/community/graph/nodes/gate.ts:11: import "../../../../adapters/model.js" ngoai graph/nodes/agent.ts (BB-15)
+violations: 1
+exit=1
+
+## Ca 5 — pipeline.ts nap triageCommunityMessage ngoai nodes/triage.ts (BB-15 b)
+$ node scripts/check_adapter_boundary.mjs
+packages/core/src/agent/community/graph/pipeline.ts:21: import "../triage.js" ngoai graph/nodes/triage.ts (BB-15)
+violations: 1
+exit=1
+
+## Ca 6 — chuoi api.telegram.org ngoai adapters/alert.ts (BB-20)
+$ node scripts/check_adapter_boundary.mjs
+packages/core/src/zz_red_tmp.ts:1: chuoi "api.telegram.org" ngoai adapters/alert.ts (BB-20)
+violations: 1
+exit=1
+
+## Ca 7 — import @langchain/core/* (BB-17)
+$ node scripts/check_adapter_boundary.mjs
+packages/core/src/agent/community/graph/zz_red_tmp.ts:1: import "@langchain/core/runnables" bi cam (BB-17: chi Annotation/StateGraph/START/END/GraphRecursionError tu "@langchain/langgraph")
+violations: 1
+exit=1
+
+## Nguyen trang sau khi tra ma
+$ node scripts/check_adapter_boundary.mjs
+violations: 0
+exit=0

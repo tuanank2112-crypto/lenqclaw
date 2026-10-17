@@ -1,0 +1,46 @@
+# evidence/P03/red-edges-delivery.txt — output may, KHONG sua tay. edges.test.ts DO khi D9 (ambient im) bi doi thanh dang text rieng tu (BB-05)
+# date_utc=2026-10-17T05:43:49Z
+# DOT BIEN packages\core\src\agent\community\graph\edges.ts:
+#   - if (!t.request.mustReply) return { delivery: 'none', outcome: 'silent' }; // D9
+#   + if (!t.request.mustReply) return { delivery: 'auto_post', outcome: 'silent' }; // D9
+$ npx vitest run src\agent\community\graph\edges.test.ts   (cwd=packages\core)
+RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/agent/community/graph/edges.test.ts (109 tests | 2 failed) 35ms
+   × decideDelivery — 12 dong D1–D12 (01-CONTRACTS §12.5) > D9 ambient im 11ms
+     → expected { delivery: 'auto_post', …(1) } to deeply equal { delivery: 'none', outcome: 'silent' }
+   × decideDelivery — 12 dong D1–D12 (01-CONTRACTS §12.5) > D9 unanswered im 1ms
+     → expected { delivery: 'auto_post', …(1) } to deeply equal { delivery: 'none', outcome: 'silent' }
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 107 passed (109)
+   Start at  12:43:47
+   Duration  1.50s (transform 94ms, setup 0ms, collect 987ms, tests 35ms, environment 0ms, prepare 154ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/agent/community/graph/edges.test.ts > decideDelivery — 12 dong D1–D12 (01-CONTRACTS §12.5) > D9 ambient im
+ FAIL  src/agent/community/graph/edges.test.ts > decideDelivery — 12 dong D1–D12 (01-CONTRACTS §12.5) > D9 unanswered im
+AssertionError: expected { delivery: 'auto_post', …(1) } to deeply equal { delivery: 'none', outcome: 'silent' }
+
+- Expected
++ Received
+
+  Object {
+-   "delivery": "none",
++   "delivery": "auto_post",
+    "outcome": "silent",
+  }
+
+ ❯ src/agent/community/graph/edges.test.ts:295:31
+    293|   ];
+    294|   it.each(cases)('%s', (_n, t, delivery, outcome) => {
+    295|     expect(decideDelivery(t)).toEqual({ delivery, outcome });
+       |                               ^
+    296|   });
+    297|   it('12 dong D1..D12 deu duoc phu (ten ca bat dau bang D1..D12)', () …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+exit=1
+# KY VONG: exit != 0 (DO)  -> OK
+# da tra ma nguyen trang: packages\core\src\agent\community\graph\edges.ts

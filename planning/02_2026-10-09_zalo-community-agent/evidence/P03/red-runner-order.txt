@@ -1,0 +1,69 @@
+# evidence/P03/red-runner-order.txt — output may, KHONG sua tay. runner.db.test.ts DO khi dispatcher khong loai thread dang chay (hai tin cung thread chong nhau / B khong vuot qua A)
+# date_utc=2026-10-17T05:45:51Z
+# DOT BIEN packages\core\src\runner\inbound-runner.ts:
+#   - const e = await claimNextInbound([...inflight.keys()]);
+#   + const e = await claimNextInbound([]);
+$ npx vitest run --config vitest.db.config.ts src\dbtests\runner.db.test.ts   (cwd=packages\core)
+
+ ❯ src/dbtests/runner.db.test.ts (9 tests | 3 failed) 11903ms
+   ✓ runner song song theo thread (BB-19) > (v) thread A treo 3 s, tin thread B toi sau 100 ms ⇒ B xong truoc A 3091ms
+   × runner song song theo thread (BB-19) > A1, A2 cung thread chay DUNG thu tu va KHONG chong nhau (du con o trong) 378ms
+     → expected 1792215942799 to be greater than or equal to 1792215943104
+   × runner song song theo thread (BB-19) > RUNNER_CONCURRENCY=1: thread khac phai cho (dieu kien nen cua ca do G23 serial) 8076ms
+     → until: het thoi gian cho
+   × runner song song theo thread (BB-19) > dung em: abort cho luot dang chay xong (toi da RUNNER_DRAIN_MS) 138ms
+     → expected false to be true // Object.is equality
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 6 passed (9)
+   Start at  12:45:37
+   Duration  14.06s (transform 423ms, setup 0ms, collect 1.90s, tests 11.90s, environment 0ms, prepare 96ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/runner.db.test.ts > runner song song theo thread (BB-19) > A1, A2 cung thread chay DUNG thu tu va KHONG chong nhau (du con o trong)
+AssertionError: expected 1792215942799 to be greater than or equal to 1792215943104
+ ❯ src/dbtests/runner.db.test.ts:92:23
+     90|     await until(() => spans.size === 3);
+     91|     const [s1, s2, s3] = ids.map((i) => spans.get(i)!);
+     92|     expect(s2!.start).toBeGreaterThanOrEqual(s1!.end);
+       |                       ^
+     93|     expect(s3!.start).toBeGreaterThanOrEqual(s2!.end);
+     94|     ctl.abort();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/dbtests/runner.db.test.ts > runner song song theo thread (BB-19) > RUNNER_CONCURRENCY=1: thread khac phai cho (dieu kien nen cua ca do G23 serial)
+Error: until: het thoi gian cho
+ ❯ until src/dbtests/runner.db.test.ts:20:9
+     18|     await sleep(20);
+     19|   }
+     20|   throw new Error('until: het thoi gian cho');
+       |         ^
+     21| }
+     22| 
+ ❯ src/dbtests/runner.db.test.ts:121:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/dbtests/runner.db.test.ts > runner song song theo thread (BB-19) > dung em: abort cho luot dang chay xong (toi da RUNNER_DRAIN_MS)
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/dbtests/runner.db.test.ts:183:22
+    181|     ctl.abort();
+    182|     await loop;
+    183|     expect(finished).toBe(true);
+       |                      ^
+    184|   }, 15_000);
+    185| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+exit=1
+# KY VONG: exit != 0 (DO)  -> OK
+# da tra ma nguyen trang: packages\core\src\runner\inbound-runner.ts

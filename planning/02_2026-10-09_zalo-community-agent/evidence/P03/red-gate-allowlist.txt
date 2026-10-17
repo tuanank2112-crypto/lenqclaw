@@ -1,0 +1,49 @@
+# evidence/P03/red-gate-allowlist.txt — output may, KHONG sua tay. gate.test.ts (G06) DO khi moderator khong con duoc mien allowUsers
+# date_utc=2026-10-17T05:43:51Z
+# DOT BIEN packages\core\src\agent\community\gate.ts:
+#   - !i.group.allowUsers.includes(i.sender.uid) && !privileged
+#   + !i.group.allowUsers.includes(i.sender.uid)
+$ npx vitest run src\agent\community\gate.test.ts   (cwd=packages\core)
+RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/agent/community/gate.test.ts (38 tests | 1 failed) 27ms
+   × decideGroupInbound — 28 ca G01–G28 > G06 allowUsers nhung nguoi gui la moderator 8ms
+     → expected { admitted: false, …(4) } to deeply equal { admitted: true, …(4) }
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 37 passed (38)
+   Start at  12:43:50
+   Duration  882ms (transform 120ms, setup 0ms, collect 276ms, tests 27ms, environment 0ms, prepare 177ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/agent/community/gate.test.ts > decideGroupInbound — 28 ca G01–G28 > G06 allowUsers nhung nguoi gui la moderator
+AssertionError: expected { admitted: false, …(4) } to deeply equal { admitted: true, …(4) }
+
+- Expected
++ Received
+
+  Object {
+-   "admitted": true,
++   "admitted": false,
+    "buffer": true,
+-   "mustReply": true,
+-   "reason": "admitted",
+-   "trigger": "mention",
++   "mustReply": false,
++   "reason": "sender_not_allowed",
++   "trigger": null,
+  }
+
+ ❯ src/agent/community/gate.test.ts:100:35
+     98|   });
+     99|   it.each(cases)('%s', (_name, i, want) => {
+    100|     expect(decideGroupInbound(i)).toEqual(want);
+       |                                   ^
+    101|   });
+    102| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+exit=1
+# KY VONG: exit != 0 (DO)  -> OK
+# da tra ma nguyen trang: packages\core\src\agent\community\gate.ts

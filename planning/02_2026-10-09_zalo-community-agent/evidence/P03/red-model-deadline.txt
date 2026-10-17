@@ -1,0 +1,69 @@
+# evidence/P03/red-model-deadline.txt — output may, KHONG sua tay. model.deadline.test.ts DO khi con < MODEL_MIN_ATTEMPT_MS van goi mang
+# date_utc=2026-10-17T05:44:08Z
+# DOT BIEN packages\core\src\adapters\model.ts:
+#   - if (remaining < l.minAttemptMs) {
+#   + if (false) {
+$ npx vitest run src\adapters\model.deadline.test.ts   (cwd=packages\core)
+
+ FAIL  src/adapters/model.deadline.test.ts > callModel — han chot (deadlineAt) > da qua han ⇒ 0 fetch
+AssertionError: expected RangeError: The value of "delay" is out o… { code: '…' } to be an instance of ModelDeadlineError
+ ❯ src/adapters/model.deadline.test.ts:80:5
+     78|     const r = rec();
+     79|     setGeminiFetchForTest(slowFetch(10, r));
+     80|     await expect(callModel({ ...CALL, deadlineAt: Date.now() - 100 }))…
+       |     ^
+     81|     expect(r.calls).toBe(0);
+     82|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/adapters/model.deadline.test.ts > callModel — han chot (deadlineAt) > nhanh openrouter cung ton trong han chot (0 fetch khi thieu gio) va max_tokens 1024
+AssertionError: promise resolved "{ message: { …(8) }, …(2) }" instead of rejecting
+
+- Expected
++ Received
+
+- [Error: rejected promise]
++ Object {
++   "message": Object {
++     "content": Array [],
++     "id": "msg_oai_1792215848403",
++     "model": "main-model",
++     "role": "assistant",
++     "stop_reason": "end_turn",
++     "stop_sequence": null,
++     "type": "message",
++     "usage": Object {
++       "cache_creation": null,
++       "cache_creation_input_tokens": 0,
++       "cache_read_input_tokens": 0,
++       "input_tokens": 0,
++       "output_tokens": 0,
++       "server_tool_use": null,
++       "service_tier": null,
++     },
++   },
++   "model": "main-model",
++   "usage": Object {
++     "cache_creation": null,
++     "cache_creation_input_tokens": 0,
++     "cache_read_input_tokens": 0,
++     "input_tokens": 0,
++     "output_tokens": 0,
++     "server_tool_use": null,
++     "service_tier": null,
++   },
++ }
+
+ ❯ src/adapters/model.deadline.test.ts:132:70
+    130|     const r = rec();
+    131|     setOpenRouterFetchForTest(slowFetch(10, r));
+    132|     await expect(callModel({ ...CALL, deadlineAt: Date.now() + 200 }))…
+       |                                                                      ^
+    133|     expect(r.calls).toBe(0);
+    134|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+exit=1
+# KY VONG: exit != 0 (DO)  -> OK
+# da tra ma nguyen trang: packages\core\src\adapters\model.ts

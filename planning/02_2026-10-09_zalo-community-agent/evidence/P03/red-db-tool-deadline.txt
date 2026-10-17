@@ -1,0 +1,40 @@
+# evidence/P03/red-db-tool-deadline.txt — output may, KHONG sua tay. p03 DO khi tool van chay du con < TOOL_MIN_MS
+# date_utc=2026-10-17T05:44:55Z
+# DOT BIEN packages\core\src\agent\community\graph\nodes\tools.ts:
+#   - if (deadlineAt - Date.now() < cfg.toolMinMs) {
+#   + if (false) {
+$ npx vitest run --config vitest.db.config.ts src\dbtests\p03-group-turn.db.test.ts -t "TOOL_MIN_MS"   (cwd=packages\core)
+RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/p03-group-turn.db.test.ts (38 tests | 1 failed | 37 skipped) 135ms
+   × P03 — D31 toc do (BB-18): han chot, lan, typing som > D31: con < TOOL_MIN_MS toi han chot ⇒ tool KHONG chay, model thay DeadlineExceeded 113ms
+     → expected 1 to be +0 // Object.is equality
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 37 skipped (38)
+   Start at  12:44:53
+   Duration  1.98s (transform 350ms, setup 0ms, collect 1.58s, tests 135ms, environment 0ms, prepare 90ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p03-group-turn.db.test.ts > P03 — D31 toc do (BB-18): han chot, lan, typing som > D31: con < TOOL_MIN_MS toi han chot ⇒ tool KHONG chay, model thay DeadlineExceeded
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ src/dbtests/p03-group-turn.db.test.ts:626:46
+    624|       delete process.env.TOOL_MIN_MS;
+    625|     }
+    626|     expect(await auditCount('kb.search', g)).toBe(0);
+       |                                              ^
+    627|     expect(JSON.stringify(modelBodies(g)[1]!.contents)).toContain('Dea…
+    628|     const t = (await tracesFor(g))[0]!;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+exit=1
+# KY VONG: exit != 0 (DO)  -> OK
+# da tra ma nguyen trang: packages\core\src\agent\community\graph\nodes\tools.ts

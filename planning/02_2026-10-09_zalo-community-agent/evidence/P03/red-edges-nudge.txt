@@ -1,0 +1,58 @@
+# evidence/P03/red-edges-nudge.txt — output may, KHONG sua tay. edges.test.ts DO khi nudge khong gioi han 1 lan
+# date_utc=2026-10-17T05:43:45Z
+# DOT BIEN packages\core\src\agent\community\graph\edges.ts:
+#   - !t.nudged &&
+#   + (xoa)
+$ npx vitest run src\agent\community\graph\edges.test.ts   (cwd=packages\core)
+RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/agent/community/graph/edges.test.ts (109 tests | 2 failed) 34ms
+   × afterPrepare / isCapped / needsNudge / afterAgent > needsNudge false: da nhac 10ms
+     → expected true to be false // Object.is equality
+   × afterPrepare / isCapped / needsNudge / afterAgent > afterAgent: can nhac => nudge; con lai => deliver 2ms
+     → expected 'nudge' to be 'deliver' // Object.is equality
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 107 passed (109)
+   Start at  12:43:44
+   Duration  1.52s (transform 97ms, setup 0ms, collect 944ms, tests 34ms, environment 0ms, prepare 175ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/agent/community/graph/edges.test.ts > afterPrepare / isCapped / needsNudge / afterAgent > needsNudge false: da nhac
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/agent/community/graph/edges.test.ts:240:59
+    238|     ['tool_use', { stop: 'tool_use' as const }],
+    239|   ])('needsNudge false: %s', (_n, over) => {
+    240|     expect(needsNudge(tstate({ ...nudgeBase, ...over }))).toBe(false);
+       |                                                           ^
+    241|   });
+    242|   it('needsNudge false: ambient / DM / mustReply=false', () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/agent/community/graph/edges.test.ts > afterPrepare / isCapped / needsNudge / afterAgent > afterAgent: can nhac => nudge; con lai => deliver
+AssertionError: expected 'nudge' to be 'deliver' // Object.is equality
+
+Expected: "deliver"
+Received: "nudge"
+
+ ❯ src/agent/community/graph/edges.test.ts:256:64
+    254|   it('afterAgent: can nhac => nudge; con lai => deliver', () => {
+    255|     expect(afterAgent(tstate(nudgeBase))).toBe('nudge');
+    256|     expect(afterAgent(tstate({ ...nudgeBase, nudged: true }))).toBe('d…
+       |                                                                ^
+    257|     expect(afterAgent(tstate({ ...nudgeBase, finalText: 'x' }))).toBe(…
+    258|     expect(afterAgent(tstate({ stop: 'model_down' }))).toBe('deliver');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+exit=1
+# KY VONG: exit != 0 (DO)  -> OK
+# da tra ma nguyen trang: packages\core\src\agent\community\graph\edges.ts

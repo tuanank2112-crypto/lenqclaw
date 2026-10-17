@@ -1,0 +1,43 @@
+# evidence/P03/red-latency-serial.txt — output may, KHONG sua tay (G23, TESTING-ACCEPTANCE §4). Ca DO: exit 1 la KY VONG.
+# date_utc=2026-10-17T05:55:40Z
+$ RUNNER_CONCURRENCY=1 node --env-file=.env --import tsx scripts/latency_slo.mjs --n 3 --fake-delay-ms 300 --block-ms 5000
+{
+  "config": {
+    "mode": "fake(300ms)",
+    "n": 3,
+    "concurrency": 1,
+    "lane_fast_deadline_ms": 3500,
+    "lane_rag_deadline_ms": 12500,
+    "block_ms": 5000,
+    "provider": "gemini",
+    "model_fast": "(mac dinh theo provider)",
+    "since": "2026-10-17T05:55:41.298Z"
+  },
+  "summary": {
+    "fast": {
+      "n": 3,
+      "answered": 3,
+      "p50": 577,
+      "p95": 619,
+      "deadline_hit_rate": 0,
+      "lane_accuracy": 1
+    },
+    "rag": {
+      "n": 3,
+      "answered": 3,
+      "p50": 862,
+      "p95": 896,
+      "deadline_hit_rate": 0,
+      "lane_accuracy": 1
+    },
+    "hol": {
+      "runtime_ms": 5182,
+      "lane": "fast",
+      "outcome": "model_down"
+    }
+  },
+  "error_rate": 0
+}
+G23 FAIL: HOL: runtime 5182 ms > 3500
+G23 RESULT: FAIL
+exit=1

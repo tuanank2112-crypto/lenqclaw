@@ -1,0 +1,44 @@
+# evidence/P03/red-db-history.txt — output may, KHONG sua tay. p03 (m) DO khi DM_HISTORY_TURNS bi bo qua (nap 30 tin) — G21
+# date_utc=2026-10-17T05:44:41Z
+# DOT BIEN packages\core\src\agent\community\graph\nodes\prepare.ts:
+#   - 2 * cfg.dmHistoryTurns
+#   + 30
+$ npx vitest run --config vitest.db.config.ts src\dbtests\p03-group-turn.db.test.ts -t "(m)"   (cwd=packages\core)
+RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/p03-group-turn.db.test.ts (38 tests | 1 failed) 7194ms
+   ✓ P03 — luot nhom > (b)(G07) nhom mention + tin thuong ⇒ 0 luot model, 0 outbox; 20 tin thuong ⇒ 0 agent_runs community 323ms
+   ✓ P03 — luot nhom > (j) ModelUnavailableError o mention ⇒ MODEL_DOWN_GROUP_REPLY; nhom khong bi takeover; chu nhan handoff 1073ms
+   × P03 — luot nhom > (m) D22: DM co 30 tin cu + ghi chu ⇒ dung 10 tin lich su + tin hien tai co khoi member_notes; khong tool recall_member_profile 80ms
+     → expected [ { role: 'user', …(1) }, …(30) ] to have a length of 11 but got 31
+   ✓ P03 — luat trong tool / chinh sach > owner DM: surface O co list_groups; tra loi D6 kind owner_dm 401ms
+   ✓ P03 — D31 toc do (BB-18): han chot, lan, typing som > (t) mention + fetch gia tre 6000 ms ⇒ MODEL_DOWN_GROUP_REPLY trong han chot fast, deadline_hit=true, agent_runs.outcome=deadline 3538ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 37 passed (38)
+   Start at  12:44:32
+   Duration  9.00s (transform 342ms, setup 0ms, collect 1.55s, tests 7.19s, environment 0ms, prepare 85ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p03-group-turn.db.test.ts > P03 — luot nhom > (m) D22: DM co 30 tin cu + ghi chu ⇒ dung 10 tin lich su + tin hien tai co khoi member_notes; khong tool recall_member_profile
+AssertionError: expected [ { role: 'user', …(1) }, …(30) ] to have a length of 11 but got 31
+
+- Expected
++ Received
+
+- 11
++ 31
+
+ ❯ src/dbtests/p03-group-turn.db.test.ts:312:24
+    310|     await runAll();
+    311|     const b = modelBodies(marker)[0]!;
+    312|     expect(b.contents).toHaveLength(11);
+       |                        ^
+    313|     const last = JSON.stringify(b.contents[10]);
+    314|     expect(last).toContain('untrusted member_notes');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+exit=1
+# KY VONG: exit != 0 (DO)  -> OK
+# da tra ma nguyen trang: packages\core\src\agent\community\graph\nodes\prepare.ts

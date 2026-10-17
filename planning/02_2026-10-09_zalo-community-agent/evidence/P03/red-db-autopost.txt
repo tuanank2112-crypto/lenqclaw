@@ -1,0 +1,62 @@
+# evidence/P03/red-db-autopost.txt — output may, KHONG sua tay. p03 (d) DO khi host khong dang text cua luot mention (BB-05)
+# date_utc=2026-10-17T05:44:30Z
+# DOT BIEN packages\core\src\agent\community\graph\nodes\deliver.ts:
+#   - await postGroupText(ctx, { text: s.finalText, replyToMsgId: ctx.focusMessages[0]?.id ?? null, by: 'host' });
+#   + void postGroupText;
+$ npx vitest run --config vitest.db.config.ts src\dbtests\p03-group-turn.db.test.ts -t "(d)"   (cwd=packages\core)
+RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/p03-group-turn.db.test.ts (38 tests | 2 failed | 3 skipped) 7897ms
+   ✓ P03 — luot nhom > (b)(G07) nhom mention + tin thuong ⇒ 0 luot model, 0 outbox; 20 tin thuong ⇒ 0 agent_runs community 525ms
+   × P03 — luot nhom > (d)(G08) mention + model khong goi tool nhung co text ⇒ host dang text (auto_posted_final) 74ms
+     → expected [] to have a length of 1 but got +0
+   ✓ P03 — luot nhom > (j) ModelUnavailableError o mention ⇒ MODEL_DOWN_GROUP_REPLY; nhom khong bi takeover; chu nhan handoff 1082ms
+   × P03 — luot nhom > (q) loi giua luot: deliver nem ⇒ dung 1 vet outcome=error + 1 audit handler_error, 0 tin trong nhom 38ms
+     → expected 'auto_posted' to be 'error' // Object.is equality
+   ✓ P03 — luat trong tool / chinh sach > owner DM: surface O co list_groups; tra loi D6 kind owner_dm 497ms
+   ✓ P03 — D31 toc do (BB-18): han chot, lan, typing som > (t) mention + fetch gia tre 6000 ms ⇒ MODEL_DOWN_GROUP_REPLY trong han chot fast, deadline_hit=true, agent_runs.outcome=deadline 3550ms
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 33 passed | 3 skipped (38)
+   Start at  12:44:20
+   Duration  10.32s (transform 509ms, setup 0ms, collect 2.08s, tests 7.90s, environment 0ms, prepare 129ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p03-group-turn.db.test.ts > P03 — luot nhom > (d)(G08) mention + model khong goi tool nhung co text ⇒ host dang text (auto_posted_final)
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/dbtests/p03-group-turn.db.test.ts:163:17
+    161|     await runAll();
+    162|     const out = await outboxFor(g);
+    163|     expect(out).toHaveLength(1);
+       |                 ^
+    164|     expect(out[0]!.body.text).toBe('Trả lời trực tiếp bằng text.');
+    165|     expect(out[0]!.body.quote?.msgId).toBe(s.msgId);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/dbtests/p03-group-turn.db.test.ts > P03 — luot nhom > (q) loi giua luot: deliver nem ⇒ dung 1 vet outcome=error + 1 audit handler_error, 0 tin trong nhom
+AssertionError: expected 'auto_posted' to be 'error' // Object.is equality
+
+Expected: "error"
+Received: "auto_posted"
+
+ ❯ src/dbtests/p03-group-turn.db.test.ts:372:27
+    370|     const t = await tracesFor(g);
+    371|     expect(t).toHaveLength(1);
+    372|     expect(t[0]!.outcome).toBe('error');
+       |                           ^
+    373|     expect(await auditCount('inbound.handler_error', g)).toBe(1);
+    374|     expect(await outboxFor(g, ['text'])).toHaveLength(0); // nhom khon…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+exit=1
+# KY VONG: exit != 0 (DO)  -> OK
+# da tra ma nguyen trang: packages\core\src\agent\community\graph\nodes\deliver.ts

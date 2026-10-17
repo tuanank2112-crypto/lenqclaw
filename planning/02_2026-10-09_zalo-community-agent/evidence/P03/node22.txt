@@ -1,0 +1,23 @@
+# evidence/P03/node22.txt — output may, KHONG sua tay. SPEC-P03 §11 hang 13: hang 1–12 chay tren Node 22. HEAD=d8e744f
+# date_utc=2026-10-17T06:07:59Z
+$ npx -y node@22 -v
+v22.23.3
+exit=0
+$ npx -y node@22 node_modules/typescript/bin/tsc --noEmit -p packages/core/tsconfig.typecheck.json
+exit=0
+$ npx -y node@22 scripts/check_adapter_boundary.mjs
+violations: 0
+exit=0
+$ npx -y node@22 scripts/check_agent_tools.mjs
+forbidden_tools: 0
+forbidden_actions: 0
+unlisted_tools: 0
+exit=0
+$ (cd packages/core && npx -y node@22 ../../node_modules/vitest/vitest.mjs run --exclude "**/*.db.test.ts")
+ Test Files  22 passed (22)
+      Tests  366 passed (366)
+exit=0
+$ (cd packages/core && npx -y node@22 ../../node_modules/vitest/vitest.mjs run --config vitest.db.config.ts)   [DATABASE_URL tu .env, khong in]
+ Test Files  7 passed (7)
+      Tests  84 passed (84)
+exit=0

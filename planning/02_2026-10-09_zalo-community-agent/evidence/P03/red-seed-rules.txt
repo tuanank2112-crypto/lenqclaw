@@ -1,0 +1,33 @@
+# evidence/P03/red-seed-rules.txt — output may, KHONG sua tay. seed.test.ts DO khi prompt rules thieu muc An toan
+# date_utc=2026-10-17T05:44:02Z
+# DOT BIEN packages\core\src\db\seed.ts:
+#   - '## An toàn',
+#   + (xoa)
+$ npx vitest run src\db\seed.test.ts   (cwd=packages\core)
+RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/db/seed.test.ts (6 tests | 1 failed) 14ms
+   × PERSONA_SEED.rules (SPEC-P03 §7.3) > co du 3 muc theo thu tu: Biet khi nao nen noi · An toan · Ghi nho (chi khi nhan rieng) 6ms
+     → expected -1 to be greater than 0
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  12:44:01
+   Duration  1.12s (transform 247ms, setup 0ms, collect 633ms, tests 14ms, environment 0ms, prepare 151ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/db/seed.test.ts > PERSONA_SEED.rules (SPEC-P03 §7.3) > co du 3 muc theo thu tu: Biet khi nao nen noi · An toan · Ghi nho (chi khi nhan rieng)
+AssertionError: expected -1 to be greater than 0
+ ❯ src/db/seed.test.ts:14:16
+     12|     const i3 = rules.indexOf('## Ghi nhớ (chỉ khi nhắn riêng)');
+     13|     expect(i1).toBeGreaterThanOrEqual(0);
+     14|     expect(i2).toBeGreaterThan(i1);
+       |                ^
+     15|     expect(i3).toBeGreaterThan(i2);
+     16|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+exit=1
+# KY VONG: exit != 0 (DO)  -> OK
+# da tra ma nguyen trang: packages\core\src\db\seed.ts

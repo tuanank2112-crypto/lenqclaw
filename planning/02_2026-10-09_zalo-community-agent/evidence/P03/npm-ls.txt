@@ -1,0 +1,22 @@
+# evidence/P03/npm-ls.txt — output may, KHONG sua tay. date_utc=2026-10-17T05:59:01Z
+$ npm ls @langchain/langgraph @langchain/core @langchain/langgraph-checkpoint @langchain/langgraph-sdk langsmith zod
+lenqclaw@0.0.1 E:\vọc vạch\lenqclaw
+`-- @lenqclaw/core@0.0.1 -> .\packages\core
+  +-- @anthropic-ai/sdk@0.68.0
+  | `-- zod@4.6.5
+  +-- @langchain/core@1.2.14
+  | +-- langsmith@0.10.7
+  | `-- zod@4.6.5 deduped
+  `-- @langchain/langgraph@1.4.18
+    +-- @langchain/core@1.2.14 deduped
+    +-- @langchain/langgraph-checkpoint@1.1.5
+    | `-- @langchain/core@1.2.14 deduped
+    +-- @langchain/langgraph-sdk@1.12.0
+    | `-- @langchain/core@1.2.14 deduped
+    `-- zod@4.6.5 deduped
+
+exit=0
+
+$ grep -n "@langchain" packages/core/package.json   (khong ^ / ~)
+26:    "@langchain/core": "1.2.14",
+27:    "@langchain/langgraph": "1.4.18",

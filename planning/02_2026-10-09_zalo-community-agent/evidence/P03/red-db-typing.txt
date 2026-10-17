@@ -1,0 +1,65 @@
+# evidence/P03/red-db-typing.txt — output may, KHONG sua tay. p03 (u) DO khi khong con gui typing som
+# date_utc=2026-10-17T05:44:51Z
+# DOT BIEN packages\core\src\agent\community\graph\nodes\prepare.ts:
+#   - kind: 'typing', body: { typing: true }, inboundEventId: req.inboundEventId });
+#   + kind: 'seen', body: { typing: true }, inboundEventId: req.inboundEventId });
+$ npx vitest run --config vitest.db.config.ts src\dbtests\p03-group-turn.db.test.ts -t "(u)"   (cwd=packages\core)
+RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/p03-group-turn.db.test.ts (38 tests | 2 failed | 1 skipped) 7228ms
+   × P03 — luot nhom > (a)(n) mention ⇒ tool send_group_message: 1 tin co quote tin kich hoat, tin bot vao dem, vet luot dung 1 dong 139ms
+     → expected +0 to be 1 // Object.is equality
+   ✓ P03 — luot nhom > (b)(G07) nhom mention + tin thuong ⇒ 0 luot model, 0 outbox; 20 tin thuong ⇒ 0 agent_runs community 322ms
+   ✓ P03 — luot nhom > (j) ModelUnavailableError o mention ⇒ MODEL_DOWN_GROUP_REPLY; nhom khong bi takeover; chu nhan handoff 1065ms
+   ✓ P03 — luat trong tool / chinh sach > owner DM: surface O co list_groups; tra loi D6 kind owner_dm 422ms
+   ✓ P03 — D31 toc do (BB-18): han chot, lan, typing som > (t) mention + fetch gia tre 6000 ms ⇒ MODEL_DOWN_GROUP_REPLY trong han chot fast, deadline_hit=true, agent_runs.outcome=deadline 3556ms
+   × P03 — D31 toc do (BB-18): han chot, lan, typing som > (u) mention ⇒ search_knowledge ⇒ tra loi: lane=rag; typing TRUOC agent_runs dau tien; 0 triage cho tin do; outbox text mang inbound_event_id 63ms
+     → expected null to be true // Object.is equality
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 35 passed | 1 skipped (38)
+   Start at  12:44:42
+   Duration  9.00s (transform 337ms, setup 0ms, collect 1.51s, tests 7.23s, environment 0ms, prepare 94ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p03-group-turn.db.test.ts > P03 — luot nhom > (a)(n) mention ⇒ tool send_group_message: 1 tin co quote tin kich hoat, tin bot vao dem, vet luot dung 1 dong
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/dbtests/p03-group-turn.db.test.ts:94:53
+     92|     expect(await count(`select 1 from agent_runs where turn_id = $1::u…
+     93|     // typing som (D31 T7) + tin tra loi
+     94|     expect((await outboxFor(g, ['typing'])).length).toBe(1);
+       |                                                     ^
+     95|   });
+     96| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/dbtests/p03-group-turn.db.test.ts > P03 — D31 toc do (BB-18): han chot, lan, typing som > (u) mention ⇒ search_knowledge ⇒ tra loi: lane=rag; typing TRUOC agent_runs dau tien; 0 triage cho tin do; outbox text mang inbound_event_id
+AssertionError: expected null to be true // Object.is equality
+
+- Expected: 
+true
+
++ Received: 
+null
+
+ ❯ src/dbtests/p03-group-turn.db.test.ts:613:36
+    611|       [g, t.id]
+    612|     );
+    613|     expect(order[0]!.typing_first).toBe(true);
+       |                                    ^
+    614|   });
+    615| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+exit=1
+# KY VONG: exit != 0 (DO)  -> OK
+# da tra ma nguyen trang: packages\core\src\agent\community\graph\nodes\prepare.ts

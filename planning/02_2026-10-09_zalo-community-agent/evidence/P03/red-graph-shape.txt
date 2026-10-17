@@ -1,0 +1,61 @@
+# evidence/P03/red-graph-shape.txt — output may, KHONG sua tay. graph-shape.test.ts phai DO khi doi canh nudge->agent thanh nudge->deliver (SPEC-P03 §11 hang 9)
+# date_utc=2026-10-17T05:43:42Z
+# DOT BIEN packages\core\src\agent\community\graph\turn.ts:
+#   - .addEdge('nudge', 'agent')
+#   + .addEdge('nudge', 'deliver')
+$ npx vitest run src\agent\community\graph\graph-shape.test.ts   (cwd=packages\core)
+RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/agent/community/graph/graph-shape.test.ts (5 tests | 1 failed) 22ms
+   × hinh do thi == hang SHAPE (so do da duyet) > turnGraph: 6 node, 10 canh 11ms
+     → expected { nodes: [ 'agent', …(5) ], …(1) } to deeply equal { nodes: [ 'agent', …(5) ], …(1) }
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  12:43:39
+   Duration  2.53s (transform 402ms, setup 0ms, collect 1.91s, tests 22ms, environment 0ms, prepare 170ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/agent/community/graph/graph-shape.test.ts > hinh do thi == hang SHAPE (so do da duyet) > turnGraph: 6 node, 10 canh
+AssertionError: expected { nodes: [ 'agent', …(5) ], …(1) } to deeply equal { nodes: [ 'agent', …(5) ], …(1) }
+
+- Expected
++ Received
+
+  Object {
+    "edges": Array [
+      "__start__>prepare>false",
+      "agent>deliver>true",
+      "agent>nudge>true",
+      "agent>tools>true",
+      "deliver>trace>false",
+-     "nudge>agent>false",
++     "nudge>deliver>false",
+      "prepare>agent>true",
+      "prepare>deliver>true",
+      "tools>agent>false",
+      "trace>__end__>false",
+    ],
+    "nodes": Array [
+      "agent",
+      "deliver",
+      "nudge",
+      "prepare",
+      "tools",
+      "trace",
+    ],
+  }
+
+ ❯ src/agent/community/graph/graph-shape.test.ts:39:76
+     37|     expect(want.nodes).toHaveLength(6);
+     38|     expect(want.edges).toHaveLength(10);
+     39|     expect(describeGraph(turnGraph.getGraph() as unknown as DrawableLi…
+       |                                                                            ^
+     40|   });
+     41| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+exit=1
+# KY VONG: exit != 0 (DO)  -> OK
+# da tra ma nguyen trang: packages\core\src\agent\community\graph\turn.ts

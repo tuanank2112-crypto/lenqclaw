@@ -1,0 +1,46 @@
+# evidence/P03/red-migration-view.txt — output may, KHONG sua tay. p03-migration-010.db.test.ts phai DO khi view reply_latency tinh core_ms = e2e_ms (bo tru hold_ms) — ap view SAI len DB tam lenqclaw_probe010, chay test, roi xoa DB.
+# date_utc=2026-10-17T05:46:39Z
+# DOT BIEN (view tren DB tam): core_ms = (sent_at - received_at)  [dung ra: tru them hold_ms]
+$ DATABASE_URL=<probe> npx vitest run --config vitest.db.config.ts src/dbtests/p03-migration-010.db.test.ts   (cwd=packages/core)
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/p03-migration-010.db.test.ts (4 tests | 1 failed) 86ms
+   × migration 010_ops_latency > view reply_latency: core_ms = e2e_ms − hold_ms; hold_ms = 0 khi khong co hold_reason; hang lane khac bi bo qua 28ms
+     → expected [ { runtime_ms: 1200, …(4) } ] to deeply equal [ { runtime_ms: 1200, …(4) } ]
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p03-migration-010.db.test.ts > migration 010_ops_latency > view reply_latency: core_ms = e2e_ms − hold_ms; hold_ms = 0 khi khong co hold_reason; hang lane khac bi bo qua
+AssertionError: expected [ { runtime_ms: 1200, …(4) } ] to deeply equal [ { runtime_ms: 1200, …(4) } ]
+
+- Expected
++ Received
+
+  Array [
+    Object {
+-     "core_ms": 1700,
++     "core_ms": 9500,
+      "e2e_ms": 9500,
+      "hold_ms": 7800,
+      "runtime_ms": 1200,
+      "send_ms": 500,
+    },
+  ]
+
+ ❯ src/dbtests/p03-migration-010.db.test.ts:74:15
+     72|       [thread]
+     73|     );
+     74|     expect(v).toEqual([{ runtime_ms: 1200, e2e_ms: 9500, hold_ms: 7800…
+       |               ^
+     75| 
+     76|     // khong co hold_reason ⇒ hold_ms = 0, core = e2e
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 passed (4)
+   Start at  12:46:40
+   Duration  471ms (transform 52ms, setup 0ms, collect 139ms, tests 86ms, environment 0ms, prepare 102ms)
+
+exit=1
+# KY VONG: exit != 0

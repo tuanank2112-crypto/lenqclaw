@@ -1,0 +1,33 @@
+# evidence/P03/red-config-langsmith.txt — output may, KHONG sua tay. community-config.test.ts DO khi bo chan LANGSMITH_TRACING (BB-17)
+# date_utc=2026-10-17T05:43:59Z
+# DOT BIEN packages\core\src\services\community-config.ts:
+#   - if (v === 'true' || v === '1') {
+#   + if (false) {
+$ npx vitest run src\services\community-config.test.ts   (cwd=packages\core)
+RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/services/community-config.test.ts (8 tests | 1 failed) 18ms
+   × readCommunityConfig > LANGSMITH_TRACING / LANGCHAIN_TRACING_V2 bat => ConfigError; khong dat / false => ok 6ms
+     → expected function to throw an error, but it didn't
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 passed (8)
+   Start at  12:43:58
+   Duration  588ms (transform 72ms, setup 0ms, collect 114ms, tests 18ms, environment 0ms, prepare 156ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/services/community-config.test.ts > readCommunityConfig > LANGSMITH_TRACING / LANGCHAIN_TRACING_V2 bat => ConfigError; khong dat / false => ok
+AssertionError: expected function to throw an error, but it didn't
+ ❯ src/services/community-config.test.ts:58:70
+     56|   // SPEC-P03 §11 hang 11 (D28, BB-17)
+     57|   it('LANGSMITH_TRACING / LANGCHAIN_TRACING_V2 bat => ConfigError; kho…
+     58|     expect(() => readCommunityConfig({ LANGSMITH_TRACING: 'true' })).t…
+       |                                                                      ^
+     59|     expect(() => readCommunityConfig({ LANGSMITH_TRACING: 'TRUE' })).t…
+     60|     expect(() => readCommunityConfig({ LANGCHAIN_TRACING_V2: '1' })).t…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+exit=1
+# KY VONG: exit != 0 (DO)  -> OK
+# da tra ma nguyen trang: packages\core\src\services\community-config.ts

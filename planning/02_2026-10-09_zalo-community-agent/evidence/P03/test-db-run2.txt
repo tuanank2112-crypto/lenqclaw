@@ -1,0 +1,280 @@
+# evidence/P03/test-db-run2.txt — output may, KHONG sua tay. Lan chay 2/2 lien tiep. date_utc=2026-10-17T06:07:00Z HEAD=d8e744f  (DATABASE_URL tu .env, khong in)
+$ npm run test:db
+
+> lenqclaw@0.0.1 test:db
+> npm run db:migrate && npm run db:seed && node --import tsx scripts/seed-sim-for-test.mjs && npm run test:db -w @lenqclaw/core && npm run test:db -w @lenqclaw/web && npm run test:db -w @lenqclaw/zalo-worker --if-present
+
+
+> lenqclaw@0.0.1 db:migrate
+> tsx packages/core/src/db/migrate.ts
+
+applied: 0
+
+> lenqclaw@0.0.1 db:seed
+> tsx packages/core/src/db/seed.ts
+
+seed: persona_docs=4 skills=2
+seed-sim(test:db): groups=4 members=14 kb_sections=10
+
+> @lenqclaw/core@0.0.1 test:db
+> tsx scripts/require-database-url.ts && vitest run --config vitest.db.config.ts
+
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ✓ src/dbtests/p03-group-turn.db.test.ts (38 tests) 8132ms
+   ✓ P03 — luot nhom > (b)(G07) nhom mention + tin thuong ⇒ 0 luot model, 0 outbox; 20 tin thuong ⇒ 0 agent_runs community 355ms
+   ✓ P03 — luot nhom > (j) ModelUnavailableError o mention ⇒ MODEL_DOWN_GROUP_REPLY; nhom khong bi takeover; chu nhan handoff 1069ms
+   ✓ P03 — luat trong tool / chinh sach > owner DM: surface O co list_groups; tra loi D6 kind owner_dm 1012ms
+   ✓ P03 — D31 toc do (BB-18): han chot, lan, typing som > (t) mention + fetch gia tre 6000 ms ⇒ MODEL_DOWN_GROUP_REPLY trong han chot fast, deadline_hit=true, agent_runs.outcome=deadline 3561ms
+ ✓ src/dbtests/sim-actions.db.test.ts (17 tests) 540ms
+ ✓ src/dbtests/runner.db.test.ts (9 tests) 5617ms
+   ✓ runner song song theo thread (BB-19) > (v) thread A treo 3 s, tin thread B toi sau 100 ms ⇒ B xong truoc A 3088ms
+   ✓ runner song song theo thread (BB-19) > A1, A2 cung thread chay DUNG thu tu va KHONG chong nhau (du con o trong) 1051ms
+   ✓ runner song song theo thread (BB-19) > RUNNER_CONCURRENCY=1: thread khac phai cho (dieu kien nen cua ca do G23 serial) 872ms
+   ✓ runner song song theo thread (BB-19) > dung em: abort cho luot dang chay xong (toi da RUNNER_DRAIN_MS) 440ms
+stdout | src/dbtests/p01.db.test.ts > 1) runMigrations — schema day du tren 001..010 (SPEC-P01 §3) > lan dau: applied = so file db/migrations/*.sql (reset) hoac schema da du; moi bang ton tai
+applied: 0 (files: 10, reset: false)
+
+ ✓ src/dbtests/p01.db.test.ts (9 tests) 215ms
+ ✓ src/dbtests/p03-migration-010.db.test.ts (4 tests) 90ms
+ ✓ src/dbtests/p02-link-zalo.db.test.ts (4 tests) 577ms
+   ✓ dev:link-zalo --owner > DATA_MODE≠sim => ham tu choi; lenh CLI exit 1 473ms
+ ✓ src/dbtests/p02-runner.db.test.ts (3 tests) 252ms
+
+ Test Files  7 passed (7)
+      Tests  84 passed (84)
+   Start at  13:07:03
+   Duration  20.87s (transform 512ms, setup 0ms, collect 3.75s, tests 15.42s, environment 1ms, prepare 668ms)
+
+
+> @lenqclaw/web@0.0.1 test:db
+> tsx ../../packages/core/scripts/require-database-url.ts && vitest run --config vitest.db.config.ts
+
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/apps/web
+
+ ✓ tests/sim-send.db.test.ts (7 tests) 908ms
+   ✓ /api/dev/sim/send — kenh gia lap nhom (db) > GET /api/dev/sim/thread ⇒ { messages, actions }: su kien, tin bot sau tick, hanh dong, tin da xoa gach ngang 644ms
+ ✓ tests/sim-replay-group.db.test.ts (1 test) 362ms
+   ✓ /api/dev/sim/replay — group-mention.jsonl (db, model gia) > 6 dong ⇒ inbound=6, 0 trung, outbound=3 (mention, quote tin bot, ten bot); sticker + tin thuong + nhom ambient im 339ms
+ ✓ tests/zalo-login.db.test.ts (5 tests) 58ms
+ ✓ tests/zalo-logout.db.test.ts (4 tests) 76ms
+ ✓ tests/sim-tick.db.test.ts (3 tests) 50ms
+ ✓ tests/sim-thread.db.test.ts (3 tests) 56ms
+ ✓ tests/00-login.db.test.ts (2 tests) 164ms
+
+ Test Files  7 passed (7)
+      Tests  25 passed (25)
+   Start at  13:07:25
+   Duration  10.02s (transform 386ms, setup 0ms, collect 6.67s, tests 1.67s, environment 1ms, prepare 583ms)
+
+
+> @lenqclaw/zalo-worker@0.0.1 test:db
+> tsx ../../packages/core/scripts/require-database-url.ts && vitest run --config vitest.db.config.ts
+
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/apps/zalo-worker
+
+{"t":"2026-10-17T06:07:39.236Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:39.244Z","event":"zalo.inbound","account":"community","outcome":"inserted","msg_type":"webchat"}
+{"t":"2026-10-17T06:07:39.249Z","event":"zalo.inbound","account":"community","outcome":"duplicate","msg_type":"webchat"}
+{"t":"2026-10-17T06:07:39.250Z","event":"zalo.inbound","account":"community","outcome":"duplicate","msg_type":"webchat"}
+{"t":"2026-10-17T06:07:39.261Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:39.265Z","event":"zalo.inbound","account":"community","outcome":"inserted","msg_type":"chat.photo"}
+{"t":"2026-10-17T06:07:39.276Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:39.280Z","event":"zalo.inbound","account":"community","outcome":"group_inserted","msg_type":"webchat"}
+{"t":"2026-10-17T06:07:39.290Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:39.297Z","event":"zalo.inbound","account":"community","outcome":"inserted","msg_type":"webchat"}
+{"t":"2026-10-17T06:07:39.298Z","event":"zalo.inbound","account":"community","outcome":"inserted","msg_type":"webchat"}
+{"t":"2026-10-17T06:07:39.310Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:39.317Z","event":"zalo.inbound","account":"community","outcome":"self_staff_takeover","msg_type":"webchat"}
+{"t":"2026-10-17T06:07:39.345Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:39.354Z","event":"zalo.inbound","account":"community","outcome":"self_bot_echo","msg_type":"webchat"}
+{"t":"2026-10-17T06:07:39.366Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:39.376Z","event":"pacer.sent","account":"community","outbox_id":9883}
+{"t":"2026-10-17T06:07:39.387Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:39.389Z","event":"zalo.closed","account":"community","code":3003,"decision":"kicked"}
+{"t":"2026-10-17T06:07:39.390Z","event":"zalo.state","account":"community","state":"kicked"}
+{"t":"2026-10-17T06:07:39.406Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:39.406Z","event":"zalo.closed","account":"community","code":3000,"decision":"kicked"}
+{"t":"2026-10-17T06:07:39.407Z","event":"zalo.state","account":"community","state":"kicked"}
+{"t":"2026-10-17T06:07:39.418Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:39.418Z","event":"zalo.closed","account":"community","code":1006,"decision":"reconnect"}
+{"t":"2026-10-17T06:07:39.420Z","event":"zalo.state","account":"community","state":"reconnecting"}
+{"t":"2026-10-17T06:07:39.421Z","event":"zalo.reconnect_failed","account":"community","attempt":1,"error":"Error: mang"}
+{"t":"2026-10-17T06:07:39.422Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:39.433Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:39.433Z","event":"zalo.closed","account":"community","code":1006,"decision":"reconnect"}
+{"t":"2026-10-17T06:07:39.435Z","event":"zalo.state","account":"community","state":"reconnecting"}
+{"t":"2026-10-17T06:07:39.435Z","event":"zalo.reconnect_failed","account":"community","attempt":1,"error":"Error: mang"}
+{"t":"2026-10-17T06:07:39.435Z","event":"zalo.reconnect_failed","account":"community","attempt":2,"error":"Error: mang"}
+{"t":"2026-10-17T06:07:39.435Z","event":"zalo.reconnect_failed","account":"community","attempt":3,"error":"Error: mang"}
+{"t":"2026-10-17T06:07:39.435Z","event":"zalo.reconnect_failed","account":"community","attempt":4,"error":"Error: mang"}
+{"t":"2026-10-17T06:07:39.435Z","event":"zalo.reconnect_failed","account":"community","attempt":5,"error":"Error: mang"}
+{"t":"2026-10-17T06:07:39.435Z","event":"zalo.reconnect_failed","account":"community","attempt":6,"error":"Error: mang"}
+{"t":"2026-10-17T06:07:39.435Z","event":"zalo.reconnect_failed","account":"community","attempt":7,"error":"Error: mang"}
+{"t":"2026-10-17T06:07:39.435Z","event":"zalo.reconnect_failed","account":"community","attempt":8,"error":"Error: mang"}
+{"t":"2026-10-17T06:07:39.435Z","event":"zalo.reconnect_failed","account":"community","attempt":9,"error":"Error: mang"}
+{"t":"2026-10-17T06:07:39.435Z","event":"zalo.reconnect_failed","account":"community","attempt":10,"error":"Error: mang"}
+{"t":"2026-10-17T06:07:39.438Z","event":"zalo.state","account":"community","state":"dead"}
+{"t":"2026-10-17T06:07:39.451Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:39.451Z","event":"zalo.closed","account":"community","code":1006,"decision":"reconnect"}
+{"t":"2026-10-17T06:07:39.453Z","event":"zalo.state","account":"community","state":"reconnecting"}
+{"t":"2026-10-17T06:07:39.455Z","event":"zalo.state","account":"community","state":"logged_out"}
+{"t":"2026-10-17T06:07:39.467Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:39.484Z","event":"zalo.probe_failed","account":"community","error":"Error: probe"}
+{"t":"2026-10-17T06:07:39.484Z","event":"zalo.closed","account":"community","code":1006,"decision":"reconnect"}
+{"t":"2026-10-17T06:07:39.487Z","event":"zalo.state","account":"community","state":"reconnecting"}
+{"t":"2026-10-17T06:07:39.490Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:39.500Z","event":"zalo.state","account":"community","state":"logged_out"}
+{"t":"2026-10-17T06:07:39.511Z","event":"zalo.qr_start","account":"community"}
+{"t":"2026-10-17T06:07:39.513Z","event":"zalo.qr_event","account":"community","type":"qr"}
+{"t":"2026-10-17T06:07:39.520Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:39.529Z","event":"zalo.qr_start","account":"community"}
+{"t":"2026-10-17T06:07:39.531Z","event":"zalo.qr_event","account":"community","type":"qr"}
+{"t":"2026-10-17T06:07:39.533Z","event":"zalo.qr_event","account":"community","type":"scanned"}
+{"t":"2026-10-17T06:07:39.536Z","event":"zalo.state","account":"community","state":"logged_out"}
+{"t":"2026-10-17T06:07:39.549Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:39.568Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:39.713Z","event":"pacer.sent","account":"community","outbox_id":9885}
+{"t":"2026-10-17T06:07:39.760Z","event":"pacer.sent","account":"community","outbox_id":9886}
+{"t":"2026-10-17T06:07:39.807Z","event":"pacer.sent","account":"community","outbox_id":9887}
+{"t":"2026-10-17T06:07:39.853Z","event":"pacer.sent","account":"community","outbox_id":9888}
+{"t":"2026-10-17T06:07:39.898Z","event":"pacer.sent","account":"community","outbox_id":9889}
+{"t":"2026-10-17T06:07:39.941Z","event":"pacer.sent","account":"community","outbox_id":9890}
+{"t":"2026-10-17T06:07:39.983Z","event":"pacer.sent","account":"community","outbox_id":9891}
+{"t":"2026-10-17T06:07:40.027Z","event":"pacer.sent","account":"community","outbox_id":9892}
+{"t":"2026-10-17T06:07:40.069Z","event":"pacer.sent","account":"community","outbox_id":9893}
+{"t":"2026-10-17T06:07:40.110Z","event":"pacer.sent","account":"community","outbox_id":9894}
+{"t":"2026-10-17T06:07:40.549Z","event":"pacer.sent","account":"community","outbox_id":9895}
+{"t":"2026-10-17T06:07:40.587Z","event":"pacer.sent","account":"community","outbox_id":9896}
+{"t":"2026-10-17T06:07:40.623Z","event":"pacer.sent","account":"community","outbox_id":9897}
+{"t":"2026-10-17T06:07:40.658Z","event":"pacer.sent","account":"community","outbox_id":9898}
+{"t":"2026-10-17T06:07:40.693Z","event":"pacer.sent","account":"community","outbox_id":9899}
+{"t":"2026-10-17T06:07:40.728Z","event":"pacer.sent","account":"community","outbox_id":9905}
+{"t":"2026-10-17T06:07:40.761Z","event":"pacer.sent","account":"community","outbox_id":9906}
+{"t":"2026-10-17T06:07:40.795Z","event":"pacer.sent","account":"community","outbox_id":9908}
+{"t":"2026-10-17T06:07:40.828Z","event":"pacer.sent","account":"community","outbox_id":9909}
+{"t":"2026-10-17T06:07:40.859Z","event":"pacer.sent","account":"community","outbox_id":9910}
+{"t":"2026-10-17T06:07:41.204Z","event":"pacer.sent","account":"community","outbox_id":9911}
+{"t":"2026-10-17T06:07:41.235Z","event":"pacer.sent","account":"community","outbox_id":9912}
+{"t":"2026-10-17T06:07:41.264Z","event":"pacer.sent","account":"community","outbox_id":9913}
+{"t":"2026-10-17T06:07:41.291Z","event":"pacer.sent","account":"community","outbox_id":9914}
+{"t":"2026-10-17T06:07:41.318Z","event":"pacer.sent","account":"community","outbox_id":9915}
+{"t":"2026-10-17T06:07:41.343Z","event":"pacer.sent","account":"community","outbox_id":9916}
+{"t":"2026-10-17T06:07:41.368Z","event":"pacer.sent","account":"community","outbox_id":9918}
+{"t":"2026-10-17T06:07:41.393Z","event":"pacer.sent","account":"community","outbox_id":9920}
+{"t":"2026-10-17T06:07:41.417Z","event":"pacer.sent","account":"community","outbox_id":9919}
+{"t":"2026-10-17T06:07:41.443Z","event":"pacer.sent","account":"community","outbox_id":9921}
+{"t":"2026-10-17T06:07:41.673Z","event":"pacer.sent","account":"community","outbox_id":9922}
+{"t":"2026-10-17T06:07:41.695Z","event":"pacer.sent","account":"community","outbox_id":9923}
+{"t":"2026-10-17T06:07:41.717Z","event":"pacer.sent","account":"community","outbox_id":9925}
+{"t":"2026-10-17T06:07:41.737Z","event":"pacer.sent","account":"community","outbox_id":9927}
+{"t":"2026-10-17T06:07:41.758Z","event":"pacer.sent","account":"community","outbox_id":9928}
+{"t":"2026-10-17T06:07:41.777Z","event":"pacer.sent","account":"community","outbox_id":9930}
+{"t":"2026-10-17T06:07:41.794Z","event":"pacer.sent","account":"community","outbox_id":9929}
+{"t":"2026-10-17T06:07:41.811Z","event":"pacer.sent","account":"community","outbox_id":9931}
+{"t":"2026-10-17T06:07:41.826Z","event":"pacer.sent","account":"community","outbox_id":9933}
+{"t":"2026-10-17T06:07:43.636Z","event":"pacer.sent","account":"community","outbox_id":9900}
+{"t":"2026-10-17T06:07:43.692Z","event":"pacer.sent","account":"community","outbox_id":9917}
+{"t":"2026-10-17T06:07:43.734Z","event":"pacer.sent","account":"community","outbox_id":9932}
+{"t":"2026-10-17T06:07:43.875Z","event":"pacer.sent","account":"community","outbox_id":9901}
+{"t":"2026-10-17T06:07:43.917Z","event":"pacer.sent","account":"community","outbox_id":9902}
+{"t":"2026-10-17T06:07:43.940Z","event":"pacer.sent","account":"community","outbox_id":9903}
+{"t":"2026-10-17T06:07:43.952Z","event":"pacer.sent","account":"community","outbox_id":9926}
+{"t":"2026-10-17T06:07:43.961Z","event":"pacer.sent","account":"community","outbox_id":9904}
+{"t":"2026-10-17T06:07:43.972Z","event":"pacer.sent","account":"community","outbox_id":9934}
+{"t":"2026-10-17T06:07:43.979Z","event":"pacer.sent","account":"community","outbox_id":9907}
+{"t":"2026-10-17T06:07:43.989Z","event":"pacer.sent","account":"community","outbox_id":9924}
+{"t":"2026-10-17T06:07:43.997Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:44.020Z","event":"pacer.sent","account":"community","outbox_id":9935}
+{"t":"2026-10-17T06:07:44.032Z","event":"pacer.sent","account":"community","outbox_id":9936}
+{"t":"2026-10-17T06:07:44.044Z","event":"pacer.sent","account":"community","outbox_id":9937}
+{"t":"2026-10-17T06:07:44.136Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:44.144Z","event":"pacer.backoff","account":"community","reason":"no_msg_id","backoff_ms":1800000}
+{"t":"2026-10-17T06:07:44.151Z","event":"pacer.sent","account":"community","outbox_id":9938}
+{"t":"2026-10-17T06:07:44.158Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:44.166Z","event":"pacer.backoff","account":"community","reason":"rate_limit_error","backoff_ms":1800000}
+{"t":"2026-10-17T06:07:44.174Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:44.188Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:44.192Z","event":"zalo.state","account":"community","state":"logged_out"}
+{"t":"2026-10-17T06:07:44.205Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:44.212Z","event":"zalo.qr_start","account":"community"}
+{"t":"2026-10-17T06:07:44.214Z","event":"zalo.qr_event","account":"community","type":"qr"}
+{"t":"2026-10-17T06:07:44.216Z","event":"zalo.qr_event","account":"community","type":"scanned"}
+{"t":"2026-10-17T06:07:44.218Z","event":"zalo.qr_event","account":"community","type":"expired"}
+{"t":"2026-10-17T06:07:44.222Z","event":"zalo.state","account":"community","state":"logged_out"}
+{"t":"2026-10-17T06:07:44.230Z","event":"zalo.qr_start","account":"community"}
+{"t":"2026-10-17T06:07:44.232Z","event":"zalo.qr_event","account":"community","type":"qr"}
+{"t":"2026-10-17T06:07:44.233Z","event":"zalo.qr_event","account":"community","type":"declined"}
+{"t":"2026-10-17T06:07:44.236Z","event":"zalo.state","account":"community","state":"logged_out"}
+{"t":"2026-10-17T06:07:44.246Z","event":"zalo.qr_start","account":"community"}
+{"t":"2026-10-17T06:07:44.248Z","event":"zalo.qr_event","account":"community","type":"qr"}
+{"t":"2026-10-17T06:07:44.249Z","event":"zalo.qr_event","account":"community","type":"scanned"}
+{"t":"2026-10-17T06:07:44.256Z","event":"zalo.state","account":"community","state":"connected"}
+ ✓ src/dbtests/p02-worker.db.test.ts (27 tests) 5071ms
+   ✓ pacer tren DB (§5, §8) > gia lap 50 tin / 20 nguoi qua outbox that + dong ho ao ⇒ gui het, 0 vi pham bang §5 4430ms
+{"t":"2026-10-17T06:07:45.333Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:45.376Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:45.403Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:45.432Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:45.454Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:45.503Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:45.620Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:45.635Z","event":"pacer.sent","account":"community","outbox_id":9972}
+{"t":"2026-10-17T06:07:45.650Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:45.677Z","event":"pacer.sent","account":"community","outbox_id":9975}
+{"t":"2026-10-17T06:07:45.688Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:45.719Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:45.738Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:45.745Z","event":"zalo.inbound","account":"community","outcome":"group_inserted","msg_type":"webchat"}
+{"t":"2026-10-17T06:07:45.753Z","event":"zalo.inbound","account":"community","outcome":"duplicate","msg_type":"webchat"}
+{"t":"2026-10-17T06:07:45.770Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:45.775Z","event":"zalo.inbound","account":"community","outcome":"group_inserted","msg_type":"webchat"}
+{"t":"2026-10-17T06:07:45.785Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:45.792Z","event":"join","account":"community","outcome":"group_event_inserted"}
+{"t":"2026-10-17T06:07:45.792Z","event":"join_request","account":"community","outcome":"group_event_inserted"}
+{"t":"2026-10-17T06:07:45.799Z","event":"new_link","account":"community","outcome":"ignored_event"}
+{"t":"2026-10-17T06:07:45.801Z","event":"leave","account":"community","outcome":"group_event_inserted"}
+{"t":"2026-10-17T06:07:45.803Z","event":"add_admin","account":"community","outcome":"group_event_inserted"}
+{"t":"2026-10-17T06:07:45.804Z","event":"join","account":"community","outcome":"duplicate"}
+{"t":"2026-10-17T06:07:45.815Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:45.818Z","event":"zalo.inbound","account":"community","outcome":"group_inserted","msg_type":"webchat"}
+ ✓ src/dbtests/p02-group.db.test.ts (17 tests) 551ms
+{"t":"2026-10-17T06:07:46.838Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:46.873Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:46.904Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:46.932Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:46.962Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:46.997Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:47.036Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:47.069Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:47.101Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:47.130Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:47.166Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:47.228Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:47.299Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:47.365Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:47.394Z","event":"pacer.backoff","account":"community","reason":"rate_limit_error","backoff_ms":1800000}
+{"t":"2026-10-17T06:07:47.425Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:47.497Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:47.550Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:47.594Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:47.639Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:47.670Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:47.694Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:47.724Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:47.750Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:47.766Z","event":"pacer.backoff","account":"community","reason":"rate_limit_error","backoff_ms":1800000}
+{"t":"2026-10-17T06:07:47.782Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T06:07:47.813Z","event":"pacer.action_error","account":"community","outbox_id":10011,"error":"Error: ECONNRESET"}
+{"t":"2026-10-17T06:07:47.869Z","event":"zalo.state","account":"community","state":"connected"}
+ ✓ src/dbtests/p02-fix.db.test.ts (29 tests) 1086ms
+
+ Test Files  3 passed (3)
+      Tests  73 passed (73)
+   Start at  13:07:37
+   Duration  10.81s (transform 353ms, setup 0ms, collect 3.39s, tests 6.71s, environment 1ms, prepare 246ms)
+
+exit=0
