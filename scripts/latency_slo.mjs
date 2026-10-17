@@ -6,7 +6,8 @@
 // roi do `reply_latency.runtime_ms` (= outbox.created_at − inbound_events.received_at) theo lan.
 //   Model THAT (mac dinh: MODEL_COMMUNITY_FAST / provider cua .env) hoac model GIA tre --fake-delay-ms (ca DO).
 //   Ngung dat: p95 runtime fast ≤ 3500, rag ≤ 12500; deadline_hit ≤ 5%/lan; phan lan dung ≥ 90%; ca HOL ≤ 3500.
-//   Exit 0 dat · 1 truot · 3 blocked (thieu credential hoac > 10% loi 429/5xx cua model that) · 2 loi su dung/he thong.
+//   Exit 0 dat · 1 truot · 3 blocked (thieu credential, preflight model that loi > 10%, hoac > 10% luot do loi model that 429/5xx — agent_runs 'error'
+//   hoac 'deadline' ket thuc som < 60% ngan sach lan) · 2 loi su dung/he thong.
 
 import { randomUUID } from 'node:crypto';
 
@@ -108,6 +109,32 @@ function installFake(delayMs) {
 }
 if (!realMode) installFake(FAKE_DELAY);
 
+// ---- preflight model THAT: 5 loi goi ngan truoc khi do; > 10% loi (401/429/5xx/mang) ⇒ BLOCKED (exit 3), khong do ----
+let preflightErrors = 0;
+if (realMode) {
+  const PRE = 5;
+  const errs = [];
+  for (let i = 0; i < PRE; i++) {
+    try {
+      await modelMod.callModel({
+        route: 'community',
+        tier: 'fast',
+        system: 'Trả lời đúng một chữ: ok',
+        messages: [{ role: 'user', content: 'ok?' }],
+      });
+    } catch (err) {
+      preflightErrors += 1;
+      errs.push(err instanceof Error ? `${err.name}: ${err.message}`.slice(0, 160) : String(err).slice(0, 160));
+    }
+  }
+  if (preflightErrors / PRE > BLOCKED_ERROR_RATE) {
+    console.log(JSON.stringify({ preflight: { calls: PRE, errors: preflightErrors, first_error: errs[0] ?? null } }));
+    console.log(`G23 RESULT: BLOCKED (model that loi ${preflightErrors}/${PRE} lan goi thu > 10%: 401/429/5xx/mang — khong do SLO)`);
+    await closeDb();
+    process.exit(3);
+  }
+}
+
 // ---- du lieu ----
 await runSeed();
 await runSeedSim();
@@ -181,8 +208,13 @@ async function measure(kind, uid) {
     samples[kind].push({ missing: true, runtime_ms: null, lane: null, deadline_hit: false, outcome: 'timeout' });
     return;
   }
-  // loi model that (khong phai het han chot) ⇒ dem cho nguong "blocked"
-  if (row.outcome === 'model_down' && !row.deadline_hit && realMode) errorTurns += 1;
+  // model that LOI (429/5xx/401…) khac model CHAM: agent_runs 'error', hoac 'deadline' ket thuc SOM (< 60% ngan sach cua lan —
+  // khong du gio lui retry sau loi) ⇒ dem cho nguong "blocked". Model cham that (deadline sat ngan sach) van la SLO truot.
+  if (realMode && row.outcome === 'model_down') {
+    const budget = row.lane === 'rag' ? cfg.laneRagDeadlineMs : cfg.laneFastDeadlineMs;
+    const runs = await sql(`select outcome, latency_ms from agent_runs where turn_id = $1::uuid and route = 'community'`, [row.id]);
+    if (runs.some((r) => r.outcome === 'error' || (r.outcome === 'deadline' && r.latency_ms < 0.6 * budget))) errorTurns += 1;
+  }
   samples[kind].push(row);
 }
 
@@ -199,6 +231,10 @@ let hol = null;
   const id = await send(gA, 'sim-mem-1', CASUAL, true);
   hol = await waitTurn(id);
   totalTurns += 1;
+  if (realMode && hol?.outcome === 'model_down') {
+    const runs = await sql(`select outcome, latency_ms from agent_runs where turn_id = $1::uuid and route = 'community'`, [hol.id]);
+    if (runs.some((r) => r.outcome === 'error' || (r.outcome === 'deadline' && r.latency_ms < 0.6 * cfg.laneFastDeadlineMs))) errorTurns += 1;
+  }
 }
 
 ctl.abort();
@@ -243,7 +279,7 @@ await sql(`update inbound_events set processed_at = coalesce(processed_at, now()
 await closeDb();
 
 if (realMode && errorRate > BLOCKED_ERROR_RATE) {
-  console.log(`G23 RESULT: BLOCKED (${(errorRate * 100).toFixed(1)}% luot loi model that (429/5xx/401...) > 10%)`);
+  console.log(`G23 RESULT: BLOCKED (${(errorRate * 100).toFixed(1)}% luot do loi model that 429/5xx/401… > 10% — khong ket luan SLO)`);
   process.exit(3);
 }
 if (fails.length > 0) {
