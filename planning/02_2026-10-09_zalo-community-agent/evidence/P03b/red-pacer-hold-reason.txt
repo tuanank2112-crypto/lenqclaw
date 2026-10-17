@@ -1,0 +1,73 @@
+# RED EVIDENCE: file=src/pacer.ts
+# mutation: "if (!this.holdReasons.has(rowId)) this.holdReasons.set(rowId, reason);" => ""
+# cmd: npx vitest run src/pacer-d31.test.ts
+# exit: 1
+
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/apps/zalo-worker
+
+{"t":"2026-10-17T07:27:44.297Z","event":"pacer.sent","account":"community","outbox_id":2}
+{"t":"2026-10-17T07:27:44.298Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-17T07:27:44.298Z","event":"pacer.sent","account":"community","outbox_id":2}
+{"t":"2026-10-17T07:27:44.299Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-17T07:27:44.299Z","event":"pacer.sent","account":"community","outbox_id":2}
+{"t":"2026-10-17T07:27:44.306Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-17T07:27:44.306Z","event":"pacer.sent","account":"community","outbox_id":2}
+{"t":"2026-10-17T07:27:44.307Z","event":"pacer.sent","account":"community","outbox_id":2}
+ ❯ src/pacer-d31.test.ts (12 tests | 2 failed) 16ms
+   × pacer — typing tuoi (T7) va hold_reason (§7.1.4) > hold_reason = ly do DAU TIEN: bi group_gap giu roi gui ⇒ markSending(id, "group_gap"); khong bi giu ⇒ null 7ms
+     → expected { id: 2, hold: null } to deeply equal { id: 2, hold: 'group_gap' }
+   × pacer — typing tuoi (T7) va hold_reason (§7.1.4) > hold_reason la ly do DAU TIEN du ly do doi sau do (per_minute) 1ms
+     → expected { id: 2, hold: null } to deeply equal { id: 2, hold: 'per_minute' }
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 10 passed (12)
+   Start at  14:27:43
+   Duration  597ms (transform 102ms, setup 0ms, collect 209ms, tests 16ms, environment 0ms, prepare 123ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/pacer-d31.test.ts > pacer — typing tuoi (T7) va hold_reason (§7.1.4) > hold_reason = ly do DAU TIEN: bi group_gap giu roi gui ⇒ markSending(id, "group_gap"); khong bi giu ⇒ null
+AssertionError: expected { id: 2, hold: null } to deeply equal { id: 2, hold: 'group_gap' }
+
+- Expected
++ Received
+
+  Object {
+-   "hold": "group_gap",
++   "hold": null,
+    "id": 2,
+  }
+
+ ❯ src/pacer-d31.test.ts:183:29
+    181|     advance(3000);
+    182|     await pacer.tick();
+    183|     expect(st.picks.at(-1)).toEqual({ id: b.id, hold: 'group_gap' });
+       |                             ^
+    184|   });
+    185| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/pacer-d31.test.ts > pacer — typing tuoi (T7) va hold_reason (§7.1.4) > hold_reason la ly do DAU TIEN du ly do doi sau do (per_minute)
+AssertionError: expected { id: 2, hold: null } to deeply equal { id: 2, hold: 'per_minute' }
+
+- Expected
++ Received
+
+  Object {
+-   "hold": "per_minute",
++   "hold": null,
+    "id": 2,
+  }
+
+ ❯ src/pacer-d31.test.ts:195:29
+    193|     advance(61_000);
+    194|     await pacer.tick();
+    195|     expect(st.picks.at(-1)).toEqual({ id: b.id, hold: 'per_minute' });
+       |                             ^
+    196|   });
+    197| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+

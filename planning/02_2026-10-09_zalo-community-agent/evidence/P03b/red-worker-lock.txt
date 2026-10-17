@@ -1,0 +1,34 @@
+# RED EVIDENCE: file=src/main.ts
+# mutation: "if (lock === null) {" => "if (false as boolean) {"
+# cmd: npx vitest run --config vitest.db.config.ts src/dbtests/p03b-worker.db.test.ts
+# exit: 1
+
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/apps/zalo-worker
+
+{"t":"2026-10-17T07:27:52.765Z","event":"zalo.state","account":"community","state":"connected"}
+{"t":"2026-10-17T07:27:52.787Z","event":"pacer.sent","account":"community","outbox_id":15516}
+{"t":"2026-10-17T07:27:52.806Z","event":"pacer.sent","account":"community","outbox_id":15517}
+ ❯ src/dbtests/p03b-worker.db.test.ts (2 tests | 1 failed) 25154ms
+   × T6 — khoa mot ban cua worker (BB-19) > khoa dang bi giu ⇒ worker thoat 1, in WORKER_ALREADY_RUNNING, KHONG mo phien zca-js (khong log worker.started/zalo.state) 25041ms
+     → worker khong thoat sau 25 s
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  14:27:50
+   Duration  27.20s (transform 307ms, setup 0ms, collect 1.80s, tests 25.15s, environment 0ms, prepare 94ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p03b-worker.db.test.ts > T6 — khoa mot ban cua worker (BB-19) > khoa dang bi giu ⇒ worker thoat 1, in WORKER_ALREADY_RUNNING, KHONG mo phien zca-js (khong log worker.started/zalo.state)
+Error: worker khong thoat sau 25 s
+ ❯ Timeout._onTimeout src/dbtests/p03b-worker.db.test.ts:92:18
+     90|         const timer = setTimeout(() => {
+     91|           child.kill();
+     92|           reject(new Error('worker khong thoat sau 25 s'));
+       |                  ^
+     93|         }, 25_000);
+     94|         child.on('exit', (code) => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+

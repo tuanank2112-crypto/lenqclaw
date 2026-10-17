@@ -1,0 +1,136 @@
+# RED EVIDENCE: file=src/pacer-policy.ts
+# mutation: "heads.filter((h) => h.reply === true)" => "[]"
+# cmd: npx vitest run src/pacer-d31.test.ts
+# exit: 1
+
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/apps/zalo-worker
+
+{"t":"2026-10-17T07:27:40.290Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-17T07:27:40.292Z","event":"pacer.sent","account":"community","outbox_id":2}
+{"t":"2026-10-17T07:27:40.294Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-17T07:27:40.294Z","event":"pacer.sent","account":"community","outbox_id":2}
+{"t":"2026-10-17T07:27:40.294Z","event":"pacer.sent","account":"community","outbox_id":1}
+ ❯ src/pacer-d31.test.ts (12 tests | 5 failed) 19ms
+   × pickNext — uu tien tin tra loi (T8) > thread co hang DAU la tin tra loi duoc xet truoc, du hang cua thread khac xep truoc 6ms
+     → expected 1 to be 2 // Object.is equality
+   × pickNext — uu tien tin tra loi (T8) > thread tra loi bi gap giu ⇒ roi xuong thread con lai; KHONG nuoi gap (check giu nguyen) 2ms
+     → expected [] to deeply equal [ 'B:group_gap' ]
+   × pacer — typing tuoi (T7) va hold_reason (§7.1.4) > typing som da gui <= 8 s ⇒ tin text khong gui typing lap va khong tre (typing dai 1–3 s van bo qua) 2ms
+     → expected +0 to be 1 // Object.is equality
+   × pacer — typing tuoi (T7) va hold_reason (§7.1.4) > hold_reason = ly do DAU TIEN: bi group_gap giu roi gui ⇒ markSending(id, "group_gap"); khong bi giu ⇒ null 1ms
+     → expected [] to deeply equal [ { id: 1, hold: null } ]
+   × pacer — typing tuoi (T7) va hold_reason (§7.1.4) > tin tra loi (inbound_event_id) cua thread khac duoc gui truoc tin chu dong du xep sau (T8) 1ms
+     → expected [ 'chu dong' ] to deeply equal [ 'tra loi' ]
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 7 passed (12)
+   Start at  14:27:39
+   Duration  579ms (transform 100ms, setup 0ms, collect 216ms, tests 19ms, environment 0ms, prepare 108ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/pacer-d31.test.ts > pickNext — uu tien tin tra loi (T8) > thread co hang DAU la tin tra loi duoc xet truoc, du hang cua thread khac xep truoc
+AssertionError: expected 1 to be 2 // Object.is equality
+
+- Expected
++ Received
+
+- 2
++ 1
+
+ ❯ src/pacer-d31.test.ts:108:68
+    106|   it('thread co hang DAU la tin tra loi duoc xet truoc, du hang cua th…
+    107|     const p = new PacerPolicy(CFG, () => 0);
+    108|     expect(pickNext(0, q([1, 'A', false], [2, 'B', true]), p)?.id).toB…
+       |                                                                    ^
+    109|   });
+    110|   it('khong co tin tra loi ⇒ giu thu tu cu (hang xep truoc thang)', ()…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  src/pacer-d31.test.ts > pickNext — uu tien tin tra loi (T8) > thread tra loi bi gap giu ⇒ roi xuong thread con lai; KHONG nuoi gap (check giu nguyen)
+AssertionError: expected [] to deeply equal [ 'B:group_gap' ]
+
+- Expected
++ Received
+
+- Array [
+-   "B:group_gap",
+- ]
++ Array []
+
+ ❯ src/pacer-d31.test.ts:127:21
+    125|     const got = pickNext(1000, q([1, 'A', false], [2, 'B', true]), p, …
+    126|     expect(got?.id).toBe(1);
+    127|     expect(blocked).toEqual(['B:group_gap']);
+       |                     ^
+    128|   });
+    129| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  src/pacer-d31.test.ts > pacer — typing tuoi (T7) va hold_reason (§7.1.4) > typing som da gui <= 8 s ⇒ tin text khong gui typing lap va khong tre (typing dai 1–3 s van bo qua)
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/pacer-d31.test.ts:140:24
+    138|     add({ kind: 'text', body: { text: 'xin chào bạn' }, inbound_event_…
+    139|     const r = await pacer.tick();
+    140|     expect(r.sentText).toBe(1); // gui NGAY trong tick nay
+       |                        ^
+    141|     expect(fake.sent.map((s) => s.kind)).toEqual(['typing', 'text']); …
+    142|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  src/pacer-d31.test.ts > pacer — typing tuoi (T7) va hold_reason (§7.1.4) > hold_reason = ly do DAU TIEN: bi group_gap giu roi gui ⇒ markSending(id, "group_gap"); khong bi giu ⇒ null
+AssertionError: expected [] to deeply equal [ { id: 1, hold: null } ]
+
+- Expected
++ Received
+
+- Array [
+-   Object {
+-     "hold": null,
+-     "id": 1,
+-   },
+- ]
++ Array []
+
+ ❯ src/pacer-d31.test.ts:174:22
+    172|     const a = add({ kind: 'text', body: { text: 'a' }, inbound_event_i…
+    173|     await pacer.tick();
+    174|     expect(st.picks).toEqual([{ id: a.id, hold: null }]);
+       |                      ^
+    175|     advance(1000);
+    176|     const b = add({ kind: 'text', body: { text: 'b' }, inbound_event_i…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  src/pacer-d31.test.ts > pacer — typing tuoi (T7) va hold_reason (§7.1.4) > tin tra loi (inbound_event_id) cua thread khac duoc gui truoc tin chu dong du xep sau (T8)
+AssertionError: expected [ 'chu dong' ] to deeply equal [ 'tra loi' ]
+
+- Expected
++ Received
+
+  Array [
+-   "tra loi",
++   "chu dong",
+  ]
+
+ ❯ src/pacer-d31.test.ts:204:38
+    202|     await pacer.tick();
+    203|     const texts = fake.sent.filter((s) => s.kind === 'text');
+    204|     expect(texts.map((t) => t.text)).toEqual(['tra loi']);
+       |                                      ^
+    205|   });
+    206| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+

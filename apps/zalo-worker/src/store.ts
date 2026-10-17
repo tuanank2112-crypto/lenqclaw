@@ -221,6 +221,8 @@ export interface OutboxRow {
   staff_takeover: boolean;
   /** `outbox.created_at` (epoch ms) — doi han `GROUP_TEXT_TTL_MIN`. */
   created_ms: number;
+  /** D31 T8: id `inbound_events` ma hang nay tra loi (null = tin chu dong/he thong). */
+  inbound_event_id?: number | null;
 }
 
 /** Tin `queued` den han cua tai khoan, theo thu tu gui (doan tach giu dung
@@ -230,6 +232,7 @@ export async function fetchDue(account: AccountId, limit = 200): Promise<OutboxR
   return sql<OutboxRow>(
     `select o.id::int as id, o.thread_id, o.thread_type, o.kind, o.body, o.attempts,
             (extract(epoch from o.created_at) * 1000)::float8 as created_ms,
+            o.inbound_event_id::float8 as inbound_event_id,
             (o.thread_type = 'user' and exists (
               select 1 from conversations c
               where c.zalo_account_id = o.zalo_account_id and c.thread_id = o.thread_id
@@ -257,11 +260,14 @@ export async function cancelRow(id: number, reason: string): Promise<void> {
   );
 }
 
-/** queued → sending (CAS). */
-export async function markSending(id: number): Promise<boolean> {
+/** queued → sending (CAS). D31 §7.1.4: ghi `picked_at = now()`; `holdReason` (ly do DAU TIEN pacer giu hang, chi tin text)
+ * ⇒ `outbox.hold_reason` — view `reply_latency` tru khoang giu nay khoi `core_ms`. Gui lai (requeue) khong xoa ly do cu. */
+export async function markSending(id: number, holdReason?: string | null): Promise<boolean> {
   const rows = await sql<{ id: number }>(
-    `update outbox set status = 'sending', attempts = attempts + 1 where id = $1 and status = 'queued' returning id`,
-    [id]
+    `update outbox set status = 'sending', attempts = attempts + 1, picked_at = now(),
+       hold_reason = coalesce($2::text, hold_reason)
+     where id = $1 and status = 'queued' returning id`,
+    [id, holdReason ?? null]
   );
   return rows.length > 0;
 }

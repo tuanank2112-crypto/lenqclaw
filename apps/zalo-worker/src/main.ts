@@ -3,7 +3,7 @@
 // ZALO_SESSION_KEY (thieu/sai do dai ⇒ exit 1) → ZALO_ACCOUNTS / PACER_* →
 // DATABASE_URL. SIGINT/SIGTERM ⇒ dung vong lap, dong listener, dong DB, exit 0.
 
-import { closeDb } from '@lenqclaw/core';
+import { closeDb, holdAdvisoryLock } from '@lenqclaw/core';
 import { ConfigError, readAccounts, readPacerConfig } from './config.js';
 import { parseSessionKey, SessionKeyError } from './crypto.js';
 import { createZcaClient } from './zca-client.js';
@@ -39,6 +39,18 @@ async function main(): Promise<void> {
     throw err;
   }
   if (!process.env.DATABASE_URL) fail('DATABASE_URL chua duoc cau hinh.');
+
+  // D31 T6 / BB-19: DUNG MOT worker. Giu advisory lock TRUOC khi mo bat ky phien zca-js nao — ban thu hai thoat 1
+  // (2 phien zca-js cho cung mot tai khoan = rui ro khoa tai khoan). Mat ket noi giu khoa ⇒ thoat 1 (supervisor khoi dong lai).
+  const lock = await holdAdvisoryLock('lenqclaw:worker:community', (err) => {
+    process.stderr.write(`${JSON.stringify({ t: new Date().toISOString(), event: 'worker.lock_lost', error: err.message.slice(0, 200) })}\n`);
+    process.exit(1);
+  });
+  if (lock === null) {
+    process.stderr.write('WORKER_ALREADY_RUNNING: da co mot worker khac giu khoa lenqclaw:worker:community.\n');
+    await closeDb();
+    process.exit(1);
+  }
 
   const client = createZcaClient();
   const sessions = accounts.map((a) => new AccountSession(a, client, key, cfg));
@@ -77,6 +89,7 @@ async function main(): Promise<void> {
     logEvent('worker.stopping', { signal });
     for (const t of timers) clearInterval(t);
     for (const s of sessions) await s.stop();
+    await lock.release();
     await closeDb();
     process.exit(0);
   };

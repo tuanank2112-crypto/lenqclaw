@@ -1,0 +1,65 @@
+# RED EVIDENCE: file=src/pacer.ts
+# mutation: "now - lastTyping <= this.cfg.typingFreshMs" => "false"
+# cmd: npx vitest run src/pacer-d31.test.ts
+# exit: 1
+
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/apps/zalo-worker
+
+{"t":"2026-10-17T07:27:42.305Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-17T07:27:42.308Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-17T07:27:42.308Z","event":"pacer.sent","account":"community","outbox_id":2}
+{"t":"2026-10-17T07:27:42.308Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-17T07:27:42.308Z","event":"pacer.sent","account":"community","outbox_id":2}
+{"t":"2026-10-17T07:27:42.309Z","event":"pacer.sent","account":"community","outbox_id":2}
+ ❯ src/pacer-d31.test.ts (12 tests | 2 failed) 14ms
+   × pacer — typing tuoi (T7) va hold_reason (§7.1.4) > typing som da gui <= 8 s ⇒ tin text khong gui typing lap va khong tre (typing dai 1–3 s van bo qua) 7ms
+     → expected +0 to be 1 // Object.is equality
+   × pacer — typing tuoi (T7) va hold_reason (§7.1.4) > typing cua tin vua gui >8 s truoc ⇒ khong con tuoi; <=8 s ⇒ tuoi (ranh gioi 8000) 1ms
+     → expected +0 to be 1 // Object.is equality
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 10 passed (12)
+   Start at  14:27:41
+   Duration  612ms (transform 100ms, setup 0ms, collect 216ms, tests 14ms, environment 0ms, prepare 118ms)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/pacer-d31.test.ts > pacer — typing tuoi (T7) va hold_reason (§7.1.4) > typing som da gui <= 8 s ⇒ tin text khong gui typing lap va khong tre (typing dai 1–3 s van bo qua)
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/pacer-d31.test.ts:140:24
+    138|     add({ kind: 'text', body: { text: 'xin chào bạn' }, inbound_event_…
+    139|     const r = await pacer.tick();
+    140|     expect(r.sentText).toBe(1); // gui NGAY trong tick nay
+       |                        ^
+    141|     expect(fake.sent.map((s) => s.kind)).toEqual(['typing', 'text']); …
+    142|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/pacer-d31.test.ts > pacer — typing tuoi (T7) va hold_reason (§7.1.4) > typing cua tin vua gui >8 s truoc ⇒ khong con tuoi; <=8 s ⇒ tuoi (ranh gioi 8000)
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/pacer-d31.test.ts:166:43
+    164|     advance(8000);
+    165|     add({ kind: 'text', body: { text: 'dung 8 s' } });
+    166|     expect((await pacer.tick()).sentText).toBe(1); // 8000 <= 8000 ⇒ t…
+       |                                           ^
+    167|     expect(fake.sent.filter((s) => s.kind === 'typing').length).toBe(1…
+    168|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+

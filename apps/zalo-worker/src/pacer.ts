@@ -14,7 +14,7 @@ import {
   type ZaloSessionLike,
 } from './client.js';
 import { executeAction, InvalidActionError, type ActionOutcome } from './actions.js';
-import { PacerPolicy, pickNext, splitText, typingDelayMs } from './pacer-policy.js';
+import { PacerPolicy, pickNext, splitText, typingDelayMs, type BlockReason } from './pacer-policy.js';
 import { errSummary, logEvent } from './log.js';
 import * as store from './store.js';
 
@@ -46,6 +46,12 @@ export class AccountPacer {
   private pending: { rowId: number; readyAt: number } | null = null;
   private readonly now: () => number;
   private readonly gateCache = new Map<string, { value: store.GroupGate | null; at: number }>();
+  /** D31 T7: lan cuoi gui su kien "dang go" cho moi thread (ms) — typing som cua `prepare` con "tuoi" ⇒ bo typing lap. */
+  private readonly lastTypingAt = new Map<string, number>();
+  /** D31 §7.1.4: ly do DAU TIEN `policy.check` giu hang dau thread (trong bo nho; ghi DB mot lan luc `markSending`). */
+  private readonly holdReasons = new Map<number, BlockReason>();
+  /** Heartbeat worker (§9): thoi diem tick gan nhat chay xong. */
+  lastTickAt: number | null = null;
 
   constructor(
     private readonly account: AccountId,
@@ -64,6 +70,12 @@ export class AccountPacer {
   }
 
   async tick(): Promise<TickResult> {
+    const out = await this.tickInner();
+    this.lastTickAt = this.now();
+    return out;
+  }
+
+  private async tickInner(): Promise<TickResult> {
     const result: TickResult = { sentText: 0, sentEvents: 0, sentActions: 0, cancelled: 0 };
     const session = this.getSession();
     if (!session) return { ...result, note: 'no_session' };
@@ -71,6 +83,10 @@ export class AccountPacer {
     if (this.policy.isBackingOff(now)) return { ...result, note: 'backoff' };
 
     const rows = await store.fetchDue(this.account);
+    if (this.holdReasons.size > 0) {
+      const live = new Set(rows.map((r) => r.id));
+      for (const id of [...this.holdReasons.keys()]) if (!live.has(id)) this.holdReasons.delete(id);
+    }
     const texts: store.OutboxRow[] = [];
     const actions: store.OutboxRow[] = [];
     const events: store.OutboxRow[] = [];
@@ -219,7 +235,11 @@ export class AccountPacer {
         this.pending = null;
       } else {
         if (now < this.pending.readyAt) return 'typing';
-        if (!this.policy.check(now, row.thread_id, row.thread_type === 'group').ok) return 'blocked';
+        const chk = this.policy.check(now, row.thread_id, row.thread_type === 'group');
+        if (!chk.ok) {
+          this.noteHold(row.id, chk.reason);
+          return 'blocked';
+        }
         this.pending = null;
         if (await this.sendText(session, row)) result.sentText++;
         return undefined;
@@ -228,8 +248,14 @@ export class AccountPacer {
 
     const picked = pickNext(
       now,
-      texts.map((r) => ({ id: r.id, threadId: r.thread_id, isGroup: r.thread_type === 'group' })),
-      this.policy
+      texts.map((r) => ({
+        id: r.id,
+        threadId: r.thread_id,
+        isGroup: r.thread_type === 'group',
+        reply: r.inbound_event_id != null,
+      })),
+      this.policy,
+      (item, reason) => this.noteHold(item.id, reason)
     );
     if (!picked) {
       if (texts.length > 0) return 'blocked';
@@ -237,9 +263,16 @@ export class AccountPacer {
     }
     const row = texts.find((r) => r.id === picked.id)!;
     const text = String(row.body.text ?? '');
+    // D31 T7: da co "dang go" tuoi o thread nay (typing som cua `prepare`) ⇒ khong typing lap, khong tre them.
+    const lastTyping = this.lastTypingAt.get(row.thread_id);
+    if (lastTyping !== undefined && now - lastTyping <= this.cfg.typingFreshMs) {
+      if (await this.sendText(session, row)) result.sentText++;
+      return undefined;
+    }
     const delay = typingDelayMs(Array.from(text).length, this.cfg);
     try {
       await session.sendTyping(row.thread_id, row.thread_type);
+      this.lastTypingAt.set(row.thread_id, now);
     } catch (err) {
       if (err instanceof ZaloRateLimitError) {
         await this.enterBackoff('typing');
@@ -253,6 +286,10 @@ export class AccountPacer {
     }
     if (await this.sendText(session, row)) result.sentText++;
     return undefined;
+  }
+
+  private noteHold(rowId: number, reason: BlockReason): void {
+    if (!this.holdReasons.has(rowId)) this.holdReasons.set(rowId, reason);
   }
 
   private async enterBackoff(reason: string): Promise<void> {
@@ -269,6 +306,7 @@ export class AccountPacer {
         await session.sendSeen(row.thread_type, row.body.seen as SeenParams);
       } else {
         await session.sendTyping(row.thread_id, row.thread_type);
+        this.lastTypingAt.set(row.thread_id, this.now());
       }
       await store.markSent(row.id, null);
       return true;
@@ -284,7 +322,9 @@ export class AccountPacer {
   }
 
   private async sendText(session: ZaloSessionLike, row: store.OutboxRow): Promise<boolean> {
-    if (!(await store.markSending(row.id))) return false;
+    const hold = this.holdReasons.get(row.id) ?? null;
+    this.holdReasons.delete(row.id);
+    if (!(await store.markSending(row.id, hold))) return false;
     const now = this.now();
     const isGroup = row.thread_type === 'group';
     try {

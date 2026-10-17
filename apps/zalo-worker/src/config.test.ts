@@ -15,7 +15,7 @@ describe('readPacerConfig', () => {
     expect([c.typingMinMs, c.typingMaxMs]).toEqual([1000, 3000]);
     expect([c.seenMinMs, c.seenMaxMs]).toEqual([2000, 6000]);
     expect(c.backoffMs).toBe(1_800_000);
-    expect(c.tickMs).toBe(1000);
+    expect(c.tickMs).toBe(250); // D31 T9: 1000 → 250 (SPEC-D31 §7.1.1)
   });
   it('env ghi de', () => {
     expect(readPacerConfig({ PACER_MAX_PER_MINUTE: '5', PACER_THREAD_GAP_MS: '4000' })).toMatchObject({

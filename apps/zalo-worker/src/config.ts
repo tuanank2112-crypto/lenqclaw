@@ -22,8 +22,10 @@ export interface PacerConfig {
   seenMaxMs: number;
   /** Loi gioi han / khong msgId / ma 221 ⇒ lui backoffMs cho tai khoan. */
   backoffMs: number;
-  /** Chu ky pacer. */
+  /** Chu ky pacer (D31 T9: 250). */
   tickMs: number;
+  /** D31 T7: thread da co "dang go" trong chung nay ms ⇒ tin text khong gui lai "dang go" va khong tre them. */
+  typingFreshMs: number;
   /** Nhom (BB-08, SPEC-P02 §5): giua 2 tin cung nhom >= groupGapMs + jitter [0, groupJitterMs]. */
   groupGapMs: number;
   groupJitterMs: number;
@@ -45,7 +47,8 @@ export const PACER_DEFAULTS: PacerConfig = {
   seenMinMs: 2000,
   seenMaxMs: 6000,
   backoffMs: 30 * 60 * 1000,
-  tickMs: 1000,
+  tickMs: 250,
+  typingFreshMs: 8000,
   groupGapMs: 8000,
   groupJitterMs: 3000,
   groupTextTtlMin: 30,
@@ -65,6 +68,7 @@ const PACER_ENV: Record<keyof PacerConfig, string> = {
   seenMaxMs: 'PACER_SEEN_MAX_MS',
   backoffMs: 'PACER_BACKOFF_MS',
   tickMs: 'PACER_TICK_MS',
+  typingFreshMs: 'PACER_TYPING_FRESH_MS',
   groupGapMs: 'PACER_GROUP_GAP_MS',
   groupJitterMs: 'PACER_GROUP_JITTER_MS',
   groupTextTtlMin: 'GROUP_TEXT_TTL_MIN',

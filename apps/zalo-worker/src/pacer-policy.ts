@@ -118,16 +118,33 @@ export interface QueueItem {
   id: number;
   threadId: string;
   isGroup?: boolean;
+  /** D31 T8: hang nay la tin TRA LOI mot tin den (`outbox.inbound_event_id` khac null). */
+  reply?: boolean;
 }
 
 /** Chon tin ke tiep duoc gui: hang doi da sap theo thu tu gui; CHI tin dau
- * cua moi thread duoc xet (giu thu tu trong thread). */
-export function pickNext<T extends QueueItem>(now: number, queue: readonly T[], policy: PacerPolicy): T | null {
+ * cua moi thread duoc xet (giu thu tu trong thread). D31 T8: vong 1 chi xet thread co hang DAU la tin
+ * tra loi, vong 2 cac thread con lai — chi doi THU TU, `policy.check` (gap, per-minute, ngan sach, backoff) giu nguyen.
+ * `onBlocked` (tuy chon) nhan hang dau thread bi `check` tu choi + ly do (pacer ghi `hold_reason`). */
+export function pickNext<T extends QueueItem>(
+  now: number,
+  queue: readonly T[],
+  policy: PacerPolicy,
+  onBlocked?: (item: T, reason: BlockReason) => void
+): T | null {
   const seenThreads = new Set<string>();
+  const heads: T[] = [];
   for (const item of queue) {
     if (seenThreads.has(item.threadId)) continue;
     seenThreads.add(item.threadId);
-    if (policy.check(now, item.threadId, item.isGroup ?? false).ok) return item;
+    heads.push(item);
+  }
+  for (const round of [heads.filter((h) => h.reply === true), heads.filter((h) => h.reply !== true)]) {
+    for (const item of round) {
+      const res = policy.check(now, item.threadId, item.isGroup ?? false);
+      if (res.ok) return item;
+      onBlocked?.(item, res.reason);
+    }
   }
   return null;
 }
