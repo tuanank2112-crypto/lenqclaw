@@ -560,6 +560,12 @@ select t.id as turn_id, t.zalo_account_id, t.thread_id, t.kind, t.lane, t.outcom
 ```
 `worker_lag_ms` không nằm trong view (cần `inbound_events.payload.ts` — đọc trực tiếp khi điều tra). Hàng ghi trước 010 có cột mới NULL ⇒ view bỏ qua. Ngữ nghĩa từng cột/bảng: [SPEC-D31 §6, §8–§11](SPEC-D31-Toc-Do-Giam-Sat.md).
 
+### §4.11 Migration `011_bot_uid.sql` (D37, append-only)
+```sql
+alter table zalo_accounts add column own_uid text;
+```
+Ghi: worker (`session.ownUid` khi phiên `connected`, `update zalo_accounts set own_uid = $2 where id = $1 and own_uid is distinct from $2`). Đọc: `agent/community/bot.ts::botUid(account)` (cache 60 s) ⇒ null ⇒ env `BOT_ZALO_UID` ⇒ chỉ `DATA_MODE=sim`: `BOT_UID_SIM`. Không xoá khi đăng xuất (uid tài khoản không đổi).
+
 ## §5. Máy trạng thái
 
 ### §5.1 `approvals.status`

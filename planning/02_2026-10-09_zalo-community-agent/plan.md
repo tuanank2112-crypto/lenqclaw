@@ -130,6 +130,9 @@ Người dùng: "không". Kích hoạt phiên bản persona trên dashboard có 
 ### D34 — 2026-10-16 · Duyệt kỹ thuật SPEC-D31 (R06); SO chốt các câu không cần người (SO)
 SO kiểm `33248d1`: 0 key lộ trong evidence/specs/report, gate exit 0 (218 test), hình đồ thị KHÔNG đổi node/cạnh (chỉ chú thích §4.1/§4.2 + tác dụng phụ typing của `prepare`) ⇒ không cần người duyệt lại ảnh 12. SO chốt: Q-D31-4 CHẤP NHẬN tin gọi bot không qua triage (lưới tất định + agent `flag_message` + kiểm duyệt ở tin sau); Q-D31-5 ping ngoài `/api/healthz` HOÃN tới P09/VPS; Q-D31-6 giữ `turn_traces`/`agent_runs` 180 ngày, `audit_log` 365 ngày. Xếp gói: runtime D31 (làn, hạn chót, runner song song + advisory lock, typing sớm) vào P03; worker D31 (tick 250, advisory lock, heartbeat) + adapter báo động Telegram + dọn dữ liệu thành gói **P03b** 🟠 sau P03; thẻ dashboard + `/api/healthz` vào P08. Hạn giữ `inbound_events`/`outbox` (chứa nội dung tin) ⇒ Idea Vault, quyết trước P09. CHỜ NGƯỜI: Q-D31-1 (flash-lite cho tin gọi bot), Q-D31-2 (nới gap nhóm D09), Q-D31-3 (billing Gemini + `MODEL_PROVIDER=gemini`; Vyce đang 401). **Lật:** không.
 
+### D37 — 2026-10-17 · Phạm vi gói P03b + nguồn `botUid` thật (SO)
+P03b 🟠 = SPEC-D31 §7.1 (tick 250, ưu tiên tin trả lời, typing tươi, `picked_at`/`hold_reason`), T6 advisory lock worker `lenqclaw:worker:community`, §9 heartbeat worker **+ `GET /api/healthz`** (dời từ P08 về đây — G24 đo nó, route nhỏ, không cần đăng nhập; thẻ dashboard vẫn P08), §10 `adapters/alert.ts` + `services/ops-watch.ts` (runner bước `opsWatch` + worker `every('ops')`), §11 dọn `turn_traces`/`agent_runs`/`audit_log` trong `pruneBuffers`. **`botUid` (D35.13):** migration MỚI `011_bot_uid.sql` thêm `zalo_accounts.own_uid text` (null tới khi đăng nhập); worker ghi `session.ownUid` mỗi lần phiên `connected`; core `botUid(account)` đọc cột, null ⇒ env `BOT_ZALO_UID` ⇒ (chỉ `DATA_MODE=sim`) `BOT_UID_SIM`; không có ⇒ cổng coi như không có mention bot (không đoán). DDL ở 01-CONTRACTS §4.11. Q-D31-2 vẫn giữ gap D09. Handoff [H10](handoffs/H10_thi-cong_P03b.md). **Lật:** rẻ.
+
 ### D36 — 2026-10-17 · Nghiệm thu P03 sau vòng sửa (R09 ✅); chốt 2 câu còn mở (SO)
 SO đo lại trên `c39e0c9`: gate exit 0, `npm test` 549 (31/102/416), test:db exit 0 ×2 = 209 (111/25/73), 0 skip; diff `4247719..c39e0c9` 26 file trong phạm vi; G14 `grep -c member_profiles persona.ts` = 0; G15 đệm DB dev max 53/thread, min `received_at` trong 8 ngày. Đột biến SO tự làm: tắt `skipFinalCall` (`nodes/agent.ts:32`) ⇒ 5 test DB đỏ; cho `owner_dm` takeover lại (`handoff.ts:22`) ⇒ 2 test DB đỏ; đã trả mã. Số lời gọi model (fetch giả): mention 1, RAG 2 (khớp SPEC-D31 §3). Chốt: (1) R09 Q1 — route `/api/dev/sim/send` vẫn có thể nhận tin cùng thread khi dispatcher đang chạy tin trước (đã đặt `processed_at`): CHẤP NHẬN vì chỉ ở `DATA_MODE=sim` (ghi `docs/web.md`); đường thật chỉ có MỘT dispatcher (advisory lock); (2) R09 Q2 — bảng 01-CONTRACTS §12.5 dòng D8 ghi `¬DM ∧ answered > 0` cho khớp mã (DM không có tool `answers`). G07, G08, G14, G15 ✅ local. G23: ca đỏ + fake PASS ✅, lượt model THẬT vẫn `blocked` (chờ Q-D31-3) ⇒ cột local giữ ⬜. **Lật:** không.
 
@@ -183,6 +186,7 @@ SO đo lại `d8e744f`: gate exit 0, `npm test` 499/0/0, test:db ×2 = 182 (84/2
 | SPEC-P04 §2 bước 2 | embed timeout 3 s | D31 T11 — `EMBED_TIMEOUT_MS` 1500 ∧ ≤ hạn lượt | p95 đo 447 ms |
 | SPEC-P02 §5 / `PACER_DEFAULTS` | tick 1000 ms; typing 1–3 s ngay trước mọi text | D31 T7, T9 — tick 250; bỏ typing lặp khi đã có typing sớm | tiết kiệm 1–3,7 s/tin, không đổi giới hạn D09 |
 | SPEC-P07 §5 "Heartbeat = CHÍNH báo cáo này — không có heartbeat khác" | không có heartbeat khác | D32 — dấu sống tiến trình `process_heartbeats` (không gửi cho ai) + báo động Telegram | runner/worker chết thì không ai biết |
+| D34 "thẻ dashboard + `/api/healthz` vào P08" | healthz ở P08 | D37 — `/api/healthz` vào P03b (thẻ dashboard vẫn P08) | G24 đo healthz cùng báo động |
 | D24 "không cần hạn giữ ở 0.1" · SPEC-P07 §2 bước 8 "KHÔNG chạm `turn_traces`, `audit_log`" | giữ vết vô hạn | D32 e4 — `turn_traces`/`agent_runs` 180 ngày, `audit_log` 365 ngày | bảng tăng không giới hạn; 365 ngày cho BB-09 |
 | 01-CONTRACTS §2.2 / plan.md Q3 | "giả định 1024 chiều; probe ở P04" | đóng Q3 — đo trả đúng 1024 | `latency-probe.txt` |
 | 01-CONTRACTS §12.5 thứ tự D4 → D8 | `stop=model_down` xét trước `answered>0` | D35.1 — D8 ngay sau D3 | nhóm đã trả lời vẫn nhận thêm tin "trục trặc" (R08 C1) |
@@ -230,7 +234,7 @@ Thứ tự bắt buộc: `P01 → P02 → P03 → (P04 ∥ P05 ∥ P06 ∥ P07) 
 - [x] D31–D33 — SPEC tốc độ + giám sát Telegram — H06↔[R06](reports/R06_kien-truc_toc-do.md) ✅ kỹ thuật (D34)
 - [ ] 🖐 Người dùng: Q-D31-1 (model cho tin gọi bot) · Q-D31-2 (gap nhóm) · Q-D31-3 (billing Gemini, `.env`)
 - [x] P03 — runtime agent trên LangGraph (G07, G08, G14, G15 local) + runtime D31 — H07↔[R07](reports/R07_thi-cong_P03.md) 🔁 · H08↔[R08](reports/R08_tham-dinh_P03.md) thẩm định ✅ · H09↔[R09](reports/R09_thi-cong_P03-fix.md) ✅ 2026-10-17 (D36) — G07/G08/G14/G15 ✅ local; G23 chờ model thật
-- [ ] P03b — worker D31 + báo động Telegram + dọn dữ liệu (🟠, sau P03)
+- [ ] P03b — worker D31 + báo động Telegram + heartbeat/healthz + dọn dữ liệu + `own_uid` (🟠, D37) — handoff [H10](handoffs/H10_thi-cong_P03b.md) phóng 2026-10-17
 - [ ] P04 — tri thức (G12 local sau golden)
 - [ ] P05 — kiểm duyệt (G13, G16)
 - [ ] P06 — lead & trí nhớ
