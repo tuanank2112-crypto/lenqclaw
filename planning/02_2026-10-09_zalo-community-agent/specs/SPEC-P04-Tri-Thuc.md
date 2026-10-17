@@ -32,7 +32,7 @@ Lượt RAG đầy đủ (flash-lite: call1 p95 1250 + tool ~550 + call2 p95 152
 Lỗi DB ⇒ `KnowledgeUnavailableError` (01-CONTRACTS §9 bổ sung: caller — tool trả `is_error`, agent nói "mình chưa tra được tài liệu").
 
 ## §3. Tool `search_knowledge` (G/D/O, mọi vai)
-`run(ctx, {query, top_k?})` ⇒ `{hits: KnowledgeHit[] (rút `body` còn 600 ký tự quanh token khớp đầu tiên + `heading`), note: 'Trích dẫn dạng: (Tài liệu <title> · mục <heading>)'}`. Ghi `audit 'kb.search' {hits: n, vector: boolean}`.
+`run(ctx, {query, top_k?})` ⇒ `{hits: KnowledgeHit[] (rút `body` còn 600 ký tự quanh token khớp đầu tiên + `heading`), note: 'Trích dẫn dạng: (theo <title> · <heading>)'} (D39 — khớp §4 + golden)`. Ghi `audit 'kb.search' {hits: n, vector: boolean}`.
 
 ## §4. Luật trích dẫn (prompt `rules` + khối hệ thống)
 - Khi trả lời câu hỏi kiến thức: gọi `search_knowledge` TRƯỚC; có hit liên quan ⇒ trả lời kèm "(theo <title> · <heading>)"; không có ⇒ nói rõ "mình chưa có tài liệu về …" và có thể trả lời từ hiểu biết chung nhưng GHI RÕ là ý kiến; CẤM bịa tên tài liệu.

@@ -20,9 +20,10 @@ Người dùng: "đến đâu rồi? tiếp tục đi".
 - R09 (worker 🟠, `4391902`/`c39e0c9`, report `806a6cd`): 18/18 đột biến đỏ, mention 1 / RAG 2 lời gọi model. SO đo lại: gate 0, `npm test` 549, test:db ×2 = 209, 0 skip; SO tự đột biến (tắt `skipFinalCall` ⇒ 5 đỏ; `owner_dm` takeover ⇒ 2 đỏ) ⇒ **R09 ✅, P03 ✅ (D36)**. G07/G08/G14/G15 ✅ local; G23 model thật còn chờ billing.
 - **D37**: phạm vi P03b (pacer D31, khoá worker, heartbeat worker + `/api/healthz` dời từ P08, báo động Telegram + `ops-watch`, dọn dữ liệu) + migration `011_bot_uid` (`zalo_accounts.own_uid`) cho `botUid` thật. H10 ⇒ phóng worker 🟠.
 - Worker P03b bị ngắt do giới hạn phiên (reset 16:00) ⇒ SendMessage cho chạy tiếp. R10 (`73a7ff0..8f8c5d1`, report `48d1349`). SO đo lại: gate 0, `npm test` 585, test:db ×2 = 238, pacer 20/0; đột biến SO (ngoại lệ healthz `/api/*` ⇒ 6 đỏ; token vào audit ⇒ 1 đỏ) ⇒ **R10 ✅, P03b ✅ (D38)**. G24 ✅ local. Gotcha G34.
+- H11 P04 ⇒ R11 (`3df5373..56b383d`, report `c5445cc`). SO đo lại: gate 0, `npm test` 602, test:db ×2 = 258; đột biến bỏ lọc `effective_to` ⇒ đỏ ⇒ **R11 ✅, P04 ✅ (D39)**. SO xác nhận `own_uid` bẩn do test worker ⇒ luật sim dùng `BOT_UID_SIM` + nâng làn trước tool tra cứu ⇒ đưa vào H12 (P05).
 
 ### ⏭ Treo
-- Kế tiếp: P04 ∥ P05 ∥ P06 ∥ P07 (cùng cây git ⇒ tuần tự hoặc worktree — G32).
+- Kế tiếp: P05 (H12) ⇒ thẩm định đối kháng 🔴 ⇒ P06 ⇒ P07 (tuần tự — G32).
 - 🖐 Q-D31-1/2/3 (billing Gemini chặn số đo thật G23).
 - 🖐 Người dùng xem bóc tách luồng kỹ thuật (tốc độ · chất lượng · eval · status · sessions) — mục checklist plan 02 còn mở.
 - `lenqclaw_presentation_transcript.pdf` ở root vẫn chưa theo dõi (trùng bản `docs/`) — chờ người xoá.

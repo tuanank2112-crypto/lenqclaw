@@ -2,6 +2,12 @@
 
 Tất cả các quyết định kiến trúc và lịch sử nâng cấp phiên bản của dự án.
 
+## [Unreleased] - 2026-10-17: P04 nghiệm thu — kho tri thức + truy hồi lai
+### Changed
+- `services/knowledge.ts` (`upsertDocument`, `embedPending`, `findUnansweredQuestions`), `retrieval/search-knowledge.ts` lai RRF, `adapters/model.ts::embedTexts`, `runTimers` thêm `pickUnanswered` + `embedPending`.
+### Decided
+- **D39 (SO):** trích dẫn `(theo …)`; nâng làn trước tool tra cứu; sim luôn dùng `BOT_UID_SIM`.
+
 ## [Unreleased] - 2026-10-17: P03b nghiệm thu — vận hành: báo động Telegram, heartbeat, healthz
 ### Changed
 - Worker: pacer D31 (tick 250, ưu tiên tin trả lời, typing tươi, `picked_at`/`hold_reason`), advisory lock `lenqclaw:worker:community`, heartbeat, ghi `own_uid`.

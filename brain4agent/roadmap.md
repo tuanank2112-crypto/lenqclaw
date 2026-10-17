@@ -23,7 +23,7 @@ Pivot 2026-10-09 (D01): agent chăm sóc cộng đồng Zalo. Bộ SPEC ĐÃ DUY
 - [x] P03b — worker D31 + báo động Telegram + heartbeat/healthz + dọn dữ liệu + `own_uid` — ✅ 2026-10-17 (D38; G24 local)
 - [ ] P02 — transport nhóm: worker + action outbox + pacer nhóm + sim nhóm (🟠 thi công · 🔴 thẩm định, G04–G06)
 - [ ] P03 — runtime agent: cổng nhận tin, đệm, ambient, persona, policy tool, host ép trả lời (🔴/🟠, G07, G08, G14, G15)
-- [ ] P04 — tri thức: kho, embedding, truy hồi lai RRF, câu hỏi bỏ trống (🟠, G12)
+- [x] P04 — tri thức ✅ 2026-10-17 (D39) —: kho, embedding, truy hồi lai RRF, câu hỏi bỏ trống (🟠, G12)
 - [ ] P05 — kiểm duyệt: lưới + model, thang cảnh cáo, thẻ duyệt, duyệt vào nhóm, chào (🟠 · 🔴 thẩm định, G13, G16)
 - [ ] P06 — lead & trí nhớ: mời riêng, hồ sơ thành viên, thẻ lead, ghi chú ngày (🟠)
 - [ ] P07 — lịch & vận hành: `runTimers`, automations, poll/nhắc/tóm tắt tuần/báo cáo ngày (🟠, G17)
@@ -94,6 +94,8 @@ Việc lẻ chưa xếp giai đoạn: lịch `cron` (D16, `cron_expr` + `croner`
 - **Nhận tin nhắn thoại của thợ** (speech-to-text) — thợ quen gửi voice.
 
 ## Đã hoàn thành (Done)
+
+- [x] **2026-10-17 — P04 tri thức:** kho tài liệu có phiên bản + hiệu lực, `embedTexts` Gemini 1024 chiều, truy hồi lai (lexical + vector `<=>` + RRF), tool `search_knowledge` trích dẫn `(theo …)`, nhặt câu hỏi bỏ trống ở nhóm ambient. `npm test` 602, `test:db` 258.
 
 - [x] **2026-10-17 — P03b vận hành:** pacer ưu tiên tin trả lời + typing tươi + tick 250 ms, khoá chống 2 worker, heartbeat runner/worker + `/api/healthz`, báo động Telegram có chống lặp CAS (8 loại sự cố, runner và worker canh chéo), dọn vết 180/365 ngày, uid bot thật (`own_uid`, migration 011). `npm test` 585, `test:db` 238.
 

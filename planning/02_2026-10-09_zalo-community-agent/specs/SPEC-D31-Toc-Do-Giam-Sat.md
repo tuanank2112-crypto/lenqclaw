@@ -94,7 +94,7 @@ So sánh (cùng mô phỏng): **hiện trạng** (3.6-flash minimal, triage trê
 | `turn` (pipeline) | dựng `TurnRequest` có `inboundEventId`, `receivedAt`, `claimedAt`, `triageMs` từ `event`/state |
 | `prepare` | ĐẦU node, nếu `isInteractive(kind)`: `enqueue({kind:'typing', body:{typing:true}, threadId, threadType})` (BB-15: `prepare` = outbox "✓ chỉ `typing`"); đặt `lane`, `deadlineAt` theo `initialDeadline`; model của lượt = `MODEL_COMMUNITY_FAST` nếu tương tác, `MODEL_COMMUNITY` nếu nền (truyền qua `ModelCall.tier`) |
 | `agent` | `callModel({..., tier, deadlineAt})`; cộng `modelMs`; `ModelDeadlineError` ⇒ `stop='model_down'`, `deadlineHit=true` |
-| `tools` | trước mỗi tool: còn < `TOOL_MIN_MS` (300) tới `deadlineAt` ⇒ KHÔNG chạy, `tool_result is_error {code:'DeadlineExceeded'}`; tool `extendsDeadline` chạy ⇒ áp `escalateLane`; cộng `toolMs`; `search_knowledge` truyền `deadlineAt` xuống `embedTexts` |
+| `tools` | trước mỗi tool: còn < `TOOL_MIN_MS` (300) tới `deadlineAt` ⇒ KHÔNG chạy, `tool_result is_error {code:'DeadlineExceeded'}`; tool `extendsDeadline` ⇒ áp `escalateLane` NGAY TRƯỚC khi chạy tool (D39 — để `embedTexts` nhận hạn `rag`); cộng `toolMs`; `search_knowledge` truyền `deadlineAt` xuống `embedTexts` |
 | `deliver` | không đổi bảng §12.5; tin host/tin tool mang `inboundEventId` (outbox §12) |
 | `trace` | ghi thêm cột §8 |
 
