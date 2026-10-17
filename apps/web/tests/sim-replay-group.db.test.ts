@@ -61,6 +61,12 @@ describe('/api/dev/sim/replay — group-mention.jsonl (db, model gia)', () => {
     await sql(`update inbound_events set processed_at = now() where processed_at is null`);
     await sql(`delete from inbound_events where zalo_msg_id like 'gm-%'`);
     await sql(`delete from group_messages where zalo_msg_id like 'gm-%'`);
+    // Xac dinh: ngan sach gio cua nhom (BB-08) tinh tren `outbox` 1 gio gan nhat — cac lan chay test truoc do trong gio co the lam can
+    // ngan sach ⇒ tool loi ⇒ model bi goi them 1 lan chot (6 thay vi 3). Day cac tin cu cua nhom gia lap lui 2 gio de moi lan chay nhu nhau.
+    await sql(
+      `update outbox set created_at = created_at - interval '2 hours', sent_at = sent_at - interval '2 hours'
+        where thread_id like 'sim-group-%' and created_at > now() - interval '1 hour'`
+    );
     const community = await sql<{ c: number }>(`select count(*)::int as c from agent_runs where route = 'community'`);
 
     const cookie = `${SESSION_COOKIE_NAME}=${await createSessionCookie(adminId, 'admin')}`;
