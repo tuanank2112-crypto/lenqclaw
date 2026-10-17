@@ -92,6 +92,8 @@ describe('P03 — luot nhom', () => {
     expect(await count(`select 1 from agent_runs where turn_id = $1::uuid`, [t[0]!.id])).toBe(2);
     // typing som (D31 T7) + tin tra loi
     expect((await outboxFor(g, ['typing'])).length).toBe(1);
+    // cau chot "xong" cua luot mention da tra loi bang tool KHONG phai suy nghi rieng tu can luu (chi luot khong bat buoc tra loi)
+    expect(await count(`select 1 from messages m join conversations c on c.id = m.conversation_id where c.thread_id = $1 and m.content->>'private' = 'true'`, [g])).toBe(0);
   });
 
   it('(b)(G07) nhom mention + tin thuong ⇒ 0 luot model, 0 outbox; 20 tin thuong ⇒ 0 agent_runs community', async () => {

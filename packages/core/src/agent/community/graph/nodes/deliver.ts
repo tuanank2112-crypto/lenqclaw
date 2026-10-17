@@ -62,8 +62,9 @@ export const deliverNode: NodeFn<TurnStateT> = async (s) => {
 
   switch (delivery) {
     case 'none': {
-      // BB-05: text cuoi RIENG TU cua luot nhom — luu cho dashboard, khong dang.
-      if (ctx && isGroupCtx(ctx) && s.finalText !== '') {
+      // BB-05: text cuoi RIENG TU cua luot nhom khong bat buoc tra loi (ambient...) — luu cho dashboard, khong dang.
+      // (Luot mustReply da tra loi bang tool: cau chot kieu "xong" khong phai suy nghi dang luu.)
+      if (ctx && isGroupCtx(ctx) && !req.mustReply && s.finalText !== '') {
         await saveMessage(ctx.conversationId, 'out', 'assistant', s.finalText, { private: true });
       }
       break;
