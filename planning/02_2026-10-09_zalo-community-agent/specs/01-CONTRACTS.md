@@ -564,7 +564,7 @@ select t.id as turn_id, t.zalo_account_id, t.thread_id, t.kind, t.lane, t.outcom
 ```sql
 alter table zalo_accounts add column own_uid text;
 ```
-Ghi: worker (`session.ownUid` khi phiên `connected`, `update zalo_accounts set own_uid = $2 where id = $1 and own_uid is distinct from $2`). Đọc: `agent/community/bot.ts::botUid(account)` (cache 60 s) ⇒ null ⇒ env `BOT_ZALO_UID` ⇒ chỉ `DATA_MODE=sim`: `BOT_UID_SIM`. Không xoá khi đăng xuất (uid tài khoản không đổi). (D39) `DATA_MODE=sim` + thread `sim-%` ⇒ `BOT_UID_SIM` bất kể cột — sim không bao giờ dùng uid thật; test ghi `own_uid` phải dọn ở `afterAll`. (D38) Bản đồng bộ `resolveBotUid()` cho node đồ thị trả hằng `BOT_UID_UNKNOWN` khi không có nguồn ⇒ cổng không coi tin nào là mention bot.
+Ghi: worker (`session.ownUid` khi phiên `connected`, `update zalo_accounts set own_uid = $2 where id = $1 and own_uid is distinct from $2`). Đọc: `agent/community/bot.ts::botUid(account)` (cache 60 s) ⇒ null ⇒ env `BOT_ZALO_UID` ⇒ chỉ `DATA_MODE=sim`: `BOT_UID_SIM`. Không xoá khi đăng xuất (uid tài khoản không đổi). (D39) `DATA_MODE=sim` + thread `sim-%` ⇒ `BOT_UID_SIM` bất kể cột — sim không bao giờ dùng uid thật; test ghi `own_uid` phải dọn ở `afterAll`. (D38) Bản đồng bộ `resolveBotUid()` cho node đồ thị trả hằng `BOT_UID_UNKNOWN` khi không có nguồn ⇒ cổng không coi tin nào là mention bot. (D41/F2) `resolveBotUid(env, account, threadId)` tự tính sim theo `threadId` của chính lượt — CẤM cờ `sim` lưu trong cache dùng chung (runner chạy song song nhiều thread).
 
 ## §5. Máy trạng thái
 
@@ -701,7 +701,7 @@ Bề mặt: **G** = lượt nhóm (mọi `group_*`), **D** = DM member/stranger,
 | `submit_lead` | `{}` | | mọi vai | | lead `qualified` ⇒ `handed_off` + DM owner `LEAD_DM`; chưa đủ ⇒ `LeadIncompleteError` |
 | `list_groups` | `{}` | | | ✓ | nhóm + chế độ + ngân sách còn lại |
 | `set_group_enabled` | `{thread_id, enabled: boolean}` | | | ✓ | audit |
-| `decide_approval` | `{approval_id: string, decision: 'approve'\|'reject', note?: string}` | owner, moderator (qua lệnh `/approve`) | | ✓ | BẰNG CHỨNG: `approval_id` (hoặc 6 ký tự đầu) PHẢI xuất hiện trong `latestText` của requester (`IntentNotConfirmedError`); `pending` ⇒ `approved/rejected` ⇒ thi hành |
+| `decide_approval` | `{approval_id: string, decision: 'approve'\|'reject', note?: string}` | owner, moderator (qua lệnh `/approve`) | | ✓ | BẰNG CHỨNG: `approval_id` (hoặc `idShort` 8 ký tự đầu — D41/F10; §5.4 SPEC-P05 thứ tự xét) PHẢI xuất hiện trong `latestText` của requester (`IntentNotConfirmedError`); `pending` ⇒ `approved/rejected` ⇒ thi hành |
 | `announce` | `{thread_id, text: string≤2000}` | | | ✓ | outbox text tới nhóm (ngân sách nhóm áp); audit `announce` |
 | `schedule_automation` | `{name, kind: 'at'\|'every'\|'daily'\|'weekly', at?: ISO8601, every_minutes?: integer≥1, time_of_day?: 'HH:MM', day_of_week?: 0..6, thread_id?, action: 'send_text'\|'weekly_summary'\|'poll', payload?: object}` | | | ✓ | kiểm `schedule.ts::computeNextRun` ⇒ `AutomationInvalidError` |
 | `list_automations` / `cancel_automation` | `{}` / `{id}` | | | ✓ | |

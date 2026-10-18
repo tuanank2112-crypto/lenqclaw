@@ -12,7 +12,7 @@ Trả `{ hits: GridHit[]; hard: boolean }`. `GridHit` ∈:
 | Hit | Luật (trên `normalizeVi(text)` + bản gốc) | `hard`? |
 | :-- | :-- | :-- |
 | `mass_mention` | `mentions.length ≥ 8` | ✗ |
-| `repeat_burst` | người gửi đã gửi ≥ 5 tin GIỐNG HỆT (sau chuẩn hoá) trong 10 phút (đếm từ đệm) | ✓ |
+| `repeat_burst` | người gửi đã gửi ≥ 5 tin GIỐNG HỆT (sau chuẩn hoá) trong 10 phút (đếm từ đệm, KHÔNG tính tin đang xét ⇒ tin giống hệt thứ 6 mới hit — D41) | ✓ |
 | `link_flood` | ≥ 3 URL trong một tin | ✗ |
 | `scam_phrase` | khớp BẰNG NHAU theo ranh giới từ một cụm trong danh sách `SCAM_PHRASES` (≥ 20 cụm không nhập nhằng, vd "nhan tien thuong khi dang ky", "chuyen khoan truoc de nhan", "viec nhe luong cao", "link rut tien", "ung dung kiem tien moi ngay") — danh sách là hằng TS, test sinh từ chính mảng (G14) | ✓ |
 | `contact_spam` | ≥ 2 SĐT (PHONE_RE) + từ "lh"/"liên hệ"/"zalo" trong tin của người có `< 3` tin trong đệm | ✗ |
@@ -24,6 +24,7 @@ Input: `triage: CommunityTriage | null` (từ P03 §5.2 — cùng MỘT lời g�
 D31 (SPEC-D31 T3): tin GỌI BOT (mention/quote tin bot/tên bot/lệnh) KHÔNG triage ⇒ `triage=null` ⇒ dòng "triage null" của bảng §9 (lưới quyết); lớp model cho tin đó là chính agent: prompt `rules` thêm "tin gọi bạn có dấu hiệu lừa đảo/spam ⇒ gọi `flag_message` rồi trả lời một câu từ chối ngắn". Thẩm định đối kháng P05 (G16) BẮT BUỘC có ca "scam kèm @bot".
 ```text
 verdict, confidence =
+  grid.hard && triage && triage.verdict == 'ok' ⇒ hạ lưới thành hit MỀM (model bác lưới — câu cảnh báo/giáo dục; D41) + audit `moderation.grid_overruled {hit}` ⇒ xét tiếp các dòng dưới
   grid.hard                                  ⇒ ('scam' nếu scam_phrase, 'spam' nếu repeat_burst), 0.95, source 'grid'
   triage && triage.verdict in {scam} && conf ≥ MOD_SCAM_MIN (0.85)        ⇒ scam, source 'model'
   triage && triage.verdict in {spam, ad, harass} && conf ≥ MOD_SPAM_MIN (0.75) ⇒ verdict đó, source 'model'
@@ -48,7 +49,7 @@ export function nextLadderStep(a: { prevScore; lastUpdatedAt; now; verdict; send
 | `delete` | `zalo_groups.bot_is_admin` ⇒ `enqueueAction({action:'delete_message', msgId, cliMsgId, uidFrom: row.sender_uid, onlyMe:false})` + `group_messages.deleted_at=now(), delete_reason=verdict` (đặt trước; nếu action `failed` thì timer `reconcileDeletes` bỏ dấu) + DM owner `MOD_DELETE_DM` (gộp ≤ 1 DM/10 phút/nhóm); không là admin ⇒ hạ về `warn` + audit `moderation.need_deputy` |
 | `kick_requested` | `delete` (như trên) + `createApproval({kind:'kick_member', threadId, targetUid, reason, requestedBy:'moderation', payload:{events: 3 id gần nhất}})` |
 | `block_requested` | `delete` + `createApproval({kind:'block_member', …})` |
-Tin bị xoá ⇒ P03 không chạy cổng/lượt cho tin đó (spam không được trả lời).
+Tin bị xoá **hoặc bị xử lý kiểm duyệt** (`!exempt && action != 'none'` — kể cả khi bot không là phó nhóm nên chỉ cảnh cáo) ⇒ node `moderate` đặt `stop='deleted'` ⇒ P03 không chạy cổng/lượt cho tin đó (spam/scam không được trả lời, kể cả khi kèm @bot — D41/F3). Giá trị `'deleted'` giữ nguyên (cấm đổi `state.ts`/`edges.ts`); nghĩa = "tin đã bị kiểm duyệt lấy khỏi luồng". Lỗi trong `moderateGroupMessage` SAU khi đã xếp `delete_message` cho tin ⇒ vẫn `stop='deleted'` (F11).
 
 ### §4.2 Tool trong lượt (agent phán xét thêm)
 `flag_message(msg_id, verdict, reason)` ⇒ `moderation_events(source='agent', confidence=0.8)` ⇒ cùng `nextLadderStep`/`applyLadderAction`. `delete_message(msg_id, reason)` ⇒ như `delete` (không qua thang; `strikes` không tăng) — điều kiện 01-CONTRACTS §7.1. `warn_member(uid, reason)` ⇒ text nhóm mention uid + event `warn`. `request_member_removal(uid, kind, reason)` ⇒ `createApproval(requestedBy:'agent')`.
@@ -64,7 +65,8 @@ export async function expireApprovals(now): Promise<number>;                    
 ### §5.2 Quyết: trạng thái máy 01-CONTRACTS §5.1; approve ⇒ cùng tx `enqueueAction` theo kind: `kick_member`⇒`remove_member`, `block_member`⇒`block_member`, `approve_join`⇒`review_join approve:true`, `reject_join`⇒`review_join approve:false`, `announce`⇒ outbox text; `outbox_id` ghi vào thẻ; `audit approval.approved {by}`. Reject từ web thiếu `note` ⇒ 400 `note_required` (route), từ tool ⇒ `note` tuỳ chọn.
 ### §5.3 Ai được quyết: web `admin`/`operator`; Zalo: `owner` (DM owner, tool `decide_approval`) hoặc `moderator` của ĐÚNG nhóm của thẻ (qua lệnh `/approve <id>` trong nhóm hoặc DM). Member ⇒ `ToolNotAllowedError`.
 ### §5.4 Bằng chứng tất định cho `decide_approval` (port `IntentNotConfirmedError`): `latestText` của requester PHẢI chứa `idShort` (hoặc uuid đầy đủ) và một từ trong `{duyệt, duyet, ok, đồng ý, approve, /approve}` (approve) hoặc `{từ chối, tu choi, không, reject, /reject}` (reject), so BẰNG NHAU sau `normalizeVi` theo ranh giới từ; thiếu ⇒ `IntentNotConfirmedError` (caller: "bạn trả lời `duyệt <id>` nhé"). Model không tự quyết thay người.
-### §5.5 Kết quả: `completeApproval` ⇒ `executed`/`failed` + `enqueueSystemEvent({event:'approval_executed', approvalId, threadId})` ⇒ router DM owner `APPROVAL_RESULT_DM` (không lượt model). Hết hạn ⇒ `expired` + DM owner 1 lần.
+**Thứ tự xét (D41/F1 — thay luật "có từ reject ở bất kỳ đâu ⇒ reject"):** (1) cụm từ chối TƯỜNG MINH `{tu choi, reject, khong duyet, khong dong y}` ⇒ `'reject'`; (2) còn lại, có token do dự/phủ định `{khong, dung, chua, khoan, doi, tu tu, huy}` ⇒ `null` (KHÔNG approve, KHÔNG reject — thẻ giữ `pending`, hỏi lại; "dung" trùng "dùng/đúng" sau `normalizeVi` ⇒ chấp nhận hỏi lại thừa, vì reject `approve_join` cũng là hành động lên người thật); (3) có từ approve ⇒ `'approve'`; (4) ⇒ `null`. Ca bắt buộc: "đừng duyệt <id>", "chưa duyệt <id>", "khoan duyệt <id>" ⇒ `null`; "không duyệt <id>" ⇒ `reject`; "duyệt <id>" ⇒ `approve`.
+### §5.5 Kết quả: `completeApproval` ⇒ `executed`/`failed` + `enqueueSystemEvent({event:'approval_executed', approvalId, threadId})` ⇒ router DM owner `APPROVAL_RESULT_DM` (không lượt model). Hết hạn ⇒ `expired` + DM owner 1 lần. **Áp cho CẢ hai đường báo kết quả** (D41/F4): sim (`applySimOutbox`) VÀ worker thật (`apps/zalo-worker` `completeApproval` sau pacer) — chuyển trạng thái thắng CAS ⇒ đúng 1 sự kiện `approval_executed`; thua CAS ⇒ 0. `APPROVAL_RESULT_DM` dùng `idShort` 8 ký tự như `APPROVAL_DM` (F10).
 
 ## §6. Duyệt vào nhóm — `join-requests.ts`
 Sự kiện `join_request` (uids[]) ở nhóm `enabled`:
@@ -97,6 +99,26 @@ Mọi quyết định ghi `join_requests.decision/decided_by/decided_at/reason` 
 | `review_join` 166 | `bot_is_admin=false`; thẻ `failed`; DM owner `NEED_DEPUTY_DM` |
 | `IntentNotConfirmedError` | hỏi lại mẫu `duyệt <id>` |
 | triage `null` (quá hạn) | lưới quyết (`hard` ⇒ hành động; mềm ⇒ `unsure`, không hành động) |
+
+## §11. Vòng sửa sau thẩm định R13 + SO đo lại (D40, D41)
+| Mã | Hợp đồng | Đo bằng (phải ĐỎ trên mã hỏng tương ứng) |
+| :-- | :-- | :-- |
+| M2 | `applyModeration` đường PIPELINE: tin `received_at` > 24 h ⇒ 0 `delete_message`, audit `moderation.cannot_delete {reason:'too_old'}` | ca DB mới; đột biến bỏ `ageMs > DELETE_MAX_AGE_MS` ⇒ đỏ |
+| F1 | §5.4 thứ tự xét mới | `approvals.test.ts` + ca DB "đừng duyệt <id>" ⇒ thẻ `pending`, 0 outbox |
+| F2 | `resolveBotUid(env, account, threadId)` tự tính sim theo `threadId` của CHÍNH lượt (`isSimThread`); cache chỉ giữ `own_uid` — CẤM cờ `sim` dùng chung giữa các thread | test: 2 lượt xen kẽ (thread `sim-*` và thread thật) với cache đã nạp ⇒ mỗi lượt đúng uid của mình |
+| F3 | §4.1 câu `stop='deleted'` mở rộng | ca DB: `!bot_is_admin` + scam kèm @bot ⇒ đúng 1 tin ra (cảnh cáo), 0 `agent_runs` |
+| F4 | §5.5 đường worker | test worker: `completeApproval` thắng CAS ⇒ 1 `inbound_events` `approval_executed`; gọi lại ⇒ không thêm |
+| F6 | ca "tin bị xoá + @bot ⇒ 0 lượt" (bot là phó nhóm) | đột biến bỏ `stop='deleted'` ở `moderate.ts` ⇒ đỏ |
+| F5 | §3 dòng "model bác lưới" | ca DB: scam_phrase + triage giả `ok` ⇒ 0 outbox, audit `moderation.grid_overruled`; triage `null` ⇒ vẫn xoá (lưới an toàn) |
+| F7 | `enqueueAction` `review_join approve:false` CHỈ khi có `approvalId` thẻ `approved` (`reject_join`) / thẻ `approve_join` vừa bị từ chối, HOẶC nhóm `join_policy='agent_review'` | thiếu ⇒ `ApprovalRequiredError`; test thuần + DB |
+| F8 | §2 `repeat_burst` không tính tin đang xét | tin giống hệt thứ 5 ⇒ không hit, thứ 6 ⇒ hit |
+| F10 | `idShort` = 8 ký tự ở MỌI chuỗi (DM, kết quả, lệnh) | grep `slice(0, 6)` trên mã thẻ = 0 |
+| F11 | §4.1 câu lỗi sau khi đã xếp delete | test: `createApproval` ném ⇒ vẫn `stop='deleted'` |
+| F13 | `WELCOME_TEMPLATE(names)`: mỗi tên qua `redactPhones` + một dòng + ≤ 40 ký tự; > 5 người ⇒ 5 tên + "và N bạn khác" | test thuần |
+| F16 | `flushWelcomes` xoá `welcome_pending_since` bằng CAS theo giá trị đã đọc; `join` đến giữa chừng ⇒ lần flush sau vẫn chào | ca DB |
+| G35 | ca P05 phụ thuộc mention không giả định `own_uid` null | đặt `own_uid='rac-g35'` rồi chạy `p05-*.db.test.ts` ⇒ xanh; trả null sau |
+**Chấp nhận, KHÔNG sửa (vùng cấm "sửa cho tốt hơn"):** F9 (CAS và enqueue khác tx — có bù trừ, crash để thẻ `approved` không outbox là hướng an toàn); F12 (24 h đo theo giờ ingest — chênh với giờ Zalo chỉ vài giây ở đường bình thường); F14 (`!bot_is_admin` ⇒ hạ `warn`, không tạo thẻ kick — không phó nhóm thì không kick được; owner đã nhận `NEED_DEPUTY_DM`); F15 (`decidedBy='staff:<x>'` — route P08 BẮT BUỘC dựng từ phiên đăng nhập, ghi SPEC-P08).
+🖐 **Câu hỏi người (giá trị TẠM = như hiện tại):** tin GỌI BOT không có triage (D31 T3) ⇒ câu cảnh báo kiểu "@bot 'việc nhẹ lương cao' có phải lừa không?" vẫn bị lưới xoá + cộng điểm. Giữ (ưu tiên chặn scam) hay để agent tự `flag_message` cho tin gọi bot (ưu tiên không xoá nhầm)?
 
 ## §10. Nghiệm thu P05
 | # | Lệnh / ca | Kỳ vọng |
