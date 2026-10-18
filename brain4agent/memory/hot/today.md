@@ -4,6 +4,23 @@
 
 ---
 
+## 🏁 Phiên 2026-10-18 — Tiếp P05: số đo cuối, SO đo lại (D40), thẩm định đối kháng H13
+
+### 🎯 Chỉ đạo
+Người dùng: "tiếp tục đi".
+
+### ✅ Đã làm
+- Bước 0 `--check` exit 0. Docker tắt ⇒ SO bật lại Docker Desktop; `lenqclaw-db-1` Up `127.0.0.1:15432`.
+- Worker 🟠 (sonnet) làm nốt H12 mục 3.f, KHÔNG đổi mã: evidence `5048d90`, R12 `3864da3`. "Worker exited unexpectedly" của lần trước KHÔNG tái hiện; lần chạy đầu đỏ 2/187 do `own_uid` sót từ lần bị ngắt (G35).
+- SO đo lại `3864da3`: gate 0, `npm test` 721 (32/114/575), test:db 295 (187/30/78), 0 skip, `own_uid` null. Chấp nhận 4 file ngoài danh sách tên (thân node/dịch vụ). Đột biến SO: M1 trần cảnh cáo ⇒ đỏ; M3 `join_default` ⇒ đỏ; **M2 bỏ chặn xoá tin > 24 h ở đường pipeline ⇒ LỌT** ⇒ D40 (`2744bb7`): R12 CHƯA phán, vòng sửa sau R13 gồm test M2 + cô lập `own_uid`.
+- H13 thẩm định đối kháng 🔴 (opus, không đọc R12/D40) phóng nền.
+
+### ⏭ Treo
+- Chờ R13 ⇒ SO phán R12 + R13 ⇒ một vòng sửa (H14) gộp phát hiện R13 + D40 ⇒ đo lại ⇒ P05 ✅ ⇒ P06.
+- 🖐 Q-D31-1/2/3 (billing Gemini); `lenqclaw_presentation_transcript.pdf` ở root chờ người xoá.
+
+---
+
 ## 🏁 Phiên 2026-10-17 — Tiếp tục: đồng bộ não D31–D34, phóng P03
 
 ### 🎯 Chỉ đạo
