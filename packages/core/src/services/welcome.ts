@@ -59,8 +59,8 @@ export async function recordMemberLeave(args: { account: AccountId; threadId: st
  * Bỏ qua thread đang chạy (`busyThreads`) hoặc đã có `welcome_flush` chưa xử lý. Tra so nhom da phat su kien.
  */
 export async function flushWelcomes(now: Date, cfg: CommunityConfig, ctx: { busyThreads?: ReadonlySet<string> } = {}): Promise<number> {
-  const due = await sql<{ zalo_account_id: AccountId; thread_id: string; enabled: boolean; welcome_enabled: boolean }>(
-    `select s.zalo_account_id, s.thread_id, g.enabled, g.welcome_enabled
+  const due = await sql<{ zalo_account_id: AccountId; thread_id: string; enabled: boolean; welcome_enabled: boolean; pending_since: string }>(
+    `select s.zalo_account_id, s.thread_id, g.enabled, g.welcome_enabled, s.welcome_pending_since::text as pending_since
        from group_sessions s join zalo_groups g on g.zalo_account_id = s.zalo_account_id and g.thread_id = s.thread_id
       where s.welcome_pending_since is not null and s.welcome_pending_since <= $1::timestamptz - make_interval(secs => $2)
       order by s.welcome_pending_since`,
@@ -68,10 +68,20 @@ export async function flushWelcomes(now: Date, cfg: CommunityConfig, ctx: { busy
   );
   let sent = 0;
   for (const s of due) {
-    const clear = () =>
-      sql(`update group_sessions set welcome_pending_since = null where zalo_account_id = $1 and thread_id = $2`, [s.zalo_account_id, s.thread_id]);
+    // D41/F16: xoa bang CAS theo gia tri da doc VA (khi `guard`) chi khi khong con thanh vien chua chao trong cua so: `join` den
+    // giua chung ⇒ phien van cho, lan flush sau van chao. (`recordMemberJoin` giu coalesce(pending, now) nen gia tri cot khong doi
+    // khi co join moi — can them dieu kien thanh vien.)
+    const clear = (guard = true) =>
+      sql(
+        `update group_sessions set welcome_pending_since = null
+          where zalo_account_id = $1 and thread_id = $2 and welcome_pending_since = $3::timestamptz
+            and (not $6::boolean or not exists (select 1 from group_members m
+                  where m.zalo_account_id = $1 and m.thread_id = $2 and m.welcomed_at is null and m.left_at is null
+                    and m.joined_at > $4::timestamptz - make_interval(mins => $5)))`,
+        [s.zalo_account_id, s.thread_id, s.pending_since, now, cfg.welcomeWindowMin, guard]
+      );
     if (!s.enabled || !s.welcome_enabled) {
-      await clear();
+      await clear(false);
       continue;
     }
     if (ctx.busyThreads?.has(s.thread_id)) continue;

@@ -3,6 +3,7 @@
 // 01-CONTRACTS §11, §12.5). Chuoi gui nguoi dung PHAI co dau tieng Viet UTF-8.
 
 import type { Role, TurnKind } from '../../../domain/types.js';
+import { redactPhones } from '../redact.js';
 
 export const FALLBACK_GROUP_REPLY = 'Mình chưa trả lời được ngay, bạn chờ mình một chút nhé.';
 export const MODEL_DOWN_GROUP_REPLY = 'Mình đang gặp trục trặc kỹ thuật, bạn hỏi lại sau ít phút nhé.';
@@ -17,8 +18,18 @@ export const COMMANDS_HELP = [
   '/approve <mã> · /reject <mã>',
 ].join('\n');
 
+const WELCOME_NAMES_MAX = 5;
+const WELCOME_NAME_MAX_LEN = 40;
+/** D41/F13: ten thanh vien moi la du lieu khong tin cay ⇒ che SDT, gop ve MOT dong, cat <= 40 ky tu. */
+function welcomeName(raw: string): string {
+  const oneLine = redactPhones(raw).replace(/\s+/g, ' ').trim();
+  return Array.from(oneLine).slice(0, WELCOME_NAME_MAX_LEN).join('').trim();
+}
+
 export function WELCOME_TEMPLATE(names: readonly string[], groupName: string | null, botName: string): string {
-  const who = names.length > 0 ? names.join(', ') : 'các bạn';
+  const clean = names.map(welcomeName).filter((n) => n !== '');
+  const shown = clean.slice(0, WELCOME_NAMES_MAX).join(', ');
+  const who = clean.length === 0 ? 'các bạn' : clean.length > WELCOME_NAMES_MAX ? `${shown} và ${clean.length - WELCOME_NAMES_MAX} bạn khác` : shown;
   return `Chào mừng ${who} đã tham gia ${groupName ?? 'nhóm'}! Bạn cứ hỏi mình về AI agent hoặc gõ @${botName} nhé.`;
 }
 
@@ -28,7 +39,7 @@ export function HANDOFF_DM(reason: string, threadId: string, requesterName: stri
 }
 
 export function APPROVAL_RESULT_DM(approvalId: string, kind: string, status: string): string {
-  return `Thẻ duyệt ${approvalId.slice(0, 6)} (${kind}) đã ${status === 'executed' ? 'thi hành xong' : 'thi hành thất bại'}.`;
+  return `Thẻ duyệt ${approvalId.slice(0, 8)} (${kind}) đã ${status === 'executed' ? 'thi hành xong' : 'thi hành thất bại'}.`;
 }
 
 // ---- P05 (SPEC-P05): kiem duyet, the duyet, vao nhom — moi cau la hang TS, khong model ----
