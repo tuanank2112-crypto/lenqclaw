@@ -1,0 +1,12 @@
+ apps/zalo-worker/src/dbtests/group-helpers.ts      |  2 ++
+ apps/zalo-worker/src/dbtests/p02-fix.db.test.ts    |  7 ++++++
+ apps/zalo-worker/src/dbtests/p02-group.db.test.ts  |  1 +
+ apps/zalo-worker/src/dbtests/p02-worker.db.test.ts |  3 ++-
+ .../src/dbtests/p05-approval-event.db.test.ts      |  1 +
+ packages/core/src/dbtests/p05-fix-f11.db.test.ts   |  1 +
+ packages/core/src/dbtests/p05-fix.db.test.ts       |  1 +
+ .../core/src/dbtests/p05-join-welcome.db.test.ts   |  1 +
+ .../core/src/dbtests/p05-moderation.db.test.ts     |  1 +
+ packages/core/src/dbtests/sim-actions.db.test.ts   |  6 +++++
+ scripts/check_g13.mjs                              | 26 ++++++++++++++++++++++
+ 11 files changed, 49 insertions(+), 1 deletion(-)
