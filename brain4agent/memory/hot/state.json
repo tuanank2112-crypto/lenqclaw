@@ -73,7 +73,7 @@
     },
     "eval_next": "gemini --set diagnosis,responsibility (D29) after quota reset ~14:00 ICT"
   },
-  "next": "H15 (G13) -> P06 -> P07 -> P08 -> P09",
+  "next": "P06 -> P07 -> P08 -> P09",
   "approved": [
     "P01",
     "P03-code",
@@ -89,8 +89,8 @@
     "D31-model-down"
   ],
   "llm_provider": "vyce (deepseek-v4-flash, temporary D28; gate provider gemini D26)",
-  "decisions_latest": "D42 (plan 02)",
-  "in_progress": "H15 test hygiene (G13 measurable on fresh DB); next P06",
+  "decisions_latest": "D43 (plan 02)",
+  "in_progress": "P06 (H16) launched",
   "pushed": "origin/main = e1c2f18 (2026-10-18)",
   "tests_now": {
     "unit": 752,
@@ -99,7 +99,7 @@
     "measured": "2026-10-18"
   },
   "active_plan": "planning/02_2026-10-09_zalo-community-agent",
-  "plan_status": "P01, P02, P03, P03b, P04, P05 accepted (P05: 2026-10-18, D42); G13 pending H15",
+  "plan_status": "P01-P05 accepted; G13 local (D43)",
   "stopped_plans": [
     "planning/01_2026-09-24_san-viec-tho-mvp (D32, 2026-10-09)"
   ],
