@@ -73,7 +73,7 @@
     },
     "eval_next": "gemini --set diagnosis,responsibility (D29) after quota reset ~14:00 ICT"
   },
-  "next": "finish H12 'done when' runs -> R12 -> SO remeasure -> H13 adversarial review P05 -> P06 -> P07 -> P08 -> P09",
+  "next": "H15 (G13) -> P06 -> P07 -> P08 -> P09",
   "approved": [
     "P01",
     "P03-code",
@@ -89,21 +89,21 @@
     "D31-model-down"
   ],
   "llm_provider": "vyce (deepseek-v4-flash, temporary D28; gate provider gemini D26)",
-  "decisions_latest": "D39 (plan 02)",
-  "in_progress": "P05 stopped by user 2026-10-17: code committed 68705f7..034a1ab, no R12, not remeasured",
-  "pushed": "origin/main = cdb0b3d (2026-10-14)",
+  "decisions_latest": "D42 (plan 02)",
+  "in_progress": "H15 test hygiene (G13 measurable on fresh DB); next P06",
+  "pushed": "origin/main = e1c2f18 (2026-10-18)",
   "tests_now": {
-    "unit": 602,
-    "db": 258,
+    "unit": 752,
+    "db": 315,
     "skip": 0,
-    "measured": "2026-10-17"
+    "measured": "2026-10-18"
   },
   "active_plan": "planning/02_2026-10-09_zalo-community-agent",
-  "plan_status": "P01, P02, P03, P03b, P04 accepted (2026-10-17, D39); P05 stopped mid-way (code committed, unverified)",
+  "plan_status": "P01, P02, P03, P03b, P04, P05 accepted (P05: 2026-10-18, D42); G13 pending H15",
   "stopped_plans": [
     "planning/01_2026-09-24_san-viec-tho-mvp (D32, 2026-10-09)"
   ],
-  "open_questions": "Q1-Q12 temporary; Q-D31-1 (flash-lite, temp yes), Q-D31-2 (group gap, temp no), Q-D31-3 (Gemini billing) pending user",
+  "open_questions": "Q1-Q12 temporary; Q-D31-1 (flash-lite, temp yes), Q-D31-2 (group gap, temp no), Q-D31-3 (Gemini billing) pending user; Q13 (bot-addressed scam-phrase warning: grid deletes, temp)",
   "dev_db": "127.0.0.1:15432 (G31)",
   "approved_plan02": [
     "P01",
@@ -111,14 +111,15 @@
     "D28-spec",
     "P03",
     "P03b",
-    "P04"
+    "P04",
+    "P05"
   ],
   "last_milestone_plan02": {
-    "id": "R11-P04",
+    "id": "R14-P05-fix",
     "verdict": "approved",
-    "approved_at": "2026-10-17",
-    "head": "56b383d",
-    "gates": "P04 local (G12 golden at P09a)"
+    "approved_at": "2026-10-18",
+    "head": "1e1f469",
+    "gates": "G16 local (R13); G13 pending H15; golden moderation at P09a"
   },
   "agent_runtime": "LangGraph.js @langchain/langgraph 1.4.18 (D28)"
 }

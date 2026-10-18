@@ -2,6 +2,12 @@
 
 Tất cả các quyết định kiến trúc và lịch sử nâng cấp phiên bản của dự án.
 
+## [Unreleased] - 2026-10-18: P05 nghiệm thu — kiểm duyệt, thẻ duyệt, vào nhóm, chào mừng
+### Changed
+- `services/{moderation,moderation-grid,moderation-ladder,approvals,join-requests,welcome,outbox-actions}.ts`; node `moderate`/`group_event`/`system_event` có thân; tool kiểm duyệt + `decide_approval` + `review_join_request`; worker phát `approval_executed`; `resolveBotUid(env, account, threadId)` tính sim theo lượt.
+### Decided
+- **D40–D42 (SO):** thẩm định R13 0 CHẶN; sửa 14 mục (SPEC-P05 §11) gồm "đừng duyệt <id>" ⇒ hỏi lại, model `ok` bác lưới (triage null ⇒ lưới vẫn xoá), tin bị kiểm duyệt không vào lượt kể cả kèm @bot; chấp nhận F9/F12/F14/F15. G13 đo trên DB tạm (G36).
+
 ## [Unreleased] - 2026-10-17: P04 nghiệm thu — kho tri thức + truy hồi lai
 ### Changed
 - `services/knowledge.ts` (`upsertDocument`, `embedPending`, `findUnansweredQuestions`), `retrieval/search-knowledge.ts` lai RRF, `adapters/model.ts::embedTexts`, `runTimers` thêm `pickUnanswered` + `embedPending`.

@@ -16,9 +16,13 @@ Người dùng: "tiếp tục đi".
 - H13 thẩm định đối kháng 🔴 (opus, không đọc R12/D40) ⇒ R13 `989f94c`: 0 CHẶN (3 lớp chặn kick/block giữ), 17 đột biến bắt 14; NÊN SỬA F1 "đừng duyệt <id>" ⇒ approve, F2 cờ sim trên cache chung (runner song song), F3 bot không phó nhóm trả lời tin scam kèm @bot, F4 worker thật không sinh `approval_executed`, F5 câu cảnh báo chứa cụm scam bị xoá, F6 ca "0 lượt" không đo được.
 - SO xác minh F1–F4 trong mã ⇒ **D41** (`bac8d98`): R12 🔁; SPEC-P05 §11 = 14 mục sửa (M2, F1–F8, F10, F11, F13, F16, G35), chấp nhận F9/F12/F14/F15; 01-CONTRACTS §4.11/§7.1, SPEC-P08 sửa theo; 🖐 Q13 mới (tin gọi bot chứa cụm scam dạng cảnh báo — tạm giữ lưới xoá). H14 ⇒ phóng worker 🟠.
 
+- R14 (worker 🟠, `04d16cb..1e1f469`, report `1e8b836`): 14/14 mục, đủ bằng chứng đỏ. SO đo lại: gate 0, `npm test` 752, test:db 315, 0 skip, `own_uid` null; đột biến SO (A) model bác lưới khi triage null ⇒ 5 đỏ, (B) bỏ `chua` ⇒ đỏ, (C) bỏ `redactPhones` chào mừng ⇒ đỏ ⇒ **R14 ✅, P05 ✅ (D42, `e1c2f18`)**, G16 ✅ local.
+- G13 trên DB dev = 2016/2075 "vi phạm" ⇒ phân lập: test xoá thẻ giữ outbox + rác từ các lần đột biến đỏ; DB tạm mới tinh sau test:db xanh: 33, cả 33 thẻ đã bị xoá, 0 lỗi mã (G36). H15 🟢 (haiku) vệ sinh test + `scripts/check_g13.mjs` + timeout `p02-worker` 300 s — phóng nền.
+- Não đồng bộ 6 điểm cho P05 (roadmap, changelog, kernel, index, state, today; `docs/core.md` do worker).
+
 ### ⏭ Treo
-- Chờ R14 ⇒ SO đo lại + đột biến ⇒ P05 ✅ ⇒ P06.
-- 🖐 Q13 (SPEC-P05 §11).
+- Chờ R15 ⇒ SO đo G13 trên DB tạm ⇒ G13 ✅ local ⇒ P06.
+- 🖐 Q13 (SPEC-P05 §11). Rác G13 trên DB dev giữ nguyên (xoá cần người).
 - 🖐 Q-D31-1/2/3 (billing Gemini); `lenqclaw_presentation_transcript.pdf` ở root chờ người xoá.
 
 ---

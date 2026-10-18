@@ -24,7 +24,8 @@ Pivot 2026-10-09 (D01): agent chăm sóc cộng đồng Zalo. Bộ SPEC ĐÃ DUY
 - [ ] P02 — transport nhóm: worker + action outbox + pacer nhóm + sim nhóm (🟠 thi công · 🔴 thẩm định, G04–G06)
 - [ ] P03 — runtime agent: cổng nhận tin, đệm, ambient, persona, policy tool, host ép trả lời (🔴/🟠, G07, G08, G14, G15)
 - [x] P04 — tri thức ✅ 2026-10-17 (D39) —: kho, embedding, truy hồi lai RRF, câu hỏi bỏ trống (🟠, G12)
-- [ ] P05 — kiểm duyệt: lưới + model, thang cảnh cáo, thẻ duyệt, duyệt vào nhóm, chào (🟠 · 🔴 thẩm định, G13, G16)
+- [x] P05 — kiểm duyệt ✅ 2026-10-18 (D40–D42) — lưới + model, thang cảnh cáo, thẻ duyệt, duyệt vào nhóm, chào (G16 local; G13 chờ vệ sinh test H15; golden ở P09a)
+- [ ] 🖐 Q13 — tin gọi bot chứa cụm scam dạng cảnh báo: lưới xoá (tạm) hay để agent `flag_message`
 - [ ] P06 — lead & trí nhớ: mời riêng, hồ sơ thành viên, thẻ lead, ghi chú ngày (🟠)
 - [ ] P07 — lịch & vận hành: `runTimers`, automations, poll/nhắc/tóm tắt tuần/báo cáo ngày (🟠, G17)
 - [ ] P08 — dashboard: nhóm, persona, thẻ duyệt, lead, kiểm duyệt, tri thức, lịch, dòng thời gian (🟠/🟢, G18)
@@ -94,6 +95,8 @@ Việc lẻ chưa xếp giai đoạn: lịch `cron` (D16, `cron_expr` + `croner`
 - **Nhận tin nhắn thoại của thợ** (speech-to-text) — thợ quen gửi voice.
 
 ## Đã hoàn thành (Done)
+
+- [x] **2026-10-18 — P05 kiểm duyệt:** lưới tất định (`scam_phrase`/`repeat_burst` hard, model `ok` bác được lưới) + thang cảnh cáo suy giảm, thẻ duyệt `approvals` (bằng chứng `duyệt <id>`, từ do dự ⇒ hỏi lại), 3 lớp chặn kick/block, duyệt vào nhóm 3 policy (Q9 cho vào), gom chào mừng. Thẩm định đối kháng R13 0 CHẶN, vòng sửa 14 mục. `npm test` 752, `test:db` 315, 0 skip.
 
 - [x] **2026-10-17 — P04 tri thức:** kho tài liệu có phiên bản + hiệu lực, `embedTexts` Gemini 1024 chiều, truy hồi lai (lexical + vector `<=>` + RRF), tool `search_knowledge` trích dẫn `(theo …)`, nhặt câu hỏi bỏ trống ở nhóm ambient. `npm test` 602, `test:db` 258.
 
