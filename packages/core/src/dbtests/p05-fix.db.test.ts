@@ -82,6 +82,7 @@ afterAll(async () => {
     await sql(`update outbox set status = 'cancelled' where thread_id = any($1::text[]) and status in ('queued','sending')`, [made]);
     await sql(`delete from moderation_events where thread_id = any($1::text[])`, [made]);
     await sql(`delete from moderation_scores where thread_id = any($1::text[])`, [made]);
+    await sql(`delete from outbox where body->>'approvalId' in (select id::text from approvals where thread_id = any($1::text[]))`, [made]);
     await sql(`delete from approvals where thread_id = any($1::text[])`, [made]);
     await sql(`delete from group_messages where thread_id = any($1::text[])`, [made]);
     await sql(`delete from group_members where thread_id = any($1::text[])`, [made]);

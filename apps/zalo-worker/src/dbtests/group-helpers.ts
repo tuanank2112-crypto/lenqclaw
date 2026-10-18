@@ -48,6 +48,8 @@ export async function makeGroup(threadId: string, budgetPerHour = 20): Promise<v
 }
 
 export async function dropGroup(threadId: string): Promise<void> {
+  // H15/G13: hang action cua chinh thread test (ca approval_invalid ⇒ failed, khong co thẻ hop le) phai duoc don cung thread
+  await sql(`delete from outbox where zalo_account_id='community' and thread_id=$1 and kind='action'`, [threadId]);
   await sql(`delete from group_messages where zalo_account_id='community' and thread_id=$1`, [threadId]);
   await sql(`delete from zalo_groups where zalo_account_id='community' and thread_id=$1`, [threadId]);
 }

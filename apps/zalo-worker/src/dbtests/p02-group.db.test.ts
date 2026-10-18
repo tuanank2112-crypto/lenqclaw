@@ -169,6 +169,7 @@ describe('ket qua action ghi vao DB (§4.2, §9)', () => {
     expect(st.find((r) => r.id === bad)).toMatchObject({ status: 'failed', executed: true });
     expect(await auditCount('approval.executed', ok)).toBe(1);
     expect(await auditCount('approval.failed', bad)).toBe(1);
+    await sql(`delete from outbox where body->>'approvalId' = any($1::text[])`, [[ok, bad]]);
     await sql(`delete from approvals where id = any($1::uuid[])`, [[ok, bad]]);
     await dropGroup(group);
     await s.stop();

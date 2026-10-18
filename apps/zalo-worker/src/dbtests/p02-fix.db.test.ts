@@ -85,6 +85,7 @@ describe('D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi
         const a = await sql<{ status: string }>(`select status from approvals where id=$1::uuid`, [extra.approvalId]);
         if (a[0]) expect(['pending', 'rejected', 'executed', 'approved']).toContain(a[0].status); // khong bi chuyen sang failed
       }
+      await sql(`delete from outbox where body->>'approvalId' in (select id::text from approvals where thread_id = $1 or id::text = $2)`, [group, String(extra.approvalId ?? '')]).catch(() => undefined);
       await sql(`delete from approvals where thread_id = $1 or id::text = $2`, [group, String(extra.approvalId ?? '')]).catch(() => undefined);
       await dropGroup(group);
       await s.stop();
@@ -101,6 +102,7 @@ describe('D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi
     expect(zaloCalls(fake, ['removeMember']).length).toBe(1);
     expect((await outboxRow(id)).status).toBe('sent');
     expect((await approvalRow(ap)).status).toBe('executed');
+    await sql(`delete from outbox where body->>'approvalId' = $1`, [ap]);
     await sql(`delete from approvals where id=$1::uuid`, [ap]);
     await dropGroup(group);
     await s.stop();
@@ -119,6 +121,7 @@ describe('D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi
     const statuses = [(await outboxRow(a)).status, (await outboxRow(b)).status].sort();
     expect(statuses).toEqual(['failed', 'sent']);
     expect((await approvalRow(ap)).status).toBe('executed');
+    await sql(`delete from outbox where body->>'approvalId' = $1`, [ap]);
     await sql(`delete from approvals where id=$1::uuid`, [ap]);
     await dropGroup(group);
     await s.stop();
@@ -133,6 +136,7 @@ describe('D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi
     await act(group, { action: 'remove_member', uid: 'u-bad', approvalId: ap });
     await Promise.all([pacerFor(s).tick(), pacerFor(s).tick()]);
     expect(zaloCalls(fake, ['removeMember']).length).toBe(1);
+    await sql(`delete from outbox where body->>'approvalId' = $1`, [ap]);
     await sql(`delete from approvals where id=$1::uuid`, [ap]);
     await dropGroup(group);
     await s.stop();
@@ -146,6 +150,7 @@ describe('D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi
     expect(await store.claimApproval(ap, ACCOUNT, group, 'remove_member', 'u-bad')).toBe(false);
     await store.releaseApproval(ap);
     expect(await store.claimApproval(ap, ACCOUNT, group, 'remove_member', 'u-bad')).toBe(true);
+    await sql(`delete from outbox where body->>'approvalId' = $1`, [ap]);
     await sql(`delete from approvals where id=$1::uuid`, [ap]);
   });
 
@@ -161,6 +166,7 @@ describe('D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi
     await act(group, { action: 'remove_member', uid: 'u-bad', approvalId: ap });
     await pacerFor(s).tick();
     expect(zaloCalls(fake, ['removeMember']).length).toBe(1);
+    await sql(`delete from outbox where body->>'approvalId' = $1`, [ap]);
     await sql(`delete from approvals where id=$1::uuid`, [ap]);
     await dropGroup(group);
     await s.stop();
@@ -177,6 +183,7 @@ describe('D29.1 — kick/block CHI khi co the duyet hop le (BB-06, lop chan cuoi
     expect((await outboxRow(id)).status).toBe('queued');
     expect((await approvalRow(ap)).status).toBe('approved');
     expect((await approvalRow(ap)).executed_at).toBeNull();
+    await sql(`delete from outbox where body->>'approvalId' = $1`, [ap]);
     await sql(`delete from approvals where id=$1::uuid`, [ap]);
     await dropGroup(group);
     await s.stop();

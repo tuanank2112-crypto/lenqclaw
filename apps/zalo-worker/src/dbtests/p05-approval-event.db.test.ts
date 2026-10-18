@@ -29,6 +29,7 @@ const sysEvents = (thread: string) =>
 afterAll(async () => {
   if (threads.length > 0) {
     await sql(`update inbound_events set processed_at = now() where processed_at is null and thread_id = any($1::text[])`, [threads]);
+    await sql(`delete from outbox where body->>'approvalId' in (select id::text from approvals where thread_id = any($1::text[]))`, [threads]);
     await sql(`delete from approvals where thread_id = any($1::text[])`, [threads]);
   }
   await closeDb();

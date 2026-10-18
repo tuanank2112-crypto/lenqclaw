@@ -404,7 +404,8 @@ describe('pacer tren DB (§5, §8)', () => {
       expect(t.at - Math.max(...before)).toBeLessThanOrEqual(FAST.typingFreshMs);
     }
     await s.stop();
-  }, 120_000);
+  // H15: baseline ~99 s; timeout 120 s bi het gio khi may tai cao (do giả). Tran 300 s; khong doi so tin/nguoi/ky vong.
+  }, 300_000);
 
   it('tin dai ⇒ tach <= 1800 ky tu, moi doan mot dong outbox, gui dung thu tu', async () => {
     let now = 0;

@@ -23,6 +23,8 @@ async function makeGroup(threadId: string): Promise<void> {
 }
 
 async function dropGroup(threadId: string): Promise<void> {
+  // H15/G13: hang action cua chinh thread test (ca approval_invalid ⇒ failed, khong co thẻ hop le) phai duoc don cung thread
+  await sql(`delete from outbox where zalo_account_id=$1 and thread_id=$2 and kind='action'`, [ACCOUNT, threadId]);
   await sql(`delete from group_messages where zalo_account_id=$1 and thread_id=$2`, [ACCOUNT, threadId]);
   await sql(`delete from join_requests where zalo_account_id=$1 and thread_id=$2`, [ACCOUNT, threadId]);
   await sql(`delete from zalo_groups where zalo_account_id=$1 and thread_id=$2`, [ACCOUNT, threadId]); // group_members cascade
@@ -169,6 +171,7 @@ describe('applySimOutbox — action tren DB gia lap (§7.2)', () => {
     await act(g, { action: 'unblock_member', uid: 'sim-b' });
     await applySimOutbox();
     expect(await deny()).toEqual([]);
+    await sql(`delete from outbox where body->>'approvalId' = any($1::text[])`, [[apRm, apBl]]);
     await sql(`delete from approvals where id = any($1::uuid[])`, [[apRm, apBl]]);
     await dropGroup(g);
   });
@@ -209,6 +212,7 @@ describe('applySimOutbox — action tren DB gia lap (§7.2)', () => {
     const st = await sql<{ id: string; status: string }>(`select id::text as id, status from approvals where id = any($1::uuid[])`, [[pending, wrongUid, wrongKind, wrongThread]]);
     expect(st.find((r) => r.id === pending)!.status).toBe('pending');
     for (const r of st.filter((x) => x.id !== pending)) expect(r.status).toBe('approved'); // KHONG bi chuyen failed
+    await sql(`delete from outbox where body->>'approvalId' = any($1::text[])`, [[pending, wrongUid, wrongKind, wrongThread]]);
     await sql(`delete from approvals where id = any($1::uuid[])`, [[pending, wrongUid, wrongKind, wrongThread]]);
     await dropGroup(g);
   });
@@ -233,6 +237,7 @@ describe('applySimOutbox — action tren DB gia lap (§7.2)', () => {
     const st = await sql<{ id: string; status: string }>(`select id, status from approvals where id = any($1::uuid[])`, [[okA, badA]]);
     expect(st.find((r) => r.id === okA)!.status).toBe('executed');
     expect(st.find((r) => r.id === badA)!.status).toBe('failed');
+    await sql(`delete from outbox where body->>'approvalId' = any($1::text[])`, [[okA, badA]]);
     await sql(`delete from approvals where id = any($1::uuid[])`, [[okA, badA]]);
     await dropGroup(g);
   });
@@ -484,6 +489,7 @@ describe('D29.6 — applySimOutbox chi xu ly hang thread "sim-" da den han', () 
     expect((await row(id)).status).toBe('queued');
     expect((await sql<{ status: string }>(`select status from approvals where id=$1::uuid`, [ap]))[0]!.status).toBe('approved');
     await sql(`update outbox set status = 'cancelled' where id = $1`, [id]);
+    await sql(`delete from outbox where body->>'approvalId' = $1`, [ap]);
     await sql(`delete from approvals where id=$1::uuid`, [ap]);
   });
 });
