@@ -293,4 +293,4 @@ Thứ tự bắt buộc: `P01 → P02 → P03 → (P04 ∥ P05 ∥ P06 ∥ P07) 
 | Q10 | Đệm nhóm giữ bao nhiêu ngày; ai đăng thông báo dữ liệu | 7 ngày; chủ đăng trong nhóm | BB-11, OPERATIONS §3 |
 | Q11 | Provider chạy dev là `vyce/deepseek` (Đ28 cũ) — có đổi về Gemini sớm không? | dev giữ `.env` hiện tại; mọi gate chấm bằng Gemini | TESTING §3 |
 | Q12 | Moderator (không phải owner) có được duyệt kick/block qua lệnh nhóm? | CÓ, chỉ thẻ của nhóm mình | SPEC-P05 §5.3 |
-| Q13 | Tin GỌI BOT (không triage) chứa cụm scam nhưng là câu cảnh báo/hỏi ("@bot 'việc nhẹ lương cao' có phải lừa không?") — lưới vẫn xoá + cộng điểm, hay để agent tự `flag_message`? | giữ lưới xoá (ưu tiên chặn scam) | SPEC-P05 §11, D41 |
+| Q13 | Tin GỌI BOT (không triage) chứa cụm scam nhưng là câu cảnh báo/hỏi ("@bot 'việc nhẹ lương cao' có phải lừa không?") — lưới vẫn xoá + cộng điểm, hay để agent tự `flag_message`? | ✅ CHỐT (người dùng 2026-10-18): giữ lưới xoá (ưu tiên chặn scam) | SPEC-P05 §11, D41 |

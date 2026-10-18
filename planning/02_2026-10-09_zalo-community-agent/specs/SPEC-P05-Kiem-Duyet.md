@@ -118,7 +118,7 @@ Mọi quyết định ghi `join_requests.decision/decided_by/decided_at/reason` 
 | F16 | `flushWelcomes` xoá `welcome_pending_since` bằng CAS theo giá trị đã đọc; `join` đến giữa chừng ⇒ lần flush sau vẫn chào | ca DB |
 | G35 | ca P05 phụ thuộc mention không giả định `own_uid` null | đặt `own_uid='rac-g35'` rồi chạy `p05-*.db.test.ts` ⇒ xanh; trả null sau |
 **Chấp nhận, KHÔNG sửa (vùng cấm "sửa cho tốt hơn"):** F9 (CAS và enqueue khác tx — có bù trừ, crash để thẻ `approved` không outbox là hướng an toàn); F12 (24 h đo theo giờ ingest — chênh với giờ Zalo chỉ vài giây ở đường bình thường); F14 (`!bot_is_admin` ⇒ hạ `warn`, không tạo thẻ kick — không phó nhóm thì không kick được; owner đã nhận `NEED_DEPUTY_DM`); F15 (`decidedBy='staff:<x>'` — route P08 BẮT BUỘC dựng từ phiên đăng nhập, ghi SPEC-P08).
-🖐 **Câu hỏi người (giá trị TẠM = như hiện tại):** tin GỌI BOT không có triage (D31 T3) ⇒ câu cảnh báo kiểu "@bot 'việc nhẹ lương cao' có phải lừa không?" vẫn bị lưới xoá + cộng điểm. Giữ (ưu tiên chặn scam) hay để agent tự `flag_message` cho tin gọi bot (ưu tiên không xoá nhầm)?
+✅ **Q13 CHỐT (người dùng 2026-10-18): GIỮ lưới xoá** (vùng cấm: không để agent tự quyết thay lưới cho tin gọi bot). Câu hỏi gốc: tin GỌI BOT không có triage (D31 T3) ⇒ câu cảnh báo kiểu "@bot 'việc nhẹ lương cao' có phải lừa không?" vẫn bị lưới xoá + cộng điểm. Giữ (ưu tiên chặn scam) hay để agent tự `flag_message` cho tin gọi bot (ưu tiên không xoá nhầm)?
 
 ## §10. Nghiệm thu P05
 | # | Lệnh / ca | Kỳ vọng |

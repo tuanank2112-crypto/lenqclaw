@@ -25,7 +25,7 @@ Pivot 2026-10-09 (D01): agent chăm sóc cộng đồng Zalo. Bộ SPEC ĐÃ DUY
 - [ ] P03 — runtime agent: cổng nhận tin, đệm, ambient, persona, policy tool, host ép trả lời (🔴/🟠, G07, G08, G14, G15)
 - [x] P04 — tri thức ✅ 2026-10-17 (D39) —: kho, embedding, truy hồi lai RRF, câu hỏi bỏ trống (🟠, G12)
 - [x] P05 — kiểm duyệt ✅ 2026-10-18 (D40–D42) — lưới + model, thang cảnh cáo, thẻ duyệt, duyệt vào nhóm, chào (G16 local; G13 chờ vệ sinh test H15; golden ở P09a)
-- [ ] 🖐 Q13 — tin gọi bot chứa cụm scam dạng cảnh báo: lưới xoá (tạm) hay để agent `flag_message`
+- [x] Q13 — tin gọi bot chứa cụm scam dạng cảnh báo ⇒ GIỮ lưới xoá (người dùng chốt 2026-10-18)
 - [ ] P06 — lead & trí nhớ: mời riêng, hồ sơ thành viên, thẻ lead, ghi chú ngày (🟠)
 - [ ] P07 — lịch & vận hành: `runTimers`, automations, poll/nhắc/tóm tắt tuần/báo cáo ngày (🟠, G17)
 - [ ] P08 — dashboard: nhóm, persona, thẻ duyệt, lead, kiểm duyệt, tri thức, lịch, dòng thời gian (🟠/🟢, G18)

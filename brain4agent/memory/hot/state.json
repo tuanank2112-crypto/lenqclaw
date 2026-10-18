@@ -103,7 +103,7 @@
   "stopped_plans": [
     "planning/01_2026-09-24_san-viec-tho-mvp (D32, 2026-10-09)"
   ],
-  "open_questions": "Q1-Q12 temporary; Q-D31-1 (flash-lite, temp yes), Q-D31-2 (group gap, temp no), Q-D31-3 (Gemini billing) pending user; Q13 (bot-addressed scam-phrase warning: grid deletes, temp)",
+  "open_questions": "Q1-Q12 temporary; Q-D31-1 (flash-lite, temp yes), Q-D31-2 (group gap, temp no), Q-D31-3 (Gemini billing) pending user",
   "dev_db": "127.0.0.1:15432 (G31)",
   "approved_plan02": [
     "P01",
