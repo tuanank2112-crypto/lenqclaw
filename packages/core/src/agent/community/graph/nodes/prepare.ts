@@ -61,7 +61,7 @@ export const prepareNode: NodeFn<TurnStateT> = async (s) => {
   }
 
   const now = new Date(startedAt);
-  const botUid = resolveBotUid();
+  const botUid = resolveBotUid(process.env, req.account, req.threadId);
   const role = req.requester?.role ?? 'member';
   const roundCap = cfg.maxToolRounds;
 

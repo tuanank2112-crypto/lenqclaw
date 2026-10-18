@@ -93,9 +93,12 @@ describe('D39 (b): botUid sim', () => {
   it('cot own_uid co uid that + DATA_MODE=sim + thread sim-% ⇒ BOT_UID_SIM; thread that ⇒ uid that', async () => {
     await sql(`update zalo_accounts set own_uid = '8801234' where id = 'community'`);
     const env = { DATA_MODE: 'sim' } as NodeJS.ProcessEnv;
-    expect(await botUid('community', env, Date.now, `sim-${randomUUID().slice(0, 6)}`)).toBe(BOT_UID_SIM);
-    expect(resolveBotUid(env)).toBe(BOT_UID_SIM);
+    const simThread = `sim-${randomUUID().slice(0, 6)}`;
+    expect(await botUid('community', env, Date.now, simThread)).toBe(BOT_UID_SIM);
+    // D41/F2: resolveBotUid tinh sim theo threadId cua CHINH luot (khong con co dung chung trong cache)
+    expect(resolveBotUid(env, 'community', simThread)).toBe(BOT_UID_SIM);
     expect(await botUid('community', env, () => Date.now() + BOT_UID_CACHE_MS + 1, 'g-real-1')).toBe('8801234');
-    expect(resolveBotUid(env)).toBe('8801234');
+    expect(resolveBotUid(env, 'community', 'g-real-1')).toBe('8801234');
+    expect(resolveBotUid(env, 'community', simThread)).toBe(BOT_UID_SIM);
   });
 });

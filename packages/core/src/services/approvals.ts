@@ -26,14 +26,18 @@ export const idShortOf = (id: string): string => id.slice(0, ID_SHORT_LEN);
 // ---------------------------------------------------------------------------
 
 const APPROVE_WORDS = ['duyet', 'ok', 'dong y', 'approve'] as const; // "/approve" ⇒ normalizeVi ⇒ "approve"
-const REJECT_WORDS = ['tu choi', 'khong', 'reject'] as const; // "/reject" ⇒ "reject"
+/** Buoc 1 (SPEC-P05 §5.4): cum tu choi TUONG MINH. "/reject" ⇒ normalizeVi ⇒ "reject". */
+const EXPLICIT_REJECT = ['tu choi', 'reject', 'khong duyet', 'khong dong y'] as const;
+/** Buoc 2: token do du / phu dinh ⇒ KHONG approve, KHONG reject (the giu `pending`, hoi lai). "dung" trung "dung/dung" sau normalizeVi ⇒ chap nhan hoi lai thua. */
+const HESITATION = ['khong', 'dung', 'chua', 'khoan', 'doi', 'tu tu', 'huy'] as const;
 
 const hasPhrase = (normalized: string, phrase: string): boolean => ` ${normalized} `.includes(` ${phrase} `);
 
 /**
  * `text` cua nguoi quyet PHAI chua ma the (`idShort` 8 ky tu, hoac uuid day du — doan dau cung la 8 ky tu do; chap nhan
  * tien to >= 6 ky tu) VA mot tu quyet dinh, so BANG NHAU theo ranh gioi tu sau `normalizeVi`.
- * Tra `'approve' | 'reject' | null`. Co ca hai loai tu (vd "khong duyet <id>") ⇒ `'reject'` (an toan hon).
+ * Tra `'approve' | 'reject' | null`. Thu tu xet (D41/F1, SPEC-P05 §5.4): (1) cum tu choi tuong minh ⇒ reject · (2) con token do du/phu
+ * dinh ⇒ null (hoi lai, KHONG doan) · (3) co tu approve ⇒ approve · (4) null. "dung duyet <id>" ⇒ null, KHONG phai approve.
  */
 export function hasDecisionEvidence(text: string, idOrShort: string): 'approve' | 'reject' | null {
   const short = idOrShort.trim().toLowerCase().slice(0, ID_SHORT_LEN);
@@ -42,7 +46,8 @@ export function hasDecisionEvidence(text: string, idOrShort: string): 'approve' 
   const tokens = n.split(' ');
   const idHit = tokens.some((t) => t.length >= 6 && short.startsWith(t));
   if (!idHit) return null;
-  if (REJECT_WORDS.some((w) => hasPhrase(n, w))) return 'reject';
+  if (EXPLICIT_REJECT.some((w) => hasPhrase(n, w))) return 'reject';
+  if (HESITATION.some((w) => hasPhrase(n, w))) return null;
   if (APPROVE_WORDS.some((w) => hasPhrase(n, w))) return 'approve';
   return null;
 }
@@ -259,7 +264,7 @@ export async function decideApproval(a: DecideApprovalArgs): Promise<{ status: '
     if (a.decision === 'approve') {
       outboxId = await executeApproved(card);
     } else if (card.kind === 'approve_join' && card.targetUid) {
-      outboxId = await enqueueAction({ threadId: card.threadId, account: card.zaloAccountId, action: 'review_join', uids: [card.targetUid], approve: false });
+      outboxId = await enqueueAction({ threadId: card.threadId, account: card.zaloAccountId, action: 'review_join', uids: [card.targetUid], approve: false, approvalId: card.id });
     }
   } catch (err) {
     await sql(`update approvals set status = 'pending', decided_by = null, decided_at = null, decision_note = null where id = $1::uuid and status = $2 and outbox_id is null`, [a.id, to]);

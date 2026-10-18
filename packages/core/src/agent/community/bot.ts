@@ -16,11 +16,10 @@ export const BOT_UID_CACHE_MS = 60_000;
 /** Gia tri thay `null` cho cac node co kieu `string`: khong bao gio la uid Zalo that (uid Zalo la day so). */
 export const BOT_UID_UNKNOWN = 'bot-uid-unknown';
 
+/** D41/F2: cache CHI giu `own_uid` (dung chung moi luot). Co "sim" tinh rieng theo `threadId` cua tung luot — cam co dung chung. */
 interface CacheEntry {
   uid: string | null;
   at: number;
-  /** D39: luot gan nhat la thread `sim-%` trong `DATA_MODE=sim` ⇒ `resolveBotUid` tra `BOT_UID_SIM` bat ke cot. */
-  sim: boolean;
 }
 const cache = new Map<string, CacheEntry>();
 
@@ -58,17 +57,17 @@ export async function botUid(
     } catch {
       /* DB chap chon: giu gia tri cu, thu lai sau 60 s */
     }
-    cache.set(account, { uid, at: now(), sim });
+    cache.set(account, { uid, at: now() });
   }
-  const entry = cache.get(account)!;
-  entry.sim = sim;
   if (sim) return BOT_UID_SIM;
-  return entry.uid ?? fromEnv(env);
+  return cache.get(account)!.uid ?? fromEnv(env);
 }
 
-/** Dong bo cho node do thi: anh chup cache (`own_uid`) → env → sim → `BOT_UID_UNKNOWN`. */
-export function resolveBotUid(env: NodeJS.ProcessEnv = process.env, account: string = 'community'): string {
-  const e = cache.get(account);
-  if (e?.sim) return BOT_UID_SIM;
-  return e?.uid ?? fromEnv(env) ?? BOT_UID_UNKNOWN;
+/**
+ * Dong bo cho node do thi (D41/F2): `threadId` CUA CHINH luot ⇒ sim-% trong DATA_MODE=sim → `BOT_UID_SIM`; neu khong: anh chup
+ * cache (`own_uid`) → env → sim → `BOT_UID_UNKNOWN`. Khong doc co nao chia se giua cac luot.
+ */
+export function resolveBotUid(env: NodeJS.ProcessEnv = process.env, account: string = 'community', threadId?: string): string {
+  if (isSimThread(env, threadId)) return BOT_UID_SIM;
+  return cache.get(account)?.uid ?? fromEnv(env) ?? BOT_UID_UNKNOWN;
 }

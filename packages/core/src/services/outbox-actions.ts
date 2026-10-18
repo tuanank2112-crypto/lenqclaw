@@ -31,6 +31,25 @@ async function assertApproved(account: AccountId, threadId: string, action: 'rem
   if (ok.length === 0) throw new ApprovalRequiredError(`${action}: the duyet khong o trang thai approved cho uid/nhom nay.`);
 }
 
+/**
+ * D41/F7: `review_join approve:false` (tu choi nguoi that) CHI khi (a) nhom `join_policy='agent_review'` (agent duoc quyen tu choi, co ly do
+ * >= 10 ky tu o tool), HOAC (b) co the duyet khop thread + dung 1 uid dich: `reject_join` da `approved`, hoac `approve_join` vua bi `rejected`.
+ */
+async function assertRejectJoinAllowed(account: AccountId, threadId: string, uids: readonly string[], approvalId: unknown): Promise<void> {
+  const g = await sql<{ join_policy: string }>(`select join_policy from zalo_groups where zalo_account_id = $1 and thread_id = $2`, [account, threadId]);
+  if (g[0]?.join_policy === 'agent_review') return;
+  if (typeof approvalId !== 'string' || !UUID_RE.test(approvalId) || uids.length !== 1) {
+    throw new ApprovalRequiredError('review_join approve:false can approvalId hop le (hoac nhom agent_review).');
+  }
+  const ok = await sql(
+    `select 1 from approvals
+      where id = $1::uuid and zalo_account_id = $2 and thread_id = $3 and target_uid = $4
+        and ((kind = 'reject_join' and status = 'approved') or (kind = 'approve_join' and status = 'rejected'))`,
+    [approvalId, account, threadId, uids[0]]
+  );
+  if (ok.length === 0) throw new ApprovalRequiredError('review_join approve:false: the duyet khong hop le cho uid/nhom nay.');
+}
+
 /** Xep MOT hang `outbox(kind='action')`. Tra `outbox.id`. */
 export async function enqueueAction(a: EnqueueActionArgs): Promise<number> {
   const { threadId, account = 'community', inboundEventId, ...action } = a;
@@ -46,6 +65,7 @@ export async function enqueueAction(a: EnqueueActionArgs): Promise<number> {
       break;
     case 'review_join':
       if (action.uids.length === 0) throw new InvalidToolInputError('review_join can it nhat 1 uid.');
+      if (!action.approve) await assertRejectJoinAllowed(account, threadId, action.uids, action.approvalId);
       break;
     default:
       break;

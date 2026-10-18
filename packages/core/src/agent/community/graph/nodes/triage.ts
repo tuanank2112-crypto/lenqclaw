@@ -40,7 +40,7 @@ export const triageNode: NodeFn<PipelineStateT> = async (s) => {
     threadType: e.threadType,
     mentions,
     quoteOwnerUid: quoteOwner,
-    botUid: resolveBotUid(),
+    botUid: resolveBotUid(process.env, e.zaloAccountId, e.threadId),
     text,
     botNamePatterns,
     hasControlCommand: hasControlCommand(text),

@@ -44,7 +44,7 @@ export const groupEventNode: NodeFn<PipelineStateT> = async (s) => {
   const now = new Date();
   switch (event) {
     case 'join': {
-      const bot = resolveBotUid();
+      const bot = resolveBotUid(process.env, e.zaloAccountId, e.threadId);
       const keep = uids.map((u, i) => ({ u, n: names[i] ?? '' })).filter((x) => x.u !== bot);
       const joined = await recordMemberJoin({ account: e.zaloAccountId, group, uids: keep.map((x) => x.u), names: keep.map((x) => x.n), now });
       await note('group.member_joined', { count: joined });

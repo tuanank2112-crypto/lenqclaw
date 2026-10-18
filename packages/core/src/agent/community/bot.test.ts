@@ -99,12 +99,12 @@ describe('D39: DATA_MODE=sim + thread sim-% ⇒ BOT_UID_SIM bat ke cot own_uid',
   it('cot co uid that, thread sim-% trong DATA_MODE=sim ⇒ BOT_UID_SIM; resolveBotUid theo anh chup do', async () => {
     db.own = '7001';
     expect(await botUid('community', { DATA_MODE: 'sim' }, Date.now, 'sim-abc')).toBe(BOT_UID_SIM);
-    expect(resolveBotUid({ DATA_MODE: 'sim' })).toBe(BOT_UID_SIM);
+    expect(resolveBotUid({ DATA_MODE: 'sim' }, 'community', 'sim-abc')).toBe(BOT_UID_SIM);
   });
   it('thread that (khong sim-) hoac DATA_MODE khac sim ⇒ van doc cot own_uid', async () => {
     db.own = '7001';
     expect(await botUid('community', { DATA_MODE: 'sim' }, Date.now, 'g-123')).toBe('7001');
-    expect(resolveBotUid({ DATA_MODE: 'sim' })).toBe('7001');
+    expect(resolveBotUid({ DATA_MODE: 'sim' }, 'community', 'g-123')).toBe('7001');
     resetBotUidCache();
     expect(await botUid('community', { DATA_MODE: 'real' }, Date.now, 'sim-abc')).toBe('7001');
   });
@@ -112,6 +112,33 @@ describe('D39: DATA_MODE=sim + thread sim-% ⇒ BOT_UID_SIM bat ke cot own_uid',
     db.own = '7001';
     await botUid('community', { DATA_MODE: 'sim' }, Date.now, 'sim-abc');
     await botUid('community', { DATA_MODE: 'sim' }, Date.now, 'g-123');
-    expect(resolveBotUid({ DATA_MODE: 'sim' })).toBe('7001');
+    expect(resolveBotUid({ DATA_MODE: 'sim' }, 'community', 'g-123')).toBe('7001');
+  });
+});
+
+describe('F2 (D41): resolveBotUid tu tinh sim theo threadId cua CHINH luot — cache chi giu own_uid', () => {
+  it('hai luot xen ke (thread that va sim-%) tren cache da nap ⇒ moi luot dung uid cua minh, bat ke thu tu lam moi', async () => {
+    db.own = '7001';
+    const env = { DATA_MODE: 'sim' } as NodeJS.ProcessEnv;
+    await botUid('community', env, Date.now, 'g-real-1');
+    await botUid('community', env, Date.now, 'sim-g-1');
+    expect(resolveBotUid(env, 'community', 'g-real-1')).toBe('7001');
+    expect(resolveBotUid(env, 'community', 'sim-g-1')).toBe(BOT_UID_SIM);
+    await botUid('community', env, Date.now, 'sim-g-2');
+    await botUid('community', env, Date.now, 'g-real-2');
+    expect(resolveBotUid(env, 'community', 'sim-g-2')).toBe(BOT_UID_SIM);
+    expect(resolveBotUid(env, 'community', 'g-real-2')).toBe('7001');
+  });
+  it('DATA_MODE=real: thread sim-% KHONG duoc coi la sim', async () => {
+    db.own = '7001';
+    const env = { DATA_MODE: 'real' } as NodeJS.ProcessEnv;
+    await botUid('community', env, Date.now, 'sim-x');
+    expect(resolveBotUid(env, 'community', 'sim-x')).toBe('7001');
+  });
+  it('khong truyen threadId ⇒ khong bao gio sim theo cache (own_uid truoc, roi env/sim)', async () => {
+    db.own = '7001';
+    const env = { DATA_MODE: 'sim' } as NodeJS.ProcessEnv;
+    await botUid('community', env, Date.now, 'sim-abc');
+    expect(resolveBotUid(env)).toBe('7001');
   });
 });

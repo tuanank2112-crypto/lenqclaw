@@ -5,6 +5,7 @@
 import { hostname } from 'node:os';
 import { audit, enqueue, sql, tx, type SessionState } from '@lenqclaw/core';
 import { sendAlert } from '@lenqclaw/core/adapters/alert';
+import { enqueueSystemEvent } from '@lenqclaw/core/services/system-events';
 import type { AccountId } from './config.js';
 import { buildSplitBodies } from './pacer-policy.js';
 
@@ -434,12 +435,13 @@ export async function releaseApproval(approvalId: string): Promise<void> {
 }
 
 /** `approvals` approved ⇒ executed | failed (01-CONTRACTS §5.1). Chuyen trang thai co dieu kien
- * `status='approved'`: khong khop ⇒ tra false (khong ghi de). Audit `approval.<to>`. */
+ * `status='approved'`: khong khop ⇒ tra false (khong ghi de). Audit `approval.<to>`. Thang CAS ⇒ DUNG MOT su kien he thong
+ * `approval_executed` (D41/F4, SPEC-P05 §5.5) bang `enqueueSystemEvent` cua core ⇒ router DM owner; thua CAS ⇒ 0 su kien. */
 export async function completeApproval(approvalId: string, ok: boolean, result: Record<string, unknown>): Promise<boolean> {
   const to = ok ? 'executed' : 'failed';
-  const rows = await sql<{ id: string }>(
+  const rows = await sql<{ id: string; thread_id: string }>(
     `update approvals set status = $2, executed_at = now(), result = $3::jsonb
-     where id = $1::uuid and status = 'approved' returning id`,
+     where id = $1::uuid and status = 'approved' returning id, thread_id`,
     [approvalId, to, JSON.stringify(result)]
   );
   if (rows.length === 0) return false;
@@ -450,6 +452,7 @@ export async function completeApproval(approvalId: string, ok: boolean, result: 
     target: approvalId,
     data: { ok },
   });
+  await enqueueSystemEvent({ event: 'approval_executed', approvalId, threadId: rows[0]!.thread_id });
   return true;
 }
 

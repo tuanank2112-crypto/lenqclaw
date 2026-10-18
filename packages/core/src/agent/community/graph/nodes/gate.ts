@@ -32,7 +32,7 @@ export const gateNode: NodeFn<PipelineStateT> = async (s) => {
       ? { enabled: s.group.enabled, mode: s.group.mode, allowUsers: s.group.allowUsers, denyUsers: s.group.denyUsers }
       : null,
     sender,
-    botUid: resolveBotUid(),
+    botUid: resolveBotUid(process.env, e.zaloAccountId, e.threadId),
     text,
     msgType: typeof p.msg_type === 'string' ? p.msg_type : 'webchat',
     mentions,
