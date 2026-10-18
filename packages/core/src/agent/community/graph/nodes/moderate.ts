@@ -18,7 +18,8 @@ export const moderateNode: NodeFn<PipelineStateT> = async (s) => {
       inboundEventId: s.event.id,
     });
     const moderation = { verdict: out.verdict, action: out.action, exempt: out.exempt };
-    return out.deleted ? { moderation, stop: 'deleted' } : { moderation };
+    // D41/F3+F6: tin bi xoa HOAC bi xu ly kiem duyet (ke ca chi canh cao khi bot khong la pho nhom) ⇒ khong chay cong/luot.
+    return out.deleted || (!out.exempt && out.action !== 'none') ? { moderation, stop: 'deleted' } : { moderation };
   } catch (err) {
     await audit(sql, {
       actorType: 'system',
@@ -27,6 +28,11 @@ export const moderateNode: NodeFn<PipelineStateT> = async (s) => {
       target: s.event.threadId,
       data: { error: err instanceof Error ? err.name : 'unknown' },
     }).catch(() => undefined);
-    return {};
+    // D41/F11: loi SAU khi da xep lenh xoa tin ⇒ tin van "da bi kiem duyet lay khoi luong" (khong tra loi spam).
+    const queued = await sql(
+      `select 1 from outbox where zalo_account_id = $1 and thread_id = $2 and kind = 'action' and body->>'action' = 'delete_message' and body->>'msgId' = $3 limit 1`,
+      [s.event.zaloAccountId, s.event.threadId, s.row.zaloMsgId]
+    ).catch(() => []);
+    return queued.length > 0 ? { stop: 'deleted' } : {};
   }
 };

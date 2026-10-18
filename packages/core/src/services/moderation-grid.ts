@@ -13,7 +13,7 @@ export interface GridContext {
   senderRole: Role;
   /** So tin cua nguoi gui TRONG dem (ke ca tin nay) — nguoi moi (`< 3`) moi bi xet `contact_spam`. */
   senderBufferCount: number;
-  /** So tin GIONG HET (sau chuan hoa) nguoi gui da gui trong 10 phut gan nhat, KE CA tin nay (dem tu dem). */
+  /** So tin GIONG HET (sau chuan hoa) nguoi gui da gui trong 10 phut gan nhat, KHONG tinh tin dang xet (D41/F8: tin thu 6 moi hit). */
   identicalRecentCount: number;
 }
 
@@ -21,6 +21,9 @@ export interface GridResult {
   hits: GridHit[];
   hard: boolean;
 }
+
+/** Hit "cung" (duy nhat 2 loai — SPEC-P05 §2). Model `ok` co the bac chung (D41/F5). */
+export const HARD_HITS: readonly GridHit[] = ['scam_phrase', 'repeat_burst'];
 
 export const MASS_MENTION_MIN = 8;
 export const REPEAT_BURST_MIN = 5;
@@ -87,5 +90,5 @@ export function classifyGrid(text: string, ctx: GridContext): GridResult {
   }
   if (!privileged && INVITE_RE.test(folded)) hits.push('invite_link');
 
-  return { hits, hard: hits.includes('scam_phrase') || hits.includes('repeat_burst') };
+  return { hits, hard: hits.some((h) => HARD_HITS.includes(h)) };
 }

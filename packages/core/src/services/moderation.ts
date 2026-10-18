@@ -14,7 +14,7 @@ import type { AccountId, CommunityTriage, GroupMessageRow, QuoteRef, Role } from
 import { createApproval } from './approvals.js';
 import { audit } from './audit.js';
 import { readCommunityConfig } from './community-config.js';
-import { classifyGrid, type GridHit, type GridResult } from './moderation-grid.js';
+import { classifyGrid, HARD_HITS, type GridHit, type GridResult } from './moderation-grid.js';
 import { nextLadderStep, type LadderAction, type LadderVerdict } from './moderation-ladder.js';
 import { enqueueAction } from './outbox-actions.js';
 
@@ -25,6 +25,8 @@ export interface VerdictDecision {
   verdict: ModerationVerdict;
   confidence: number;
   source: ModerationSource;
+  /** D41/F5: hit cung bi model `ok` bac (ha thanh hit mem) — caller ghi audit `moderation.grid_overruled`. */
+  overruled?: GridHit[];
 }
 
 export const DELETE_MAX_AGE_MS = 24 * 3_600_000;
@@ -35,7 +37,19 @@ const BURST_WINDOW_MS = 10 * 60_000;
 // ---------------------------------------------------------------------------
 
 /** Bang §3, xet theo thu tu. `ok` ⇒ null-equivalent (verdict 'ok', khong ghi event). */
-export function decideVerdict(grid: GridResult, triage: CommunityTriage | null, cfg: { scamMin: number; spamMin: number }): VerdictDecision {
+export function decideVerdict(gridIn: GridResult, triage: CommunityTriage | null, cfg: { scamMin: number; spamMin: number }): VerdictDecision {
+  let grid = gridIn;
+  let overruled: GridHit[] | undefined;
+  if (grid.hard && triage && triage.verdict === 'ok') {
+    // D41/F5: model bac luoi (cau canh bao / giao duc) ⇒ ha thanh hit MEM, xet tiep cac dong duoi. triage null ⇒ luoi van quyet.
+    overruled = grid.hits.filter((h) => HARD_HITS.includes(h));
+    grid = { hits: grid.hits.filter((h) => !HARD_HITS.includes(h)), hard: false };
+  }
+  const d = decideBase(grid, triage, cfg);
+  return overruled ? { ...d, overruled } : d;
+}
+
+function decideBase(grid: GridResult, triage: CommunityTriage | null, cfg: { scamMin: number; spamMin: number }): VerdictDecision {
   if (grid.hard) {
     return { verdict: grid.hits.includes('scam_phrase') ? 'scam' : 'spam', confidence: 0.95, source: 'grid' };
   }
@@ -65,9 +79,9 @@ async function gridContext(account: AccountId, threadId: string, row: GroupMessa
   const recent = await sql<{ text: string | null }>(
     `select text from group_messages
       where zalo_account_id = $1 and thread_id = $2 and sender_uid = $3 and deleted_at is null and text is not null
-        and received_at > $4::timestamptz - make_interval(secs => $5)
+        and received_at > $4::timestamptz - make_interval(secs => $5) and id <> $6
       order by id desc limit 40`,
-    [account, threadId, row.senderUid, now, BURST_WINDOW_MS / 1000]
+    [account, threadId, row.senderUid, now, BURST_WINDOW_MS / 1000, row.id]
   );
   const mine = normalizeVi(row.text ?? '');
   const identical = mine === '' ? 0 : recent.filter((r) => normalizeVi(r.text ?? '') === mine).length;
@@ -294,6 +308,9 @@ export async function moderateGroupMessage(row: GroupMessageRow, triage: Communi
   const cfg = readCommunityConfig();
   const grid = classifyGrid(row.text ?? '', await gridContext(ctx.account, ctx.group.threadId, row, ctx.sender.role, ctx.now));
   const d = decideVerdict(grid, triage, { scamMin: cfg.modScamMin, spamMin: cfg.modSpamMin });
+  for (const hit of d.overruled ?? []) {
+    await audit(sql, { actorType: 'system', actorId: null, action: 'moderation.grid_overruled', target: ctx.group.threadId, data: { hit } });
+  }
   if (d.verdict === 'ok') return { ...skip(), confidence: d.confidence, source: d.source };
   return applyModeration({
     account: ctx.account,

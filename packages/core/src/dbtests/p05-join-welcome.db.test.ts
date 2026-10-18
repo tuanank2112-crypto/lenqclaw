@@ -23,6 +23,7 @@ import {
   modelBodies,
   bodyText,
   outboxFor,
+  pinBotUidForTest,
   resetScripts,
   runAll,
   script,
@@ -36,6 +37,7 @@ import {
 
 const made: string[] = [];
 let startOutboxId = 0;
+let restoreBotUid: () => Promise<void> = async () => undefined;
 
 async function mk(over: Parameters<typeof mkGroup>[0] & { policy?: 'manual' | 'auto_approve' | 'agent_review'; welcome?: boolean } = {}): Promise<string> {
   const { policy = 'manual', welcome = true, ...rest } = over;
@@ -46,6 +48,7 @@ async function mk(over: Parameters<typeof mkGroup>[0] & { policy?: 'manual' | 'a
 }
 
 beforeAll(async () => {
+  restoreBotUid = await pinBotUidForTest();
   installFakeModel();
   await drainStale();
   startOutboxId = (await sql<{ m: number }>(`select coalesce(max(id), 0)::int as m from outbox`))[0]!.m;
@@ -65,6 +68,7 @@ afterAll(async () => {
   }
   await sql(`update outbox set status = 'cancelled' where id > $1 and thread_id = 'sim-owner' and status = 'queued'`, [startOutboxId]);
   await sql(`update inbound_events set processed_at = now() where processed_at is null and thread_id = any($1::text[])`, [made]);
+  await restoreBotUid();
   await closeDb();
 });
 

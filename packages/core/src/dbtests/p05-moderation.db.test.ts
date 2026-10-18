@@ -27,6 +27,7 @@ import {
   installFakeModel,
   mkGroup,
   outboxFor,
+  pinBotUidForTest,
   resetScripts,
   runAll,
   script,
@@ -40,12 +41,18 @@ import {
 
 const made: string[] = [];
 let startOutboxId = 0;
+let restoreBotUid: () => Promise<void> = async () => undefined;
 
-/** Triage gia: text chua `SPAMMARK` ⇒ spam 0.8 (>= MOD_SPAM_MIN 0.75); con lai ok. */
+/**
+ * Triage gia: text chua `SPAMMARK` ⇒ spam 0.8 (>= MOD_SPAM_MIN 0.75); chua mot cum trong SCAM_PHRASES ⇒ scam 0.9 (D41/F5: model
+ * `ok` bac luoi nen cac ca "scam bi xoa" phai co model dong y); con lai ok.
+ */
 const triageFetch: typeof fetch = async (_url, init) => {
-  const spam = String(init?.body ?? '').includes('SPAMMARK');
+  const raw = String(init?.body ?? '');
+  const spam = raw.includes('SPAMMARK');
+  const scam = !spam && SCAM_PHRASES.some((p) => raw.includes(p));
   const payload = {
-    verdict: spam ? 'spam' : 'ok',
+    verdict: spam ? 'spam' : scam ? 'scam' : 'ok',
     confidence: spam ? 0.8 : 0.9,
     is_question: false,
     question_confidence: 0.1,
@@ -71,6 +78,7 @@ async function mk(over: Parameters<typeof mkGroup>[0] & { botAdmin?: boolean } =
 }
 
 beforeAll(async () => {
+  restoreBotUid = await pinBotUidForTest();
   installFakeModel();
   setTriageFetchForTest(triageFetch);
   await drainStale();
@@ -92,6 +100,7 @@ afterAll(async () => {
   }
   await sql(`update outbox set status = 'cancelled' where id > $1 and thread_id = 'sim-owner' and status = 'queued'`, [startOutboxId]);
   await sql(`update inbound_events set processed_at = now() where processed_at is null and thread_id = any($1::text[])`, [made]);
+  await restoreBotUid();
   await closeDb();
 });
 
@@ -326,7 +335,7 @@ describe('P05-B — the duyet (f)–(j)', () => {
     );
     expect(sys).toHaveLength(1);
     await runAll();
-    expect((await ownerDms('thi hành xong')).some((d) => d.body.text.includes(id.slice(0, 6)))).toBe(true);
+    expect((await ownerDms('thi hành xong')).some((d) => d.body.text.includes(idShortOf(id)))).toBe(true);
 
     await expect(decideApproval({ id, decision: 'approve', decidedBy: 'staff:11111111-1111-4111-8111-111111111111', now: new Date() })).rejects.toBeInstanceOf(ConflictError);
     expect(await actionsOf(g)).toHaveLength(1);

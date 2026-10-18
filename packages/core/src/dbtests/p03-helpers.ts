@@ -4,10 +4,11 @@
 import { randomUUID } from 'node:crypto';
 import { sql } from '../adapters/db.js';
 import { setGeminiFetchForTest, setTriageFetchForTest } from '../adapters/model.js';
+import { resetBotUidCache } from '../agent/community/bot.js';
 import { routeInboundEvent } from '../agent/community/router.js';
 import { invalidatePersonaCache } from '../agent/community/persona.js';
 import { drainInbound } from '../runner/inbound-runner.js';
-import { processInbound, simInbound, type SimInboundArgs } from '../sim/sim-transport.js';
+import { BOT_UID_SIM, processInbound, simInbound, type SimInboundArgs } from '../sim/sim-transport.js';
 
 // ---------------------------------------------------------------------------
 // Model gia
@@ -218,6 +219,20 @@ export function resetScripts(): void {
 // ---------------------------------------------------------------------------
 
 export const ACCOUNT = 'community' as const;
+
+/**
+ * G35 (D41): test phu thuoc mention bot KHONG duoc gia dinh `zalo_accounts.own_uid` la null. Dat `own_uid = BOT_UID_SIM` cho
+ * suot file test (ca khi lan chay truoc bi ngat de lai rac) va xoa cache `botUid`; tra ve ham khoi phuc gia tri cu.
+ */
+export async function pinBotUidForTest(): Promise<() => Promise<void>> {
+  const prev = await sql<{ own_uid: string | null }>(`select own_uid from zalo_accounts where id = $1`, [ACCOUNT]);
+  await sql(`update zalo_accounts set own_uid = $2 where id = $1`, [ACCOUNT, BOT_UID_SIM]);
+  resetBotUidCache();
+  return async () => {
+    await sql(`update zalo_accounts set own_uid = $2 where id = $1`, [ACCOUNT, prev[0]?.own_uid ?? null]);
+    resetBotUidCache();
+  };
+}
 
 export function uniq(prefix: string): string {
   return `${prefix}-${randomUUID().slice(0, 8)}`;
