@@ -1,0 +1,83 @@
+# red F7 — ma nguyen trang (chua sua F7), HEAD 128acac + test moi
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/p05-fix.db.test.ts (14 tests | 3 failed | 10 skipped) 262ms
+   × F7 — review_join approve:false chi khi co the duyet hop le hoac nhom agent_review > thieu approvalId / the pending / sai uid / the khac nhom ⇒ ApprovalRequiredError, 0 outbox 28ms
+     → promise resolved "25674" instead of rejecting
+   × F7 — review_join approve:false chi khi co the duyet hop le hoac nhom agent_review > the approve_join bi TU CHOI ⇒ decideApproval reject xep review_join approve:false (co approvalId cua the) 58ms
+     → expected { uids: [ 'sim-f7d-70938323' ], …(2) } to match object { action: 'review_join', …(3) }
+   × F7 — review_join approve:false chi khi co the duyet hop le hoac nhom agent_review > nhom agent_review ⇒ khong can approvalId; nhom manual/auto_approve thi can; approve:true luon tu do 20ms
+     → promise resolved "25680" instead of rejecting
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p05-fix.db.test.ts > F7 — review_join approve:false chi khi co the duyet hop le hoac nhom agent_review > thieu approvalId / the pending / sai uid / the khac nhom ⇒ ApprovalRequiredError, 0 outbox
+AssertionError: promise resolved "25674" instead of rejecting
+
+- Expected: 
+[Error: rejected promise]
+
++ Received: 
+25674
+
+ ❯ src/dbtests/p05-fix.db.test.ts:219:98
+    217|     const other = await mk({ policy: 'manual' });
+    218|     const u = uniq('sim-f7');
+    219|     await expect(enqueueAction({ threadId: g, action: 'review_join', u…
+       |                                                                                                  ^
+    220|     const pend = await card(g, 'reject_join', u);
+    221|     await expect(enqueueAction({ threadId: g, action: 'review_join', u…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/dbtests/p05-fix.db.test.ts > F7 — review_join approve:false chi khi co the duyet hop le hoac nhom agent_review > the approve_join bi TU CHOI ⇒ decideApproval reject xep review_join approve:false (co approvalId cua the)
+AssertionError: expected { uids: [ 'sim-f7d-70938323' ], …(2) } to match object { action: 'review_join', …(3) }
+
+- Expected
++ Received
+
+  Object {
+    "action": "review_join",
+-   "approvalId": "7325435c-f4a6-493c-abf7-5bdf2f317a5a",
+    "approve": false,
+    "uids": Array [
+      "sim-f7d-70938323",
+    ],
+  }
+
+ ❯ src/dbtests/p05-fix.db.test.ts:248:43
+    246|     const r = await decideApproval({ id, decision: 'reject', decidedBy…
+    247|     expect(r.outboxId).not.toBeNull();
+    248|     expect((await actionsOf(g))[0]!.body).toMatchObject({ action: 'rev…
+       |                                           ^
+    249|     // the approve_join rejected + dung uid: enqueue lai van hop le; s…
+    250|     await expect(enqueueAction({ threadId: g, action: 'review_join', u…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/dbtests/p05-fix.db.test.ts > F7 — review_join approve:false chi khi co the duyet hop le hoac nhom agent_review > nhom agent_review ⇒ khong can approvalId; nhom manual/auto_approve thi can; approve:true luon tu do
+AssertionError: promise resolved "25680" instead of rejecting
+
+- Expected: 
+[Error: rejected promise]
+
++ Received: 
+25680
+
+ ❯ src/dbtests/p05-fix.db.test.ts:258:99
+    256|     await expect(enqueueAction({ threadId: ag, action: 'review_join', …
+    257|     const au = await mk({ policy: 'auto_approve' });
+    258|     await expect(enqueueAction({ threadId: au, action: 'review_join', …
+       |                                                                                                   ^
+    259|     await expect(enqueueAction({ threadId: au, action: 'review_join', …
+    260|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 1 passed | 10 skipped (14)
+   Start at  12:54:44
+   Duration  2.98s (transform 542ms, setup 0ms, collect 2.42s, tests 262ms, environment 0ms, prepare 100ms)
+
+exit=1

@@ -1,0 +1,37 @@
+# red F3 — ma nguyen trang (chua sua F3), HEAD 128acac + test moi
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/p05-fix.db.test.ts (14 tests | 1 failed | 12 skipped) 263ms
+   × F3 / F6 — tin bi kiem duyet xu ly thi KHONG chay luot, ke ca khi kem @bot > F3: bot KHONG la phu nhom + scam kem @bot ⇒ dung 1 tin ra (canh cao), 0 agent_runs, 0 trace 144ms
+     → expected [ …(2) ] to deeply equal [ Array(1) ]
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p05-fix.db.test.ts > F3 / F6 — tin bi kiem duyet xu ly thi KHONG chay luot, ke ca khi kem @bot > F3: bot KHONG la phu nhom + scam kem @bot ⇒ dung 1 tin ra (canh cao), 0 agent_runs, 0 trace
+AssertionError: expected [ …(2) ] to deeply equal [ Array(1) ]
+
+- Expected
++ Received
+
+  Array [
+    "Tin này bị nhận diện là nghi lừa đảo. Vui lòng không đăng nội dung như vậy trong nhóm; nếu tiếp tục, tin sẽ bị xoá và người đăng có thể bị mời ra khỏi nhóm.",
++   "ok (khong kich ban)",
+  ]
+
+ ❯ src/dbtests/p05-fix.db.test.ts:163:58
+    161|     await send({ threadId: g, senderUid: sender, text: scamText(9), me…
+    162|     await runAll();
+    163|     expect((await outboxFor(g)).map((t) => t.body.text)).toEqual([WARN…
+       |                                                          ^
+    164|     expect(await actionsOf(g)).toHaveLength(0);
+    165|     expect(await agentRunsForThread(g)).toBe(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed | 12 skipped (14)
+   Start at  12:54:32
+   Duration  3.58s (transform 690ms, setup 0ms, collect 2.90s, tests 263ms, environment 0ms, prepare 151ms)
+
+exit=1

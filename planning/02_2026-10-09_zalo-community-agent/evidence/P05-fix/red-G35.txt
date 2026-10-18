@@ -1,0 +1,173 @@
+# red G35: test P05 cu (128acac, khong ghim own_uid) voi own_uid='rac-g35'
+update zalo_accounts set own_uid='rac-g35' where id='community' returning id, own_uid => [{"id":"community","own_uid":"rac-g35"}]
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/p05-moderation.db.test.ts (18 tests | 7 failed) 2436ms
+   × P05-B — kiem duyet (a)–(e) > (a) scam_phrase ⇒ event scam/grid, outbox delete_message uidFrom=nguoi gui, deleted_at set, 0 luot community, tin khong duoc tra loi 200ms
+     → expected [] to have a length of 1 but got +0
+   ✓ P05-B — kiem duyet (a)–(e) > (b) spam x2 cung gio (triage 0.8): lan 1 warn co quote, lan 2 delete, lan 3 ⇒ the kick_member pending + DM owner 1 dong; KHONG co remove_member (BB-06) 397ms
+   × P05-B — kiem duyet (a)–(e) > (c) moderator gui scam_phrase ⇒ event none (mien tru), 0 outbox, tin khong bi xoa, diem khong doi 86ms
+     → expected [] to have a length of 1 but got +0
+   × P05-B — kiem duyet (a)–(e) > (d) bot khong la admin ⇒ ha ve warn + audit moderation.need_deputy + DM owner; KHONG delete_message 73ms
+     → expected undefined to match object { verdict: 'scam', action: 'warn' }
+   × P05-B — kiem duyet (a)–(e) > (d2) tin thieu cli_msg_id / qua 24 gio ⇒ khong xoa (ha ve warn); kick van chi tao the 66ms
+     → expected [] to deeply equal [ 'delete_message' ]
+   ✓ P05-B — kiem duyet (a)–(e) > (e) warn lan thu 11 trong gio ⇒ van ghi event nhung 0 outbox text (MOD_WARN_PER_HOUR = 10) 782ms
+   × P05-B — kiem duyet (a)–(e) > delete that bai (zca-js) ⇒ timer reconcileDeletes bo dau deleted_at + audit; chay lai khong doi 63ms
+     → Cannot read properties of undefined (reading 'id')
+   × P05-B — kiem duyet (a)–(e) > agent: tin scam KHONG khop luoi nhung goi @bot (triage null) ⇒ model goi flag_message ⇒ event source=agent action=delete + tra loi tu choi 49ms
+     → expected [] to have a length of 1 but got +0
+   × P05-B — kiem duyet (a)–(e) > agent flag_message len tin cua owner/moderator ⇒ chi log event none, khong xoa 38ms
+     → expected [] to deeply equal [ ObjectContaining{…} ]
+ ✓ src/dbtests/p05-join-welcome.db.test.ts (15 tests) 10462ms
+   ✓ P05-C — duyet vao nhom (§6) > agent_review + model im (khong goi tool) ⇒ approve mac dinh; model sap (HTTP 500) ⇒ approve mac dinh; chi 1 action moi uid 4242ms
+   ✓ P05-C — chao thanh vien moi (§7) > join 3 nguoi trong 2 phut ⇒ sau runTimers(now+3 phut) dung 1 welcome_flush voi 3 uid ⇒ 1 outbox text co 3 mention; chay timer lai ⇒ khong them su kien 429ms
+   ✓ P05-C — chao thanh vien moi (§7) > chao 2 lan: thanh vien da duoc chao KHONG bi chao lai o dot flush sau (welcomed_at dat truoc luot) 316ms
+   ✓ P05-C — chao thanh vien moi (§7) > model sap ⇒ host gui WELCOME_TEMPLATE (ten that, ten nhom, ten bot) dung 1 tin 4186ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p05-moderation.db.test.ts > P05-B — kiem duyet (a)–(e) > (a) scam_phrase ⇒ event scam/grid, outbox delete_message uidFrom=nguoi gui, deleted_at set, 0 luot community, tin khong duoc tra loi
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/dbtests/p05-moderation.db.test.ts:127:16
+    125|     await runAll();
+    126|     const ev = await eventsOf(g, sender);
+    127|     expect(ev).toHaveLength(1);
+       |                ^
+    128|     expect(ev[0]).toMatchObject({ verdict: 'scam', source: 'grid', act…
+    129|     expect(ev[0]!.grid_hits).toContain('scam_phrase');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  src/dbtests/p05-moderation.db.test.ts > P05-B — kiem duyet (a)–(e) > (c) moderator gui scam_phrase ⇒ event none (mien tru), 0 outbox, tin khong bi xoa, diem khong doi
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/dbtests/p05-moderation.db.test.ts:191:16
+    189|     await runAll();
+    190|     const ev = await eventsOf(g, mod);
+    191|     expect(ev).toHaveLength(1);
+       |                ^
+    192|     expect(ev[0]).toMatchObject({ verdict: 'scam', source: 'grid', act…
+    193|     expect(await count(`select 1 from outbox where thread_id = $1`, [g…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  src/dbtests/p05-moderation.db.test.ts > P05-B — kiem duyet (a)–(e) > (d) bot khong la admin ⇒ ha ve warn + audit moderation.need_deputy + DM owner; KHONG delete_message
+AssertionError: expected undefined to match object { verdict: 'scam', action: 'warn' }
+
+- Expected: 
+Object {
+  "action": "warn",
+  "verdict": "scam",
+}
+
++ Received: 
+undefined
+
+ ❯ src/dbtests/p05-moderation.db.test.ts:204:19
+    202|     await runAll();
+    203|     const ev = await eventsOf(g, sender);
+    204|     expect(ev[0]).toMatchObject({ verdict: 'scam', action: 'warn' });
+       |                   ^
+    205|     expect(await actionsOf(g)).toHaveLength(0);
+    206|     expect(await auditCount('moderation.need_deputy', g)).toBe(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+ FAIL  src/dbtests/p05-moderation.db.test.ts > P05-B — kiem duyet (a)–(e) > (d2) tin thieu cli_msg_id / qua 24 gio ⇒ khong xoa (ha ve warn); kick van chi tao the
+AssertionError: expected [] to deeply equal [ 'delete_message' ]
+
+- Expected
++ Received
+
+- Array [
+-   "delete_message",
+- ]
++ Array []
+
+ ❯ src/dbtests/p05-moderation.db.test.ts:217:60
+    215|     // tin nay da vao dem; mo phong "tin cu" bang cach lui received_at…
+    216|     await runAll();
+    217|     expect((await actionsOf(g)).map((a) => a.body.action)).toEqual(['d…
+       |                                                            ^
+    218|     // tool delete_message: tin cu > 24 gio / thieu cli ⇒ ActionNotPer…
+    219|     const old = await sql<{ id: number }>(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯
+
+ FAIL  src/dbtests/p05-moderation.db.test.ts > P05-B — kiem duyet (a)–(e) > delete that bai (zca-js) ⇒ timer reconcileDeletes bo dau deleted_at + audit; chay lai khong doi
+TypeError: Cannot read properties of undefined (reading 'id')
+ ❯ src/dbtests/p05-moderation.db.test.ts:253:107
+    251|     await runAll();
+    252|     const [act] = await actionsOf(g);
+    253|     await sql(`update outbox set status = 'failed', result = '{"error"…
+       |                                                                                                           ^
+    254|     expect(await reconcileDeletes(new Date())).toBeGreaterThanOrEqual(…
+    255|     const row = await sql<{ deleted_at: string | null; delete_reason: …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/7]⎯
+
+ FAIL  src/dbtests/p05-moderation.db.test.ts > P05-B — kiem duyet (a)–(e) > agent: tin scam KHONG khop luoi nhung goi @bot (triage null) ⇒ model goi flag_message ⇒ event source=agent action=delete + tra loi tu choi
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/dbtests/p05-moderation.db.test.ts:272:16
+    270|     await runAll();
+    271|     const ev = await eventsOf(g, sender);
+    272|     expect(ev).toHaveLength(1);
+       |                ^
+    273|     expect(ev[0]).toMatchObject({ verdict: 'scam', source: 'agent', ac…
+    274|     const acts = await actionsOf(g);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/7]⎯
+
+ FAIL  src/dbtests/p05-moderation.db.test.ts > P05-B — kiem duyet (a)–(e) > agent flag_message len tin cua owner/moderator ⇒ chi log event none, khong xoa
+AssertionError: expected [] to deeply equal [ ObjectContaining{…} ]
+
+- Expected
++ Received
+
+- Array [
+-   ObjectContaining {
+-     "action": "none",
+-     "source": "agent",
+-   },
+- ]
++ Array []
+
+ ❯ src/dbtests/p05-moderation.db.test.ts:291:16
+    289|     await runAll();
+    290|     const ev = await eventsOf(g, mod);
+    291|     expect(ev).toEqual([expect.objectContaining({ source: 'agent', act…
+       |                ^
+    292|     expect(await actionsOf(g)).toHaveLength(0);
+    293|     resetScripts();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/7]⎯
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  7 failed | 26 passed (33)
+   Start at  13:40:21
+   Duration  18.74s (transform 917ms, setup 0ms, collect 4.92s, tests 12.90s, environment 1ms, prepare 349ms)
+
+vitest exit=1
+update zalo_accounts set own_uid=null where id='community' returning id, own_uid => [{"id":"community","own_uid":null}]

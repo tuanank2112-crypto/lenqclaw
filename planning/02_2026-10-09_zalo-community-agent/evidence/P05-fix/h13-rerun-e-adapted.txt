@@ -1,0 +1,15 @@
+# h13 'e' (race D39) doi chu ky resolveBotUid(env, account, threadId) theo F2 + import BOT_UID_SIM dung noi (bot.js khong export) — ca con lai khong doi
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+stdout | src/services/h13-review.test.ts > H13 e — D39 BOT_UID_SIM duoi RUNNER_CONCURRENCY > 1 > xen ke 2 luot: thread that va thread sim-% (DATA_MODE=sim, own_uid co uid that qua env) ⇒ resolveBotUid cua luot that phai la uid that
+D39 race: luot that thay = uid-that-123 ; luot sim thay = sim-bot
+
+ ✓ src/services/h13-review.test.ts (25 tests | 24 skipped) 4ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 24 skipped (25)
+   Start at  13:02:10
+   Duration  796ms (transform 144ms, setup 0ms, collect 413ms, tests 4ms, environment 0ms, prepare 121ms)
+
+exit=0

@@ -1,0 +1,50 @@
+# red F2 (unit) ma nguyen trang
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/agent/community/bot.test.ts (16 tests | 2 failed) 45ms
+   × F2 (D41): resolveBotUid tu tinh sim theo threadId cua CHINH luot — cache chi giu own_uid > hai luot xen ke (thread that va sim-%) tren cache da nap ⇒ moi luot dung uid cua minh, bat ke thu tu lam moi 10ms
+     → expected 'sim-bot' to be '7001' // Object.is equality
+   × F2 (D41): resolveBotUid tu tinh sim theo threadId cua CHINH luot — cache chi giu own_uid > khong truyen threadId ⇒ khong bao gio sim theo cache (own_uid truoc, roi env/sim) 1ms
+     → expected 'sim-bot' to be '7001' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/agent/community/bot.test.ts > F2 (D41): resolveBotUid tu tinh sim theo threadId cua CHINH luot — cache chi giu own_uid > hai luot xen ke (thread that va sim-%) tren cache da nap ⇒ moi luot dung uid cua minh, bat ke thu tu lam moi
+AssertionError: expected 'sim-bot' to be '7001' // Object.is equality
+
+Expected: "7001"
+Received: "sim-bot"
+
+ ❯ src/agent/community/bot.test.ts:125:57
+    123|     await botUid('community', env, Date.now, 'g-real-1');
+    124|     await botUid('community', env, Date.now, 'sim-g-1');
+    125|     expect(resolveBotUid(env, 'community', 'g-real-1')).toBe('7001');
+       |                                                         ^
+    126|     expect(resolveBotUid(env, 'community', 'sim-g-1')).toBe(BOT_UID_SI…
+    127|     await botUid('community', env, Date.now, 'sim-g-2');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/agent/community/bot.test.ts > F2 (D41): resolveBotUid tu tinh sim theo threadId cua CHINH luot — cache chi giu own_uid > khong truyen threadId ⇒ khong bao gio sim theo cache (own_uid truoc, roi env/sim)
+AssertionError: expected 'sim-bot' to be '7001' // Object.is equality
+
+Expected: "7001"
+Received: "sim-bot"
+
+ ❯ src/agent/community/bot.test.ts:142:32
+    140|     const env = { DATA_MODE: 'sim' } as NodeJS.ProcessEnv;
+    141|     await botUid('community', env, Date.now, 'sim-abc');
+    142|     expect(resolveBotUid(env)).toBe('7001');
+       |                                ^
+    143|   });
+    144| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 14 passed (16)
+   Start at  12:50:54
+   Duration  977ms (transform 197ms, setup 0ms, collect 420ms, tests 45ms, environment 0ms, prepare 181ms)
+
+exit=1

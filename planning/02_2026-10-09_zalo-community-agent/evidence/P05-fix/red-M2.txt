@@ -1,0 +1,48 @@
+# red M2: dot bien bo 'ageMs > DELETE_MAX_AGE_MS' trong applyModeration
+diff --git a/packages/core/src/services/moderation.ts b/packages/core/src/services/moderation.ts
+index be0ae87..da0e617 100644
+--- a/packages/core/src/services/moderation.ts
++++ b/packages/core/src/services/moderation.ts
+@@ -241,7 +241,7 @@ export async function applyModeration(a: ApplyModerationArgs): Promise<Moderatio
+       await dmOwner(a.account, NEED_DEPUTY_DM(a.group.name));
+       await audit(sql, { actorType: 'system', actorId: null, action: 'moderation.need_deputy_dm', target: a.group.threadId, data: null });
+     }
+-  } else if (wantDelete && (!hasCli || ageMs > DELETE_MAX_AGE_MS || a.row.isSelf)) {
++  } else if (wantDelete && (!hasCli || a.row.isSelf)) {
+     canDelete = false;
+     if (step.action === 'delete') effective = 'warn';
+     await audit(sql, { actorType: 'system', actorId: null, action: 'moderation.cannot_delete', target: a.group.threadId, data: { reason: !hasCli ? 'cli_msg_id_missing' : a.row.isSelf ? 'self' : 'too_old' } });
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/p05-fix.db.test.ts (14 tests | 1 failed | 13 skipped) 146ms
+   × M2 — applyModeration (duong PIPELINE) khong xoa tin > 24 gio > tin scam received_at 25 gio truoc ⇒ 0 delete_message, audit moderation.cannot_delete {reason:too_old}, ha ve warn 95ms
+     → expected [ { id: 25656, body: { …(5) } } ] to have a length of +0 but got 1
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p05-fix.db.test.ts > M2 — applyModeration (duong PIPELINE) khong xoa tin > 24 gio > tin scam received_at 25 gio truoc ⇒ 0 delete_message, audit moderation.cannot_delete {reason:too_old}, ha ve warn
+AssertionError: expected [ { id: 25656, body: { …(5) } } ] to have a length of +0 but got 1
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ src/dbtests/p05-fix.db.test.ts:118:32
+    116|     const s = await send({ threadId: g, senderUid: sender, text: scamT…
+    117|     await runAll();
+    118|     expect(await actionsOf(g)).toHaveLength(0);
+       |                                ^
+    119|     const au = await sql<{ data: { reason?: string } }>(`select data f…
+    120|     expect(au).toHaveLength(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 13 skipped (14)
+   Start at  12:54:15
+   Duration  2.41s (transform 477ms, setup 0ms, collect 1.91s, tests 146ms, environment 0ms, prepare 122ms)
+
+exit=1

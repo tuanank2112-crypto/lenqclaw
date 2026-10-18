@@ -1,0 +1,1 @@
+select id, own_uid from zalo_accounts => [{"id":"community","own_uid":null}]

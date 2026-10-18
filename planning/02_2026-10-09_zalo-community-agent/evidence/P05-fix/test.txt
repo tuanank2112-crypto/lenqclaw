@@ -1,0 +1,122 @@
+
+> lenqclaw@0.0.1 test
+> npm run test --workspaces --if-present
+
+
+> @lenqclaw/web@0.0.1 test
+> vitest run --exclude "**/*.db.test.ts"
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mE:/vọc vạch/lenqclaw/apps/web[39m
+
+ [32m✓[39m app/zalo/display.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 6[2mms[22m[39m
+ [32m✓[39m app/api/zalo/policy.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 5[2mms[22m[39m
+ [32m✓[39m lib/auth/policy.test.ts [2m([22m[2m16 tests[22m[2m)[22m[90m 15[2mms[22m[39m
+ [32m✓[39m lib/auth/session.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 20[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[32m32 passed[39m[22m[90m (32)[39m
+[2m   Start at [22m 13:13:13
+[2m   Duration [22m 733ms[2m (transform 269ms, setup 0ms, collect 472ms, tests 46ms, environment 1ms, prepare 785ms)[22m
+
+
+> @lenqclaw/zalo-worker@0.0.1 test
+> vitest run --exclude "**/*.db.test.ts"
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mE:/vọc vạch/lenqclaw/apps/zalo-worker[39m
+
+ [32m✓[39m src/crypto.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 12[2mms[22m[39m
+ [32m✓[39m src/config.test.ts [2m([22m[2m7 tests[22m[2m)[22m[90m 10[2mms[22m[39m
+ [32m✓[39m src/watchdog.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 40[2mms[22m[39m
+ [32m✓[39m src/zca-normalize.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 7[2mms[22m[39m
+{"t":"2026-10-18T06:13:16.014Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-18T06:13:16.018Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-18T06:13:16.020Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-18T06:13:16.020Z","event":"pacer.sent","account":"community","outbox_id":2}
+{"t":"2026-10-18T06:13:16.018Z","event":"pacer.sent","account":"community","outbox_id":2}
+{"t":"2026-10-18T06:13:16.021Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-18T06:13:16.022Z","event":"pacer.sent","account":"community","outbox_id":2}
+{"t":"2026-10-18T06:13:16.023Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-18T06:13:16.023Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-18T06:13:16.023Z","event":"pacer.sent","account":"community","outbox_id":2}
+{"t":"2026-10-18T06:13:16.024Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-18T06:13:16.024Z","event":"pacer.sent","account":"community","outbox_id":2}
+{"t":"2026-10-18T06:13:16.024Z","event":"pacer.sent","account":"community","outbox_id":2}
+ [32m✓[39m src/pacer-d31.test.ts [2m([22m[2m12 tests[22m[2m)[22m[90m 17[2mms[22m[39m
+{"t":"2026-10-18T06:13:16.032Z","event":"pacer.backoff","account":"community","reason":"rate_limit_error","backoff_ms":1800000}
+{"t":"2026-10-18T06:13:16.033Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-18T06:13:16.038Z","event":"pacer.sent","account":"community","outbox_id":1}
+{"t":"2026-10-18T06:13:16.039Z","event":"pacer.sent","account":"community","outbox_id":2}
+ [32m✓[39m src/pacer.test.ts [2m([22m[2m20 tests[22m[2m)[22m[90m 32[2mms[22m[39m
+ [32m✓[39m src/check-agent-tools.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 750[2mms[22m[39m
+ [32m✓[39m src/pacer-policy.test.ts [2m([22m[2m24 tests[22m[2m)[22m[33m 738[2mms[22m[39m
+ [32m✓[39m src/inbound.test.ts [2m([22m[2m15 tests[22m[2m)[22m[90m 14[2mms[22m[39m
+ [32m✓[39m src/actions.test.ts [2m([22m[2m14 tests[22m[2m)[22m[90m 17[2mms[22m[39m
+ [32m✓[39m src/main.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 6670[2mms[22m[39m
+   [33m[2m✓[22m[39m zalo-worker main — khoa phien[2m > [22mthieu ZALO_SESSION_KEY ⇒ exit 1 [33m2761[2mms[22m[39m
+   [33m[2m✓[22m[39m zalo-worker main — khoa phien[2m > [22mkhoa sai do dai ⇒ exit 1, khong in lai gia tri [33m2014[2mms[22m[39m
+   [33m[2m✓[22m[39m zalo-worker main — khoa phien[2m > [22mkhoa dung nhung ZALO_ACCOUNTS khac community ⇒ exit 1 [33m1893[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m11 passed[39m[22m[90m (11)[39m
+[2m      Tests [22m [1m[32m114 passed[39m[22m[90m (114)[39m
+[2m   Start at [22m 13:13:14
+[2m   Duration [22m 7.59s[2m (transform 2.02s, setup 0ms, collect 8.96s, tests 8.31s, environment 3ms, prepare 2.80s)[22m
+
+
+> @lenqclaw/core@0.0.1 test
+> vitest run --exclude "**/*.db.test.ts"
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mE:/vọc vạch/lenqclaw/packages/core[39m
+
+ [32m✓[39m src/services/moderation-grid.test.ts [2m([22m[2m74 tests[22m[2m)[22m[90m 35[2mms[22m[39m
+ [32m✓[39m src/adapters/alert.test.ts [2m([22m[2m11 tests[22m[2m)[22m[90m 27[2mms[22m[39m
+ [32m✓[39m src/agent/community/persona.test.ts [2m([22m[2m19 tests[22m[2m)[22m[90m 20[2mms[22m[39m
+ [32m✓[39m src/agent/community/gate.test.ts [2m([22m[2m38 tests[22m[2m)[22m[90m 35[2mms[22m[39m
+ [32m✓[39m src/agent/community/bot.test.ts [2m([22m[2m16 tests[22m[2m)[22m[90m 13[2mms[22m[39m
+ [32m✓[39m src/services/community-config.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 17[2mms[22m[39m
+ [32m✓[39m src/services/moderation-ladder.test.ts [2m([22m[2m19 tests[22m[2m)[22m[90m 15[2mms[22m[39m
+ [32m✓[39m src/agent/community/graph/edges.test.ts [2m([22m[2m124 tests[22m[2m)[22m[90m 39[2mms[22m[39m
+ [32m✓[39m src/adapters/model.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 163[2mms[22m[39m
+ [32m✓[39m src/agent/community/policy.test.ts [2m([22m[2m82 tests[22m[2m)[22m[90m 30[2mms[22m[39m
+ [32m✓[39m src/retrieval/search-knowledge.test.ts [2m([22m[2m13 tests[22m[2m)[22m[90m 12[2mms[22m[39m
+ [32m✓[39m src/agent/community/tools/tool-kit.test.ts [2m([22m[2m7 tests[22m[2m)[22m[90m 9[2mms[22m[39m
+ [32m✓[39m src/db/seed.test.ts [2m([22m[2m7 tests[22m[2m)[22m[90m 16[2mms[22m[39m
+ [32m✓[39m src/domain/errors.test.ts [2m([22m[2m26 tests[22m[2m)[22m[90m 16[2mms[22m[39m
+ [32m✓[39m src/agent/community/triage.test.ts [2m([22m[2m10 tests[22m[2m)[22m[90m 10[2mms[22m[39m
+ [32m✓[39m src/services/vn-time.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 8[2mms[22m[39m
+ [32m✓[39m src/services/moderation.test.ts [2m([22m[2m7 tests[22m[2m)[22m[90m 8[2mms[22m[39m
+ [32m✓[39m src/services/approvals.test.ts [2m([22m[2m35 tests[22m[2m)[22m[90m 14[2mms[22m[39m
+ [32m✓[39m src/services/welcome.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 8[2mms[22m[39m
+ [32m✓[39m src/services/ops-watch.test.ts [2m([22m[2m1 test[22m[2m)[22m[90m 13[2mms[22m[39m
+ [32m✓[39m src/sim/sim-mentions.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 6[2mms[22m[39m
+ [32m✓[39m src/boundary.test.ts [2m([22m[2m16 tests[22m[2m)[22m[33m 3594[2mms[22m[39m
+   [33m[2m✓[22m[39m D35.8 — canh THUAN: graph/edges.ts (BB-16)[2m > [22medges.ts dung Date.now() / new Date( / Math.random( / process. / fetch( => vi pham [33m702[2mms[22m[39m
+ [32m✓[39m src/adapters/transport.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 6[2mms[22m[39m
+ [32m✓[39m src/agent/community/redact.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 7[2mms[22m[39m
+ [32m✓[39m src/agent/community/graph/graph-shape.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 16[2mms[22m[39m
+ [32m✓[39m src/adapters/db-lock.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 5[2mms[22m[39m
+ [32m✓[39m src/agent/conversation.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 5[2mms[22m[39m
+ [32m✓[39m src/adapters/model.deadline.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 3834[2mms[22m[39m
+   [33m[2m✓[22m[39m callModel — han chot (deadlineAt)[2m > [22mfetch tre 5000 ms, han chot +1500 ms ⇒ ModelDeadlineError trong <= 1700 ms, signal da huy [33m1529[2mms[22m[39m
+   [33m[2m✓[22m[39m callModel — han chot (deadlineAt)[2m > [22m503 + du gio (+5000 ms) ⇒ van lui va thu lai nhu cu (ModelUnavailableError khi het retry khong phai ModelDeadlineError) [33m1010[2mms[22m[39m
+   [33m[2m✓[22m[39m callModel — han chot (deadlineAt)[2m > [22mModelDeadlineError la con cua ModelUnavailableError va KHONG thu MODEL_FALLBACKS [33m1011[2mms[22m[39m
+ [32m✓[39m src/domain/password.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 254[2mms[22m[39m
+ [32m✓[39m src/adapters/model.openrouter.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 4252[2mms[22m[39m
+   [33m[2m✓[22m[39m callModel — nhanh openrouter (01-CONTRACTS §2c)[2m > [22m429 x3 (het retry) o model chinh => thu MODEL_FALLBACKS, thanh cong, model = fallback [33m4017[2mms[22m[39m
+ [32m✓[39m src/adapters/model.vyce.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 4336[2mms[22m[39m
+   [33m[2m✓[22m[39m callModel — nhanh vyce (01-CONTRACTS §2d)[2m > [22m429 x3 (het retry) o model chinh => thu MODEL_FALLBACKS, thanh cong, model = fallback (dung chung retry voi §2c) [33m4042[2mms[22m[39m
+ [32m✓[39m src/adapters/model.gemini.test.ts [2m([22m[2m16 tests[22m[2m)[22m[33m 4413[2mms[22m[39m
+   [33m[2m✓[22m[39m callModel — nhanh gemini (01-CONTRACTS §2b)[2m > [22m503 x3 (het retry) o model chinh => thu MODEL_FALLBACKS, thanh cong, model = fallback [33m4050[2mms[22m[39m
+ [32m✓[39m src/adapters/model.body-errors.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 4454[2mms[22m[39m
+   [33m[2m✓[22m[39m than phan hoi — gemini[2m > [22mstall_body: abort khi dang doc than, het han luot ⇒ ModelDeadlineError (khong loi tho) [33m1215[2mms[22m[39m
+   [33m[2m✓[22m[39m than phan hoi — gemini[2m > [22mbad_json lan 1, lan 2 tot ⇒ retry thanh cong (retryable) [33m1004[2mms[22m[39m
+   [33m[2m✓[22m[39m than phan hoi — openrouter[2m > [22mstall_body: abort khi dang doc than, het han luot ⇒ ModelDeadlineError (khong loi tho) [33m1211[2mms[22m[39m
+   [33m[2m✓[22m[39m than phan hoi — openrouter[2m > [22mbad_json lan 1, lan 2 tot ⇒ retry thanh cong (retryable) [33m1009[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m33 passed[39m[22m[90m (33)[39m
+[2m      Tests [22m [1m[32m606 passed[39m[22m[90m (606)[39m
+[2m   Start at [22m 13:13:23
+[2m   Duration [22m 7.42s[2m (transform 4.65s, setup 0ms, collect 14.65s, tests 25.69s, environment 11ms, prepare 6.76s)[22m
+

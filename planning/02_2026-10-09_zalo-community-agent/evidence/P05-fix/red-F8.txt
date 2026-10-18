@@ -1,0 +1,41 @@
+# red F8 — ma nguyen trang (chua sua F8), HEAD 128acac + test moi
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/p05-fix.db.test.ts (14 tests | 1 failed | 12 skipped) 189ms
+   × F8 — repeat_burst khong tinh tin dang xet (tin giong het thu 5 khong hit, thu 6 hit) > 4 tin truoc + tin dang xet (thu 5) ⇒ KHONG hit 71ms
+     → expected { verdict: 'spam', …(1) } to deeply equal { verdict: 'ok', hits: [] }
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p05-fix.db.test.ts > F8 — repeat_burst khong tinh tin dang xet (tin giong het thu 5 khong hit, thu 6 hit) > 4 tin truoc + tin dang xet (thu 5) ⇒ KHONG hit
+AssertionError: expected { verdict: 'spam', …(1) } to deeply equal { verdict: 'ok', hits: [] }
+
+- Expected
++ Received
+
+  Object {
+-   "hits": Array [],
+-   "verdict": "ok",
++   "hits": Array [
++     "repeat_burst",
++   ],
++   "verdict": "spam",
+  }
+
+ ❯ src/dbtests/p05-fix.db.test.ts:291:15
+    289|     const g = await mk();
+    290|     const r = await verdictOfLast(g, uniq('sim-f8a'), 4);
+    291|     expect(r).toEqual({ verdict: 'ok', hits: [] });
+       |               ^
+    292|   });
+    293|   it('5 tin truoc + tin dang xet (thu 6) ⇒ hit repeat_burst (spam, luo…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed | 12 skipped (14)
+   Start at  12:54:50
+   Duration  3.34s (transform 662ms, setup 0ms, collect 2.73s, tests 189ms, environment 0ms, prepare 154ms)
+
+exit=1

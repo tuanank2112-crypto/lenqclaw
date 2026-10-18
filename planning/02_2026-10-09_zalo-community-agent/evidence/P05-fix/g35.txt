@@ -1,0 +1,26 @@
+# G35: dat own_uid='rac-g35' cho dong community, chay p05-* (core), roi tra null
+update zalo_accounts set own_uid='rac-g35' where id='community' returning id, own_uid => [{"id":"community","own_uid":"rac-g35"}]
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ✓ src/dbtests/p05-moderation.db.test.ts (18 tests) 2702ms
+   ✓ P05-B — kiem duyet (a)–(e) > (e) warn lan thu 11 trong gio ⇒ van ghi event nhung 0 outbox text (MOD_WARN_PER_HOUR = 10) 643ms
+ ✓ src/dbtests/p05-join-welcome.db.test.ts (15 tests) 11622ms
+   ✓ P05-C — duyet vao nhom (§6) > agent_review + model im (khong goi tool) ⇒ approve mac dinh; model sap (HTTP 500) ⇒ approve mac dinh; chi 1 action moi uid 4264ms
+   ✓ P05-C — su kien nhom khac (§6–§7) > leave / remove_member ⇒ left_at; add_admin 2 lan ⇒ DUNG 1 sync_group_info dang cho; nhom tat ⇒ audit event_disabled va khong lam gi 373ms
+   ✓ P05-C — chao thanh vien moi (§7) > join 3 nguoi trong 2 phut ⇒ sau runTimers(now+3 phut) dung 1 welcome_flush voi 3 uid ⇒ 1 outbox text co 3 mention; chay timer lai ⇒ khong them su kien 975ms
+   ✓ P05-C — chao thanh vien moi (§7) > chao 2 lan: thanh vien da duoc chao KHONG bi chao lai o dot flush sau (welcomed_at dat truoc luot) 601ms
+   ✓ P05-C — chao thanh vien moi (§7) > model sap ⇒ host gui WELCOME_TEMPLATE (ten that, ten nhom, ten bot) dung 1 tin 4203ms
+ ✓ src/dbtests/p05-fix.db.test.ts (14 tests) 1155ms
+ ✓ src/dbtests/p05-d39.db.test.ts (3 tests) 1299ms
+   ✓ D39 (a): node tools nang lan TRUOC khi chay tool extendsDeadline > luot fast con 1000 ms (< 3500, > 300) goi search_knowledge ⇒ embed nhan han rag (khong roi ve lexical) 1238ms
+ ✓ src/dbtests/p05-fix-f16.db.test.ts (1 test) 144ms
+ ✓ src/dbtests/p05-fix-f11.db.test.ts (1 test) 266ms
+
+ Test Files  6 passed (6)
+      Tests  52 passed (52)
+   Start at  13:39:38
+   Duration  31.22s (transform 1.34s, setup 0ms, collect 10.68s, tests 17.19s, environment 2ms, prepare 1.30s)
+
+vitest exit=0
+update zalo_accounts set own_uid=null where id='community' returning id, own_uid => [{"id":"community","own_uid":null}]

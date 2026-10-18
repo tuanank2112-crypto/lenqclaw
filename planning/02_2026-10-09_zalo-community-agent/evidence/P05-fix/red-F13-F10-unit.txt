@@ -1,0 +1,132 @@
+# red F13/F10 (unit)
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/services/welcome.test.ts (8 tests | 6 failed) 27ms
+   × WELCOME_TEMPLATE — F13 > > 5 nguoi ⇒ 5 ten dau + "và N bạn khác" 12ms
+     → expected 'Chào mừng A, B, C, D, E, F, G đã tham…' to contain 'A, B, C, D, E và 2 bạn khác đã tham g…'
+   × WELCOME_TEMPLATE — F13 > ten la so dien thoai ⇒ che [SĐT] 2ms
+     → expected 'Chào mừng Nguyễn An 0912345678, 0987 …' not to match /0912345678|0987 654 321/
+   × WELCOME_TEMPLATE — F13 > ten co xuong dong / tab ⇒ gop thanh MOT dong 3ms
+     → expected true to be false // Object.is equality
+   × WELCOME_TEMPLATE — F13 > ten dai > 40 ky tu bi cat con <= 40 1ms
+     → expected 'Chào mừng NNNNNNNNNNNNNNNNNNNNNNNNNNN…' not to contain 'NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN…'
+   × WELCOME_TEMPLATE — F13 > ten chi gom khoang trang ⇒ bo; khong con ten nao ⇒ "cac ban" 3ms
+     → expected 'Chào mừng   , \n đã tham gia Nhóm AI!…' to contain 'Chào mừng các bạn đã tham gia'
+   × APPROVAL_RESULT_DM — F10 (idShort 8 ky tu) > dung 8 ky tu dau cua uuid, cung do dai voi idShortOf 1ms
+     → expected 'Thẻ duyệt 1a2b3c (kick_member) đã thi…' to contain '1a2b3c4d'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/services/welcome.test.ts > WELCOME_TEMPLATE — F13 > > 5 nguoi ⇒ 5 ten dau + "và N bạn khác"
+AssertionError: expected 'Chào mừng A, B, C, D, E, F, G đã tham…' to contain 'A, B, C, D, E và 2 bạn khác đã tham g…'
+
+Expected: "A, B, C, D, E và 2 bạn khác đã tham gia"
+Received: "Chào mừng A, B, C, D, E, F, G đã tham gia Nhóm AI! Bạn cứ hỏi mình về AI agent hoặc gõ @Claw nhé."
+
+ ❯ src/services/welcome.test.ts:19:15
+     17|   it('> 5 nguoi ⇒ 5 ten dau + "và N bạn khác"', () => {
+     18|     const t = tpl(['A', 'B', 'C', 'D', 'E', 'F', 'G']);
+     19|     expect(t).toContain('A, B, C, D, E và 2 bạn khác đã tham gia');
+       |               ^
+     20|     expect(t).not.toContain('F');
+     21|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/services/welcome.test.ts > WELCOME_TEMPLATE — F13 > ten la so dien thoai ⇒ che [SĐT]
+AssertionError: expected 'Chào mừng Nguyễn An 0912345678, 0987 …' not to match /0912345678|0987 654 321/
+
+- Expected: 
+/0912345678|0987 654 321/
+
++ Received: 
+"Chào mừng Nguyễn An 0912345678, 0987 654 321 đã tham gia Nhóm AI! Bạn cứ hỏi mình về AI agent hoặc gõ @Claw nhé."
+
+ ❯ src/services/welcome.test.ts:24:19
+     22|   it('ten la so dien thoai ⇒ che [SĐT]', () => {
+     23|     const t = tpl(['Nguyễn An 0912345678', '0987 654 321']);
+     24|     expect(t).not.toMatch(/0912345678|0987 654 321/);
+       |                   ^
+     25|     expect(t).toContain('[SĐT]');
+     26|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  src/services/welcome.test.ts > WELCOME_TEMPLATE — F13 > ten co xuong dong / tab ⇒ gop thanh MOT dong
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/services/welcome.test.ts:29:30
+     27|   it('ten co xuong dong / tab ⇒ gop thanh MOT dong', () => {
+     28|     const t = tpl(['An\nBình\r\nChào\tcả nhà']);
+     29|     expect(t.includes('\n')).toBe(false);
+       |                              ^
+     30|     expect(t.includes('\r')).toBe(false);
+     31|     expect(t.includes('\t')).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  src/services/welcome.test.ts > WELCOME_TEMPLATE — F13 > ten dai > 40 ky tu bi cat con <= 40
+AssertionError: expected 'Chào mừng NNNNNNNNNNNNNNNNNNNNNNNNNNN…' not to contain 'NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN…'
+
+Expected: "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN"
+Received: "Chào mừng NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN đã tham gia Nhóm AI! Bạn cứ hỏi mình về AI agent hoặc gõ @Claw nhé."
+
+ ❯ src/services/welcome.test.ts:37:19
+     35|     const t = tpl([long]);
+     36|     expect(t).toContain('N'.repeat(40));
+     37|     expect(t).not.toContain('N'.repeat(41));
+       |                   ^
+     38|   });
+     39|   it('ten chi gom khoang trang ⇒ bo; khong con ten nao ⇒ "cac ban"', (…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  src/services/welcome.test.ts > WELCOME_TEMPLATE — F13 > ten chi gom khoang trang ⇒ bo; khong con ten nao ⇒ "cac ban"
+AssertionError: expected 'Chào mừng   , \n đã tham gia Nhóm AI!…' to contain 'Chào mừng các bạn đã tham gia'
+
+- Expected
++ Received
+
+- Chào mừng các bạn đã tham gia
++ Chào mừng   , 
++  đã tham gia Nhóm AI! Bạn cứ hỏi mình về AI agent hoặc gõ @Claw nhé.
+
+ ❯ src/services/welcome.test.ts:40:31
+     38|   });
+     39|   it('ten chi gom khoang trang ⇒ bo; khong con ten nao ⇒ "cac ban"', (…
+     40|     expect(tpl(['  ', '\n'])).toContain('Chào mừng các bạn đã tham gia…
+       |                               ^
+     41|   });
+     42| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  src/services/welcome.test.ts > APPROVAL_RESULT_DM — F10 (idShort 8 ky tu) > dung 8 ky tu dau cua uuid, cung do dai voi idShortOf
+AssertionError: expected 'Thẻ duyệt 1a2b3c (kick_member) đã thi…' to contain '1a2b3c4d'
+
+Expected: "1a2b3c4d"
+Received: "Thẻ duyệt 1a2b3c (kick_member) đã thi hành xong."
+
+ ❯ src/services/welcome.test.ts:48:15
+     46|   it('dung 8 ky tu dau cua uuid, cung do dai voi idShortOf', () => {
+     47|     const t = APPROVAL_RESULT_DM(FULL, 'kick_member', 'executed');
+     48|     expect(t).toContain(idShortOf(FULL));
+       |               ^
+     49|     expect(t).toContain('1a2b3c4d');
+     50|     expect(t).not.toContain('1a2b3c4d-');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+ Test Files  1 failed (1)
+      Tests  6 failed | 2 passed (8)
+   Start at  12:55:39
+   Duration  1.20s (transform 175ms, setup 0ms, collect 431ms, tests 27ms, environment 0ms, prepare 212ms)
+
+exit=1

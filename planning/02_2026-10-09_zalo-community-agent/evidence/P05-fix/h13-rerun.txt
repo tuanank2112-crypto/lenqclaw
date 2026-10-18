@@ -1,0 +1,181 @@
+# h13 rerun tren ma da sua (2 file test pha cua H13 chep tam vao cay, chay, xoa)
+## unit
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+stdout | src/services/h13-review.test.ts > H13 e — D39 BOT_UID_SIM duoi RUNNER_CONCURRENCY > 1 > xen ke 2 luot: thread that va thread sim-% (DATA_MODE=sim, own_uid co uid that qua env) ⇒ resolveBotUid cua luot that phai la uid that
+D39 race: luot that thay = uid-that-123 ; luot sim thay = uid-that-123
+
+ ❯ src/services/h13-review.test.ts (25 tests | 11 failed) 76ms
+   × H13 c — luoi: cau canh bao / giao dich binh thuong cua cong dong > benign: Mọi người cẩn thận mấy tin "việc nhẹ lương cao" nh 16ms
+     → expected { …(3) } to match object { hard: false }
+(2 matching properties omitted from actual)
+   × H13 c — luoi: cau canh bao / giao dich binh thuong cua cong dong > benign: Ai gặp kiểu tin "chuyển khoản trước để nhận" thì b 2ms
+     → expected { …(3) } to match object { hard: false }
+(2 matching properties omitted from actual)
+   × H13 c — luoi: cau canh bao / giao dich binh thuong cua cong dong > benign: Bạn nào làm bot phát hiện câu "link rút tiền" chưa 2ms
+     → expected { …(3) } to match object { hard: false }
+(2 matching properties omitted from actual)
+   × H13 c — luoi: cau canh bao / giao dich binh thuong cua cong dong > benign: Anh quét mã QR để nhận tiền hoàn nhé, em gửi rồi đ 1ms
+     → expected { …(3) } to match object { hard: false }
+(2 matching properties omitted from actual)
+   × H13 c — luoi: cau canh bao / giao dich binh thuong cua cong dong > benign: Prompt kiểu "bạn đã trúng thưởng iphone" là ví dụ  1ms
+     → expected { …(3) } to match object { hard: false }
+(2 matching properties omitted from actual)
+   × H13 c — luoi: cau canh bao / giao dich binh thuong cua cong dong > benign: Dataset mình gắn nhãn câu "cam kết lợi nhuận hằng  2ms
+     → expected { …(3) } to match object { hard: false }
+(2 matching properties omitted from actual)
+   × H13 c — luoi: cau canh bao / giao dich binh thuong cua cong dong > repeat_burst: "ok" 5 lan trong 10 phut cua mot nguoi ⇒ hard spam? 1ms
+     → expected true to be false // Object.is equality
+   × H13 a — hasDecisionEvidence > "đừng duyệt 1a2b3c4d" ⇒ reject 1ms
+     → expected null to be 'reject' // Object.is equality
+   × H13 a — hasDecisionEvidence > "chưa duyệt 1a2b3c4d" ⇒ reject 1ms
+     → expected null to be 'reject' // Object.is equality
+   × H13 a — hasDecisionEvidence > "khoan duyệt 1a2b3c4d đã" ⇒ reject 1ms
+     → expected null to be 'reject' // Object.is equality
+   × H13 e — D39 BOT_UID_SIM duoi RUNNER_CONCURRENCY > 1 > xen ke 2 luot: thread that va thread sim-% (DATA_MODE=sim, own_uid co uid that qua env) ⇒ resolveBotUid cua luot that phai la uid that 43ms
+     → expected 'uid-that-123' to be undefined // Object.is equality
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 11 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/services/h13-review.test.ts > H13 c — luoi: cau canh bao / giao dich binh thuong cua cong dong > benign: Mọi người cẩn thận mấy tin "việc nhẹ lương cao" nh
+ FAIL  src/services/h13-review.test.ts > H13 c — luoi: cau canh bao / giao dich binh thuong cua cong dong > benign: Ai gặp kiểu tin "chuyển khoản trước để nhận" thì b
+ FAIL  src/services/h13-review.test.ts > H13 c — luoi: cau canh bao / giao dich binh thuong cua cong dong > benign: Bạn nào làm bot phát hiện câu "link rút tiền" chưa
+ FAIL  src/services/h13-review.test.ts > H13 c — luoi: cau canh bao / giao dich binh thuong cua cong dong > benign: Anh quét mã QR để nhận tiền hoàn nhé, em gửi rồi đ
+ FAIL  src/services/h13-review.test.ts > H13 c — luoi: cau canh bao / giao dich binh thuong cua cong dong > benign: Prompt kiểu "bạn đã trúng thưởng iphone" là ví dụ 
+ FAIL  src/services/h13-review.test.ts > H13 c — luoi: cau canh bao / giao dich binh thuong cua cong dong > benign: Dataset mình gắn nhãn câu "cam kết lợi nhuận hằng 
+AssertionError: expected { …(3) } to match object { hard: false }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  Object {
+-   "hard": false,
++   "hard": true,
+  }
+
+ ❯ src/services/h13-review.test.ts:24:49
+     22|       const g = classifyGrid(t, ctx);
+     23|       // ghi nhan: neu hard ⇒ xoa + 2 diem cho nguoi CANH BAO
+     24|       expect({ t, hard: g.hard, hits: g.hits }).toMatchObject({ hard: …
+       |                                                 ^
+     25|     });
+     26|   }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/11]⎯
+
+ FAIL  src/services/h13-review.test.ts > H13 c — luoi: cau canh bao / giao dich binh thuong cua cong dong > repeat_burst: "ok" 5 lan trong 10 phut cua mot nguoi ⇒ hard spam?
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/services/h13-review.test.ts:32:74
+     30|   });
+     31|   it('repeat_burst: "ok" 5 lan trong 10 phut cua mot nguoi ⇒ hard spam…
+     32|     expect(classifyGrid('ok', { ...ctx, identicalRecentCount: 5 }).har…
+       |                                                                          ^
+     33|   });
+     34| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/11]⎯
+
+ FAIL  src/services/h13-review.test.ts > H13 a — hasDecisionEvidence > "đừng duyệt 1a2b3c4d" ⇒ reject
+ FAIL  src/services/h13-review.test.ts > H13 a — hasDecisionEvidence > "chưa duyệt 1a2b3c4d" ⇒ reject
+ FAIL  src/services/h13-review.test.ts > H13 a — hasDecisionEvidence > "khoan duyệt 1a2b3c4d đã" ⇒ reject
+AssertionError: expected null to be 'reject' // Object.is equality
+
+- Expected: 
+"reject"
+
++ Received: 
+null
+
+ ❯ src/services/h13-review.test.ts:57:75
+     55|   ];
+     56|   for (const [text, want] of table) {
+     57|     it(`"${text}" ⇒ ${want}`, () => expect(hasDecisionEvidence(text, i…
+       |                                                                           ^
+     58|   }
+     59| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/11]⎯
+
+ FAIL  src/services/h13-review.test.ts > H13 e — D39 BOT_UID_SIM duoi RUNNER_CONCURRENCY > 1 > xen ke 2 luot: thread that va thread sim-% (DATA_MODE=sim, own_uid co uid that qua env) ⇒ resolveBotUid cua luot that phai la uid that
+AssertionError: expected 'uid-that-123' to be undefined // Object.is equality
+
+- Expected: 
+undefined
+
++ Received: 
+"uid-that-123"
+
+ ❯ src/services/h13-review.test.ts:78:23
+     76|     console.log('D39 race: luot that thay =', seenByReal, '; luot sim …
+     77|     expect(seenByReal).toBe('uid-that-123');
+     78|     expect(seenBySim).toBe(BOT_UID_SIM);
+       |                       ^
+     79|   });
+     80| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/11]⎯
+
+ Test Files  1 failed (1)
+      Tests  11 failed | 14 passed (25)
+   Start at  13:01:30
+   Duration  1.13s (transform 202ms, setup 0ms, collect 540ms, tests 76ms, environment 0ms, prepare 190ms)
+
+exit=1
+## db
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+stdout | src/dbtests/h13-review.db.test.ts > H13 ca bat buoc > B4b tin scam KEM @bot, bot KHONG la admin ⇒ dem so tin text ra nhom (ky vong handoff: khong co 2 tin ra)
+B4b texts ra nhom = 1 ["Tin này bị nhận diện là nghi lừa đảo. Vu"]
+B4b traces = 0
+
+stdout | src/dbtests/h13-review.db.test.ts > H13 a — the duyet > A3 hasDecisionEvidence qua tool DM owner: "đừng duyệt <id>" / "chưa duyệt <id>" / "khoan duyệt <id>" ⇒ model goi approve co qua khong?
+A3 ket qua = {"đừng duyệt":"loi:IntentNotConfirmedError","chưa duyệt":"loi:IntentNotConfirmedError","khoan duyệt":"loi:IntentNotConfirmedError","hủy, không cần duyệt":"loi:IntentNotConfirmedError"}
+
+stdout | src/dbtests/h13-review.db.test.ts > H13 c — kiem duyet > C1 delete_message tool: tin owner / moderator / qua 24h / thieu cli_msg_id / thread khac ⇒ ActionNotPermitted|MessageNotInBuffer, 0 action
+C1 codes = ActionNotPermittedError,ActionNotPermittedError,ActionNotPermittedError,ActionNotPermittedError,MessageNotInBufferError
+
+stdout | src/dbtests/h13-review.db.test.ts > H13 f — ro ri > F1 sau toan bo test: audit_log.data / moderation_events / approvals KHONG chua nguyen van cum scam, SDT
+F1 audit hit = 0 approvals hit = 0
+F1 outbox chua SDT (quote) = 0
+
+ ❯ src/dbtests/h13-review.db.test.ts (14 tests | 1 failed) 1654ms
+   × H13 c — kiem duyet > C2 MOD_WARN_PER_HOUR: 12 nguoi khac nhau moi nguoi 1 tin soft-hit + triage spam ⇒ <= 10 canh cao text 349ms
+     → expected +0 to be 10 // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/h13-review.db.test.ts > H13 c — kiem duyet > C2 MOD_WARN_PER_HOUR: 12 nguoi khac nhau moi nguoi 1 tin soft-hit + triage spam ⇒ <= 10 canh cao text
+AssertionError: expected +0 to be 10 // Object.is equality
+
+- Expected
++ Received
+
+- 10
++ 0
+
+ ❯ src/dbtests/h13-review.db.test.ts:335:26
+    333|     await runAll();
+    334|     const warns = (await outboxFor(g)).filter((t) => (t.body.text ?? '…
+    335|     expect(warns.length).toBe(cfg.modWarnPerHour);
+       |                          ^
+    336|     expect(await sql(`select 1 from outbox where kind = 'text' and thr…
+    337|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 13 passed (14)
+   Start at  13:01:34
+   Duration  4.85s (transform 747ms, setup 0ms, collect 2.78s, tests 1.65s, environment 0ms, prepare 166ms)
+
+exit=1

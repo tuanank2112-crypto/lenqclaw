@@ -1,0 +1,74 @@
+# red F1 (unit) tren ma nguyen trang 128acac
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/services/approvals.test.ts (35 tests | 8 failed) 30ms
+   × hasDecisionEvidence > "đừng duyệt 1a2b3c4d" ⇒ null 10ms
+     → expected 'approve' to be null // Object.is equality
+   × hasDecisionEvidence > "chưa duyệt 1a2b3c4d" ⇒ null 1ms
+     → expected 'approve' to be null // Object.is equality
+   × hasDecisionEvidence > "khoan duyệt 1a2b3c4d" ⇒ null 1ms
+     → expected 'approve' to be null // Object.is equality
+   × hasDecisionEvidence > "duyệt 1a2b3c4d đợi chút" ⇒ null 1ms
+     → expected 'approve' to be null // Object.is equality
+   × hasDecisionEvidence > "duyệt từ từ 1a2b3c4d" ⇒ null 1ms
+     → expected 'approve' to be null // Object.is equality
+   × hasDecisionEvidence > "hủy, duyệt 1a2b3c4d" ⇒ null 1ms
+     → expected 'approve' to be null // Object.is equality
+   × hasDecisionEvidence > "ok 1a2b3c4d nhưng không chắc" ⇒ null 1ms
+     → expected 'reject' to be null // Object.is equality
+   × hasDecisionEvidence > "không 1a2b3c4d" ⇒ null 1ms
+     → expected 'reject' to be null // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/services/approvals.test.ts > hasDecisionEvidence > "đừng duyệt 1a2b3c4d" ⇒ null
+ FAIL  src/services/approvals.test.ts > hasDecisionEvidence > "chưa duyệt 1a2b3c4d" ⇒ null
+ FAIL  src/services/approvals.test.ts > hasDecisionEvidence > "khoan duyệt 1a2b3c4d" ⇒ null
+ FAIL  src/services/approvals.test.ts > hasDecisionEvidence > "duyệt 1a2b3c4d đợi chút" ⇒ null
+ FAIL  src/services/approvals.test.ts > hasDecisionEvidence > "duyệt từ từ 1a2b3c4d" ⇒ null
+ FAIL  src/services/approvals.test.ts > hasDecisionEvidence > "hủy, duyệt 1a2b3c4d" ⇒ null
+AssertionError: expected 'approve' to be null // Object.is equality
+
+- Expected: 
+null
+
++ Received: 
+"approve"
+
+ ❯ src/services/approvals.test.ts:47:45
+     45|   for (const [text, id, want] of cases) {
+     46|     it(`"${text}" ⇒ ${want}`, () => {
+     47|       expect(hasDecisionEvidence(text, id)).toBe(want);
+       |                                             ^
+     48|     });
+     49|   }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  src/services/approvals.test.ts > hasDecisionEvidence > "ok 1a2b3c4d nhưng không chắc" ⇒ null
+ FAIL  src/services/approvals.test.ts > hasDecisionEvidence > "không 1a2b3c4d" ⇒ null
+AssertionError: expected 'reject' to be null // Object.is equality
+
+- Expected: 
+null
+
++ Received: 
+"reject"
+
+ ❯ src/services/approvals.test.ts:47:45
+     45|   for (const [text, id, want] of cases) {
+     46|     it(`"${text}" ⇒ ${want}`, () => {
+     47|       expect(hasDecisionEvidence(text, id)).toBe(want);
+       |                                             ^
+     48|     });
+     49|   }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ Test Files  1 failed (1)
+      Tests  8 failed | 27 passed (35)
+   Start at  12:49:56
+   Duration  1.24s (transform 181ms, setup 0ms, collect 428ms, tests 30ms, environment 0ms, prepare 187ms)
+
+exit=1

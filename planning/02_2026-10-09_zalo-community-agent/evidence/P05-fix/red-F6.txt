@@ -1,0 +1,60 @@
+# red F6: dot bien bo stop='deleted' trong moderate.ts (than node)
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/p05-fix.db.test.ts (14 tests | 2 failed | 12 skipped) 308ms
+   × F3 / F6 — tin bi kiem duyet xu ly thi KHONG chay luot, ke ca khi kem @bot > F3: bot KHONG la phu nhom + scam kem @bot ⇒ dung 1 tin ra (canh cao), 0 agent_runs, 0 trace 166ms
+     → expected [ …(2) ] to deeply equal [ Array(1) ]
+   × F3 / F6 — tin bi kiem duyet xu ly thi KHONG chay luot, ke ca khi kem @bot > F6: bot la phu nhom + scam kem @bot ⇒ chi 1 delete_message, 0 tin text, 0 agent_runs, 0 trace 88ms
+     → expected [ { id: 26012, kind: 'text', …(1) } ] to have a length of +0 but got 1
+ ↓ src/dbtests/p05-fix-f16.db.test.ts (1 test | 1 skipped)
+ ↓ src/dbtests/p05-fix-f11.db.test.ts (1 test | 1 skipped)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p05-fix.db.test.ts > F3 / F6 — tin bi kiem duyet xu ly thi KHONG chay luot, ke ca khi kem @bot > F3: bot KHONG la phu nhom + scam kem @bot ⇒ dung 1 tin ra (canh cao), 0 agent_runs, 0 trace
+AssertionError: expected [ …(2) ] to deeply equal [ Array(1) ]
+
+- Expected
++ Received
+
+  Array [
+    "Tin này bị nhận diện là nghi lừa đảo. Vui lòng không đăng nội dung như vậy trong nhóm; nếu tiếp tục, tin sẽ bị xoá và người đăng có thể bị mời ra khỏi nhóm.",
++   "ok (khong kich ban)",
+  ]
+
+ ❯ src/dbtests/p05-fix.db.test.ts:163:58
+    161|     await send({ threadId: g, senderUid: sender, text: scamText(9), me…
+    162|     await runAll();
+    163|     expect((await outboxFor(g)).map((t) => t.body.text)).toEqual([WARN…
+       |                                                          ^
+    164|     expect(await actionsOf(g)).toHaveLength(0);
+    165|     expect(await agentRunsForThread(g)).toBe(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/dbtests/p05-fix.db.test.ts > F3 / F6 — tin bi kiem duyet xu ly thi KHONG chay luot, ke ca khi kem @bot > F6: bot la phu nhom + scam kem @bot ⇒ chi 1 delete_message, 0 tin text, 0 agent_runs, 0 trace
+AssertionError: expected [ { id: 26012, kind: 'text', …(1) } ] to have a length of +0 but got 1
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ src/dbtests/p05-fix.db.test.ts:178:32
+    176|     expect(acts).toHaveLength(1);
+    177|     expect(acts[0]!.body).toMatchObject({ action: 'delete_message', ms…
+    178|     expect(await outboxFor(g)).toHaveLength(0);
+       |                                ^
+    179|     expect(await agentRunsForThread(g)).toBe(0);
+    180|     expect(await tracesFor(g)).toHaveLength(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed | 2 skipped (3)
+      Tests  2 failed | 14 skipped (16)
+   Start at  13:01:12
+   Duration  5.24s (transform 572ms, setup 0ms, collect 4.08s, tests 308ms, environment 1ms, prepare 313ms)
+
+exit=1

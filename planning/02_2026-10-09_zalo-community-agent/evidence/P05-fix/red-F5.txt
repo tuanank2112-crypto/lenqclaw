@@ -1,0 +1,35 @@
+# red F5 — ma nguyen trang (chua sua F5), HEAD 128acac + test moi
+
+ RUN  v2.1.9 E:/vọc vạch/lenqclaw/packages/core
+
+ ❯ src/dbtests/p05-fix.db.test.ts (14 tests | 1 failed | 12 skipped) 309ms
+   × F5 — model `ok` bac luoi hard; triage null thi luoi van xoa > scam_phrase + triage ok (OKMARK) ⇒ 0 outbox, 0 event, audit moderation.grid_overruled {hit:scam_phrase} 153ms
+     → expected 1 to be +0 // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/dbtests/p05-fix.db.test.ts > F5 — model `ok` bac luoi hard; triage null thi luoi van xoa > scam_phrase + triage ok (OKMARK) ⇒ 0 outbox, 0 event, audit moderation.grid_overruled {hit:scam_phrase}
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ src/dbtests/p05-fix.db.test.ts:190:75
+    188|     const s = await send({ threadId: g, senderUid: sender, text: scamT…
+    189|     await runAll();
+    190|     expect(await count(`select 1 from outbox where thread_id = $1`, [g…
+       |                                                                           ^
+    191|     expect(await eventsOf(g)).toHaveLength(0);
+    192|     const au = await sql<{ data: { hit?: string } }>(`select data from…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed | 12 skipped (14)
+   Start at  12:54:38
+   Duration  3.54s (transform 674ms, setup 0ms, collect 2.80s, tests 309ms, environment 0ms, prepare 155ms)
+
+exit=1
