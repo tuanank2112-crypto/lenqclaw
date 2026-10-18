@@ -13,10 +13,12 @@ Người dùng: "tiếp tục đi".
 - Bước 0 `--check` exit 0. Docker tắt ⇒ SO bật lại Docker Desktop; `lenqclaw-db-1` Up `127.0.0.1:15432`.
 - Worker 🟠 (sonnet) làm nốt H12 mục 3.f, KHÔNG đổi mã: evidence `5048d90`, R12 `3864da3`. "Worker exited unexpectedly" của lần trước KHÔNG tái hiện; lần chạy đầu đỏ 2/187 do `own_uid` sót từ lần bị ngắt (G35).
 - SO đo lại `3864da3`: gate 0, `npm test` 721 (32/114/575), test:db 295 (187/30/78), 0 skip, `own_uid` null. Chấp nhận 4 file ngoài danh sách tên (thân node/dịch vụ). Đột biến SO: M1 trần cảnh cáo ⇒ đỏ; M3 `join_default` ⇒ đỏ; **M2 bỏ chặn xoá tin > 24 h ở đường pipeline ⇒ LỌT** ⇒ D40 (`2744bb7`): R12 CHƯA phán, vòng sửa sau R13 gồm test M2 + cô lập `own_uid`.
-- H13 thẩm định đối kháng 🔴 (opus, không đọc R12/D40) phóng nền.
+- H13 thẩm định đối kháng 🔴 (opus, không đọc R12/D40) ⇒ R13 `989f94c`: 0 CHẶN (3 lớp chặn kick/block giữ), 17 đột biến bắt 14; NÊN SỬA F1 "đừng duyệt <id>" ⇒ approve, F2 cờ sim trên cache chung (runner song song), F3 bot không phó nhóm trả lời tin scam kèm @bot, F4 worker thật không sinh `approval_executed`, F5 câu cảnh báo chứa cụm scam bị xoá, F6 ca "0 lượt" không đo được.
+- SO xác minh F1–F4 trong mã ⇒ **D41** (`bac8d98`): R12 🔁; SPEC-P05 §11 = 14 mục sửa (M2, F1–F8, F10, F11, F13, F16, G35), chấp nhận F9/F12/F14/F15; 01-CONTRACTS §4.11/§7.1, SPEC-P08 sửa theo; 🖐 Q13 mới (tin gọi bot chứa cụm scam dạng cảnh báo — tạm giữ lưới xoá). H14 ⇒ phóng worker 🟠.
 
 ### ⏭ Treo
-- Chờ R13 ⇒ SO phán R12 + R13 ⇒ một vòng sửa (H14) gộp phát hiện R13 + D40 ⇒ đo lại ⇒ P05 ✅ ⇒ P06.
+- Chờ R14 ⇒ SO đo lại + đột biến ⇒ P05 ✅ ⇒ P06.
+- 🖐 Q13 (SPEC-P05 §11).
 - 🖐 Q-D31-1/2/3 (billing Gemini); `lenqclaw_presentation_transcript.pdf` ở root chờ người xoá.
 
 ---
