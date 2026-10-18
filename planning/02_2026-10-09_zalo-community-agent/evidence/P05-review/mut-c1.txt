@@ -1,0 +1,34 @@
+== mutation c1 :: src/services/moderation-ladder.ts
+diff --git a/packages/core/src/services/moderation-ladder.ts b/packages/core/src/services/moderation-ladder.ts
+index b787474..46aa386 100644
+--- a/packages/core/src/services/moderation-ladder.ts
++++ b/packages/core/src/services/moderation-ladder.ts
+@@ -39,7 +39,7 @@ export interface LadderStep {
+ 
+ export function nextLadderStep(a: LadderInput): LadderStep {
+   // owner/moderator mien tru (vung cam P05 §8): KHONG doi diem, KHONG hanh dong.
+-  if (a.senderRole === 'owner' || a.senderRole === 'moderator') return { score: a.prevScore, action: 'none', exempt: true };
++  // MUT c1
+   const inc = INCREMENT[a.verdict];
+   if (inc === 0) return { score: a.prevScore, action: 'none', exempt: false };
+   const score = round1(decayScore(a.prevScore, a.lastUpdatedAt, a.now, a.halfLifeHours ?? LADDER.halfLifeHours) + inc);
+== unit (core, khong DB)
+[31m   [31m×[31m moderation-ladder — 14 ca nguyen van ladder-ref.txt[2m > [22mL11 moderator mien tru[90m 14[2mms[22m[31m[39m
+[31m   [31m×[31m moderation-ladder — 14 ca nguyen van ladder-ref.txt[2m > [22mL12 owner mien tru[90m 1[2mms[22m[31m[39m
+[31m   [31m×[31m moderation-ladder — don vi[2m > [22mad = spam (1); exempt khong doi diem du co diem cu[90m 8[2mms[22m[31m[39m
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 3 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1m[7m FAIL [27m[22m[39m src/services/moderation-ladder.test.ts[2m > [22mmoderation-ladder — 14 ca nguyen van ladder-ref.txt[2m > [22mL11 moderator mien tru
+[31m[1m[7m FAIL [27m[22m[39m src/services/moderation-ladder.test.ts[2m > [22mmoderation-ladder — 14 ca nguyen van ladder-ref.txt[2m > [22mL12 owner mien tru
+[31m[1m[7m FAIL [27m[22m[39m src/services/moderation-ladder.test.ts[2m > [22mmoderation-ladder — don vi[2m > [22mad = spam (1); exempt khong doi diem du co diem cu
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m30 passed[39m[22m[90m (31)[39m
+[2m      Tests [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m572 passed[39m[22m[90m (575)[39m
+unit exit=1
+== db
+[31m   [31m×[31m P05-B — kiem duyet (a)–(e)[2m > [22m(c) moderator gui scam_phrase ⇒ event none (mien tru), 0 outbox, tin khong bi xoa, diem khong doi[90m 128[2mms[22m[31m[39m
+[31m   [31m×[31m P05-B — kiem duyet (a)–(e)[2m > [22magent flag_message len tin cua owner/moderator ⇒ chi log event none, khong xoa[90m 168[2mms[22m[31m[39m
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 2 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1m[7m FAIL [27m[22m[39m src/dbtests/p05-moderation.db.test.ts[2m > [22mP05-B — kiem duyet (a)–(e)[2m > [22m(c) moderator gui scam_phrase ⇒ event none (mien tru), 0 outbox, tin khong bi xoa, diem khong doi
+[31m[1m[7m FAIL [27m[22m[39m src/dbtests/p05-moderation.db.test.ts[2m > [22mP05-B — kiem duyet (a)–(e)[2m > [22magent flag_message len tin cua owner/moderator ⇒ chi log event none, khong xoa
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m3 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m52 passed[39m[22m[90m (54)[39m
+db exit=1

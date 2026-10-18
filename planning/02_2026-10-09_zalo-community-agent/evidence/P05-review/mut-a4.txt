@@ -1,0 +1,26 @@
+== mutation a4 :: src/sim/sim-actions.ts
+warning: in the working copy of 'packages/core/src/sim/sim-actions.ts', CRLF will be replaced by LF the next time Git touches it
+diff --git a/packages/core/src/sim/sim-actions.ts b/packages/core/src/sim/sim-actions.ts
+index dd56caf..7400889 100644
+--- a/packages/core/src/sim/sim-actions.ts
++++ b/packages/core/src/sim/sim-actions.ts
+@@ -81,7 +81,7 @@ async function applyAction(row: ClaimedRow): Promise<ActionOutcome> {
+             and status = 'approved' and executed_at is null returning id::text as id`,
+         [approvalId, account, thread, b.action === 'remove_member' ? 'kick_member' : 'block_member', uid]
+       );
+-      if (claimed.length === 0) return fail('approval_invalid');
++      // MUT a4
+       await sql(
+         `update group_members set left_at = coalesce(left_at, now())
+          where zalo_account_id=$1 and thread_id=$2 and zalo_uid=$3`,
+== unit (core, khong DB)
+[2m Test Files [22m [1m[32m31 passed[39m[22m[90m (31)[39m
+[2m      Tests [22m [1m[32m575 passed[39m[22m[90m (575)[39m
+unit exit=0
+== db
+[31m   [31m×[31m applySimOutbox — action tren DB gia lap (§7.2)[2m > [22mD30(3): remove_member/block_member KHONG the hop le (thieu, ngau nhien, pending, lech uid/kind/thread) ⇒ failed approval_invalid, thanh vien con nguyen, the khong bi dong[90m 241[2mms[22m[31m[39m
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 1 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1m[7m FAIL [27m[22m[39m src/dbtests/sim-actions.db.test.ts[2m > [22mapplySimOutbox — action tren DB gia lap (§7.2)[2m > [22mD30(3): remove_member/block_member KHONG the hop le (thieu, ngau nhien, pending, lech uid/kind/thread) ⇒ failed approval_invalid, thanh vien con nguyen, the khong bi dong
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m3 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m53 passed[39m[22m[90m (54)[39m
+db exit=1

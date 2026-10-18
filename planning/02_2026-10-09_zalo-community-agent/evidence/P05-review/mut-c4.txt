@@ -1,0 +1,25 @@
+== mutation c4 :: src/services/moderation.ts
+diff --git a/packages/core/src/services/moderation.ts b/packages/core/src/services/moderation.ts
+index be0ae87..ab12763 100644
+--- a/packages/core/src/services/moderation.ts
++++ b/packages/core/src/services/moderation.ts
+@@ -233,7 +233,7 @@ export async function applyModeration(a: ApplyModerationArgs): Promise<Moderatio
+   const hasCli = a.row.cliMsgId !== null && a.row.cliMsgId !== '';
+   let effective: LadderAction = step.action;
+   let canDelete = wantDelete;
+-  if (wantDelete && !a.group.botIsAdmin) {
++  if (false && wantDelete && !a.group.botIsAdmin) {
+     effective = 'warn';
+     canDelete = false;
+     await audit(sql, { actorType: 'system', actorId: null, action: 'moderation.need_deputy', target: a.group.threadId, data: { verdict: a.verdict, wanted: step.action } });
+== unit (core, khong DB)
+[2m Test Files [22m [1m[32m31 passed[39m[22m[90m (31)[39m
+[2m      Tests [22m [1m[32m575 passed[39m[22m[90m (575)[39m
+unit exit=0
+== db
+[31m   [31m×[31m P05-B — kiem duyet (a)–(e)[2m > [22m(d) bot khong la admin ⇒ ha ve warn + audit moderation.need_deputy + DM owner; KHONG delete_message[90m 97[2mms[22m[31m[39m
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 1 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1m[7m FAIL [27m[22m[39m src/dbtests/p05-moderation.db.test.ts[2m > [22mP05-B — kiem duyet (a)–(e)[2m > [22m(d) bot khong la admin ⇒ ha ve warn + audit moderation.need_deputy + DM owner; KHONG delete_message
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m3 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m53 passed[39m[22m[90m (54)[39m
+db exit=1

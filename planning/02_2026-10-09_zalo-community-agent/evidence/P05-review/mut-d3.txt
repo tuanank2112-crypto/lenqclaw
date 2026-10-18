@@ -1,0 +1,26 @@
+== mutation d3 :: src/agent/community/graph/nodes/system-event.ts
+warning: in the working copy of 'packages/core/src/agent/community/graph/nodes/system-event.ts', CRLF will be replaced by LF the next time Git touches it
+diff --git a/packages/core/src/agent/community/graph/nodes/system-event.ts b/packages/core/src/agent/community/graph/nodes/system-event.ts
+index 97837c0..158e877 100644
+--- a/packages/core/src/agent/community/graph/nodes/system-event.ts
++++ b/packages/core/src/agent/community/graph/nodes/system-event.ts
+@@ -101,7 +101,7 @@ export const systemEventNode: NodeFn<PipelineStateT> = async (s) => {
+               [e.zaloAccountId, e.threadId, uid]
+             )
+           : [];
+-      if (!group || !group.enabled || group.joinPolicy !== 'agent_review' || pending.length === 0) {
++      if (!group || !group.enabled || pending.length === 0) {
+         await audit(sql, { actorType: 'system', actorId: String(e.id), action: 'join_review.skip', target: e.threadId, data: null });
+         return { group, stop: 'system_no_turn' };
+       }
+== unit (core, khong DB)
+[2m Test Files [22m [1m[32m31 passed[39m[22m[90m (31)[39m
+[2m      Tests [22m [1m[32m575 passed[39m[22m[90m (575)[39m
+unit exit=0
+== db
+[31m   [31m×[31m P05-C — duyet vao nhom (§6)[2m > [22magent_review nhung nhom doi sang policy khac / yeu cau khong con pending ⇒ system_event bo qua, 0 luot[90m 94[2mms[22m[31m[39m
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 1 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1m[7m FAIL [27m[22m[39m src/dbtests/p05-join-welcome.db.test.ts[2m > [22mP05-C — duyet vao nhom (§6)[2m > [22magent_review nhung nhom doi sang policy khac / yeu cau khong con pending ⇒ system_event bo qua, 0 luot
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m3 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m53 passed[39m[22m[90m (54)[39m
+db exit=1

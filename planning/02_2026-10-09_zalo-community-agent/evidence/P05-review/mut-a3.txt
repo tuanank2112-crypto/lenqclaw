@@ -1,0 +1,36 @@
+== mutation a3 :: src/services/approvals.ts
+diff --git a/packages/core/src/services/approvals.ts b/packages/core/src/services/approvals.ts
+index c72c20d..c72f520 100644
+--- a/packages/core/src/services/approvals.ts
++++ b/packages/core/src/services/approvals.ts
+@@ -41,7 +41,7 @@ export function hasDecisionEvidence(text: string, idOrShort: string): 'approve'
+   const n = normalizeVi(text);
+   const tokens = n.split(' ');
+   const idHit = tokens.some((t) => t.length >= 6 && short.startsWith(t));
+-  if (!idHit) return null;
++  // MUT a3
+   if (REJECT_WORDS.some((w) => hasPhrase(n, w))) return 'reject';
+   if (APPROVE_WORDS.some((w) => hasPhrase(n, w))) return 'approve';
+   return null;
+== unit (core, khong DB)
+[31m   [31m×[31m hasDecisionEvidence[2m > [22m"duyệt" ⇒ null[90m 13[2mms[22m[31m[39m
+[31m   [31m×[31m hasDecisionEvidence[2m > [22m"duyệt 99999999" ⇒ null[90m 2[2mms[22m[31m[39m
+[31m   [31m×[31m hasDecisionEvidence[2m > [22m"duyệt 1a2b3" ⇒ null[90m 1[2mms[22m[31m[39m
+[31m   [31m×[31m hasDecisionEvidence[2m > [22m"duyệt 1a2b3c4dxyz" ⇒ null[90m 1[2mms[22m[31m[39m
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 4 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1m[7m FAIL [27m[22m[39m src/services/approvals.test.ts[2m > [22mhasDecisionEvidence[2m > [22m"duyệt" ⇒ null
+[31m[1m[7m FAIL [27m[22m[39m src/services/approvals.test.ts[2m > [22mhasDecisionEvidence[2m > [22m"duyệt 99999999" ⇒ null
+[31m[1m[7m FAIL [27m[22m[39m src/services/approvals.test.ts[2m > [22mhasDecisionEvidence[2m > [22m"duyệt 1a2b3" ⇒ null
+[31m[1m[7m FAIL [27m[22m[39m src/services/approvals.test.ts[2m > [22mhasDecisionEvidence[2m > [22m"duyệt 1a2b3c4dxyz" ⇒ null
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m30 passed[39m[22m[90m (31)[39m
+[2m      Tests [22m [1m[31m4 failed[39m[22m[2m | [22m[1m[32m571 passed[39m[22m[90m (575)[39m
+unit exit=1
+== db
+[31m   [31m×[31m P05-B — the duyet (f)–(j)[2m > [22m(i) decide_approval qua pipeline voi tin THIEU ma the ⇒ IntentNotConfirmedError (tool_result loi), the van pending, 0 action[90m 249[2mms[22m[31m[39m
+[31m   [31m×[31m P05-B — the duyet (f)–(j)[2m > [22m(i2) decide_approval tool: thieu ma / sai huong (tin noi "tu choi" nhung model goi approve) / member ⇒ loi; dung ma + tu ⇒ approved[90m 73[2mms[22m[31m[39m
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 2 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1m[7m FAIL [27m[22m[39m src/dbtests/p05-moderation.db.test.ts[2m > [22mP05-B — the duyet (f)–(j)[2m > [22m(i) decide_approval qua pipeline voi tin THIEU ma the ⇒ IntentNotConfirmedError (tool_result loi), the van pending, 0 action
+[31m[1m[7m FAIL [27m[22m[39m src/dbtests/p05-moderation.db.test.ts[2m > [22mP05-B — the duyet (f)–(j)[2m > [22m(i2) decide_approval tool: thieu ma / sai huong (tin noi "tu choi" nhung model goi approve) / member ⇒ loi; dung ma + tu ⇒ approved
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m3 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m52 passed[39m[22m[90m (54)[39m
+db exit=1

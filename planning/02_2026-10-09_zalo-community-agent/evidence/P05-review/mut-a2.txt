@@ -1,0 +1,26 @@
+== mutation a2 :: src/services/approvals.ts
+warning: in the working copy of 'packages/core/src/services/approvals.ts', CRLF will be replaced by LF the next time Git touches it
+diff --git a/packages/core/src/services/approvals.ts b/packages/core/src/services/approvals.ts
+index c72c20d..b647de9 100644
+--- a/packages/core/src/services/approvals.ts
++++ b/packages/core/src/services/approvals.ts
+@@ -245,7 +245,7 @@ export async function decideApproval(a: DecideApprovalArgs): Promise<{ status: '
+   const cas = await tx(async (q) => {
+     const rows = await q<{ id: string }>(
+       `update approvals set status = $2, decided_by = $3, decided_at = $4, decision_note = $5
+-        where id = $1::uuid and status = 'pending' and expires_at > $4 returning id::text as id`,
++        where id = $1::uuid and status = 'pending' returning id::text as id`,
+       [a.id, to, a.decidedBy, a.now, a.note ?? null]
+     );
+     if (rows.length === 0) return false;
+== unit (core, khong DB)
+[2m Test Files [22m [1m[32m31 passed[39m[22m[90m (31)[39m
+[2m      Tests [22m [1m[32m575 passed[39m[22m[90m (575)[39m
+unit exit=0
+== db
+[31m   [31m×[31m P05-B — the duyet (f)–(j)[2m > [22m(h2) qua han (expires_at < now) ⇒ decideApproval tu choi ConflictError du chua chay timer[90m 72[2mms[22m[31m[39m
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 1 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1m[7m FAIL [27m[22m[39m src/dbtests/p05-moderation.db.test.ts[2m > [22mP05-B — the duyet (f)–(j)[2m > [22m(h2) qua han (expires_at < now) ⇒ decideApproval tu choi ConflictError du chua chay timer
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m3 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m53 passed[39m[22m[90m (54)[39m
+db exit=1

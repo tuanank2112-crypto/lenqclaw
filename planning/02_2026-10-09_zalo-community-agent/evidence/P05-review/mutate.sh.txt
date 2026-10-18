@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Chay dot bien: mut <id> <file tu packages/core/src> <perl-expr> ; ghi evidence; tra ma bang git checkout.
+
+ROOT="/e/vọc vạch/lenqclaw"
+EV="$ROOT/planning/02_2026-10-09_zalo-community-agent/evidence/P05-review"
+cd "$ROOT"; set -a; . ./.env; set +a
+cd "$ROOT/packages/core"
+DB="src/dbtests/p05-moderation.db.test.ts src/dbtests/p05-join-welcome.db.test.ts src/dbtests/p05-d39.db.test.ts src/dbtests/sim-actions.db.test.ts"
+SUMMARY="$EV/mutations-summary.txt"
+mut() {
+  local id="$1" f="src/$2" expr="$3"
+  local out="$EV/mut-$id.txt"
+  perl -0pi -e "$expr" "$f"
+  local changed; changed=$(git diff --numstat -- "$f" | awk '{print $1+$2}')
+  {
+    echo "== mutation $id :: $f"; git diff -- "$f"
+    echo "== unit (core, khong DB)"; npx vitest run --exclude "**/*.db.test.ts" --exclude "**/h13-review.test.ts" 2>&1 | grep -E "FAIL|×|Tests |Test Files" | head -40; echo "unit exit=${PIPESTATUS[0]}"
+    echo "== db"; npx vitest run --config vitest.db.config.ts $DB 2>&1 | grep -E "FAIL|×|Tests |Test Files" | head -40; echo "db exit=${PIPESTATUS[0]}"
+  } > "$out" 2>&1
+  git checkout -- "$f"
+  local ufail dfail
+  ufail=$(grep -c "×" "$out")
+  echo "$id changed_lines=${changed:-0} red_cases=$ufail unit=$(grep 'unit exit' "$out") db=$(grep 'db exit' "$out")" >> "$SUMMARY"
+}
+
+mut a2 services/approvals.ts 's/ and expires_at > .4 returning id::text as id/ returning id::text as id/'
+mut a3 services/approvals.ts 's/  if \(!idHit\) return null;/  \/\/ MUT a3/'
+mut a4 sim/sim-actions.ts "s/      if \(claimed\.length === 0\) return fail\('approval_invalid'\);/      \/\/ MUT a4/"
+mut b1 agent/community/tools/approval-tools.ts "s/requester\.role !== 'owner' && requester\.role !== 'moderator'/false/"
+mut b2 services/approvals.ts "s/    if \(role === 'owner' \|\| role === 'moderator'\) return;/    return;/"
+mut c1 services/moderation-ladder.ts "s/  if \(a\.senderRole === 'owner' \|\| a\.senderRole === 'moderator'\) return \{ score: a\.prevScore, action: 'none', exempt: true \};/  \/\/ MUT c1/"
+mut c2 services/moderation.ts 's/\)\) < cfg\.modWarnPerHour : false;/)) <= cfg.modWarnPerHour : false;/'
+mut c3 agent/community/tools/moderation-tools.ts 's/    if \(Date\.now\(\) - new Date\(row\.receivedAt\)\.getTime\(\) > DELETE_MAX_AGE_MS\) throw/    if (false) throw/'
+mut c4 services/moderation.ts 's/  if \(wantDelete && !a\.group\.botIsAdmin\) \{/  if (false \&\& wantDelete \&\& !a.group.botIsAdmin) {/'
+mut c5 services/moderation.ts "s/  if \(grid\.hits\.length > 0\) return \{ verdict: 'unsure', confidence: 0\.5, source: 'grid' \};/  if (grid.hits.length > 0) return { verdict: 'spam', confidence: 0.5, source: 'grid' };/"
+mut d1 services/welcome.ts 's/thread_id = \$2 and welcomed_at is null and left_at is null/thread_id = \$2 and left_at is null/'
+mut d2 services/join-requests.ts 's/(applyJoinDefault[\s\S]*?action: .review_join.,\s*uids: \[args\.uid\],\s*approve: )true/${1}false/'
+mut d3 agent/community/graph/nodes/system-event.ts "s/group\.joinPolicy !== 'agent_review' \|\| pending/pending/"
+mut e1 agent/community/graph/nodes/moderate.ts "s/return out\.deleted \? \{ moderation, stop: 'deleted' \} : \{ moderation \};/return { moderation };/"
+mut e2 agent/community/bot.ts "s/ && \(env\.DATA_MODE\?\.trim\(\) \|\| 'sim'\) === 'sim';\n  \}/;\n  }/; s/threadId\.startsWith\('sim-'\) && \(env\.DATA_MODE\?\.trim\(\) \|\| 'sim'\) === 'sim'/threadId.startsWith('sim-')/"
+mut e3 agent/community/graph/nodes/tools.ts 's/      if \(tool\.extendsDeadline\) \{/      if (false \&\& tool.extendsDeadline) {/'
+echo DONE >> "$SUMMARY"
+cd "$ROOT"; git status --short >> "$SUMMARY"

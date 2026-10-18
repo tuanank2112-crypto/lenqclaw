@@ -1,0 +1,25 @@
+== mutation d1 :: src/services/welcome.ts
+diff --git a/packages/core/src/services/welcome.ts b/packages/core/src/services/welcome.ts
+index 88415b9..9178c86 100644
+--- a/packages/core/src/services/welcome.ts
++++ b/packages/core/src/services/welcome.ts
+@@ -84,7 +84,7 @@ export async function flushWelcomes(now: Date, cfg: CommunityConfig, ctx: { busy
+ 
+     const marked = await sql<{ zalo_uid: string }>(
+       `update group_members set welcomed_at = $3
+-        where zalo_account_id = $1 and thread_id = $2 and welcomed_at is null and left_at is null
++        where zalo_account_id = $1 and thread_id = $2 and left_at is null
+           and joined_at > $3::timestamptz - make_interval(mins => $4)
+         returning zalo_uid`,
+       [s.zalo_account_id, s.thread_id, now, cfg.welcomeWindowMin]
+== unit (core, khong DB)
+[2m Test Files [22m [1m[32m31 passed[39m[22m[90m (31)[39m
+[2m      Tests [22m [1m[32m575 passed[39m[22m[90m (575)[39m
+unit exit=0
+== db
+[31m   [31m×[31m P05-C — chao thanh vien moi (§7)[2m > [22mchao 2 lan: thanh vien da duoc chao KHONG bi chao lai o dot flush sau (welcomed_at dat truoc luot)[90m 195[2mms[22m[31m[39m
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 1 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1m[7m FAIL [27m[22m[39m src/dbtests/p05-join-welcome.db.test.ts[2m > [22mP05-C — chao thanh vien moi (§7)[2m > [22mchao 2 lan: thanh vien da duoc chao KHONG bi chao lai o dot flush sau (welcomed_at dat truoc luot)
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m3 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m53 passed[39m[22m[90m (54)[39m
+db exit=1

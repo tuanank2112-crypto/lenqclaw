@@ -1,0 +1,25 @@
+== mutation c3 :: src/agent/community/tools/moderation-tools.ts
+diff --git a/packages/core/src/agent/community/tools/moderation-tools.ts b/packages/core/src/agent/community/tools/moderation-tools.ts
+index 3d180aa..e51a34b 100644
+--- a/packages/core/src/agent/community/tools/moderation-tools.ts
++++ b/packages/core/src/agent/community/tools/moderation-tools.ts
+@@ -123,7 +123,7 @@ export const deleteMessageTool: AgentTool<{ msg_id: string; reason: string }> =
+       const role = await resolveRole(g.account, row.senderUid, g.threadId);
+       if (role === 'owner' || role === 'moderator') throw new ActionNotPermittedError('Không xoá tin của chủ hoặc quản trị viên.');
+     }
+-    if (Date.now() - new Date(row.receivedAt).getTime() > DELETE_MAX_AGE_MS) throw new ActionNotPermittedError('Tin quá 24 giờ, không xoá được.');
++    if (false) throw new ActionNotPermittedError('Tin quá 24 giờ, không xoá được.');
+     if (!row.cliMsgId) throw new ActionNotPermittedError('Tin thiếu cli_msg_id nên không xoá được.');
+     await sql(`update group_messages set deleted_at = now(), delete_reason = 'agent' where id = $1 and deleted_at is null`, [row.id]);
+     const outboxId = await enqueueAction({
+== unit (core, khong DB)
+[2m Test Files [22m [1m[32m31 passed[39m[22m[90m (31)[39m
+[2m      Tests [22m [1m[32m575 passed[39m[22m[90m (575)[39m
+unit exit=0
+== db
+[31m   [31m×[31m P05-B — kiem duyet (a)–(e)[2m > [22m(d2) tin thieu cli_msg_id / qua 24 gio ⇒ khong xoa (ha ve warn); kick van chi tao the[90m 96[2mms[22m[31m[39m
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 1 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1m[7m FAIL [27m[22m[39m src/dbtests/p05-moderation.db.test.ts[2m > [22mP05-B — kiem duyet (a)–(e)[2m > [22m(d2) tin thieu cli_msg_id / qua 24 gio ⇒ khong xoa (ha ve warn); kick van chi tao the
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m3 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m53 passed[39m[22m[90m (54)[39m
+db exit=1

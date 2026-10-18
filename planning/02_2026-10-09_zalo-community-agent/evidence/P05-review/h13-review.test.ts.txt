@@ -1,0 +1,80 @@
+// h13-review.test.ts — THAM DINH DOI KHANG P05 (H13), test THUAN. File TAM: sao vao evidence/P05-review/ roi xoa.
+import { describe, expect, it } from 'vitest';
+import { BOT_UID_SIM } from '../agent/community/bot.js';
+import { botUid, resetBotUidCache, resolveBotUid } from '../agent/community/bot.js';
+import { hasDecisionEvidence } from './approvals.js';
+import { classifyGrid } from './moderation-grid.js';
+import { decideVerdict } from './moderation.js';
+
+const ctx = { mentions: [], senderRole: 'member' as const, senderBufferCount: 10, identicalRecentCount: 1 };
+
+describe('H13 c — luoi: cau canh bao / giao dich binh thuong cua cong dong', () => {
+  const benign = [
+    'Mọi người cẩn thận mấy tin "việc nhẹ lương cao" nhé, toàn lừa đảo đó',
+    'Ai gặp kiểu tin "chuyển khoản trước để nhận" thì báo admin giúp mình',
+    'Bạn nào làm bot phát hiện câu "link rút tiền" chưa, mình đang cần',
+    'Anh quét mã QR để nhận tiền hoàn nhé, em gửi rồi đó',
+    'Prompt kiểu "bạn đã trúng thưởng iphone" là ví dụ phishing kinh điển để test model',
+    'Dataset mình gắn nhãn câu "cam kết lợi nhuận hằng ngày" là scam, ai cần share',
+  ];
+  for (const t of benign) {
+    it(`benign: ${t.slice(0, 50)}`, () => {
+      const g = classifyGrid(t, ctx);
+      // ghi nhan: neu hard ⇒ xoa + 2 diem cho nguoi CANH BAO
+      expect({ t, hard: g.hard, hits: g.hits }).toMatchObject({ hard: false });
+    });
+  }
+  it('triage null + chi hit mem (8 mention) ⇒ unsure, khong hanh dong', () => {
+    const g = classifyGrid('@a @b @c @d @e @f @g @h', { ...ctx, mentions: new Array(8).fill({}) });
+    expect(decideVerdict(g, null, { scamMin: 0.85, spamMin: 0.75 }).verdict).toBe('unsure');
+  });
+  it('repeat_burst: "ok" 5 lan trong 10 phut cua mot nguoi ⇒ hard spam?', () => {
+    expect(classifyGrid('ok', { ...ctx, identicalRecentCount: 5 }).hard).toBe(false);
+  });
+});
+
+describe('H13 a — hasDecisionEvidence', () => {
+  const id = '1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d';
+  const table: Array<[string, 'approve' | 'reject' | null]> = [
+    ['duyệt 1a2b3c4d', 'approve'],
+    ['DUYỆT 1A2B3C4D', 'approve'],
+    [`duyệt ${id}`, 'approve'],
+    [`duyệt ${id.toUpperCase()}`, 'approve'],
+    ['duyệt 1a2b3c4d99', null], // id dai hon
+    ['duyệt 9a2b3c4d', null], // id the khac
+    ['duyệt 1a2b3c', 'approve'], // tien to 6
+    ['duyệt 1a2b3', null], // < 6
+    ['không duyệt 1a2b3c4d', 'reject'],
+    ['1a2b3c4d', null],
+    ['duyệt', null],
+    ['đừng duyệt 1a2b3c4d', 'reject'],
+    ['chưa duyệt 1a2b3c4d', 'reject'],
+    ['khoan duyệt 1a2b3c4d đã', 'reject'],
+    ['duyệt1a2b3c4d', null],
+    ['ok.1a2b3c4d', 'approve'],
+  ];
+  for (const [text, want] of table) {
+    it(`"${text}" ⇒ ${want}`, () => expect(hasDecisionEvidence(text, id)).toBe(want));
+  }
+});
+
+describe('H13 e — D39 BOT_UID_SIM duoi RUNNER_CONCURRENCY > 1', () => {
+  it('xen ke 2 luot: thread that va thread sim-% (DATA_MODE=sim, own_uid co uid that qua env) ⇒ resolveBotUid cua luot that phai la uid that', async () => {
+    resetBotUidCache();
+    const env = { DATA_MODE: 'sim', BOT_ZALO_UID: 'uid-that-123' } as NodeJS.ProcessEnv;
+    const now = () => 1_000_000;
+    // runner: handler luot THAT lam moi cache roi cho I/O ...
+    await botUid('community', env, now, 'g-real-1');
+    // ... trong luc do handler luot SIM (thread khac, song song) lam moi cache
+    await botUid('community', env, now, 'sim-g-1');
+    // node gate cua luot THAT doc dong bo
+    const seenByReal = resolveBotUid(env);
+    // va nguoc lai
+    await botUid('community', env, now, 'sim-g-2');
+    await botUid('community', env, now, 'g-real-2');
+    const seenBySim = resolveBotUid(env);
+    console.log('D39 race: luot that thay =', seenByReal, '; luot sim thay =', seenBySim);
+    expect(seenByReal).toBe('uid-that-123');
+    expect(seenBySim).toBe(BOT_UID_SIM);
+  });
+});

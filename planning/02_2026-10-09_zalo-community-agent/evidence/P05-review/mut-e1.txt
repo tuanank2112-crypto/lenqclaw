@@ -1,0 +1,22 @@
+== mutation e1 :: src/agent/community/graph/nodes/moderate.ts
+diff --git a/packages/core/src/agent/community/graph/nodes/moderate.ts b/packages/core/src/agent/community/graph/nodes/moderate.ts
+index e2f65b2..95298bb 100644
+--- a/packages/core/src/agent/community/graph/nodes/moderate.ts
++++ b/packages/core/src/agent/community/graph/nodes/moderate.ts
+@@ -18,7 +18,7 @@ export const moderateNode: NodeFn<PipelineStateT> = async (s) => {
+       inboundEventId: s.event.id,
+     });
+     const moderation = { verdict: out.verdict, action: out.action, exempt: out.exempt };
+-    return out.deleted ? { moderation, stop: 'deleted' } : { moderation };
++    return { moderation };
+   } catch (err) {
+     await audit(sql, {
+       actorType: 'system',
+== unit (core, khong DB)
+[2m Test Files [22m [1m[32m31 passed[39m[22m[90m (31)[39m
+[2m      Tests [22m [1m[32m575 passed[39m[22m[90m (575)[39m
+unit exit=0
+== db
+[2m Test Files [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[32m54 passed[39m[22m[90m (54)[39m
+db exit=0

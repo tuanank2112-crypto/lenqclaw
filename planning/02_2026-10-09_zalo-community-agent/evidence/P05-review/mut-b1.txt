@@ -1,0 +1,22 @@
+== mutation b1 :: src/agent/community/tools/approval-tools.ts
+diff --git a/packages/core/src/agent/community/tools/approval-tools.ts b/packages/core/src/agent/community/tools/approval-tools.ts
+index 7a5dbe2..14c0c1e 100644
+--- a/packages/core/src/agent/community/tools/approval-tools.ts
++++ b/packages/core/src/agent/community/tools/approval-tools.ts
+@@ -36,7 +36,7 @@ export const decideApprovalTool: AgentTool<{ approval_id: string; decision: 'app
+   definition: decideDef,
+   async run(ctx, input) {
+     const requester = ctx.requester;
+-    if (!requester || (requester.role !== 'owner' && requester.role !== 'moderator')) {
++    if (!requester || (false)) {
+       throw new ToolNotAllowedError('Chỉ chủ hoặc quản trị viên mới được quyết thẻ duyệt.');
+     }
+     const card = await findApprovalByRef(ctx.account, input.approval_id, { pendingOnly: true });
+== unit (core, khong DB)
+[2m Test Files [22m [1m[32m31 passed[39m[22m[90m (31)[39m
+[2m      Tests [22m [1m[32m575 passed[39m[22m[90m (575)[39m
+unit exit=0
+== db
+[2m Test Files [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[32m54 passed[39m[22m[90m (54)[39m
+db exit=0

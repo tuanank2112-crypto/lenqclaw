@@ -1,0 +1,25 @@
+== mutation b2 :: src/services/approvals.ts
+diff --git a/packages/core/src/services/approvals.ts b/packages/core/src/services/approvals.ts
+index c72c20d..0e174a6 100644
+--- a/packages/core/src/services/approvals.ts
++++ b/packages/core/src/services/approvals.ts
+@@ -196,7 +196,7 @@ async function assertMayDecide(card: ApprovalRow, decidedBy: string): Promise<vo
+   if (decidedBy.startsWith('staff:') && decidedBy.length > 6) return;
+   if (decidedBy.startsWith('zalo:') && decidedBy.length > 5) {
+     const role = await resolveRole(card.zaloAccountId, decidedBy.slice(5), card.threadId);
+-    if (role === 'owner' || role === 'moderator') return;
++    return;
+   }
+   throw new ToolNotAllowedError('Chi chu (owner) hoac quan tri vien cua dung nhom nay moi duoc quyet the duyet.');
+ }
+== unit (core, khong DB)
+[2m Test Files [22m [1m[32m31 passed[39m[22m[90m (31)[39m
+[2m      Tests [22m [1m[32m575 passed[39m[22m[90m (575)[39m
+unit exit=0
+== db
+[31m   [31m×[31m P05-B — the duyet (f)–(j)[2m > [22m(f2) reject ⇒ rejected, KHONG co action; zalo:<member> khong duoc quyet; moderator nhom KHAC khong duoc; owner/moderator dung nhom duoc[90m 54[2mms[22m[31m[39m
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 1 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1m[7m FAIL [27m[22m[39m src/dbtests/p05-moderation.db.test.ts[2m > [22mP05-B — the duyet (f)–(j)[2m > [22m(f2) reject ⇒ rejected, KHONG co action; zalo:<member> khong duoc quyet; moderator nhom KHAC khong duoc; owner/moderator dung nhom duoc
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m3 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m53 passed[39m[22m[90m (54)[39m
+db exit=1

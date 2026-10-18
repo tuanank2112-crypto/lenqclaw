@@ -1,0 +1,26 @@
+== mutation e3 :: src/agent/community/graph/nodes/tools.ts
+warning: in the working copy of 'packages/core/src/agent/community/graph/nodes/tools.ts', CRLF will be replaced by LF the next time Git touches it
+diff --git a/packages/core/src/agent/community/graph/nodes/tools.ts b/packages/core/src/agent/community/graph/nodes/tools.ts
+index 1099c5b..770985f 100644
+--- a/packages/core/src/agent/community/graph/nodes/tools.ts
++++ b/packages/core/src/agent/community/graph/nodes/tools.ts
+@@ -48,7 +48,7 @@ export const toolsNode: NodeFn<TurnStateT> = async (s) => {
+       }
+       // D39 (SPEC-D31 §5.2): tool truy hoi (extendsDeadline) ⇒ nang lan fast → rag NGAY TRUOC khi chay, de tool (embedTexts)
+       // nhan han `rag` thay vi han `fast` da cu. Lua chon tra cuu cua model da quyet lan (T1).
+-      if (tool.extendsDeadline) {
++      if (false && tool.extendsDeadline) {
+         const up = escalateLane({ ...s, lane, deadlineAt }, [use.name], laneCfg);
+         if (up) ({ lane, deadlineAt } = up);
+       }
+== unit (core, khong DB)
+[2m Test Files [22m [1m[32m31 passed[39m[22m[90m (31)[39m
+[2m      Tests [22m [1m[32m575 passed[39m[22m[90m (575)[39m
+unit exit=0
+== db
+[31m   [31m×[31m D39 (a): node tools nang lan TRUOC khi chay tool extendsDeadline[2m > [22mluot fast con 1000 ms (< 3500, > 300) goi search_knowledge ⇒ embed nhan han rag (khong roi ve lexical)[33m 1051[2mms[22m[31m[39m
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 1 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1m[7m FAIL [27m[22m[39m src/dbtests/p05-d39.db.test.ts[2m > [22mD39 (a): node tools nang lan TRUOC khi chay tool extendsDeadline[2m > [22mluot fast con 1000 ms (< 3500, > 300) goi search_knowledge ⇒ embed nhan han rag (khong roi ve lexical)
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m3 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m53 passed[39m[22m[90m (54)[39m
+db exit=1

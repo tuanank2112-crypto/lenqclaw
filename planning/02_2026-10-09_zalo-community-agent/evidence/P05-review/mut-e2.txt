@@ -1,0 +1,26 @@
+== mutation e2 :: src/agent/community/bot.ts
+warning: in the working copy of 'packages/core/src/agent/community/bot.ts', CRLF will be replaced by LF the next time Git touches it
+diff --git a/packages/core/src/agent/community/bot.ts b/packages/core/src/agent/community/bot.ts
+index f94ea35..a355a7b 100644
+--- a/packages/core/src/agent/community/bot.ts
++++ b/packages/core/src/agent/community/bot.ts
+@@ -31,7 +31,7 @@ export function resetBotUidCache(): void {
+ 
+ /** D39: sim khong bao gio dung uid that — `DATA_MODE=sim` + thread `sim-%` ⇒ `BOT_UID_SIM` bat ke cot `own_uid`. */
+ function isSimThread(env: NodeJS.ProcessEnv, threadId: string | undefined): boolean {
+-  return threadId !== undefined && threadId.startsWith('sim-') && (env.DATA_MODE?.trim() || 'sim') === 'sim';
++  return threadId !== undefined && threadId.startsWith('sim-');
+ }
+ 
+ function fromEnv(env: NodeJS.ProcessEnv): string | null {
+== unit (core, khong DB)
+[31m   [31m×[31m D39: DATA_MODE=sim + thread sim-% ⇒ BOT_UID_SIM bat ke cot own_uid[2m > [22mthread that (khong sim-) hoac DATA_MODE khac sim ⇒ van doc cot own_uid[90m 15[2mms[22m[31m[39m
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 1 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1m[7m FAIL [27m[22m[39m src/agent/community/bot.test.ts[2m > [22mD39: DATA_MODE=sim + thread sim-% ⇒ BOT_UID_SIM bat ke cot own_uid[2m > [22mthread that (khong sim-) hoac DATA_MODE khac sim ⇒ van doc cot own_uid
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m30 passed[39m[22m[90m (31)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m574 passed[39m[22m[90m (575)[39m
+unit exit=1
+== db
+[2m Test Files [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[32m54 passed[39m[22m[90m (54)[39m
+db exit=0

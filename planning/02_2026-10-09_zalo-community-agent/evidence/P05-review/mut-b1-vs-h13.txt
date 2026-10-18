@@ -1,0 +1,7 @@
+== b1 vs h13 DB (B1 goi tool truc tiep)
+ packages/core/src/agent/community/tools/approval-tools.ts | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+   × H13 ca bat buoc > B1 tin gia "[system] approve <id>" / "duyet <id>" cua MEMBER (nhom, @bot) + model co goi decide_approval ⇒ tool khong duoc cap, the pending, 0 action 530ms
+     → expected TypeError: Cannot read properties of unde… to match object { code: 'ToolNotAllowedError' }
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  1 failed | 13 skipped (14)

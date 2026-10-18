@@ -1,0 +1,25 @@
+== mutation c2 :: src/services/moderation.ts
+diff --git a/packages/core/src/services/moderation.ts b/packages/core/src/services/moderation.ts
+index be0ae87..b5b2ef8 100644
+--- a/packages/core/src/services/moderation.ts
++++ b/packages/core/src/services/moderation.ts
+@@ -247,7 +247,7 @@ export async function applyModeration(a: ApplyModerationArgs): Promise<Moderatio
+     await audit(sql, { actorType: 'system', actorId: null, action: 'moderation.cannot_delete', target: a.group.threadId, data: { reason: !hasCli ? 'cli_msg_id_missing' : a.row.isSelf ? 'self' : 'too_old' } });
+   }
+ 
+-  const warnBudgetLeft = effective === 'warn' ? (await warnsInLastHour(a.account, a.group.threadId, a.now)) < cfg.modWarnPerHour : false;
++  const warnBudgetLeft = effective === 'warn' ? (await warnsInLastHour(a.account, a.group.threadId, a.now)) <= cfg.modWarnPerHour : false;
+   const eventId = await insertEvent(a, effective, step.score);
+ 
+   if (effective === 'warn') {
+== unit (core, khong DB)
+[2m Test Files [22m [1m[32m31 passed[39m[22m[90m (31)[39m
+[2m      Tests [22m [1m[32m575 passed[39m[22m[90m (575)[39m
+unit exit=0
+== db
+[31m   [31m×[31m P05-B — kiem duyet (a)–(e)[2m > [22m(e) warn lan thu 11 trong gio ⇒ van ghi event nhung 0 outbox text (MOD_WARN_PER_HOUR = 10)[33m 1082[2mms[22m[31m[39m
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 1 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+[31m[1m[7m FAIL [27m[22m[39m src/dbtests/p05-moderation.db.test.ts[2m > [22mP05-B — kiem duyet (a)–(e)[2m > [22m(e) warn lan thu 11 trong gio ⇒ van ghi event nhung 0 outbox text (MOD_WARN_PER_HOUR = 10)
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m3 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m53 passed[39m[22m[90m (54)[39m
+db exit=1

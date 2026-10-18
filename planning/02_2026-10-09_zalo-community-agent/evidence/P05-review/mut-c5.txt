@@ -1,0 +1,22 @@
+== mutation c5 :: src/services/moderation.ts
+diff --git a/packages/core/src/services/moderation.ts b/packages/core/src/services/moderation.ts
+index be0ae87..1553cae 100644
+--- a/packages/core/src/services/moderation.ts
++++ b/packages/core/src/services/moderation.ts
+@@ -49,7 +49,7 @@ export function decideVerdict(grid: GridResult, triage: CommunityTriage | null,
+     }
+     return { verdict: 'ok', confidence: triage.confidence, source: 'model' };
+   }
+-  if (grid.hits.length > 0) return { verdict: 'unsure', confidence: 0.5, source: 'grid' };
++  if (grid.hits.length > 0) return { verdict: 'spam', confidence: 0.5, source: 'grid' };
+   return { verdict: 'ok', confidence: 1, source: 'grid' };
+ }
+ 
+== unit (core, khong DB)
+[2m Test Files [22m [1m[32m31 passed[39m[22m[90m (31)[39m
+[2m      Tests [22m [1m[32m575 passed[39m[22m[90m (575)[39m
+unit exit=0
+== db
+[2m Test Files [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[32m54 passed[39m[22m[90m (54)[39m
+db exit=0
