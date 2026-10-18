@@ -57,7 +57,7 @@ Bằng chứng đỏ bắt buộc cho máy chấm: `scripts/eval/community/red-f
 | G13 | Kiểm duyệt DB 10 ca + thẻ duyệt: `select count(*)::int as violations from outbox o where o.kind='action' and (o.body->>'action') in ('remove_member','block_member') and not exists (select 1 from approvals a where a.id::text = o.body->>'approvalId' and a.status in ('approved','executed','failed'))` ⇒ `0` (chạy sau mọi test:db và sau demo); ca đỏ: chèn 1 hàng action tay ⇒ `1` | ⬜ | ⬜ (sau 7 ngày: `0`) | ⬜ |
 | G14 | BB-07: prompt lượt nhóm không chứa `member_profiles.notes` (test fetch giả) + `grep -c "member_profiles" packages/core/src/agent/community/persona.ts` = `0` | ✅ 2026-10-17 (R09) | — | ⬜ |
 | G15 | Đệm: `select max(c) from (select count(*) c from group_messages group by zalo_account_id, thread_id) t` ≤ 200 và `min(received_at) > now() - interval '8 days'` sau `runTimers` | ✅ 2026-10-17 (R09) | ⬜ | ⬜ |
-| G16 | Thẩm định đối kháng P05 (🔴, agent khác, ≥ 3 cách phá, 0 hành động trái phép) | ⬜ | — | — |
+| G16 | Thẩm định đối kháng P05 (🔴, agent khác, ≥ 3 cách phá, 0 hành động trái phép) | ✅ R13 (2026-10-18, 0 CHẶN; NÊN SỬA đã sửa ở R14) | — | — |
 | G17 | Timers idempotent + automations skip-locked + báo cáo ngày DM owner | ⬜ | ⬜ (nhận 1 báo cáo/ngày trong 3 ngày) | ⬜ |
 | G18 | Dashboard: 4 bộ DB web xanh 3 lần + `next build && next start` curl | ⬜ | — | ⬜ |
 | G19 | 7 ngày chạy Zalo thật ≥ 2 nhóm (≥ 1 ambient): tài khoản không bị khoá, phiên `connected` ≥ 95% giờ 7–22h, 0 `approvals.status='failed'` do 166 sau khi đặt phó nhóm, than phiền "bot nói nhiều" = 0 (chủ ghi `daily_notes`) | — | ⬜ | ⬜ |
